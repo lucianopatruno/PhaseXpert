@@ -38,14 +38,14 @@ without explicit redistribution rights.
 
 ## Initial engineering domain
 
-The UI input envelope is 218.15–423.15 K and 0.08–30 MPa absolute. It is an
+The UI input envelope is −55–150 °C and 0.8–300 bar absolute. It is an
 engineering scope for test planning, not a validated model-accuracy statement.
 
 | Scenario | Temperature | Absolute pressure |
 |---|---:|---:|
-| Ship transport | −55 to +15 °C | 0.5 to 7 MPa |
-| Dense-phase pipeline | 0 to 50 °C | 7 to 30 MPa |
-| Capture/compression | 0 to 150 °C | 0.08 to 30 MPa |
+| Ship transport | −55 to +15 °C | 5 to 70 bar abs |
+| Dense-phase pipeline | 0 to 50 °C | 70 to 300 bar abs |
+| Capture/compression | 0 to 150 °C | 0.8 to 300 bar abs |
 
 The first validation target is 90–100 mol% CO₂, at most 10 mol% total
 impurities and at most 20 impurity entries. Component-specific maxima are not
@@ -80,4 +80,3 @@ capabilities rather than joining curves cosmetically.
 The UI will use Swift Charts for the resulting provider points and an overlay
 gesture for pan/zoom and point inspection. If the provider returns no envelope,
 the chart stays unavailable. No decorative curve is permitted.
-

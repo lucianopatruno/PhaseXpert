@@ -11,11 +11,8 @@ struct CompositionInput: Identifiable, Equatable {
 @MainActor
 @Observable
 final class CalculatorViewModel {
-    var pressureText = "15"
-    var pressureUnit: PressureUnit = .megapascal
+    var pressureText = "150"
     var temperatureText = "20"
-    var temperatureUnit: TemperatureUnit = .celsius
-    var atmosphericReferenceText = "101325"
     var selectedModelID = "architecture-demo"
     var composition: [CompositionInput] = [
         CompositionInput(component: .carbonDioxide, molPercent: "100")
@@ -77,36 +74,12 @@ final class CalculatorViewModel {
             return
         }
 
-        let atmosphericReference: Double
-        if pressureUnit.isGauge {
-            guard
-                let parsedReference = parse(atmosphericReferenceText),
-                parsedReference.isFinite,
-                parsedReference > 0
-            else {
-                validationReport = ValidationReport(
-                    issues: [.init(
-                        code: .nonFiniteInput,
-                        severity: .error,
-                        message: "Enter a finite, positive atmospheric reference pressure in Pa absolute."
-                    )],
-                    normalizedComposition: nil
-                )
-                return
-            }
-            atmosphericReference = parsedReference
-        } else {
-            atmosphericReference = UnitConstants.standardAtmospherePa
-        }
         let supportedComponents = descriptor.availability == .available
             ? descriptor.supportedComponents
             : Set(domainComposition().map(\.component))
         let coreReport = validator.validate(
-            pressurePa: pressureUnit.toPascal(
-                pressure,
-                atmosphericReferencePa: atmosphericReference
-            ),
-            temperatureK: temperatureUnit.toKelvin(temperature),
+            pressurePa: PressureUnit.bar.toPascal(pressure),
+            temperatureK: TemperatureUnit.celsius.toKelvin(temperature),
             composition: domainComposition(),
             supportedComponents: supportedComponents,
             domain: descriptor.domain
@@ -152,16 +125,10 @@ final class CalculatorViewModel {
         calculationError = nil
         defer { isCalculating = false }
 
-        let atmosphericReference = pressureUnit.isGauge
-            ? (parse(atmosphericReferenceText) ?? .nan)
-            : UnitConstants.standardAtmospherePa
         let request = CalculationRequest(
             modelID: selectedModelID,
-            pressurePa: pressureUnit.toPascal(
-                pressure,
-                atmosphericReferencePa: atmosphericReference
-            ),
-            temperatureK: temperatureUnit.toKelvin(temperature),
+            pressurePa: PressureUnit.bar.toPascal(pressure),
+            temperatureK: TemperatureUnit.celsius.toKelvin(temperature),
             composition: domainComposition(),
             clientVersion: Bundle.main.releaseVersion
         )

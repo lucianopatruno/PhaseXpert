@@ -12,3 +12,5 @@
 - Added unit and UI test foundations plus project documentation.
 - Refined calculator styling with IFE blue accents, explicit operating-point
   labels, and an OK action for dismissing numeric keyboards.
+- Standardized all user-facing pressure and temperature entry and display to
+  bar absolute and °C while retaining SI internally.

@@ -66,11 +66,11 @@ private struct ModelDetailView: View {
             Section("Validity domain") {
                 LabeledContent(
                     "Temperature",
-                    value: "\(descriptor.domain.minimumTemperatureK.formatted())–\(descriptor.domain.maximumTemperatureK.formatted()) K"
+                    value: "\((descriptor.domain.minimumTemperatureK - 273.15).formatted())–\((descriptor.domain.maximumTemperatureK - 273.15).formatted()) °C"
                 )
                 LabeledContent(
                     "Pressure",
-                    value: "\((descriptor.domain.minimumPressurePa / 1_000_000).formatted())–\((descriptor.domain.maximumPressurePa / 1_000_000).formatted()) MPa abs"
+                    value: "\((descriptor.domain.minimumPressurePa / 100_000).formatted())–\((descriptor.domain.maximumPressurePa / 100_000).formatted()) bar abs"
                 )
             }
 

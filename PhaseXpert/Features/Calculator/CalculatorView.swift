@@ -4,7 +4,6 @@ import SwiftUI
 struct CalculatorView: View {
     private enum InputField: Hashable {
         case pressure
-        case atmosphericReference
         case temperature
         case composition
     }
@@ -51,34 +50,9 @@ struct CalculatorView: View {
                                 .focused($focusedField, equals: .pressure)
                                 .accessibilityLabel("Pressure value")
 
-                            Picker("Pressure unit", selection: $viewModel.pressureUnit) {
-                                ForEach(PressureUnit.allCases) { unit in
-                                    Text(unit.rawValue).tag(unit)
-                                }
-                            }
-                            .labelsHidden()
-                            .frame(width: 100)
-                        }
-                    }
-
-                    if viewModel.pressureUnit.isGauge {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Atmospheric reference pressure")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color.ifeText)
-
-                            HStack {
-                                TextField("Value", text: $viewModel.atmosphericReferenceText)
-                                    .keyboardType(.decimalPad)
-                                    .focused($focusedField, equals: .atmosphericReference)
-                                    .accessibilityLabel("Atmospheric reference pressure value")
-                                Text("Pa abs")
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Text("Gauge pressure is converted using this explicit atmospheric reference.")
-                                .font(.caption)
+                            Text("bar abs")
                                 .foregroundStyle(.secondary)
+                                .frame(width: 64, alignment: .trailing)
                         }
                     }
 
@@ -93,13 +67,9 @@ struct CalculatorView: View {
                                 .focused($focusedField, equals: .temperature)
                                 .accessibilityLabel("Temperature value")
 
-                            Picker("Temperature unit", selection: $viewModel.temperatureUnit) {
-                                ForEach(TemperatureUnit.allCases) { unit in
-                                    Text(unit.rawValue).tag(unit)
-                                }
-                            }
-                            .labelsHidden()
-                            .frame(width: 100)
+                            Text("°C")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 64, alignment: .trailing)
                         }
                     }
                 }

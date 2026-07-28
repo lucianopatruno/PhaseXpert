@@ -29,7 +29,8 @@ UI state is main-actor isolated.
 
 ## Data flow
 
-1. The UI converts entered units to Pa and K through `UnitConverter`.
+1. The UI accepts bar absolute and °C, then converts them to Pa and K through
+   the centralized unit layer.
 2. `CalculationValidator` validates finite values, composition, provider
    coverage and the provider domain.
 3. Normalization is a separate, explicit user action. Original input remains
@@ -77,4 +78,3 @@ Asset colors were sampled from the supplied IFE template. The supplied English
 IFE logo is used as an unmodified vector. Apple system typography is used
 because the template font cannot be assumed redistributable; Dynamic Type and
 VoiceOver are therefore supported without bundling a font licence.
-
