@@ -5,8 +5,7 @@ struct PhaseXpertApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .tint(.ifeSignal)
+                .tint(.ifePrimary)
         }
     }
 }
-

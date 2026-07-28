@@ -10,4 +10,5 @@
   providers.
 - Added the versioned future IFE API request/response contract.
 - Added unit and UI test foundations plus project documentation.
-
+- Refined calculator styling with IFE blue accents, explicit operating-point
+  labels, and an OK action for dismissing numeric keyboards.

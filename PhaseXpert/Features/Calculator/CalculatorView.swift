@@ -2,7 +2,15 @@ import PhaseXpertCore
 import SwiftUI
 
 struct CalculatorView: View {
+    private enum InputField: Hashable {
+        case pressure
+        case atmosphericReference
+        case temperature
+        case composition
+    }
+
     @State private var viewModel = CalculatorViewModel()
+    @FocusState private var focusedField: InputField?
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -32,40 +40,67 @@ struct CalculatorView: View {
                 }
 
                 Section("Operating point") {
-                    HStack {
-                        TextField("Pressure", text: $viewModel.pressureText)
-                            .keyboardType(.decimalPad)
-                            .accessibilityLabel("Pressure value")
-                        Picker("Pressure unit", selection: $viewModel.pressureUnit) {
-                            ForEach(PressureUnit.allCases) { unit in
-                                Text(unit.rawValue).tag(unit)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Pressure")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.ifeText)
+
+                        HStack(spacing: 12) {
+                            TextField("Value", text: $viewModel.pressureText)
+                                .keyboardType(.decimalPad)
+                                .focused($focusedField, equals: .pressure)
+                                .accessibilityLabel("Pressure value")
+
+                            Picker("Pressure unit", selection: $viewModel.pressureUnit) {
+                                ForEach(PressureUnit.allCases) { unit in
+                                    Text(unit.rawValue).tag(unit)
+                                }
                             }
+                            .labelsHidden()
+                            .frame(width: 100)
                         }
-                        .labelsHidden()
                     }
 
                     if viewModel.pressureUnit.isGauge {
-                        HStack {
-                            TextField("Atmospheric reference", text: $viewModel.atmosphericReferenceText)
-                                .keyboardType(.decimalPad)
-                            Text("Pa abs")
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Atmospheric reference pressure")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.ifeText)
+
+                            HStack {
+                                TextField("Value", text: $viewModel.atmosphericReferenceText)
+                                    .keyboardType(.decimalPad)
+                                    .focused($focusedField, equals: .atmosphericReference)
+                                    .accessibilityLabel("Atmospheric reference pressure value")
+                                Text("Pa abs")
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Text("Gauge pressure is converted using this explicit atmospheric reference.")
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        Text("Gauge pressure is converted using this explicit atmospheric reference.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
 
-                    HStack {
-                        TextField("Temperature", text: $viewModel.temperatureText)
-                            .keyboardType(.numbersAndPunctuation)
-                            .accessibilityLabel("Temperature value")
-                        Picker("Temperature unit", selection: $viewModel.temperatureUnit) {
-                            ForEach(TemperatureUnit.allCases) { unit in
-                                Text(unit.rawValue).tag(unit)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Temperature")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.ifeText)
+
+                        HStack(spacing: 12) {
+                            TextField("Value", text: $viewModel.temperatureText)
+                                .keyboardType(.numbersAndPunctuation)
+                                .focused($focusedField, equals: .temperature)
+                                .accessibilityLabel("Temperature value")
+
+                            Picker("Temperature unit", selection: $viewModel.temperatureUnit) {
+                                ForEach(TemperatureUnit.allCases) { unit in
+                                    Text(unit.rawValue).tag(unit)
+                                }
                             }
+                            .labelsHidden()
+                            .frame(width: 100)
                         }
-                        .labelsHidden()
                     }
                 }
 
@@ -87,6 +122,7 @@ struct CalculatorView: View {
 
                             TextField("mol%", text: $entry.molPercent)
                                 .keyboardType(.decimalPad)
+                                .focused($focusedField, equals: .composition)
                                 .multilineTextAlignment(.trailing)
                                 .frame(width: 90)
                             Text("mol%")
@@ -120,7 +156,7 @@ struct CalculatorView: View {
                                     ? "xmark.octagon.fill"
                                     : "exclamationmark.triangle.fill"
                             )
-                            .foregroundStyle(issue.severity == .error ? .red : Color.ifeSignal)
+                            .foregroundStyle(issue.severity == .error ? .red : Color.ifePrimary)
                         }
 
                         if viewModel.canNormalize {
@@ -181,6 +217,15 @@ struct CalculatorView: View {
                     Button("Validate", systemImage: "checkmark.shield") {
                         viewModel.validate()
                     }
+                }
+
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("OK") {
+                        focusedField = nil
+                        viewModel.validate()
+                    }
+                    .fontWeight(.semibold)
                 }
             }
         }

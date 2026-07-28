@@ -28,7 +28,7 @@ struct ModelInformationView: View {
     private func statusColor(_ availability: ModelAvailability) -> Color {
         switch availability {
         case .available: .green
-        case .preliminary: .ifeSignal
+        case .preliminary: .ifePrimary
         case .unavailable: .secondary
         }
     }

@@ -44,7 +44,7 @@ struct ScientificStatusBanner: View {
     var body: some View {
         HStack(alignment: .top, spacing: IFESpacing.small) {
             Image(systemName: isError ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
-                .foregroundStyle(isError ? .red : Color.ifeSignal)
+                .foregroundStyle(isError ? .red : Color.ifePrimary)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -56,7 +56,7 @@ struct ScientificStatusBanner: View {
         }
         .padding(IFESpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background((isError ? Color.red : Color.ifeSignal).opacity(0.10))
+        .background((isError ? Color.red : Color.ifeBlue).opacity(isError ? 0.10 : 0.55))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
