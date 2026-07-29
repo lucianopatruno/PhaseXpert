@@ -9,8 +9,9 @@ review before distribution.
 
 ## Software
 
-The current runtime uses only Apple SDK frameworks. No CoolProp, REFPROP or
-other thermodynamic software is included.
+The current runtime uses only Apple SDK frameworks. The CoolProp bridge and
+MIT notice are present, but no CoolProp binary is linked. REFPROP and other
+thermodynamic software are not included.
 
 Potential CoolProp reference:
 
@@ -30,4 +31,3 @@ code or data in an iPhone application.
 Scientific references for the production formulation, binary interaction
 parameters and validation datasets are not selected yet and must not be
 invented.
-
