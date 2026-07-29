@@ -18,9 +18,17 @@ public struct ProviderRegistry: Sendable {
     public static var defaults: [any ThermodynamicModelProvider] {
         [
             ArchitectureDemoProvider(),
-            CoolPropProvider(engine: UnavailableCoolPropEngine()),
+            defaultCoolPropProvider,
             UnavailableModelProvider.ife
         ]
+    }
+
+    private static var defaultCoolPropProvider: any ThermodynamicModelProvider {
+        #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
+        CoolPropProvider(engine: NativeCoolPropEngine())
+        #else
+        CoolPropProvider(engine: UnavailableCoolPropEngine())
+        #endif
     }
 }
 

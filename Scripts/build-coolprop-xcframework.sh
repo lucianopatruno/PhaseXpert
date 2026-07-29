@@ -24,6 +24,33 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
     exit 1
 fi
 
+if [[ -z "${DEVELOPER_DIR:-}" && -d "/Applications/Xcode.app/Contents/Developer" ]]; then
+    export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
+fi
+
+resolve_sdk_identifier() {
+    local requested_sdk="$1"
+    local resolved_sdk
+
+    if xcrun --sdk "${requested_sdk}" --show-sdk-path >/dev/null 2>&1; then
+        printf '%s\n' "${requested_sdk}"
+        return
+    fi
+
+    resolved_sdk="$(
+        xcodebuild -showsdks 2>/dev/null |
+            awk -v prefix="${requested_sdk}" '$0 ~ "-sdk " prefix { print $NF; found = 1 } END { exit found ? 0 : 1 }' |
+            tail -n 1
+    )"
+
+    if [[ -z "${resolved_sdk}" ]]; then
+        echo "Unable to locate an installed SDK matching ${requested_sdk}." >&2
+        exit 1
+    fi
+
+    printf '%s\n' "${resolved_sdk}"
+}
+
 mkdir -p "${work_root}" "${output_root}"
 
 if [[ ! -d "${source_root}/.git" ]]; then
@@ -40,19 +67,25 @@ build_coolprop() {
     local sdk="$1"
     local architectures="$2"
     local build_directory="$3"
+    local sdk_identifier
+    local sdk_path
+
+    sdk_identifier="$(resolve_sdk_identifier "${sdk}")"
+    sdk_path="$(xcrun --sdk "${sdk_identifier}" --show-sdk-path)"
 
     cmake \
         -S "${source_root}" \
         -B "${build_directory}" \
-        -G Xcode \
+        -G "Unix Makefiles" \
         -DCOOLPROP_STATIC_LIBRARY=ON \
         -DCOOLPROP_SHARED_LIBRARY=OFF \
         -DCOOLPROP_EXTERNC_LIBRARY=OFF \
         -DCOOLPROP_LIBRARY_NAME=CoolProp \
         -DFORCE_BITNESS_NATIVE=ON \
         -DBUILD_TESTING=OFF \
+        -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
         -DCMAKE_SYSTEM_NAME=iOS \
-        -DCMAKE_OSX_SYSROOT="${sdk}" \
+        -DCMAKE_OSX_SYSROOT="${sdk_path}" \
         -DCMAKE_OSX_DEPLOYMENT_TARGET="${deployment_target}" \
         -DCMAKE_OSX_ARCHITECTURES="${architectures}"
 
@@ -75,6 +108,7 @@ compile_bridge() {
     local build_directory="$2"
     shift 2
     local architecture_flags=("$@")
+    local sdk_identifier
     local minimum_version_flag
 
     if [[ "${sdk}" == "iphoneos" ]]; then
@@ -83,16 +117,25 @@ compile_bridge() {
         minimum_version_flag="-mios-simulator-version-min=${deployment_target}"
     fi
 
-    xcrun --sdk "${sdk}" clang++ \
+    sdk_identifier="$(resolve_sdk_identifier "${sdk}")"
+
+    xcrun --sdk "${sdk_identifier}" clang++ \
         -std=c++17 \
         -O2 \
         -fvisibility=hidden \
         -fvisibility-inlines-hidden \
-        -isysroot "$(xcrun --sdk "${sdk}" --show-sdk-path)" \
+        -isysroot "$(xcrun --sdk "${sdk_identifier}" --show-sdk-path)" \
         "${minimum_version_flag}" \
         "${architecture_flags[@]}" \
         -I"${bridge_headers}" \
         -I"${source_root}/include" \
+        -I"${build_directory}/_deps/fmt-src/include" \
+        -I"${build_directory}/_deps/eigen-src" \
+        -I"${build_directory}/_deps/msgpack-c-src/include" \
+        -I"${build_directory}/_deps/nlohmann_json-src/include" \
+        -I"${build_directory}/_deps/valijson-src/include" \
+        -I"${build_directory}/_deps/boost_headers-src" \
+        -I"${build_directory}/_deps/multicomplex-src/multicomplex/include" \
         -c "${bridge_source}" \
         -o "${build_directory}/PhaseXpertCoolPropBridge.o"
 }
