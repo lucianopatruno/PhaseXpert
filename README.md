@@ -5,8 +5,9 @@ phase-property calculations for CO₂-rich mixtures.
 
 > **Scientific status:** this repository currently contains the application
 > foundation and a non-scientific architecture demo provider. It does **not**
-> yet produce engineering results. CoolProp and the IFE Model are represented
-> by unavailable provider descriptors only.
+> yet produce engineering results. The CoolProp pure-CO₂ provider and native
+> bridge are scaffolded, but the binary is not linked. The IFE Model remains
+> unavailable.
 
 Developed by the **IFE Flow Technology Department**.
 
@@ -51,8 +52,10 @@ swift test
   pressure reference
 - composition and model-domain validation with explicit normalization
 - provider-independent request, response, metadata and phase-envelope contracts
-- unavailable CoolProp and IFE providers plus a clearly labelled
-  non-scientific workflow provider
+- a pure-CO₂ CoolProp provider/engine boundary, an unavailable IFE provider,
+  and a clearly labelled non-scientific workflow provider
+- a native CoolProp C bridge and macOS XCFramework build script; the binary is
+  deliberately not linked in this commit
 - versioned future IFE API data-transfer contract
 - core unit tests and a main-workflow UI smoke test
 - empty privacy manifest: no tracking and no collected data
@@ -70,9 +73,10 @@ See [Architecture](Documentation/Architecture.md),
 
 ## Dependencies and licences
 
-This milestone uses Apple frameworks only and has no third-party runtime
-dependency. CoolProp is not copied, linked, or redistributed yet. Licence and
-notices must be reviewed before any integration is shipped. See
+The application target still uses Apple frameworks only and has no linked
+third-party runtime dependency. CoolProp wrapper code and its MIT notice are
+present, but CoolProp itself is not linked or redistributed yet. Licence,
+binary and notices must be reviewed before any integration is shipped. See
 [References and Licences](Documentation/ReferencesAndLicences.md).
 
 ## Testing
@@ -106,6 +110,7 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
 - [Architecture and directory structure](Documentation/Architecture.md)
 - [Scientific models and phase-envelope strategy](Documentation/ScientificModels.md)
+- [CoolProp integration spike](Documentation/CoolPropIntegration.md)
 - [IFE Model API contract](Documentation/IFEModelAPI.md)
 - [Validation strategy](Documentation/ValidationStrategy.md)
 - [Adding providers and components](Documentation/ExtendingPhaseXpert.md)
@@ -113,4 +118,3 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - [App Store preparation](Documentation/AppStoreChecklist.md)
 - [Known limitations](Documentation/KnownLimitations.md)
 - [Changelog](CHANGELOG.md)
-

@@ -5,6 +5,10 @@ final class ProviderAndAPITests: XCTestCase {
     func testProviderSelectionUsesStableIdentifier() {
         let registry = ProviderRegistry()
         XCTAssertEqual(registry.provider(id: "coolprop-heos")?.descriptor.id, "coolprop-heos")
+        XCTAssertEqual(
+            registry.provider(id: "coolprop-heos")?.descriptor.availability,
+            .unavailable
+        )
         XCTAssertNil(registry.provider(id: "missing"))
     }
 

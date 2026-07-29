@@ -18,7 +18,8 @@ The approved spike is therefore restricted:
 - licence texts, notices, binary architecture and App Store packaging are
   reviewed before distribution.
 
-No CoolProp source or binary is included in the current milestone.
+The pure-CO₂ provider boundary, native C bridge and reproducible build script
+are included. No CoolProp source or binary is committed or linked yet.
 
 ## Alternatives considered
 

@@ -12,3 +12,6 @@ xcuserdata/
 *.dSYM
 Secrets.xcconfig
 .env
+Vendor/CoolProp/*.xcframework/
+Vendor/CoolProp/COOLPROP-LICENSE.txt
+Vendor/CoolProp/COOLPROP-REVISION.txt

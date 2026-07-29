@@ -14,3 +14,5 @@
   labels, and an OK action for dismissing numeric keyboards.
 - Standardized all user-facing pressure and temperature entry and display to
   bar absolute and °C while retaining SI internally.
+- Added the restricted pure-CO₂ CoolProp provider, testable engine seam,
+  native C++ bridge, MIT notice and reproducible XCFramework build tooling.

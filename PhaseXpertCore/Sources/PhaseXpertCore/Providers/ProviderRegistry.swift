@@ -18,7 +18,7 @@ public struct ProviderRegistry: Sendable {
     public static var defaults: [any ThermodynamicModelProvider] {
         [
             ArchitectureDemoProvider(),
-            UnavailableModelProvider.coolProp,
+            CoolPropProvider(engine: UnavailableCoolPropEngine()),
             UnavailableModelProvider.ife
         ]
     }
@@ -95,32 +95,6 @@ public struct UnavailableModelProvider: ThermodynamicModelProvider {
     public func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse {
         throw ProviderError.modelUnavailable("\(descriptor.name) cannot generate a phase envelope.")
     }
-
-    public static let coolProp = UnavailableModelProvider(descriptor: ModelDescriptor(
-        id: "coolprop-heos",
-        name: "CoolProp HEOS — Validation pending",
-        modelVersion: "Not integrated",
-        providerVersion: "0.1.0",
-        availability: .unavailable,
-        calculationMode: .local,
-        supportedComponents: [],
-        supportedProperties: [],
-        domain: .initialCO2Transport,
-        scientificBasis: "Planned local CoolProp HEOS integration. No CoolProp code is present in this milestone.",
-        equationOrMethod: "CoolProp HEOS backend (planned; not integrated)",
-        limitations: [
-            "No calculations are currently available.",
-            "Component combinations will be restricted after binary-pair and reference validation."
-        ],
-        references: [
-            SourceReference(
-                authors: "Bell, Wronski, Quoilin and Lemort",
-                title: "Pure and Pseudo-pure Fluid Thermophysical Property Evaluation and the Open-Source Thermophysical Property Library CoolProp",
-                year: 2014,
-                doiOrURL: "https://doi.org/10.1021/ie4033999"
-            )
-        ]
-    ))
 
     public static let ife = UnavailableModelProvider(descriptor: ModelDescriptor(
         id: "ife-model",

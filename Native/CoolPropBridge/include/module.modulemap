@@ -1,0 +1,4 @@
+module PhaseXpertCoolPropBridge {
+    header "PhaseXpertCoolPropBridge.h"
+    export *
+}
