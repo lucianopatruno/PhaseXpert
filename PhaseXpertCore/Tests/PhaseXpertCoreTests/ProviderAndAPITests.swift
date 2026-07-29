@@ -7,9 +7,17 @@ final class ProviderAndAPITests: XCTestCase {
         XCTAssertEqual(registry.provider(id: "coolprop-heos")?.descriptor.id, "coolprop-heos")
         XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
-            .unavailable
+            expectedDefaultCoolPropAvailability
         )
         XCTAssertNil(registry.provider(id: "missing"))
+    }
+
+    private var expectedDefaultCoolPropAvailability: ModelAvailability {
+        #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
+        .preliminary
+        #else
+        .unavailable
+        #endif
     }
 
     func testAPIRequestRoundTripsWithoutLosingSIUnits() throws {

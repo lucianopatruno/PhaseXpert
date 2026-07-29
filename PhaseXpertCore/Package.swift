@@ -3,8 +3,10 @@ import Foundation
 import PackageDescription
 
 let coolPropXCFrameworkPath = "../Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework"
+let packageDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+let coolPropXCFrameworkURL = packageDirectory.appendingPathComponent(coolPropXCFrameworkPath)
 let hasLocalCoolPropXCFramework = FileManager.default.fileExists(
-    atPath: coolPropXCFrameworkPath
+    atPath: coolPropXCFrameworkURL.path
 )
 
 var phaseXpertCoreDependencies: [Target.Dependency] = []
