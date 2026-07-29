@@ -9,15 +9,23 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        XCTAssertTrue(app.tabBars.buttons["Calculator"].exists)
-        XCTAssertTrue(app.buttons["run-calculation"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Calculator"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["Pressure"].exists)
         XCTAssertTrue(app.staticTexts["bar abs"].exists)
         XCTAssertTrue(app.staticTexts["Temperature"].exists)
         XCTAssertTrue(app.staticTexts["°C"].exists)
 
+        let runCalculationButton = app.buttons["run-calculation"]
+        for _ in 0..<5 where !runCalculationButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(
+            runCalculationButton.waitForExistence(timeout: 2),
+            "Run calculation button should be reachable by scrolling the calculator form."
+        )
+
         app.tabBars.buttons["Models"].tap()
-        XCTAssertTrue(app.navigationBars["Model Information"].exists)
+        XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
     }
 
     func testNumericKeyboardCanBeDismissed() {
