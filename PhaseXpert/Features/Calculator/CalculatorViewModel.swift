@@ -18,12 +18,14 @@ final class CalculatorViewModel {
         CompositionInput(component: .carbonDioxide, molPercent: "100")
     ]
     private(set) var validationReport = ValidationReport(issues: [], normalizedComposition: nil)
-    private(set) var response: CalculationResponse?
+    private(set) var calculationRecord: CalculationRecord?
     private(set) var calculationError: String?
     private(set) var isCalculating = false
 
     let registry = ProviderRegistry()
     private let validator = CalculationValidator()
+    private var compositionBeforeNormalization: [CompositionInputSnapshot]?
+    private var lastNormalizedComposition: [MixtureComponent]?
 
     var descriptors: [ModelDescriptor] { registry.descriptors }
 
@@ -74,9 +76,9 @@ final class CalculatorViewModel {
             return
         }
 
-        let supportedComponents = descriptor.availability == .available
-            ? descriptor.supportedComponents
-            : Set(domainComposition().map(\.component))
+        let supportedComponents = descriptor.availability == .unavailable
+            ? Set(domainComposition().map(\.component))
+            : descriptor.supportedComponents
         let coreReport = validator.validate(
             pressurePa: PressureUnit.bar.toPascal(pressure),
             temperatureK: TemperatureUnit.celsius.toKelvin(temperature),
@@ -103,6 +105,8 @@ final class CalculatorViewModel {
 
     func normalizeComposition() {
         guard let normalized = validationReport.normalizedComposition else { return }
+        compositionBeforeNormalization = compositionSnapshot()
+        lastNormalizedComposition = normalized
         composition = normalized.map {
             CompositionInput(
                 component: $0.component,
@@ -123,21 +127,42 @@ final class CalculatorViewModel {
 
         isCalculating = true
         calculationError = nil
+        calculationRecord = nil
         defer { isCalculating = false }
 
+        let pressurePa = PressureUnit.bar.toPascal(pressure)
+        let temperatureK = TemperatureUnit.celsius.toKelvin(temperature)
+        let calculatedComposition = domainComposition()
         let request = CalculationRequest(
             modelID: selectedModelID,
-            pressurePa: PressureUnit.bar.toPascal(pressure),
-            temperatureK: TemperatureUnit.celsius.toKelvin(temperature),
-            composition: domainComposition(),
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: calculatedComposition,
             clientVersion: Bundle.main.releaseVersion
         )
 
         do {
-            response = try await provider.calculate(request)
+            let response = try await provider.calculate(request)
+            let normalizationWasUsed = lastNormalizedComposition == calculatedComposition
+            calculationRecord = CalculationRecord(
+                request: request,
+                input: CalculationInputSnapshot(
+                    pressureValue: pressure,
+                    pressureUnit: .bara,
+                    pressurePa: pressurePa,
+                    temperatureValue: temperature,
+                    temperatureUnit: .celsius,
+                    temperatureK: temperatureK,
+                    originalComposition: normalizationWasUsed
+                        ? compositionBeforeNormalization ?? compositionSnapshot()
+                        : compositionSnapshot(),
+                    normalizedComposition: normalizationWasUsed ? calculatedComposition : nil
+                ),
+                response: response,
+                application: Bundle.main.applicationIdentity
+            )
         } catch {
-            response = nil
-            calculationError = String(describing: error)
+            calculationError = userMessage(for: error)
         }
     }
 
@@ -150,15 +175,51 @@ final class CalculatorViewModel {
         }
     }
 
+    private func compositionSnapshot() -> [CompositionInputSnapshot] {
+        composition.map {
+            CompositionInputSnapshot(
+                component: $0.component,
+                value: parse($0.molPercent) ?? .nan,
+                unit: .molePercent
+            )
+        }
+    }
+
+    private func userMessage(for error: Error) -> String {
+        if error is CancellationError {
+            return "The calculation was cancelled."
+        }
+        guard let providerError = error as? ProviderError else {
+            return "The calculation failed unexpectedly. Please review the inputs and try again."
+        }
+        switch providerError {
+        case let .modelUnavailable(message),
+             let .invalidRequest(message),
+             let .malformedResponse(message):
+            return message
+        case let .unsupportedComponent(component):
+            return "\(component.symbol) is not supported by the selected model."
+        case .timeout:
+            return "The calculation timed out."
+        case .cancelled:
+            return "The calculation was cancelled."
+        }
+    }
+
     private func parse(_ value: String) -> Double? {
         Double(value.replacingOccurrences(of: ",", with: "."))
     }
 }
 
 extension Bundle {
+    var applicationIdentity: ApplicationIdentity {
+        ApplicationIdentity(
+            version: object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown",
+            build: object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
+        )
+    }
+
     var releaseVersion: String {
-        let version = object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
-        let build = object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "Unknown"
-        return "\(version) (\(build))"
+        "\(applicationIdentity.version) (\(applicationIdentity.build))"
     }
 }
