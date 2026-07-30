@@ -7,17 +7,9 @@ final class ProviderAndAPITests: XCTestCase {
         XCTAssertEqual(registry.provider(id: "coolprop-heos")?.descriptor.id, "coolprop-heos")
         XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
-            expectedDefaultCoolPropAvailability
+            .unavailable
         )
         XCTAssertNil(registry.provider(id: "missing"))
-    }
-
-    private var expectedDefaultCoolPropAvailability: ModelAvailability {
-        #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
-        .preliminary
-        #else
-        .unavailable
-        #endif
     }
 
     func testAPIRequestRoundTripsWithoutLosingSIUnits() throws {
@@ -58,5 +50,56 @@ final class ProviderAndAPITests: XCTestCase {
         XCTAssertFalse(response.isScientificResult)
         XCTAssertNil(response.properties.first?.value)
         XCTAssertEqual(response.properties.first?.status, .unavailable)
+    }
+
+    func testCalculationRecordRoundTripsWithOriginalAndNormalizedInput() async throws {
+        let provider = ArchitectureDemoProvider()
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            requestedProperties: [.density],
+            clientVersion: "1.0 (42)"
+        )
+        let response = try await provider.calculate(request)
+        let record = CalculationRecord(
+            request: request,
+            input: CalculationInputSnapshot(
+                pressureValue: 150,
+                pressureUnit: .bara,
+                pressurePa: 15_000_000,
+                temperatureValue: 20,
+                temperatureUnit: .celsius,
+                temperatureK: 293.15,
+                originalComposition: [
+                    .init(component: .carbonDioxide, value: 99.99, unit: .molePercent)
+                ],
+                normalizedComposition: [
+                    .init(component: .carbonDioxide, moleFraction: 1)
+                ]
+            ),
+            response: response,
+            application: ApplicationIdentity(version: "1.0", build: "42")
+        )
+
+        let data = try JSONEncoder().encode(record)
+        let decoded = try JSONDecoder().decode(CalculationRecord.self, from: data)
+
+        XCTAssertEqual(decoded, record)
+        XCTAssertEqual(decoded.input.originalComposition.first?.value, 99.99)
+        XCTAssertEqual(decoded.input.normalizedComposition?.first?.moleFraction, 1)
+        XCTAssertEqual(decoded.response.model, response.model)
+    }
+
+    func testNonFiniteCalculatedPropertyIsNotDisplayable() {
+        let property = PropertyValue(
+            property: .density,
+            value: .nan,
+            unit: "kg/m³",
+            status: .calculated
+        )
+
+        XCTAssertFalse(property.hasFiniteCalculatedValue)
     }
 }
