@@ -37,8 +37,24 @@ UI state is main-actor isolated.
    available for provenance.
 4. The registry resolves the selected provider by stable identifier.
 5. The provider returns status-bearing values and solver metadata.
-6. A future immutable saved-result snapshot will retain request, response,
-   display units, app build and provider provenance.
+6. `CalculationRecord` combines the request, response, original display
+   values, SI values, normalization history, app build and embedded provider
+   descriptor. Results, persistence and exports consume this immutable record
+   rather than querying the current provider registry for historical metadata.
+
+## Result traceability
+
+The calculator creates a `CalculationRecord` only after a provider returns.
+The record retains the exact model descriptor supplied with that response,
+including versions, calculation mode, coefficient/library version, method,
+limitations and references. This prevents historical results from silently
+adopting metadata from a later provider release.
+
+Original pressure and temperature are retained as bar absolute and degrees
+Celsius alongside Pa and K. Original mol% entries are retained separately from
+the normalized mole-fraction array whenever the user explicitly applies
+normalization. Presentation may convert dynamic viscosity from Pa·s to mPa·s,
+but the provider value and unit remain unchanged in the record.
 
 ## Directory structure
 
