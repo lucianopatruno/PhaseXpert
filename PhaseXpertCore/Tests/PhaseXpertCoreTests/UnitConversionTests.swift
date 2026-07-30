@@ -21,5 +21,17 @@ final class UnitConversionTests: XCTestCase {
         XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(32), 273.15, accuracy: 1e-12)
         XCTAssertEqual(TemperatureUnit.kelvin.fromKelvin(300), 300, accuracy: 1e-12)
     }
-}
 
+    func testDynamicViscosityConversions() {
+        XCTAssertEqual(
+            DynamicViscosityUnit.millipascalSecond.fromPascalSeconds(0.000_071),
+            0.071,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            DynamicViscosityUnit.millipascalSecond.toPascalSeconds(0.071),
+            0.000_071,
+            accuracy: 1e-12
+        )
+    }
+}
