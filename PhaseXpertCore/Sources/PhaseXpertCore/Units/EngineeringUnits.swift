@@ -75,6 +75,27 @@ public enum CompositionUnit: String, CaseIterable, Codable, Hashable, Sendable, 
     public var id: String { rawValue }
 }
 
+public enum DynamicViscosityUnit: String, CaseIterable, Codable, Hashable, Sendable, Identifiable {
+    case pascalSecond = "Pa·s"
+    case millipascalSecond = "mPa·s"
+
+    public var id: String { rawValue }
+
+    public func fromPascalSeconds(_ value: Double) -> Double {
+        switch self {
+        case .pascalSecond: value
+        case .millipascalSecond: value * 1_000
+        }
+    }
+
+    public func toPascalSeconds(_ value: Double) -> Double {
+        switch self {
+        case .pascalSecond: value
+        case .millipascalSecond: value / 1_000
+        }
+    }
+}
+
 public enum UnitConstants {
     public static let standardAtmospherePa = 101_325.0
     public static let psiToPascal = 6_894.757_293_168
