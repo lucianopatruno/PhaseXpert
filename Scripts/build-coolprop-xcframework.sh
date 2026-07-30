@@ -83,6 +83,7 @@ build_coolprop() {
         -DCOOLPROP_LIBRARY_NAME=CoolProp \
         -DFORCE_BITNESS_NATIVE=ON \
         -DBUILD_TESTING=OFF \
+        -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
         -DCMAKE_SYSTEM_NAME=iOS \
         -DCMAKE_OSX_SYSROOT="${sdk_path}" \

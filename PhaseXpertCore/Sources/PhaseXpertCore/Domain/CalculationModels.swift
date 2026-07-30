@@ -76,6 +76,12 @@ public struct PropertyValue: Codable, Equatable, Sendable {
         self.status = status
         self.message = message
     }
+
+    /// True only when a calculated property contains a finite numeric value
+    /// that can safely be presented as a result.
+    public var hasFiniteCalculatedValue: Bool {
+        status == .calculated && value?.isFinite == true
+    }
 }
 
 public enum PhaseRegion: String, Codable, Equatable, Sendable {
@@ -145,5 +151,88 @@ public struct CalculationResponse: Codable, Equatable, Sendable {
         self.solver = solver
         self.warnings = warnings
         self.isScientificResult = isScientificResult
+    }
+}
+
+/// A composition value exactly as entered by the user.
+public struct CompositionInputSnapshot: Codable, Equatable, Sendable {
+    public let component: ComponentID
+    public let value: Double
+    public let unit: CompositionUnit
+
+    public init(component: ComponentID, value: Double, unit: CompositionUnit) {
+        self.component = component
+        self.value = value
+        self.unit = unit
+    }
+}
+
+/// Immutable operating-point and composition provenance for a calculation.
+///
+/// Display values are retained alongside SI values so a saved or exported
+/// calculation never needs to reconstruct the user's original scientific input.
+public struct CalculationInputSnapshot: Codable, Equatable, Sendable {
+    public let pressureValue: Double
+    public let pressureUnit: PressureUnit
+    public let pressurePa: Double
+    public let temperatureValue: Double
+    public let temperatureUnit: TemperatureUnit
+    public let temperatureK: Double
+    public let originalComposition: [CompositionInputSnapshot]
+    public let normalizedComposition: [MixtureComponent]?
+
+    public init(
+        pressureValue: Double,
+        pressureUnit: PressureUnit,
+        pressurePa: Double,
+        temperatureValue: Double,
+        temperatureUnit: TemperatureUnit,
+        temperatureK: Double,
+        originalComposition: [CompositionInputSnapshot],
+        normalizedComposition: [MixtureComponent]? = nil
+    ) {
+        self.pressureValue = pressureValue
+        self.pressureUnit = pressureUnit
+        self.pressurePa = pressurePa
+        self.temperatureValue = temperatureValue
+        self.temperatureUnit = temperatureUnit
+        self.temperatureK = temperatureK
+        self.originalComposition = originalComposition
+        self.normalizedComposition = normalizedComposition
+    }
+}
+
+/// App identity captured at calculation time rather than read back later.
+public struct ApplicationIdentity: Codable, Equatable, Sendable {
+    public let version: String
+    public let build: String
+
+    public init(version: String, build: String) {
+        self.version = version
+        self.build = build
+    }
+}
+
+/// Complete immutable record used by results, persistence and future exports.
+///
+/// The response embeds its original model descriptor, ensuring model provenance
+/// is retained even after PhaseXpert or a provider is updated.
+public struct CalculationRecord: Codable, Equatable, Sendable, Identifiable {
+    public var id: UUID { response.calculationID }
+    public let request: CalculationRequest
+    public let input: CalculationInputSnapshot
+    public let response: CalculationResponse
+    public let application: ApplicationIdentity
+
+    public init(
+        request: CalculationRequest,
+        input: CalculationInputSnapshot,
+        response: CalculationResponse,
+        application: ApplicationIdentity
+    ) {
+        self.request = request
+        self.input = input
+        self.response = response
+        self.application = application
     }
 }
