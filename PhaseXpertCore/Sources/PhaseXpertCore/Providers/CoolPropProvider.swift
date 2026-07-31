@@ -192,7 +192,6 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Preliminary integration; no production accuracy claim.",
                 "CO₂-N₂ dynamic viscosity is unavailable pending separate validation.",
                 "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
-
             ],
             references: [
                 SourceReference(
