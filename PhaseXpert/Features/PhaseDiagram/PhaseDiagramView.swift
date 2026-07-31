@@ -149,6 +149,8 @@ private struct PhaseBoundaryChart: View {
     let response: PhaseEnvelopeResponse
 
     @State private var selectedTemperatureCelsius: Double?
+    @State private var exportedDiagramURL: URL?
+    @State private var exportErrorMessage: String?
     @State private var xVisibleLength: Double = 1
     @State private var yVisibleLength: Double = 1
     @State private var xScrollPosition: Double = 0
@@ -215,12 +217,37 @@ private struct PhaseBoundaryChart: View {
                 )
 
                 IFECard {
+                    if let exportedDiagramURL {
+                        ShareLink(
+                            item: exportedDiagramURL,
+                            preview: SharePreview(
+                                "PhaseXpert phase diagram",
+                                image: Image(systemName: "photo")
+                            )
+                        ) {
+                            Label("Share diagram image", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .accessibilityIdentifier("share-phase-diagram-image")
+                    } else if let exportErrorMessage {
+                        Label(exportErrorMessage, systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        HStack {
+                            ProgressView()
+                            Text("Preparing diagram image…")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
                         Text(record.response.model.name)
                             .font(.headline)
                         LabeledContent(
                             "Operating pressure",
-                            value: "\(number(operatingPressureBar)) bar abs"
+                            value: "\(number(operatingPressureBar)) bar(a)"
                         )
                         LabeledContent(
                             "Operating temperature",
@@ -248,7 +275,7 @@ private struct PhaseBoundaryChart: View {
                             ForEach(saturation) { sample in
                                 LineMark(
                                     x: .value("Temperature (°C)", sample.temperatureCelsius),
-                                    y: .value("Pressure (bar abs)", sample.pressureBar)
+                                    y: .value("Pressure (bar(a))", sample.pressureBar)
                                 )
                                 .foregroundStyle(by: .value("Series", "CO₂ saturation boundary"))
                                 .interpolationMethod(.linear)
@@ -257,7 +284,7 @@ private struct PhaseBoundaryChart: View {
                             if let critical {
                                 PointMark(
                                     x: .value("Temperature (°C)", critical.temperatureCelsius),
-                                    y: .value("Pressure (bar abs)", critical.pressureBar)
+                                    y: .value("Pressure (bar(a))", critical.pressureBar)
                                 )
                                 .symbolSize(70)
                                 .foregroundStyle(by: .value("Series", "Critical point"))
@@ -265,7 +292,7 @@ private struct PhaseBoundaryChart: View {
 
                             PointMark(
                                 x: .value("Temperature (°C)", operatingTemperatureCelsius),
-                                y: .value("Pressure (bar abs)", operatingPressureBar)
+                                y: .value("Pressure (bar(a))", operatingPressureBar)
                             )
                             .symbolSize(90)
                             .foregroundStyle(by: .value("Series", "Operating point"))
@@ -293,7 +320,7 @@ private struct PhaseBoundaryChart: View {
                         .chartScrollPosition(y: $yScrollPosition)
                         .chartXSelection(value: $selectedTemperatureCelsius)
                         .chartXAxisLabel("Temperature (°C)")
-                        .chartYAxisLabel("Pressure (bar abs)")
+                        .chartYAxisLabel("Pressure (bar(a))")
                         .frame(minHeight: 360)
                         .accessibilityLabel(
                             "Pure carbon dioxide saturation boundary with critical point and operating point"
@@ -307,7 +334,7 @@ private struct PhaseBoundaryChart: View {
                             )
                             LabeledContent(
                                 "Selected saturation pressure",
-                                value: "\(number(selectedSample.pressureBar)) bar abs"
+                                value: "\(number(selectedSample.pressureBar)) bar(a)"
                             )
                         }
                     }
@@ -358,6 +385,18 @@ private struct PhaseBoundaryChart: View {
             .padding(IFESpacing.medium)
         }
         .onAppear(perform: resetViewport)
+        .task(id: response.requestID) {
+            do {
+                exportedDiagramURL = try PhaseDiagramImageExporter().writeTemporaryPNG(
+                    for: record,
+                    response: response
+                )
+                exportErrorMessage = nil
+            } catch {
+                exportedDiagramURL = nil
+                exportErrorMessage = error.localizedDescription
+            }
+        }
         .onChange(of: response.requestID) { _, _ in resetViewport() }
         .accessibilityIdentifier("phase-diagram-available")
     }
