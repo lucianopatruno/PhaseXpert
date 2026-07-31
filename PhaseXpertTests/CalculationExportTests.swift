@@ -3,6 +3,7 @@ import PhaseXpertCore
 import XCTest
 @testable import PhaseXpert
 
+@MainActor
 final class CalculationExportTests: XCTestCase {
     private let fixedDate = Date(timeIntervalSince1970: 1_800_000_000.125)
     private let caseID = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
