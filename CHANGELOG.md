@@ -47,3 +47,8 @@
   rule or fallback coefficients.
 - Added binary rejection, malformed-output, provider-applicability and response
   serialization tests plus an independent experimental validation plan.
+
+- Added export of the real provider-calculated pure CO₂ phase diagram as PNG.
+- Added the calculated phase diagram and searchable phase-boundary provenance to PDF reports when the saved provider versions match the installed provider.
+- Made the calculator shield open scientific traceability, aligned pressure and temperature inputs with composition fields, and added keyboard previous/next navigation.
+- Added a persisted light/dark appearance toggle, selected CoolProp by default, and standardized absolute-pressure labels as `bar(a)`.
