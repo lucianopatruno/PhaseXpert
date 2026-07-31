@@ -31,6 +31,17 @@ final class PhaseXpertTests: XCTestCase {
         )
     }
 
+    @MainActor
+    func testNewImpurityStartsEmptyAndReturnsItsFocusIdentity() {
+        let viewModel = CalculatorViewModel()
+
+        let addedID = viewModel.addImpurity()
+
+        XCTAssertEqual(viewModel.composition.count, 2)
+        XCTAssertEqual(viewModel.composition.last?.id, addedID)
+        XCTAssertEqual(viewModel.composition.last?.molPercent, "")
+    }
+
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
         #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
         .preliminary
