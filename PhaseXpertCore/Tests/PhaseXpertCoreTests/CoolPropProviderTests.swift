@@ -145,6 +145,39 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertEqual(rejected.first?.severity, .error)
     }
 
+    func testBinaryCompositionIsNotImplicitlyNormalized() async {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.94995),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.05)
+        ]
+        let issues = provider.applicabilityIssues(for: composition)
+
+        XCTAssertEqual(issues.map(\.code), [.compositionTotal])
+
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: composition,
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+        do {
+            _ = try await provider.calculate(request)
+            XCTFail("The provider must not silently normalize binary input.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .invalidRequest(
+                    "CO₂-N₂ mole fractions must sum to 100 mol% without implicit normalization."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testNitrogenAboveSpikeCapIsRejected() async {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = CalculationRequest(
