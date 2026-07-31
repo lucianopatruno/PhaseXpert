@@ -68,6 +68,67 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testComparisonComputesDifferencesInDisplayedEngineeringUnits() async throws {
+        let reference = try await makeComparisonRecord(
+            pressureBar: 150,
+            temperatureCelsius: 20,
+            density: 900,
+            viscosityPascalSeconds: 0.00009
+        )
+        let compared = try await makeComparisonRecord(
+            pressureBar: 120,
+            temperatureCelsius: -20,
+            density: 1_000,
+            viscosityPascalSeconds: 0.00012
+        )
+
+        let comparison = CalculationComparison(
+            reference: reference,
+            compared: compared
+        )
+        let density = try XCTUnwrap(
+            comparison.properties.first { $0.id == .density }
+        )
+        let viscosity = try XCTUnwrap(
+            comparison.properties.first { $0.id == .dynamicViscosity }
+        )
+
+        XCTAssertEqual(comparison.pressureDifferenceBar, -30, accuracy: 1e-12)
+        XCTAssertEqual(comparison.temperatureDifferenceCelsius, -40, accuracy: 1e-12)
+        XCTAssertEqual(try XCTUnwrap(density.difference), 100, accuracy: 1e-12)
+        XCTAssertEqual(density.displayUnit, "kg/m³")
+        XCTAssertEqual(try XCTUnwrap(viscosity.difference), 0.03, accuracy: 1e-12)
+        XCTAssertEqual(viscosity.displayUnit, "mPa·s")
+    }
+
+    @MainActor
+    func testComparisonDoesNotCreateDifferenceForUnavailableValue() async throws {
+        let reference = try await makeComparisonRecord(
+            pressureBar: 150,
+            temperatureCelsius: 20,
+            density: 900,
+            viscosityPascalSeconds: 0.00009
+        )
+        let compared = try await makeComparisonRecord(
+            pressureBar: 150,
+            temperatureCelsius: 20,
+            density: nil,
+            viscosityPascalSeconds: 0.00009
+        )
+
+        let comparison = CalculationComparison(
+            reference: reference,
+            compared: compared
+        )
+        let density = try XCTUnwrap(
+            comparison.properties.first { $0.id == .density }
+        )
+
+        XCTAssertNil(density.difference)
+        XCTAssertTrue(comparison.nonComparableProperties.contains(density))
+    }
+
+    @MainActor
     private func makeRecord() async throws -> CalculationRecord {
         let provider = ArchitectureDemoProvider()
         let request = CalculationRequest(
@@ -94,6 +155,62 @@ final class PhaseXpertTests: XCTestCase {
             ),
             response: response,
             application: .init(version: "1.0", build: "1")
+        )
+    }
+
+    @MainActor
+    private func makeComparisonRecord(
+        pressureBar: Double,
+        temperatureCelsius: Double,
+        density: Double?,
+        viscosityPascalSeconds: Double
+    ) async throws -> CalculationRecord {
+        let base = try await makeRecord()
+        let request = CalculationRequest(
+            modelID: base.response.model.id,
+            pressurePa: pressureBar * 100_000,
+            temperatureK: temperatureCelsius + 273.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            requestedProperties: [.density, .dynamicViscosity],
+            clientVersion: "test"
+        )
+        let response = CalculationResponse(
+            requestID: request.requestID,
+            model: base.response.model,
+            phase: .dense,
+            properties: [
+                PropertyValue(
+                    property: .density,
+                    value: density,
+                    unit: "kg/m³",
+                    status: density == nil ? .unavailable : .calculated
+                ),
+                PropertyValue(
+                    property: .dynamicViscosity,
+                    value: viscosityPascalSeconds,
+                    unit: "Pa·s",
+                    status: .calculated
+                )
+            ],
+            solver: base.response.solver,
+            warnings: [],
+            isScientificResult: false
+        )
+        return CalculationRecord(
+            request: request,
+            input: CalculationInputSnapshot(
+                pressureValue: pressureBar,
+                pressureUnit: .bara,
+                pressurePa: request.pressurePa,
+                temperatureValue: temperatureCelsius,
+                temperatureUnit: .celsius,
+                temperatureK: request.temperatureK,
+                originalComposition: [
+                    .init(component: .carbonDioxide, value: 100, unit: .molePercent)
+                ]
+            ),
+            response: response,
+            application: base.application
         )
     }
 }
