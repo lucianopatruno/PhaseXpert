@@ -56,6 +56,8 @@ swift test
 - immutable results with concise and expert scientific traceability views
 - versioned, local-only SwiftData saved cases with search, sorting, metadata
   editing, duplication, confirmed deletion and edit/rerun
+- pairwise saved-case comparison for operating points, composition, model
+  snapshots, phase and compatible property values
 - versioned future IFE API data-transfer contract
 - core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
@@ -102,7 +104,9 @@ Certificate validation must never be bypassed.
 See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
 - CoolProp calculations are preliminary and pure-CO₂ only;
-- phase-envelope plotting, comparison and export are placeholders;
+- phase-envelope plotting and export are placeholders;
+- comparison is currently pairwise and reports numerical differences, not
+  model accuracy;
 - saved cases are local-only and do not sync between devices;
 - impurity-specific validated limits are not established;
 - an App Store icon has not been approved or supplied.
