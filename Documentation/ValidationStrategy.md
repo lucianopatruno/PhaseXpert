@@ -59,6 +59,9 @@ a tolerance justified from that reference's uncertainty or precision.
 
 ## CO₂-N₂ spike validation plan
 
+The executable evidence schema, review gate and selected source route are
+documented in [CO2N2DensityValidation.md](CO2N2DensityValidation.md).
+
 The current binary implementation is a software-integration spike, not a
 validated property model. Its 10 mol% N₂ cap limits first-release testing and
 must not be described as an accuracy range.
