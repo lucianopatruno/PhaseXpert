@@ -62,7 +62,7 @@ final class PhaseDiagramViewModel {
         guard let providerError = error as? ProviderError else {
             return "The phase-boundary calculation failed unexpectedly."
         }
-        switch providerError {
+        return switch providerError {
         case let .modelUnavailable(message),
              let .invalidRequest(message),
              let .malformedResponse(message):
