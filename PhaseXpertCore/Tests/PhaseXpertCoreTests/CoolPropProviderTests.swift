@@ -134,12 +134,17 @@ final class CoolPropProviderTests: XCTestCase {
             .init(component: .carbonDioxide, moleFraction: 0.95),
             .init(component: .nitrogen, moleFraction: 0.05)
         ])
+        let boundary = provider.applicabilityIssues(for: [
+            .init(component: .carbonDioxide, moleFraction: 0.90),
+            .init(component: .nitrogen, moleFraction: 0.10)
+        ])
         let rejected = provider.applicabilityIssues(for: [
-            .init(component: .carbonDioxide, moleFraction: 0.89),
-            .init(component: .nitrogen, moleFraction: 0.11)
+            .init(component: .carbonDioxide, moleFraction: 0.899999),
+            .init(component: .nitrogen, moleFraction: 0.100001)
         ])
 
         XCTAssertTrue(accepted.isEmpty)
+        XCTAssertTrue(boundary.isEmpty)
         XCTAssertEqual(rejected.count, 1)
         XCTAssertEqual(rejected.first?.code, .componentOutsideModelRange)
         XCTAssertEqual(rejected.first?.severity, .error)
