@@ -18,9 +18,10 @@ The approved spike is therefore restricted:
 - licence texts, notices, binary architecture and App Store packaging are
   reviewed before distribution.
 
-The pure-CO₂ provider boundary, native C bridge and reproducible build script
-are included. The generated CoolProp binary is intentionally not committed;
-when built at the documented local path it is linked conditionally for iOS.
+The pure-CO₂ provider, restricted CO₂-N₂ path, native C bridge and reproducible
+build script are included. The generated CoolProp binary is intentionally not
+committed; when built at the documented local path it is linked conditionally
+for iOS.
 
 ## Alternatives considered
 
@@ -49,9 +50,10 @@ engineering scope for test planning, not a validated model-accuracy statement.
 | Dense-phase pipeline | 0 to 50 °C | 70 to 300 bar abs |
 | Capture/compression | 0 to 150 °C | 0.8 to 300 bar abs |
 
-The first validation target is 90–100 mol% CO₂, at most 10 mol% total
-impurities and at most 20 impurity entries. Component-specific maxima are not
-yet defined and must come from source data and model validation.
+The current executable mixture spike accepts 90–100 mol% CO₂ with N₂ as the
+only impurity and applies a temporary maximum of 10 mol% N₂. This cap is a
+software-integration boundary, not a validated accuracy statement. Other
+component-specific maxima must come from source data and model validation.
 
 Candidate identifiers currently scaffolded are CO₂, N₂, O₂, Ar, H₂O, CH₄, H₂,
 CO, H₂S, He, ethane and propane. This is not a claim of calculation support.
@@ -103,6 +105,26 @@ The result remains preliminary and validation-pending. Independent
 saturation-pressure reference cases have not yet been accepted, so the curve
 must not be used for engineering, safety, commercial or regulatory decisions.
 Mixtures and the unavailable IFE provider return no boundary.
+
+### Implemented restricted CO₂-N₂ calculation
+
+Provider version 0.4.0 admits exactly two executable composition families:
+
+- 100 mol% CO₂, retaining the existing density, viscosity and saturation path;
+- a binary CO₂-N₂ mixture with CO₂ uniquely largest and
+  `0 < x(N₂) <= 0.10`, returning density and provider phase only.
+
+The binary calculation uses CoolProp HEOS and only the CO₂-N₂ interaction data
+shipped with the pinned CoolProp 8.0.0 release. PhaseXpert supplies explicit
+mole fractions and never enables CoolProp's estimated simple mixing rules or
+overwrites pair parameters. If the pair data is unavailable or calculation
+fails, the request fails; there is no fallback correlation.
+
+Mixture dynamic viscosity and mixture phase envelopes are deliberately
+unavailable. All binary results carry validation-pending warnings, the exact
+model/library version and the numerical method. The implementation has
+contract and serialization tests but no independently sourced numeric
+acceptance cases yet; see `ValidationStrategy.md`.
 
 CoolProp 8.0.0 identifies Span and Wagner (1996), DOI
 `10.1063/1.555991`, as the equation-of-state reference for its carbon-dioxide
