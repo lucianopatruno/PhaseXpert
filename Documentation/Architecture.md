@@ -17,8 +17,8 @@ flowchart TD
     State --> Export["CSV / JSON / PDF export"]
 ```
 
-Only the first four boxes are scaffolded in this milestone. Persistence and
-export remain explicit extension points.
+The calculator, provider registry and local saved-case store are implemented.
+Export remains an explicit extension point.
 
 ## Concurrency
 
@@ -81,12 +81,17 @@ PhaseXpert/
 
 ## Persistence plan
 
-Use SwiftData with an explicit schema version. Persist a case definition and
-an immutable calculation snapshot separately. Store enums and provider payloads
-using stable string identifiers; do not persist Swift type names. Before the
-first schema ships, add migration tests for at least one synthetic prior
-schema. Remote calculations are opt-in and the request preview must disclose
-exactly what leaves the device.
+SwiftData uses `PhaseXpertSchemaV1` and `PhaseXpertMigrationPlan` from the first
+stored release. `SavedCalculation` keeps searchable, sortable index fields and
+an encoded immutable `CalculationRecord`. The payload has its own format
+version so unsupported future payloads fail visibly instead of being
+misinterpreted.
+
+Duplicate and metadata-edit operations do not change the embedded calculation.
+“Edit inputs and rerun” loads the recorded SI operating point and calculated
+composition into the calculator, uses the currently installed provider, and
+creates a new result without overwriting the original. The store is local-only:
+CloudKit is disabled and no saved-case data leaves the device.
 
 ## Design system
 
