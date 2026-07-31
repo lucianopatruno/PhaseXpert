@@ -15,10 +15,16 @@ enum AppTab: Hashable {
 final class AppNavigationState {
     var selectedTab: AppTab = .calculator
     var pendingCalculationRecord: CalculationRecord?
+    var latestCalculationRecord: CalculationRecord?
 
     func editAndRerun(_ record: CalculationRecord) {
         pendingCalculationRecord = record
         selectedTab = .calculator
+    }
+
+    func showPhaseDiagram(for record: CalculationRecord) {
+        latestCalculationRecord = record
+        selectedTab = .phaseDiagram
     }
 }
 

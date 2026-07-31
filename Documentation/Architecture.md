@@ -17,8 +17,9 @@ flowchart TD
     State --> Export["CSV / JSON / PDF export"]
 ```
 
-The calculator, provider registry and local saved-case store are implemented.
-Export remains an explicit extension point.
+The calculator, provider registry, local saved-case store and preliminary
+pure-CO₂ phase diagram are implemented. Export remains an explicit extension
+point.
 
 ## Concurrency
 
@@ -41,6 +42,26 @@ UI state is main-actor isolated.
    values, SI values, normalization history, app build and embedded provider
    descriptor. Results, persistence and exports consume this immutable record
    rather than querying the current provider registry for historical metadata.
+7. A successful current calculation can request a provider-owned phase
+   boundary. The phase-diagram feature receives only `PhaseEnvelopeResponse`
+   points and never calls CoolProp or performs equilibrium calculations in a
+   SwiftUI view.
+
+## Phase diagram
+
+`PhaseDiagramViewModel` is main-actor isolated and resolves the provider using
+the immutable latest calculation record. `CoolPropProvider` accepts only pure
+CO₂ for this operation. It samples the HEOS saturation boundary away from the
+triple and critical singular endpoints, validates every point and appends the
+critical point returned by CoolProp rather than estimating it from the plotted
+curve.
+
+The provider owns a per-instance actor cache keyed by CoolProp version and
+sampling configuration. A cached response receives the new request identifier,
+so traceability is not confused between UI requests. The view plots the
+provider response with Swift Charts, uses straight segments between calculated
+points and shows no curve when the provider reports unavailable or malformed
+data.
 
 ## Result traceability
 

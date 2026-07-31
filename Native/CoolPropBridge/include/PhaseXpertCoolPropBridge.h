@@ -23,11 +23,32 @@ typedef struct PXCoolPropResult {
     PXCoolPropPhase phase;
 } PXCoolPropResult;
 
+typedef struct PXCoolPropSaturationLimits {
+    double triple_temperature_k;
+    double critical_temperature_k;
+    double critical_pressure_pa;
+} PXCoolPropSaturationLimits;
+
 /// Returns zero on success. On failure, writes a diagnostic to `error_buffer`.
 int px_coolprop_calculate_pure_co2(
     double pressure_pa,
     double temperature_k,
     PXCoolPropResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Returns the pure-CO2 saturation temperature limits and critical pressure.
+int px_coolprop_pure_co2_saturation_limits(
+    PXCoolPropSaturationLimits *limits,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Returns pure-CO2 saturation pressure at temperature using HEOS and Q=0.
+int px_coolprop_pure_co2_saturation_pressure(
+    double temperature_k,
+    double *pressure_pa,
     char *error_buffer,
     size_t error_buffer_size
 );

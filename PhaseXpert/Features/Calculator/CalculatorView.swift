@@ -147,7 +147,12 @@ struct CalculatorView: View {
 
                 Section {
                     Button {
-                        Task { await viewModel.calculate() }
+                        Task {
+                            await viewModel.calculate()
+                            if let record = viewModel.calculationRecord {
+                                navigationState.latestCalculationRecord = record
+                            }
+                        }
                     } label: {
                         if viewModel.isCalculating {
                             ProgressView()
@@ -166,6 +171,11 @@ struct CalculatorView: View {
                     CalculationResultSections(record: record)
 
                     Section {
+                        Button("View phase diagram", systemImage: "chart.xyaxis.line") {
+                            navigationState.showPhaseDiagram(for: record)
+                        }
+                        .accessibilityIdentifier("view-phase-diagram")
+
                         Button("Save case", systemImage: "square.and.arrow.down") {
                             recordToSave = record
                         }

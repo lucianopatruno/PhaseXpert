@@ -19,7 +19,8 @@ The approved spike is therefore restricted:
   reviewed before distribution.
 
 The pure-CO₂ provider boundary, native C bridge and reproducible build script
-are included. No CoolProp source or binary is committed or linked yet.
+are included. The generated CoolProp binary is intentionally not committed;
+when built at the documented local path it is linked conditionally for iOS.
 
 ## Alternatives considered
 
@@ -81,3 +82,30 @@ capabilities rather than joining curves cosmetically.
 The UI will use Swift Charts for the resulting provider points and an overlay
 gesture for pan/zoom and point inspection. If the provider returns no envelope,
 the chart stays unavailable. No decorative curve is permitted.
+
+### Implemented preliminary pure-CO₂ boundary
+
+The CoolProp provider now exposes a narrower pure-fluid operation. For exactly
+100 mol% CO₂, it obtains triple-point temperature, critical temperature and
+critical pressure from the linked CoolProp release, then evaluates saturation
+pressure with `PropsSI(P,T,Q=0)` at ordered temperatures strictly inside those
+limits. For a pure fluid, the bubble and dew pressures coincide; PhaseXpert
+therefore plots one **pure CO₂ saturation boundary**, not two visually separate
+branches and not an enclosed mixture phase envelope.
+
+Every returned temperature and pressure must be finite and positive, and
+pressure must increase with the sampled temperature. Any failed, non-finite or
+non-monotonic point rejects the complete curve so the UI cannot connect across
+a numerical gap. The critical point is a separate provider value. Straight
+line segments between calculated points are a display operation only.
+
+The result remains preliminary and validation-pending. Independent
+saturation-pressure reference cases have not yet been accepted, so the curve
+must not be used for engineering, safety, commercial or regulatory decisions.
+Mixtures and the unavailable IFE provider return no boundary.
+
+CoolProp 8.0.0 identifies Span and Wagner (1996), DOI
+`10.1063/1.555991`, as the equation-of-state reference for its carbon-dioxide
+fluid implementation. PhaseXpert records that source with the provider
+metadata; citing the formulation does not constitute independent validation of
+the compiled implementation.

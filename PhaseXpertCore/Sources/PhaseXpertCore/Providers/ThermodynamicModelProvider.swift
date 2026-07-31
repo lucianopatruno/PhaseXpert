@@ -109,21 +109,38 @@ public struct PhaseEnvelopePoint: Codable, Equatable, Sendable {
 }
 
 public struct PhaseEnvelopeResponse: Codable, Equatable, Sendable {
+    public enum BoundaryKind: String, Codable, Equatable, Sendable {
+        case pureFluidSaturation
+        case mixtureEnvelope
+    }
+
     public let requestID: UUID
     public let points: [PhaseEnvelopePoint]
     public let warnings: [String]
     public let isAvailable: Bool
+    public let boundaryKind: BoundaryKind?
+    public let model: ModelDescriptor?
+    public let generatedAt: Date?
+    public let solver: SolverMetadata?
 
     public init(
         requestID: UUID,
         points: [PhaseEnvelopePoint],
         warnings: [String],
-        isAvailable: Bool
+        isAvailable: Bool,
+        boundaryKind: BoundaryKind? = nil,
+        model: ModelDescriptor? = nil,
+        generatedAt: Date? = nil,
+        solver: SolverMetadata? = nil
     ) {
         self.requestID = requestID
         self.points = points
         self.warnings = warnings
         self.isAvailable = isAvailable
+        self.boundaryKind = boundaryKind
+        self.model = model
+        self.generatedAt = generatedAt
+        self.solver = solver
     }
 }
 
