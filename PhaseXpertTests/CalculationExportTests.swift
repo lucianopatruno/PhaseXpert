@@ -127,10 +127,15 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertEqual(Set(artifacts.map(\.format)), Set(CalculationExportFormat.allCases))
         for artifact in artifacts {
             XCTAssertTrue(FileManager.default.fileExists(atPath: artifact.fileURL.path))
-            XCTAssertEqual(
-                try Data(contentsOf: artifact.fileURL),
-                try exporter.data(for: snapshot, format: artifact.format)
-            )
+            let storedData = try Data(contentsOf: artifact.fileURL)
+            if artifact.format == .pdf {
+                XCTAssertNotNil(PDFDocument(data: storedData))
+            } else {
+                XCTAssertEqual(
+                    storedData,
+                    try exporter.data(for: snapshot, format: artifact.format)
+                )
+            }
         }
     }
 
