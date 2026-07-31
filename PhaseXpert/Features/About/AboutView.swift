@@ -31,7 +31,7 @@ struct AboutView: View {
 
                     ScientificStatusBanner(
                         title: "Development build",
-                        message: "No validated thermodynamic engine is included in this milestone. Do not use demonstration output for engineering, safety, commercial, or regulatory decisions."
+                        message: "CoolProp HEOS is included as a preliminary provider with incomplete PhaseXpert validation. Do not use preliminary output for engineering, safety, commercial, or regulatory decisions."
                     )
 
                     IFECard {
