@@ -771,7 +771,7 @@ private struct SavedCaseDetailView: View {
                         modelContext.insert(savedCase.duplicate())
                         saveContext()
                     }
-                    Button("Export JSON or CSV", systemImage: "square.and.arrow.up") {
+                    Button("Export case", systemImage: "square.and.arrow.up") {
                         isExporting = true
                     }
                     .disabled(savedCase.calculationRecord == nil)
