@@ -299,24 +299,24 @@ public struct DensityValidationEvaluator: Sendable {
             throw DensityValidationError.invalidPoint(point.id)
         }
 
-        let active = point.composition.filter {
-            $0.moleFraction > Self.compositionTolerance
-        }
         guard
-            active.count == 2,
-            let carbonDioxide = active.first(where: {
+            point.composition.count == 2,
+            point.composition.allSatisfy({
+                $0.moleFraction.isFinite && $0.moleFraction >= 0
+            }),
+            Set(point.composition.map(\.component))
+                == Set([ComponentID.carbonDioxide, .nitrogen]),
+            let carbonDioxide = point.composition.first(where: {
                 $0.component == .carbonDioxide
             }),
-            let nitrogen = active.first(where: {
+            let nitrogen = point.composition.first(where: {
                 $0.component == .nitrogen
-            }),
-            active.allSatisfy({
-                $0.moleFraction.isFinite && $0.moleFraction >= 0
             }),
             abs(
                 carbonDioxide.moleFraction + nitrogen.moleFraction - 1
             ) <= Self.compositionTolerance,
             carbonDioxide.moleFraction > nitrogen.moleFraction,
+            nitrogen.moleFraction > Self.compositionTolerance,
             nitrogen.moleFraction <= Self.maximumNitrogenMoleFraction
         else {
             throw DensityValidationError.unsupportedComposition(point.id)
@@ -325,10 +325,10 @@ public struct DensityValidationEvaluator: Sendable {
 
     private func uncertaintyIsValid(_ uncertainty: DensityUncertainty) -> Bool {
         let absoluteIsValid = uncertainty.absoluteKilogramsPerCubicMetre.map {
-            $0.isFinite && $0 >= 0
+            $0.isFinite && $0 > 0
         } ?? false
         let relativeIsValid = uncertainty.relativeFraction.map {
-            $0.isFinite && $0 >= 0
+            $0.isFinite && $0 > 0
         } ?? false
         let coverageIsValid = uncertainty.coverageFactor.map {
             $0.isFinite && $0 > 0
