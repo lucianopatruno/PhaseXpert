@@ -29,7 +29,7 @@ struct SavedCaseExportView: View {
                     )
                 }
 
-                Section("Formats") {
+                Section {
                     if isPreparing {
                         HStack {
                             ProgressView()
@@ -64,6 +64,8 @@ struct SavedCaseExportView: View {
                             )
                         }
                     }
+                } header: {
+                    Text("Formats")
                 } footer: {
                     Text("JSON retains the complete versioned calculation record. CSV provides a long-form table suitable for review in spreadsheet and data-analysis software.")
                 }
