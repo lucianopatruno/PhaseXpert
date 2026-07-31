@@ -282,7 +282,7 @@ struct CalculatorView: View {
                 ? "Workflow demonstration only. No thermophysical values are calculated."
                 : "Review the model domain and limitations before calculating."
         case .preliminary:
-            "Pure CO₂ density and dynamic viscosity only. Validation remains incomplete; do not use results for engineering decisions."
+            "Pure CO₂: density and viscosity. CO₂-N₂ up to 10 mol% N₂: density and phase only. Validation remains incomplete; do not use results for engineering decisions."
         case .unavailable:
             "This provider cannot perform calculations in the current build."
         }

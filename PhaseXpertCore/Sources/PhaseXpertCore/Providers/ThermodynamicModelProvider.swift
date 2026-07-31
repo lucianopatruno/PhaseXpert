@@ -146,8 +146,19 @@ public struct PhaseEnvelopeResponse: Codable, Equatable, Sendable {
 
 public protocol ThermodynamicModelProvider: Sendable {
     var descriptor: ModelDescriptor { get }
+    func applicabilityIssues(for composition: [MixtureComponent]) -> [ValidationIssue]
     func calculate(_ request: CalculationRequest) async throws -> CalculationResponse
     func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse
+}
+
+public extension ThermodynamicModelProvider {
+    /// Provider-specific applicability checks that supplement shared input validation.
+    ///
+    /// Providers should report documented composition restrictions here so the
+    /// calculator can block an unsupported request before model execution.
+    func applicabilityIssues(for composition: [MixtureComponent]) -> [ValidationIssue] {
+        []
+    }
 }
 
 public enum ProviderError: Error, Equatable, Sendable {

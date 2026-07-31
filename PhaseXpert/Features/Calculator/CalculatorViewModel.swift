@@ -76,17 +76,24 @@ final class CalculatorViewModel {
             return
         }
 
+        let requestedComposition = domainComposition()
         let supportedComponents = descriptor.availability == .unavailable
-            ? Set(domainComposition().map(\.component))
+            ? Set(requestedComposition.map(\.component))
             : descriptor.supportedComponents
         let coreReport = validator.validate(
             pressurePa: PressureUnit.bar.toPascal(pressure),
             temperatureK: TemperatureUnit.celsius.toKelvin(temperature),
-            composition: domainComposition(),
+            composition: requestedComposition,
             supportedComponents: supportedComponents,
             domain: descriptor.domain
         )
         var issues = coreReport.issues
+        if
+            descriptor.availability != .unavailable,
+            let provider = registry.provider(id: selectedModelID)
+        {
+            issues.append(contentsOf: provider.applicabilityIssues(for: requestedComposition))
+        }
         if descriptor.availability == .unavailable {
             issues.insert(
                 .init(
