@@ -4,6 +4,7 @@ import PhaseXpertCore
 enum CalculationExportFormat: String, CaseIterable, Hashable, Identifiable, Sendable {
     case json
     case csv
+    case pdf
 
     var id: String { rawValue }
 
@@ -11,6 +12,7 @@ enum CalculationExportFormat: String, CaseIterable, Hashable, Identifiable, Send
         switch self {
         case .json: "JSON"
         case .csv: "CSV"
+        case .pdf: "PDF Report"
         }
     }
 
@@ -62,6 +64,7 @@ enum CalculationExportError: LocalizedError, Equatable {
     case nonFiniteValue(String)
     case textEncodingFailed
     case noStoredCalculation
+    case pdfRenderingFailed(String)
 
     var errorDescription: String? {
         switch self {
@@ -71,6 +74,8 @@ enum CalculationExportError: LocalizedError, Equatable {
             "PhaseXpert could not encode the export as UTF-8."
         case .noStoredCalculation:
             "The stored calculation record could not be decoded, so no export was created."
+        case let .pdfRenderingFailed(message):
+            message
         }
     }
 }
