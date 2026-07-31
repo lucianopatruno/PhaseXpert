@@ -15,6 +15,7 @@ final class PhaseXpertTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testSavedCaseDefaultNameIncludesActiveMixtureComposition() {
         XCTAssertEqual(
             SavedCaseNameFormatter.compositionLabel(for: [
