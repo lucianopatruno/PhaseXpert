@@ -74,10 +74,16 @@ final class CalculationExportTests: XCTestCase {
         let document = try XCTUnwrap(PDFDocument(data: data))
 
         XCTAssertGreaterThan(document.pageCount, 1)
+        let finalPageText = try XCTUnwrap(
+            document.page(at: document.pageCount - 1)?.string
+        )
+        let normalizedFinalPageText = finalPageText
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+
         XCTAssertTrue(
-            document.page(at: document.pageCount - 1)?
-                .string?
-                .contains("Independent engineering review") == true
+            normalizedFinalPageText.contains("Independent engineering review"),
+            "The final PDF page must retain the complete intended-use disclaimer."
         )
     }
 
