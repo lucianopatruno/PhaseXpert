@@ -16,3 +16,10 @@
   bar absolute and °C while retaining SI internally.
 - Added the restricted pure-CO₂ CoolProp provider, testable engine seam,
   native C++ bridge, MIT notice and reproducible XCFramework build tooling.
+- Added preliminary result presentation with immutable scientific traceability.
+- Added published pure-CO₂ reference checks and Release-optimized CoolProp
+  builds, reducing the measured simulator cold calculation from about 70
+  seconds to about 1.6 seconds on the test Mac.
+- Added versioned, local-only SwiftData saved cases with search, sorting,
+  metadata editing, duplication, deletion confirmation and edit/rerun.
+- Added persistence round-trip and provenance-preservation tests.

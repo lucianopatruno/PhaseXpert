@@ -116,6 +116,25 @@ final class CalculatorViewModel {
         validate()
     }
 
+    func loadInputs(from record: CalculationRecord) {
+        pressureText = String(format: "%.8g", record.input.pressurePa / 100_000)
+        temperatureText = String(format: "%.8g", record.input.temperatureK - 273.15)
+        if registry.provider(id: record.request.modelID) != nil {
+            selectedModelID = record.request.modelID
+        }
+        composition = record.request.composition.map {
+            CompositionInput(
+                component: $0.component,
+                molPercent: String(format: "%.8g", $0.moleFraction * 100)
+            )
+        }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
+        validate()
+    }
+
     func calculate() async {
         validate()
         guard validationReport.canCalculate else { return }

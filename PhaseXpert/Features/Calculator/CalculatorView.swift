@@ -1,4 +1,5 @@
 import PhaseXpertCore
+import SwiftData
 import SwiftUI
 
 struct CalculatorView: View {
@@ -10,6 +11,11 @@ struct CalculatorView: View {
 
     @State private var viewModel = CalculatorViewModel()
     @FocusState private var focusedField: InputField?
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppNavigationState.self) private var navigationState
+    @State private var recordToSave: CalculationRecord?
+    @State private var saveConfirmation: String?
+    @State private var saveError: String?
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -158,6 +164,13 @@ struct CalculatorView: View {
 
                 if let record = viewModel.calculationRecord {
                     CalculationResultSections(record: record)
+
+                    Section {
+                        Button("Save case", systemImage: "square.and.arrow.down") {
+                            recordToSave = record
+                        }
+                        .accessibilityIdentifier("save-calculation")
+                    }
                 }
 
                 if let error = viewModel.calculationError {
@@ -170,7 +183,13 @@ struct CalculatorView: View {
             .scrollContentBackground(.hidden)
             .background(Color.ifeBackground)
             .navigationTitle("PhaseXpert")
-            .onAppear { viewModel.validate() }
+            .onAppear {
+                viewModel.validate()
+                loadPendingSavedCase()
+            }
+            .onChange(of: navigationState.pendingCalculationRecord?.id) { _, _ in
+                loadPendingSavedCase()
+            }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
             .onSubmit { viewModel.validate() }
             .toolbar {
@@ -189,6 +208,52 @@ struct CalculatorView: View {
                     .fontWeight(.semibold)
                 }
             }
+            .sheet(item: $recordToSave) { record in
+                SaveCalculationSheet(record: record) { name, notes in
+                    save(record: record, name: name, notes: notes)
+                }
+            }
+            .alert(
+                "Case saved",
+                isPresented: Binding(
+                    get: { saveConfirmation != nil },
+                    set: { if !$0 { saveConfirmation = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveConfirmation ?? "")
+            }
+            .alert(
+                "Unable to save case",
+                isPresented: Binding(
+                    get: { saveError != nil },
+                    set: { if !$0 { saveError = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveError ?? "")
+            }
+        }
+    }
+
+    private func loadPendingSavedCase() {
+        guard let record = navigationState.pendingCalculationRecord else { return }
+        viewModel.loadInputs(from: record)
+        navigationState.pendingCalculationRecord = nil
+    }
+
+    private func save(record: CalculationRecord, name: String, notes: String) {
+        do {
+            let savedCase = try SavedCalculation(name: name, notes: notes, record: record)
+            modelContext.insert(savedCase)
+            try modelContext.save()
+            recordToSave = nil
+            saveConfirmation = "\(savedCase.name) is available in Saved Cases."
+        } catch {
+            modelContext.rollback()
+            saveError = error.localizedDescription
         }
     }
 
@@ -214,7 +279,7 @@ struct CalculatorView: View {
     }
 }
 
-private struct CalculationResultSections: View {
+struct CalculationResultSections: View {
     let record: CalculationRecord
 
     private var calculatedProperties: [PropertyValue] {
@@ -369,6 +434,71 @@ private struct CalculationResultSections: View {
     private func number(_ value: Double) -> String {
         guard value.isFinite else { return "Invalid" }
         return value.formatted(.number.precision(.significantDigits(1...8)))
+    }
+}
+
+private struct SaveCalculationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let record: CalculationRecord
+    let onSave: (String, String) -> Void
+    @State private var name: String
+    @State private var notes = ""
+
+    init(record: CalculationRecord, onSave: @escaping (String, String) -> Void) {
+        self.record = record
+        self.onSave = onSave
+        _name = State(initialValue: Self.defaultName(for: record))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Case information") {
+                    TextField("Case name", text: $name)
+                    TextField("Description or notes", text: $notes, axis: .vertical)
+                        .lineLimit(3...8)
+                }
+
+                Section("Calculation") {
+                    LabeledContent(
+                        "Pressure",
+                        value: "\(number(record.input.pressurePa / 100_000)) bar abs"
+                    )
+                    LabeledContent(
+                        "Temperature",
+                        value: "\(number(record.input.temperatureK - 273.15)) °C"
+                    )
+                    LabeledContent("Model", value: record.response.model.name)
+                }
+            }
+            .navigationTitle("Save Calculation")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(name, notes)
+                        dismiss()
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+
+    private static func defaultName(for record: CalculationRecord) -> String {
+        let pressure = (record.input.pressurePa / 100_000)
+            .formatted(.number.precision(.significantDigits(1...6)))
+        let temperature = (record.input.temperatureK - 273.15)
+            .formatted(.number.precision(.significantDigits(1...6)))
+        return "CO₂ — \(pressure) bar, \(temperature) °C"
+    }
+
+    private func number(_ value: Double) -> String {
+        value.formatted(.number.precision(.significantDigits(1...6)))
     }
 }
 
