@@ -1,6 +1,7 @@
 import PhaseXpertCore
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct CalculatorView: View {
     private enum InputField: Hashable {
