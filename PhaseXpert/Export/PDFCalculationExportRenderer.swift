@@ -137,13 +137,8 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         )
 
         context.saveGState()
-        context.translateBy(x: rect.minX, y: rect.maxY)
-        context.scaleBy(x: 1, y: -1)
         context.interpolationQuality = .high
-        context.draw(
-            logo,
-            in: CGRect(origin: .zero, size: rect.size)
-        )
+        context.draw(logo, in: rect)
         context.restoreGState()
     }
 
