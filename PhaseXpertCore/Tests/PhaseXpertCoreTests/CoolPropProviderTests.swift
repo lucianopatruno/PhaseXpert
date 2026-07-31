@@ -10,6 +10,10 @@ final class CoolPropProviderTests: XCTestCase {
             dynamicViscosityPascalSeconds: 0.000071,
             phaseIdentifier: "supercritical_liquid"
         )
+        var binaryResult = CoolPropBinaryEngineResult(
+            densityKilogramsPerCubicMetre: 760.2,
+            phaseIdentifier: "supercritical_liquid"
+        )
         var saturationLimits = CoolPropSaturationLimits(
             triplePointTemperatureK: 216.6,
             criticalPointTemperatureK: 304.1,
@@ -24,6 +28,15 @@ final class CoolPropProviderTests: XCTestCase {
             temperatureK: Double
         ) async throws -> CoolPropEngineResult {
             result
+        }
+
+        func calculateCarbonDioxideNitrogen(
+            pressurePa: Double,
+            temperatureK: Double,
+            carbonDioxideMoleFraction: Double,
+            nitrogenMoleFraction: Double
+        ) async throws -> CoolPropBinaryEngineResult {
+            binaryResult
         }
 
         func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
@@ -77,15 +90,108 @@ final class CoolPropProviderTests: XCTestCase {
         )
     }
 
-    func testMixtureIsRejectedDuringPureCO2Spike() async {
+    func testCO2NitrogenDensityIsPreliminaryAndViscosityRemainsUnavailable() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        XCTAssertEqual(
+            provider.descriptor.supportedComponents,
+            [.carbonDioxide, .nitrogen]
+        )
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ],
+            requestedProperties: [.density, .dynamicViscosity],
+            clientVersion: "test"
+        )
+
+        let response = try await provider.calculate(request)
+
+        XCTAssertEqual(response.phase, .dense)
+        XCTAssertTrue(response.warnings.contains { $0.contains("CO₂-N₂ MIXTURE SPIKE") })
+        XCTAssertTrue(response.solver.method.contains("interaction data only"))
+        XCTAssertEqual(
+            response.properties.first { $0.property == .density }?.value,
+            760.2
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .dynamicViscosity }?.status,
+            .unavailable
+        )
+
+        let encoded = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(CalculationResponse.self, from: encoded)
+        XCTAssertEqual(decoded, response)
+    }
+
+    func testApplicabilityReportsNitrogenAboveSpikeCap() {
+        let provider = CoolPropProvider(engine: MockEngine())
+
+        let accepted = provider.applicabilityIssues(for: [
+            .init(component: .carbonDioxide, moleFraction: 0.95),
+            .init(component: .nitrogen, moleFraction: 0.05)
+        ])
+        let boundary = provider.applicabilityIssues(for: [
+            .init(component: .carbonDioxide, moleFraction: 0.90),
+            .init(component: .nitrogen, moleFraction: 0.10)
+        ])
+        let rejected = provider.applicabilityIssues(for: [
+            .init(component: .carbonDioxide, moleFraction: 0.899999),
+            .init(component: .nitrogen, moleFraction: 0.100001)
+        ])
+
+        XCTAssertTrue(accepted.isEmpty)
+        XCTAssertTrue(boundary.isEmpty)
+        XCTAssertEqual(rejected.count, 1)
+        XCTAssertEqual(rejected.first?.code, .componentOutsideModelRange)
+        XCTAssertEqual(rejected.first?.severity, .error)
+    }
+
+    func testBinaryCompositionIsNotImplicitlyNormalized() async {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.94995),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.05)
+        ]
+        let issues = provider.applicabilityIssues(for: composition)
+
+        XCTAssertEqual(issues.map(\.code), [.compositionTotal])
+
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: composition,
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+        do {
+            _ = try await provider.calculate(request)
+            XCTFail("The provider must not silently normalize binary input.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .invalidRequest(
+                    "CO₂-N₂ mole fractions must sum to 100 mol% without implicit normalization."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testNitrogenAboveSpikeCapIsRejected() async {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
             pressurePa: 15_000_000,
             temperatureK: 293.15,
             composition: [
-                .init(component: .carbonDioxide, moleFraction: 0.99),
-                .init(component: .nitrogen, moleFraction: 0.01)
+                .init(component: .carbonDioxide, moleFraction: 0.89),
+                .init(component: .nitrogen, moleFraction: 0.11)
             ],
             requestedProperties: [.density],
             clientVersion: "test"
@@ -93,18 +199,45 @@ final class CoolPropProviderTests: XCTestCase {
 
         do {
             _ = try await provider.calculate(request)
-            XCTFail("A mixture must not be accepted in the pure-CO₂ spike.")
+            XCTFail("The temporary 10 mol% N₂ cap must be enforced.")
         } catch let error as ProviderError {
             XCTAssertEqual(
                 error,
-                .invalidRequest("The CoolProp spike accepts pure CO₂ only.")
+                .invalidRequest(
+                    "The CO₂-N₂ spike is temporarily limited to at most 10 mol% N₂."
+                )
             )
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
     }
 
-    func testNonFiniteNativeResultIsRejected() async {
+    func testUnapprovedThirdComponentIsRejected() async {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.98),
+                .init(component: .nitrogen, moleFraction: 0.01),
+                .init(component: .oxygen, moleFraction: 0.01)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+
+        do {
+            _ = try await provider.calculate(request)
+            XCTFail("An unapproved binary pair must not be calculated.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(error, .unsupportedComponent(.oxygen))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testNonFinitePureDensityIsRejected() async {
         let invalidEngine = MockEngine(result: .init(
             densityKilogramsPerCubicMetre: .nan,
             dynamicViscosityPascalSeconds: 0.000071,
@@ -127,7 +260,40 @@ final class CoolPropProviderTests: XCTestCase {
             XCTAssertEqual(
                 error,
                 .malformedResponse(
-                    "CoolProp returned a non-finite or non-positive property."
+                    "CoolProp returned a non-finite or non-positive density."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testNonFiniteBinaryDensityIsRejected() async {
+        let invalidEngine = MockEngine(binaryResult: .init(
+            densityKilogramsPerCubicMetre: .infinity,
+            phaseIdentifier: "gas"
+        ))
+        let provider = CoolPropProvider(engine: invalidEngine)
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 10_000_000,
+            temperatureK: 303.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+
+        do {
+            _ = try await provider.calculate(request)
+            XCTFail("Non-finite binary output must be rejected.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .malformedResponse(
+                    "CoolProp returned a non-finite or non-positive density."
                 )
             )
         } catch {

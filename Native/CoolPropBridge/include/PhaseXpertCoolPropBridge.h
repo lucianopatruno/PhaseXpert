@@ -23,6 +23,11 @@ typedef struct PXCoolPropResult {
     PXCoolPropPhase phase;
 } PXCoolPropResult;
 
+typedef struct PXCoolPropBinaryResult {
+    double density_kg_m3;
+    PXCoolPropPhase phase;
+} PXCoolPropBinaryResult;
+
 typedef struct PXCoolPropSaturationLimits {
     double triple_temperature_k;
     double critical_temperature_k;
@@ -34,6 +39,19 @@ int px_coolprop_calculate_pure_co2(
     double pressure_pa,
     double temperature_k,
     PXCoolPropResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Calculates the restricted CO2-N2 binary state using only the interaction
+/// data shipped by the pinned CoolProp release. No estimated mixing rule is
+/// applied. Nitrogen is temporarily capped at 10 mol% for this spike.
+int px_coolprop_calculate_co2_n2(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    PXCoolPropBinaryResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

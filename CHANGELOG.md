@@ -40,3 +40,10 @@
   references, privacy text and scientific disclaimer.
 - Added PDF signature, content, filename, long-document pagination and
   all-format non-finite rejection tests.
+- Added a restricted preliminary CO₂-N₂ CoolProp spike for density and phase,
+  using only binary interaction data from the pinned library release.
+- Added a visible, blocking 10 mol% N₂ applicability cap, explicit unavailable
+  status for mixture viscosity and phase envelopes, and no estimated mixing
+  rule or fallback coefficients.
+- Added binary rejection, malformed-output, provider-applicability and response
+  serialization tests plus an independent experimental validation plan.

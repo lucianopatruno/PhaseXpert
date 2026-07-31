@@ -18,6 +18,7 @@ public enum ValidationCode: String, Codable, Equatable, Sendable {
     case pressureOutsideDomain
     case temperatureOutsideDomain
     case unsupportedComponent
+    case componentOutsideModelRange
 }
 
 public struct ValidationIssue: Codable, Equatable, Sendable, Identifiable {

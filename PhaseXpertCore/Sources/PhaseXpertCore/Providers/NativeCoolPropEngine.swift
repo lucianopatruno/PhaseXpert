@@ -47,6 +47,40 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         return result
     }
 
+    public func calculateCarbonDioxideNitrogen(
+        pressurePa: Double,
+        temperatureK: Double,
+        carbonDioxideMoleFraction: Double,
+        nitrogenMoleFraction: Double
+    ) async throws -> CoolPropBinaryEngineResult {
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXCoolPropBinaryResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_calculate_co2_n2(
+                pressurePa,
+                temperatureK,
+                carbonDioxideMoleFraction,
+                nitrogenMoleFraction,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp CO₂-N₂ calculation failed." : message
+                )
+            }
+            return CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+    }
+
     public func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
         try Task.checkCancellation()
         let limits = try await Task.detached(priority: .userInitiated) {

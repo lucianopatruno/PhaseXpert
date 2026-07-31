@@ -4,9 +4,10 @@ PhaseXpert is a native iPhone application for traceable thermophysical and
 phase-property calculations for CO₂-rich mixtures.
 
 > **Scientific status:** the optional native CoolProp 8.0.0 bridge provides
-> preliminary pure-CO₂ density, dynamic viscosity and phase results. Validation
-> is incomplete, so these results must not be used for engineering, safety,
-> commercial or regulatory decisions. The IFE Model remains unavailable.
+> preliminary pure-CO₂ density, viscosity and phase results plus a restricted
+> CO₂-N₂ density/phase spike up to 10 mol% N₂. Validation is incomplete, so
+> these results must not be used for engineering, safety, commercial or
+> regulatory decisions. The IFE Model remains unavailable.
 
 Developed by the **IFE Flow Technology Department**.
 
@@ -51,8 +52,9 @@ swift test
   pressure reference
 - composition and model-domain validation with explicit normalization
 - provider-independent request, response, metadata and phase-envelope contracts
-- a restricted pure-CO₂ CoolProp 8.0.0 provider for density, dynamic viscosity
-  and phase, an unavailable IFE provider, and a non-scientific demo provider
+- a CoolProp 8.0.0 provider for pure-CO₂ density, viscosity and phase plus a
+  restricted CO₂-N₂ density/phase spike, an unavailable IFE provider, and a
+  non-scientific demo provider
 - immutable results with concise and expert scientific traceability views
 - versioned, local-only SwiftData saved cases with search, sorting, metadata
   editing, duplication, confirmed deletion and edit/rerun
@@ -90,9 +92,10 @@ the generated artifact and must be included in distribution review. See
 
 Tests cover absolute/gauge pressure and temperature conversion, composition
 totals, explicit normalization, duplicates, CO₂ dominance, provider lookup,
-unsupported components, API serialization, selected published pure-CO₂
-reference points, persistence round trips, and searchable multipage PDF
-calculation reports. Each scientific tolerance is
+unsupported components, provider-specific N₂ limits, API and calculation
+response serialization, selected published pure-CO₂ reference points, and
+persistence round trips, and searchable multipage PDF calculation reports. Each
+scientific tolerance is
 documented with its source and purpose.
 
 This environment does not contain Xcode, so the committed project must be
@@ -109,7 +112,8 @@ Certificate validation must never be bypassed.
 
 See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
-- CoolProp calculations are preliminary and pure-CO₂ only;
+- CoolProp calculations are preliminary; CO₂-N₂ is limited to density and
+  phase with at most 10 mol% N₂ and has no independent numerical validation;
 - the phase diagram is pure CO₂ only and is not a validated mixture envelope;
 - phase-diagram image/PDF export remains a placeholder;
 - comparison is currently pairwise and reports numerical differences, not
