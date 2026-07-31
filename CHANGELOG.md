@@ -47,3 +47,8 @@
   rule or fallback coefficients.
 - Added binary rejection, malformed-output, provider-applicability and response
   serialization tests plus an independent experimental validation plan.
+- Added a versioned experimental-density reference schema and evaluator that
+  blocks unreviewed datasets, missing preapproved tolerances, unsupported
+  compositions, non-finite values and incomplete predictions.
+- Documented the NIST ThermoML ingestion route and two-person evidence gate for
+  future CO₂-N₂ density validation; no experimental numeric claim is made yet.
