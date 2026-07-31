@@ -6,7 +6,7 @@ struct CalculatorView: View {
     private enum InputField: Hashable {
         case pressure
         case temperature
-        case composition
+        case composition(UUID)
     }
 
     @State private var viewModel = CalculatorViewModel()
@@ -84,35 +84,62 @@ struct CalculatorView: View {
 
                 Section {
                     ForEach($viewModel.composition) { $entry in
-                        HStack {
+                        HStack(spacing: 10) {
                             if entry.component == .carbonDioxide {
                                 Text(entry.component.symbol)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .font(.body.weight(.medium))
+                                    .accessibilityLabel("Carbon dioxide")
                             } else {
-                                Picker("Component", selection: $entry.component) {
+                                Picker("Impurity", selection: $entry.component) {
                                     ForEach(ComponentID.allCases.filter { $0 != .carbonDioxide }) { component in
                                         Text(component.symbol).tag(component)
                                     }
                                 }
+                                .pickerStyle(.menu)
                                 .labelsHidden()
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .fixedSize(horizontal: true, vertical: false)
+                                .accessibilityLabel("Impurity component")
                             }
 
-                            TextField("mol%", text: $entry.molPercent)
+                            Spacer(minLength: 8)
+
+                            TextField("Value", text: $entry.molPercent)
                                 .keyboardType(.decimalPad)
-                                .focused($focusedField, equals: .composition)
+                                .focused($focusedField, equals: .composition(entry.id))
                                 .multilineTextAlignment(.trailing)
-                                .frame(width: 90)
+                                .frame(width: 104)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.secondary.opacity(0.08))
+                                )
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(
+                                            focusedField == .composition(entry.id)
+                                                ? Color.ifePrimary
+                                                : Color.secondary.opacity(0.22),
+                                            lineWidth: focusedField == .composition(entry.id) ? 1.5 : 1
+                                        )
+                                }
+                                .contentShape(Rectangle())
+                                .accessibilityLabel("\(entry.component.symbol) mole percent")
+
                             Text("mol%")
                                 .foregroundStyle(.secondary)
+                                .frame(width: 42, alignment: .leading)
+                                .accessibilityHidden(true)
                         }
-                        .accessibilityElement(children: .combine)
+                        .accessibilityElement(children: .contain)
                     }
                     .onDelete(perform: viewModel.removeImpurities)
                     .onMove(perform: viewModel.moveImpurities)
 
                     Button("Add impurity", systemImage: "plus") {
-                        viewModel.addImpurity()
+                        if let addedID = viewModel.addImpurity() {
+                            focusedField = .composition(addedID)
+                        }
                     }
                     .disabled(viewModel.composition.count >= 21)
                 } header: {
@@ -210,7 +237,24 @@ struct CalculatorView: View {
                 }
 
                 ToolbarItemGroup(placement: .keyboard) {
+                    Button {
+                        moveFocus(by: -1)
+                    } label: {
+                        Image(systemName: "chevron.up")
+                    }
+                    .disabled(!canMoveFocus(by: -1))
+                    .accessibilityLabel("Previous input field")
+
+                    Button {
+                        moveFocus(by: 1)
+                    } label: {
+                        Image(systemName: "chevron.down")
+                    }
+                    .disabled(!canMoveFocus(by: 1))
+                    .accessibilityLabel("Next input field")
+
                     Spacer()
+
                     Button("OK") {
                         focusedField = nil
                         viewModel.validate()
@@ -246,6 +290,32 @@ struct CalculatorView: View {
                 Text(saveError ?? "")
             }
         }
+    }
+
+    private var orderedInputFields: [InputField] {
+        [.pressure, .temperature]
+            + viewModel.composition.map { .composition($0.id) }
+    }
+
+    private func canMoveFocus(by offset: Int) -> Bool {
+        guard
+            let focusedField,
+            let index = orderedInputFields.firstIndex(of: focusedField)
+        else {
+            return false
+        }
+        return orderedInputFields.indices.contains(index + offset)
+    }
+
+    private func moveFocus(by offset: Int) {
+        guard
+            let focusedField,
+            let index = orderedInputFields.firstIndex(of: focusedField),
+            orderedInputFields.indices.contains(index + offset)
+        else {
+            return
+        }
+        self.focusedField = orderedInputFields[index + offset]
     }
 
     private func loadPendingSavedCase() {
@@ -504,11 +574,39 @@ private struct SaveCalculationSheet: View {
             .formatted(.number.precision(.significantDigits(1...6)))
         let temperature = (record.input.temperatureK - 273.15)
             .formatted(.number.precision(.significantDigits(1...6)))
-        return "CO₂ — \(pressure) bar, \(temperature) °C"
+        let composition = SavedCaseNameFormatter.compositionLabel(
+            for: record.request.composition
+        )
+        return "\(composition) — \(pressure) bar, \(temperature) °C"
     }
 
     private func number(_ value: Double) -> String {
         value.formatted(.number.precision(.significantDigits(1...6)))
+    }
+}
+
+enum SavedCaseNameFormatter {
+    static func compositionLabel(for composition: [MixtureComponent]) -> String {
+        let active = composition
+            .filter { $0.moleFraction.isFinite && $0.moleFraction > 0 }
+            .sorted { $0.moleFraction > $1.moleFraction }
+
+        guard active.count > 1 else {
+            return active.first?.component.symbol ?? "CO₂-rich mixture"
+        }
+
+        let displayedComponents = active.prefix(3).map { entry in
+            let percentage = (entry.moleFraction * 100)
+                .formatted(.number.precision(.significantDigits(1...6)))
+            return "\(entry.component.symbol) \(percentage) mol%"
+        }
+        let remainingCount = active.count - displayedComponents.count
+        let displayed = displayedComponents.joined(separator: " + ")
+
+        guard remainingCount > 0 else {
+            return displayed
+        }
+        return "\(displayed) + \(remainingCount) more"
     }
 }
 

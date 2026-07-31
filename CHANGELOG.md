@@ -33,6 +33,13 @@
   point, plotted with the current operating point in a pan/zoom Swift Chart.
 - Added strict pure-fluid gating, cancellation, finite/monotonic boundary
   validation and explicit unavailable states for mixtures and other providers.
+- Added a searchable, paginated PDF calculation report generated locally
+  from the immutable saved-case snapshot.
+- Added printable IFE styling, operating inputs, original/normalized
+  composition, property status, warnings, model provenance, solver metadata,
+  references, privacy text and scientific disclaimer.
+- Added PDF signature, content, filename, long-document pagination and
+  all-format non-finite rejection tests.
 - Added a restricted preliminary CO₂-N₂ CoolProp spike for density and phase,
   using only binary interaction data from the pinned library release.
 - Added a visible, blocking 10 mol% N₂ applicability cap, explicit unavailable

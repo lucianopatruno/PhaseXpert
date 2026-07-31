@@ -67,7 +67,7 @@ struct SavedCaseExportView: View {
                 } header: {
                     Text("Formats")
                 } footer: {
-                    Text("JSON retains the complete versioned calculation record. CSV provides a long-form table suitable for review in spreadsheet and data-analysis software.")
+                    Text("JSON retains the complete versioned record. CSV provides a long-form data table. The PDF Report is a printable, human-readable calculation record with warnings and scientific provenance.")
                 }
 
                 Section("Privacy") {
@@ -118,6 +118,7 @@ struct SavedCaseExportView: View {
         switch format {
         case .json: "curlybraces"
         case .csv: "tablecells"
+        case .pdf: "doc.richtext"
         }
     }
 }
