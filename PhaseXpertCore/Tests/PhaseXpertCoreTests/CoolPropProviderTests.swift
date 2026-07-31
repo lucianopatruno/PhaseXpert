@@ -237,7 +237,7 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
-    func testNonFiniteNativeResultIsRejected() async {
+    func testNonFinitePureDensityIsRejected() async {
         let invalidEngine = MockEngine(result: .init(
             densityKilogramsPerCubicMetre: .nan,
             dynamicViscosityPascalSeconds: 0.000071,
@@ -260,7 +260,7 @@ final class CoolPropProviderTests: XCTestCase {
             XCTAssertEqual(
                 error,
                 .malformedResponse(
-                    "CoolProp returned a non-finite or non-positive property."
+                    "CoolProp returned a non-finite or non-positive density."
                 )
             )
         } catch {
