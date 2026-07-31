@@ -412,7 +412,7 @@ private struct PDFReportContent {
         row("Converged", solver.converged ? "Yes" : "No", in: document)
         row(
             "Iterations",
-            solver.iterationCount.map(String.init) ?? "Not reported",
+            solver.iterationCount.map { String($0) } ?? "Not reported",
             in: document
         )
         row(
