@@ -121,6 +121,28 @@ final class CoolPropProviderTests: XCTestCase {
             response.properties.first { $0.property == .dynamicViscosity }?.status,
             .unavailable
         )
+
+        let encoded = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(CalculationResponse.self, from: encoded)
+        XCTAssertEqual(decoded, response)
+    }
+
+    func testApplicabilityReportsNitrogenAboveSpikeCap() {
+        let provider = CoolPropProvider(engine: MockEngine())
+
+        let accepted = provider.applicabilityIssues(for: [
+            .init(component: .carbonDioxide, moleFraction: 0.95),
+            .init(component: .nitrogen, moleFraction: 0.05)
+        ])
+        let rejected = provider.applicabilityIssues(for: [
+            .init(component: .carbonDioxide, moleFraction: 0.89),
+            .init(component: .nitrogen, moleFraction: 0.11)
+        ])
+
+        XCTAssertTrue(accepted.isEmpty)
+        XCTAssertEqual(rejected.count, 1)
+        XCTAssertEqual(rejected.first?.code, .componentOutsideModelRange)
+        XCTAssertEqual(rejected.first?.severity, .error)
     }
 
     func testNitrogenAboveSpikeCapIsRejected() async {
