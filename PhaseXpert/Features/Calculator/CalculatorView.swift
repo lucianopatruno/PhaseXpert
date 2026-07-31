@@ -567,7 +567,7 @@ private struct PropertyStatusBadge: View {
     }
 }
 
-private extension PropertyID {
+extension PropertyID {
     var displayName: String {
         switch self {
         case .density: "Density"
@@ -591,7 +591,7 @@ private extension PropertyID {
     }
 }
 
-private extension PropertyStatus {
+extension PropertyStatus {
     var displayName: String {
         switch self {
         case .calculated: "Calculated"
@@ -603,7 +603,7 @@ private extension PropertyStatus {
     }
 }
 
-private extension PhaseRegion {
+extension PhaseRegion {
     var displayName: String {
         switch self {
         case .gas: "Gas"

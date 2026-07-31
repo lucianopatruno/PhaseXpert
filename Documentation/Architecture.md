@@ -93,6 +93,20 @@ composition into the calculator, uses the currently installed provider, and
 creates a new result without overwriting the original. The store is local-only:
 CloudKit is disabled and no saved-case data leaves the device.
 
+## Comparison
+
+Saved-case comparison is derived from two immutable `CalculationRecord`
+snapshots and is not persisted as a new scientific result. One record is the
+reference and the displayed difference is always `compared − reference`.
+Pressure differences are shown in bar and temperature differences in °C.
+Dynamic viscosity is converted from internal Pa·s to mPa·s before comparison.
+
+A property difference is available only when both records contain finite,
+calculated values with a common display unit. Unsupported, failed, extrapolated
+or unit-incompatible values remain visibly non-comparable. The interface calls
+these values differences—not errors or deviations—and explicitly states that
+the comparison does not establish model accuracy.
+
 ## Design system
 
 Asset colors were sampled from the supplied IFE template. The supplied English

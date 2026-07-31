@@ -23,3 +23,8 @@
 - Added versioned, local-only SwiftData saved cases with search, sorting,
   metadata editing, duplication, deletion confirmation and edit/rerun.
 - Added persistence round-trip and provenance-preservation tests.
+- Added pairwise saved-case comparison for operating conditions, composition,
+  model snapshots, phase and compatible finite property values.
+- Added explicit compared-minus-reference semantics and safeguards that prevent
+  unavailable, non-finite or unit-incompatible values from producing a
+  numerical difference.
