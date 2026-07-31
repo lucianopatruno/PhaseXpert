@@ -37,11 +37,14 @@ struct SavedCaseExportView: View {
                                 .foregroundStyle(.secondary)
                         }
                     } else if let errorMessage {
-                        ContentUnavailableView(
-                            "Export unavailable",
-                            systemImage: "exclamationmark.triangle",
-                            description: Text(errorMessage)
-                        )
+                        ContentUnavailableView {
+                            Label(
+                                "Export unavailable",
+                                systemImage: "exclamationmark.triangle"
+                            )
+                        } description: {
+                            Text(errorMessage)
+                        }
                     } else {
                         ForEach(artifacts) { artifact in
                             ShareLink(
