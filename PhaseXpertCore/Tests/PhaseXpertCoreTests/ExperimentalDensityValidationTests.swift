@@ -109,6 +109,37 @@ final class ExperimentalDensityValidationTests: XCTestCase {
         }
     }
 
+    func testHiddenThirdOrNonFiniteComponentIsRejected() {
+        let point = ExperimentalDensityPoint(
+            id: "malformed-composition",
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05),
+                .init(component: .oxygen, moleFraction: .nan)
+            ],
+            densityKilogramsPerCubicMetre: 800,
+            uncertainty: makeUncertainty(),
+            sourceLocation: "Synthetic schema test"
+        )
+        let dataset = makeDataset(points: [point])
+
+        XCTAssertThrowsError(
+            try DensityValidationEvaluator().evaluate(
+                dataset: dataset,
+                predictionsKilogramsPerCubicMetre: [
+                    "malformed-composition": 800
+                ]
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? DensityValidationError,
+                .unsupportedComposition("malformed-composition")
+            )
+        }
+    }
+
     func testNonFinitePredictionIsRejected() {
         let dataset = makeDataset()
 
