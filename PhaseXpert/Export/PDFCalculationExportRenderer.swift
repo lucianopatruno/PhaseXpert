@@ -142,8 +142,7 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         context.interpolationQuality = .high
         context.draw(
             logo,
-            in: CGRect(origin: .zero, size: rect.size),
-            intent: .defaultIntent
+            in: CGRect(origin: .zero, size: rect.size)
         )
         context.restoreGState()
     }
