@@ -230,9 +230,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             .reduce(0) { $0 + $1.moleFraction }
 
         var issues: [ValidationIssue] = []
-        if nitrogenFraction > Self.maximumNitrogenMoleFraction
-            + CalculationValidator.compositionTolerance
-        {
+        if nitrogenFraction > Self.maximumNitrogenMoleFraction {
             issues.append(
                 ValidationIssue(
                     code: .componentOutsideModelRange,
@@ -530,9 +528,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "CO₂ must be the unique largest component."
             )
         }
-        guard nitrogen.moleFraction <= Self.maximumNitrogenMoleFraction
-            + CalculationValidator.compositionTolerance
-        else {
+        guard nitrogen.moleFraction <= Self.maximumNitrogenMoleFraction else {
             throw ProviderError.invalidRequest(
                 "The CO₂-N₂ spike is temporarily limited to at most 10 mol% N₂."
             )
