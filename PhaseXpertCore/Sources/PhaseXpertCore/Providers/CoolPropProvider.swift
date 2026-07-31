@@ -222,6 +222,27 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         )
     }
 
+    public func applicabilityIssues(
+        for composition: [MixtureComponent]
+    ) -> [ValidationIssue] {
+        let nitrogenFraction = composition
+            .filter { $0.component == .nitrogen && $0.moleFraction.isFinite }
+            .reduce(0) { $0 + $1.moleFraction }
+
+        guard nitrogenFraction > Self.maximumNitrogenMoleFraction
+            + CalculationValidator.compositionTolerance
+        else {
+            return []
+        }
+        return [
+            ValidationIssue(
+                code: .componentOutsideModelRange,
+                severity: .error,
+                message: "The preliminary CO₂-N₂ spike is limited to at most 10 mol% N₂. This temporary cap is not a validated accuracy range."
+            )
+        ]
+    }
+
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
         try Task.checkCancellation()
         guard engine.isAvailable else {
