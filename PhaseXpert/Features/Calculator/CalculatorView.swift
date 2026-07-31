@@ -137,7 +137,9 @@ struct CalculatorView: View {
                     .onMove(perform: viewModel.moveImpurities)
 
                     Button("Add impurity", systemImage: "plus") {
-                        viewModel.addImpurity()
+                        if let addedID = viewModel.addImpurity() {
+                            focusedField = .composition(addedID)
+                        }
                     }
                     .disabled(viewModel.composition.count >= 21)
                 } header: {
