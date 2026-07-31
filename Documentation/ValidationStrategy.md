@@ -47,3 +47,11 @@ decision.
 Tolerances must be established before observing the implementation result and
 must not be widened merely to obtain a passing test.
 
+## Preliminary phase-boundary checks
+
+Provider tests use non-scientific mock values only to verify orchestration:
+pure-CO₂ gating, endpoint handling, ordered finite points, critical-point
+labelling, cancellation and rejection of malformed values. They do not
+validate CoolProp accuracy. A scientific saturation-pressure test will be
+added only after IFE accepts an independent authoritative reference value and
+a tolerance justified from that reference's uncertainty or precision.

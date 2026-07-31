@@ -17,6 +17,23 @@ public struct CoolPropEngineResult: Equatable, Sendable {
     }
 }
 
+/// Pure-fluid limits needed to sample the CO₂ saturation boundary safely.
+public struct CoolPropSaturationLimits: Equatable, Sendable {
+    public let triplePointTemperatureK: Double
+    public let criticalPointTemperatureK: Double
+    public let criticalPointPressurePa: Double
+
+    public init(
+        triplePointTemperatureK: Double,
+        criticalPointTemperatureK: Double,
+        criticalPointPressurePa: Double
+    ) {
+        self.triplePointTemperatureK = triplePointTemperatureK
+        self.criticalPointTemperatureK = criticalPointTemperatureK
+        self.criticalPointPressurePa = criticalPointPressurePa
+    }
+}
+
 /// Narrow seam between the provider and a local CoolProp binary.
 ///
 /// The protocol keeps C/C++ symbols out of the domain and presentation layers
@@ -29,6 +46,12 @@ public protocol CoolPropEngine: Sendable {
         pressurePa: Double,
         temperatureK: Double
     ) async throws -> CoolPropEngineResult
+
+    func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits
+
+    func pureCarbonDioxideSaturationPressure(
+        temperatureK: Double
+    ) async throws -> Double
 }
 
 /// Used until the native XCFramework has been built and linked.
@@ -46,6 +69,39 @@ public struct UnavailableCoolPropEngine: CoolPropEngine {
             "The CoolProp native XCFramework has not been linked."
         )
     }
+
+    public func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+        throw ProviderError.modelUnavailable(
+            "The CoolProp native XCFramework has not been linked."
+        )
+    }
+
+    public func pureCarbonDioxideSaturationPressure(
+        temperatureK: Double
+    ) async throws -> Double {
+        throw ProviderError.modelUnavailable(
+            "The CoolProp native XCFramework has not been linked."
+        )
+    }
+}
+
+private actor PureCarbonDioxideEnvelopeCache {
+    struct Entry: Sendable {
+        let points: [PhaseEnvelopePoint]
+        let warnings: [String]
+        let generatedAt: Date
+        let solver: SolverMetadata
+    }
+
+    private var entries: [String: Entry] = [:]
+
+    func entry(for key: String) -> Entry? {
+        entries[key]
+    }
+
+    func store(_ entry: Entry, for key: String) {
+        entries[key] = entry
+    }
 }
 
 /// Preliminary established-model provider restricted to pure CO₂.
@@ -54,9 +110,13 @@ public struct UnavailableCoolPropEngine: CoolPropEngine {
 /// carries an explicit validation-pending warning.
 public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider {
     private let engine: Engine
+    private let envelopeCache: PureCarbonDioxideEnvelopeCache
+
+    private static var saturationPointCount: Int { 81 }
 
     public init(engine: Engine) {
         self.engine = engine
+        self.envelopeCache = PureCarbonDioxideEnvelopeCache()
     }
 
     public var descriptor: ModelDescriptor {
@@ -64,7 +124,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.2.0",
+            providerVersion: "0.3.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable ? [.carbonDioxide] : [],
@@ -77,10 +137,16 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             limitations: [
                 "Pure CO₂ only in this spike.",
                 "Preliminary integration; no production accuracy claim.",
-                "Phase-envelope calculation is not enabled.",
+                "The phase diagram is a pure-fluid saturation boundary, not a mixture phase envelope.",
                 "Mixtures remain disabled pending pair-specific validation."
             ],
             references: [
+                SourceReference(
+                    authors: "Span and Wagner",
+                    title: "A New Equation of State for Carbon Dioxide Covering the Fluid Region from the Triple-Point Temperature to 1100 K at Pressures up to 800 MPa",
+                    year: 1996,
+                    doiOrURL: "https://doi.org/10.1063/1.555991"
+                ),
                 SourceReference(
                     authors: "Bell, Wronski, Quoilin and Lemort",
                     title: "Pure and Pseudo-pure Fluid Thermophysical Property Evaluation and the Open-Source Thermophysical Property Library CoolProp",
@@ -166,13 +232,155 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
 
     public func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse {
         try Task.checkCancellation()
+        let startedAt = Date()
+        guard engine.isAvailable else {
+            return unavailableEnvelope(
+                requestID: request.requestID,
+                warning: "Pure CO₂ saturation boundary unavailable because CoolProp is not linked."
+            )
+        }
+        guard request.modelID == descriptor.id else {
+            throw ProviderError.invalidRequest(
+                "The phase-envelope request model ID does not match CoolProp."
+            )
+        }
+        guard isPureCarbonDioxide(request.composition) else {
+            return unavailableEnvelope(
+                requestID: request.requestID,
+                warning: "The preliminary CoolProp phase diagram supports exactly 100 mol% CO₂ only."
+            )
+        }
+
+        let cacheKey = "\(engine.libraryVersion)-pure-co2-\(Self.saturationPointCount)"
+        if let cached = await envelopeCache.entry(for: cacheKey) {
+            return PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: cached.points,
+                warnings: cached.warnings,
+                isAvailable: true,
+                boundaryKind: .pureFluidSaturation,
+                model: descriptor,
+                generatedAt: cached.generatedAt,
+                solver: cached.solver
+            )
+        }
+
+        let limits = try await engine.pureCarbonDioxideSaturationLimits()
+        try validate(limits)
+
+        // Sampling avoids both singular endpoints. The actual critical point is
+        // returned separately from CoolProp and is not inferred from the curve.
+        let span = limits.criticalPointTemperatureK - limits.triplePointTemperatureK
+        let endpointOffset = max(span * 1e-6, 1e-4)
+        let firstTemperature = limits.triplePointTemperatureK + endpointOffset
+        let lastTemperature = limits.criticalPointTemperatureK - endpointOffset
+        let increment = (lastTemperature - firstTemperature)
+            / Double(Self.saturationPointCount - 1)
+
+        var points: [PhaseEnvelopePoint] = []
+        points.reserveCapacity(Self.saturationPointCount + 1)
+        for index in 0..<Self.saturationPointCount {
+            try Task.checkCancellation()
+            let temperature = firstTemperature + Double(index) * increment
+            let pressure = try await engine.pureCarbonDioxideSaturationPressure(
+                temperatureK: temperature
+            )
+            guard pressure.isFinite, pressure > 0 else {
+                throw ProviderError.malformedResponse(
+                    "CoolProp returned a non-finite or non-positive saturation pressure."
+                )
+            }
+            guard points.last.map({ pressure > $0.pressurePa }) ?? true else {
+                throw ProviderError.malformedResponse(
+                    "CoolProp returned a non-increasing pure-CO₂ saturation boundary."
+                )
+            }
+            points.append(
+                PhaseEnvelopePoint(
+                    temperatureK: temperature,
+                    pressurePa: pressure,
+                    branch: .bubble
+                )
+            )
+        }
+        points.append(
+            PhaseEnvelopePoint(
+                temperatureK: limits.criticalPointTemperatureK,
+                pressurePa: limits.criticalPointPressurePa,
+                branch: .critical
+            )
+        )
+        try Task.checkCancellation()
+
+        let generatedAt = Date()
+        let warnings = [
+            "PRELIMINARY — VALIDATION PENDING: the plotted boundary must not be used for engineering, safety, commercial, or regulatory decisions.",
+            "For pure CO₂, bubble and dew boundaries coincide; the chart shows one saturation boundary calculated by CoolProp HEOS."
+        ]
+        let solver = SolverMetadata(
+            method: "CoolProp PropsSI(P,T,Q=0), HEOS pure CO₂",
+            converged: true,
+            durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+        )
+        await envelopeCache.store(
+            .init(
+                points: points,
+                warnings: warnings,
+                generatedAt: generatedAt,
+                solver: solver
+            ),
+            for: cacheKey
+        )
         return PhaseEnvelopeResponse(
             requestID: request.requestID,
+            points: points,
+            warnings: warnings,
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: descriptor,
+            generatedAt: generatedAt,
+            solver: solver
+        )
+    }
+
+    private func isPureCarbonDioxide(_ composition: [MixtureComponent]) -> Bool {
+        composition.count == 1
+            && composition[0].component == .carbonDioxide
+            && abs(composition[0].moleFraction - 1)
+                <= CalculationValidator.compositionTolerance
+    }
+
+    private func validate(_ limits: CoolPropSaturationLimits) throws {
+        guard
+            limits.triplePointTemperatureK.isFinite,
+            limits.triplePointTemperatureK > 0,
+            limits.criticalPointTemperatureK.isFinite,
+            limits.criticalPointTemperatureK > limits.triplePointTemperatureK,
+            limits.criticalPointPressurePa.isFinite,
+            limits.criticalPointPressurePa > 0
+        else {
+            throw ProviderError.malformedResponse(
+                "CoolProp returned invalid pure-CO₂ saturation limits."
+            )
+        }
+    }
+
+    private func unavailableEnvelope(
+        requestID: UUID,
+        warning: String
+    ) -> PhaseEnvelopeResponse {
+        PhaseEnvelopeResponse(
+            requestID: requestID,
             points: [],
-            warnings: [
-                "Phase envelope unavailable in the pure-CO₂ CoolProp integration spike."
-            ],
-            isAvailable: false
+            warnings: [warning],
+            isAvailable: false,
+            model: descriptor,
+            generatedAt: Date(),
+            solver: SolverMetadata(
+                method: "No phase-boundary calculation",
+                converged: false,
+                durationMilliseconds: 0
+            )
         )
     }
 

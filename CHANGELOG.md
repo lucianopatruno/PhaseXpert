@@ -28,3 +28,8 @@
 - Added explicit compared-minus-reference semantics and safeguards that prevent
   unavailable, non-finite or unit-incompatible values from producing a
   numerical difference.
+- Added approved light and dark PhaseXpert app-icon assets.
+- Added a preliminary CoolProp HEOS pure-CO₂ saturation boundary and critical
+  point, plotted with the current operating point in a pan/zoom Swift Chart.
+- Added strict pure-fluid gating, cancellation, finite/monotonic boundary
+  validation and explicit unavailable states for mixtures and other providers.

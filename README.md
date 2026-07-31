@@ -58,6 +58,9 @@ swift test
   editing, duplication, confirmed deletion and edit/rerun
 - pairwise saved-case comparison for operating points, composition, model
   snapshots, phase and compatible property values
+- a preliminary pure-CO₂ pressure–temperature saturation diagram calculated
+  by the linked CoolProp HEOS provider, including the critical point and the
+  current operating point
 - versioned future IFE API data-transfer contract
 - core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
@@ -104,12 +107,12 @@ Certificate validation must never be bypassed.
 See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
 - CoolProp calculations are preliminary and pure-CO₂ only;
-- phase-envelope plotting and export are placeholders;
+- the phase diagram is pure CO₂ only and is not a validated mixture envelope;
+- phase-diagram image/PDF export remains a placeholder;
 - comparison is currently pairwise and reports numerical differences, not
   model accuracy;
 - saved cases are local-only and do not sync between devices;
-- impurity-specific validated limits are not established;
-- an App Store icon has not been approved or supplied.
+- impurity-specific validated limits are not established.
 
 ## Documentation
 

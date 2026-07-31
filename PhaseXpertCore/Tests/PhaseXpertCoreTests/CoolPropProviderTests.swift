@@ -10,12 +10,30 @@ final class CoolPropProviderTests: XCTestCase {
             dynamicViscosityPascalSeconds: 0.000071,
             phaseIdentifier: "supercritical_liquid"
         )
+        var saturationLimits = CoolPropSaturationLimits(
+            triplePointTemperatureK: 216.6,
+            criticalPointTemperatureK: 304.1,
+            criticalPointPressurePa: 7_377_000
+        )
+        var saturationPressure: @Sendable (Double) -> Double = { temperature in
+            temperature * 20_000
+        }
 
         func calculatePureCarbonDioxide(
             pressurePa: Double,
             temperatureK: Double
         ) async throws -> CoolPropEngineResult {
             result
+        }
+
+        func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+            saturationLimits
+        }
+
+        func pureCarbonDioxideSaturationPressure(
+            temperatureK: Double
+        ) async throws -> Double {
+            saturationPressure(temperatureK)
         }
     }
 
@@ -112,6 +130,98 @@ final class CoolPropProviderTests: XCTestCase {
                     "CoolProp returned a non-finite or non-positive property."
                 )
             )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testPureCO2SaturationBoundaryIsFiniteOrderedAndIncludesCriticalPoint() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+
+        let response = try await provider.phaseEnvelope(request)
+
+        XCTAssertTrue(response.isAvailable)
+        XCTAssertEqual(response.boundaryKind, .pureFluidSaturation)
+        XCTAssertEqual(response.model?.modelVersion, "8.0.0-test")
+        XCTAssertEqual(response.solver?.converged, true)
+        XCTAssertEqual(response.points.count, 82)
+        XCTAssertTrue(response.warnings.contains { $0.contains("VALIDATION PENDING") })
+        XCTAssertTrue(response.points.allSatisfy {
+            $0.temperatureK.isFinite && $0.pressurePa.isFinite && $0.pressurePa > 0
+        })
+        let saturationPoints = response.points.filter { $0.branch == .bubble }
+        XCTAssertEqual(saturationPoints.count, 81)
+        XCTAssertTrue(zip(saturationPoints, saturationPoints.dropFirst()).allSatisfy { pair in
+            pair.0.temperatureK < pair.1.temperatureK
+                && pair.0.pressurePa < pair.1.pressurePa
+        })
+        let critical = try XCTUnwrap(response.points.last)
+        XCTAssertEqual(critical.branch, .critical)
+        XCTAssertEqual(critical.temperatureK, 304.1, accuracy: 1e-12)
+        XCTAssertEqual(critical.pressurePa, 7_377_000, accuracy: 1e-12)
+    }
+
+    func testMixtureSaturationBoundaryIsExplicitlyUnavailable() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.99),
+                .init(component: .nitrogen, moleFraction: 0.01)
+            ]
+        )
+
+        let response = try await provider.phaseEnvelope(request)
+
+        XCTAssertFalse(response.isAvailable)
+        XCTAssertTrue(response.points.isEmpty)
+        XCTAssertTrue(response.warnings.contains { $0.contains("100 mol% CO₂") })
+    }
+
+    func testNonFiniteSaturationPressureIsRejected() async {
+        let provider = CoolPropProvider(engine: MockEngine(
+            saturationPressure: { _ in .nan }
+        ))
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+
+        do {
+            _ = try await provider.phaseEnvelope(request)
+            XCTFail("A non-finite boundary point must be rejected.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .malformedResponse(
+                    "CoolProp returned a non-finite or non-positive saturation pressure."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testCancelledSaturationBoundaryStopsBeforeEngineWork() async {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+        let task = Task {
+            try await provider.phaseEnvelope(request)
+        }
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("A cancelled envelope request must not complete.")
+        } catch is CancellationError {
+            // Expected.
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

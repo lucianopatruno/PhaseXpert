@@ -110,4 +110,33 @@ final class ProviderAndAPITests: XCTestCase {
 
         XCTAssertFalse(property.hasFiniteCalculatedValue)
     }
+
+    func testPhaseEnvelopeTraceabilityRoundTrips() throws {
+        let generatedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let response = PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_785_000, branch: .bubble),
+                .init(temperatureK: 304.1, pressurePa: 7_377_000, branch: .critical)
+            ],
+            warnings: ["Validation pending"],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: ArchitectureDemoProvider().descriptor,
+            generatedAt: generatedAt,
+            solver: .init(
+                method: "Deterministic test method",
+                converged: true,
+                durationMilliseconds: 12.5
+            )
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(PhaseEnvelopeResponse.self, from: data)
+
+        XCTAssertEqual(decoded, response)
+        XCTAssertEqual(decoded.boundaryKind, .pureFluidSaturation)
+        XCTAssertEqual(decoded.generatedAt, generatedAt)
+        XCTAssertEqual(decoded.solver?.method, "Deterministic test method")
+    }
 }

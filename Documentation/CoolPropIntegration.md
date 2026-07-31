@@ -3,8 +3,9 @@
 ## Status
 
 The Swift provider, native C bridge and reproducible XCFramework build script
-are present. The generated binary is not committed or linked yet, so the
-application remains buildable and CoolProp remains unavailable.
+are present. The generated binary remains intentionally uncommitted. When it
+is built at the documented local path, Swift Package Manager links it for iOS;
+clean clones remain buildable and expose CoolProp as unavailable.
 
 This separation is intentional: a binary is not accepted until its device and
 simulator slices, upstream revision, licence and behavior have been inspected.
@@ -16,6 +17,8 @@ simulator slices, upstream revision, licence and behavior have been inspected.
 - Backend planned for this spike: `HEOS`
 - Enabled fluid: pure carbon dioxide only
 - Enabled properties: mass density and dynamic viscosity
+- Enabled phase operation: pure-CO₂ saturation pressure from temperature,
+  plus provider-reported triple/critical limits
 
 The build script records the resolved upstream Git revision beside the
 generated artifact. It also copies the upstream licence. The checked-in licence
@@ -58,6 +61,8 @@ reviewed. Do not download an unverified binary from an unofficial source.
 - dynamic viscosity in Pa·s;
 - a controlled phase enumeration;
 - linked library version;
+- pure-CO₂ saturation pressure through `PropsSI(P,T,Q=0)`;
+- triple-point temperature, critical temperature and critical pressure;
 - bounded diagnostic buffers and integer error codes.
 
 C++ exceptions never cross the C or Swift boundary. The bridge rejects
@@ -73,7 +78,8 @@ non-finite/non-positive input and output.
 - checks cancellation and native output;
 - marks every successful value as preliminary and validation-pending;
 - returns unavailable status for properties outside the spike;
-- does not generate a phase envelope.
+- returns one pure-CO₂ saturation boundary and a critical point;
+- returns no phase boundary for mixtures or when the binary is absent.
 
 Tests use a deterministic mock engine to verify orchestration and status
 handling. Mock values are never registered in the running app.
@@ -88,6 +94,7 @@ handling. Mock values are never registered in the running app.
 - Native smoke tests reject NaN, infinity and invalid state points.
 - No mixture can reach the native bridge.
 
-Linking and the real pure-CO₂ reference tests form the next commit after the
-artifact is built successfully on the user's Mac.
-
+The linked iOS path and the existing pure-CO₂ density/viscosity reference tests
+have been exercised on the user's Mac. Independent saturation-pressure
+reference cases remain pending IFE acceptance, as described in the validation
+strategy.
