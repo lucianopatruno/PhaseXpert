@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct PhaseXpertApp: App {
+    @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
     private let modelContainer: ModelContainer
 
     init() {
@@ -29,6 +30,7 @@ struct PhaseXpertApp: App {
         WindowGroup {
             RootView()
                 .tint(.ifePrimary)
+                .preferredColorScheme(prefersDarkAppearance ? .dark : .light)
         }
         .modelContainer(modelContainer)
     }
