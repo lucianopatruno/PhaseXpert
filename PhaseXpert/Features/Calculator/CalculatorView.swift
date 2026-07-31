@@ -504,11 +504,39 @@ private struct SaveCalculationSheet: View {
             .formatted(.number.precision(.significantDigits(1...6)))
         let temperature = (record.input.temperatureK - 273.15)
             .formatted(.number.precision(.significantDigits(1...6)))
-        return "CO₂ — \(pressure) bar, \(temperature) °C"
+        let composition = SavedCaseNameFormatter.compositionLabel(
+            for: record.request.composition
+        )
+        return "\(composition) — \(pressure) bar, \(temperature) °C"
     }
 
     private func number(_ value: Double) -> String {
         value.formatted(.number.precision(.significantDigits(1...6)))
+    }
+}
+
+enum SavedCaseNameFormatter {
+    static func compositionLabel(for composition: [MixtureComponent]) -> String {
+        let active = composition
+            .filter { $0.moleFraction.isFinite && $0.moleFraction > 0 }
+            .sorted { $0.moleFraction > $1.moleFraction }
+
+        guard active.count > 1 else {
+            return active.first?.component.symbol ?? "CO₂-rich mixture"
+        }
+
+        let displayedComponents = active.prefix(3).map { entry in
+            let percentage = (entry.moleFraction * 100)
+                .formatted(.number.precision(.significantDigits(1...6)))
+            return "\(entry.component.symbol) \(percentage) mol%"
+        }
+        let remainingCount = active.count - displayedComponents.count
+        let displayed = displayedComponents.joined(separator: " + ")
+
+        guard remainingCount > 0 else {
+            return displayed
+        }
+        return "\(displayed) + \(remainingCount) more"
     }
 }
 
