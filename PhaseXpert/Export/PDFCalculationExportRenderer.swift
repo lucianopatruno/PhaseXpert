@@ -43,6 +43,8 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         repeat {
             pageNumber += 1
             context.beginPDFPage(nil)
+            context.setFillColor(CGColor(gray: 1, alpha: 1))
+            context.fill(PDFReportLayout.pageRect)
             drawHeader(in: context, pageNumber: pageNumber)
 
             let path = CGPath(
