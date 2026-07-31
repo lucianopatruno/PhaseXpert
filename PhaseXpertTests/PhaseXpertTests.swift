@@ -16,6 +16,11 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testCalculatorStartsWithCoolPropSelected() {
+        XCTAssertEqual(CalculatorViewModel().selectedModelID, "coolprop-heos")
+    }
+
+    @MainActor
     func testSavedCaseDefaultNameIncludesActiveMixtureComposition() {
         XCTAssertEqual(
             SavedCaseNameFormatter.compositionLabel(for: [
