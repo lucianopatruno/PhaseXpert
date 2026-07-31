@@ -67,7 +67,7 @@ final class CalculationExportTests: XCTestCase {
         let snapshot = makeSnapshot()
         let image = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 400)).image { context in
             UIColor.white.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
+            context.cgContext.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
             UIColor.systemBlue.setStroke()
             context.cgContext.move(to: CGPoint(x: 40, y: 350))
             context.cgContext.addLine(to: CGPoint(x: 560, y: 40))
