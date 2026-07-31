@@ -3,11 +3,10 @@
 PhaseXpert is a native iPhone application for traceable thermophysical and
 phase-property calculations for CO₂-rich mixtures.
 
-> **Scientific status:** this repository currently contains the application
-> foundation and a non-scientific architecture demo provider. It does **not**
-> yet produce engineering results. The CoolProp pure-CO₂ provider and native
-> bridge are scaffolded, but the binary is not linked. The IFE Model remains
-> unavailable.
+> **Scientific status:** the optional native CoolProp 8.0.0 bridge provides
+> preliminary pure-CO₂ density, dynamic viscosity and phase results. Validation
+> is incomplete, so these results must not be used for engineering, safety,
+> commercial or regulatory decisions. The IFE Model remains unavailable.
 
 Developed by the **IFE Flow Technology Department**.
 
@@ -52,12 +51,13 @@ swift test
   pressure reference
 - composition and model-domain validation with explicit normalization
 - provider-independent request, response, metadata and phase-envelope contracts
-- a pure-CO₂ CoolProp provider/engine boundary, an unavailable IFE provider,
-  and a clearly labelled non-scientific workflow provider
-- a native CoolProp C bridge and macOS XCFramework build script; the binary is
-  deliberately not linked in this commit
+- a restricted pure-CO₂ CoolProp 8.0.0 provider for density, dynamic viscosity
+  and phase, an unavailable IFE provider, and a non-scientific demo provider
+- immutable results with concise and expert scientific traceability views
+- versioned, local-only SwiftData saved cases with search, sorting, metadata
+  editing, duplication, confirmed deletion and edit/rerun
 - versioned future IFE API data-transfer contract
-- core unit tests and a main-workflow UI smoke test
+- core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
 
 ## Architecture
@@ -73,19 +73,19 @@ See [Architecture](Documentation/Architecture.md),
 
 ## Dependencies and licences
 
-The application target still uses Apple frameworks only and has no linked
-third-party runtime dependency. CoolProp wrapper code and its MIT notice are
-present, but CoolProp itself is not linked or redistributed yet. Licence,
-binary and notices must be reviewed before any integration is shipped. See
+The generated CoolProp XCFramework is intentionally ignored by Git and must be
+built locally with `Scripts/build-coolprop-xcframework.sh`. CoolProp is
+MIT-licensed; its pinned source revision and licence notice are recorded beside
+the generated artifact and must be included in distribution review. See
 [References and Licences](Documentation/ReferencesAndLicences.md).
 
 ## Testing
 
 Tests cover absolute/gauge pressure and temperature conversion, composition
 totals, explicit normalization, duplicates, CO₂ dominance, provider lookup,
-unsupported components and API serialization. Scientific reference-value tests
-will be added with the selected independent reference dataset; no tolerance
-will be chosen before that source and its uncertainty are documented.
+unsupported components, API serialization, selected published pure-CO₂
+reference points, and persistence round trips. Each scientific tolerance is
+documented with its source and purpose.
 
 This environment does not contain Xcode, so the committed project must be
 built and tested on a Mac before the milestone is accepted.
@@ -101,8 +101,9 @@ Certificate validation must never be bypassed.
 
 See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
-- no scientific property calculation is connected;
-- phase-envelope plotting, persistence, comparison and export are placeholders;
+- CoolProp calculations are preliminary and pure-CO₂ only;
+- phase-envelope plotting, comparison and export are placeholders;
+- saved cases are local-only and do not sync between devices;
 - impurity-specific validated limits are not established;
 - an App Store icon has not been approved or supplied.
 
