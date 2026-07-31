@@ -96,6 +96,8 @@ struct CalculationExporter: Sendable {
             return try JSONCalculationExportRenderer().render(snapshot)
         case .csv:
             return try CSVCalculationExportRenderer().render(snapshot)
+        case .pdf:
+            return try PDFCalculationExportRenderer().render(snapshot)
         }
     }
 
