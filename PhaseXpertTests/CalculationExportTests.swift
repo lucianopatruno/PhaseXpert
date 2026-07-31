@@ -1,4 +1,5 @@
 import Foundation
+import PDFKit
 import PhaseXpertCore
 import XCTest
 @testable import PhaseXpert
@@ -39,6 +40,47 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(text.hasSuffix("\r\n"))
     }
 
+    func testPDFReportIsSearchableAndContainsRecordedProvenance() throws {
+        let data = try CalculationExporter().data(for: makeSnapshot(), format: .pdf)
+
+        XCTAssertEqual(String(decoding: data.prefix(4), as: UTF8.self), "%PDF")
+        let document = try XCTUnwrap(PDFDocument(data: data))
+        XCTAssertGreaterThanOrEqual(document.pageCount, 1)
+        let text = (0..<document.pageCount)
+            .compactMap { document.page(at: $0)?.string }
+            .joined(separator: "\n")
+
+        XCTAssertTrue(text.contains("PhaseXpert"))
+        XCTAssertTrue(text.contains("IFE Flow Technology Department"))
+        XCTAssertTrue(text.contains("Pipeline inlet"))
+        XCTAssertTrue(text.contains("150 bar abs"))
+        XCTAssertTrue(text.contains("Density"))
+        XCTAssertTrue(text.contains("903.5 kg/m³"))
+        XCTAssertTrue(text.contains("PRELIMINARY — validation pending."))
+        XCTAssertTrue(text.contains("export-test-provider"))
+        XCTAssertTrue(text.contains(calculationID.uuidString))
+        XCTAssertTrue(text.contains("Test Reference"))
+    }
+
+    func testPDFReportPaginatesLongSavedCaseNotes() throws {
+        let longNotes = Array(
+            repeating: "Long traceable engineering note retained in the report.",
+            count: 300
+        ).joined(separator: " ")
+        let data = try CalculationExporter().data(
+            for: makeSnapshot(notes: longNotes),
+            format: .pdf
+        )
+        let document = try XCTUnwrap(PDFDocument(data: data))
+
+        XCTAssertGreaterThan(document.pageCount, 1)
+        XCTAssertTrue(
+            document.page(at: document.pageCount - 1)?
+                .string?
+                .contains("Independent engineering review") == true
+        )
+    }
+
     func testNonFinitePropertyStopsJSONAndCSVExport() {
         let snapshot = makeSnapshot(propertyValue: .nan)
         let exporter = CalculationExporter()
@@ -65,6 +107,10 @@ final class CalculationExportTests: XCTestCase {
             exporter.filename(for: snapshot, format: .csv),
             "PhaseXpert-Pipeline-inlet-12345678.csv"
         )
+        XCTAssertEqual(
+            exporter.filename(for: snapshot, format: .pdf),
+            "PhaseXpert-Pipeline-inlet-12345678.pdf"
+        )
     }
 
     func testFileStoreCreatesBothArtifactsWithMatchingContents() throws {
@@ -90,6 +136,7 @@ final class CalculationExportTests: XCTestCase {
 
     private func makeSnapshot(
         name: String = "Pipeline inlet",
+        notes: String = "He said \"check\"\nsecond line",
         propertyValue: Double = 903.5
     ) -> SavedCaseExportSnapshot {
         let requestID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
@@ -181,7 +228,7 @@ final class CalculationExportTests: XCTestCase {
             exportedAt: fixedDate,
             savedCaseID: caseID,
             name: name,
-            notes: "He said \"check\"\nsecond line",
+            notes: notes,
             savedAt: fixedDate,
             lastUpdatedAt: fixedDate,
             calculation: record
