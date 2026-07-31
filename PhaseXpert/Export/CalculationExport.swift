@@ -88,9 +88,9 @@ struct CalculationExporter: Sendable {
         try validateFiniteValues(in: snapshot)
         switch format {
         case .json:
-            try JSONCalculationExportRenderer().render(snapshot)
+            return try JSONCalculationExportRenderer().render(snapshot)
         case .csv:
-            try CSVCalculationExportRenderer().render(snapshot)
+            return try CSVCalculationExportRenderer().render(snapshot)
         }
     }
 
