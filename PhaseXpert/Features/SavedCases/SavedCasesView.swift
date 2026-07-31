@@ -133,6 +133,136 @@ enum SavedCaseSort: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+struct PropertyComparison: Identifiable, Equatable {
+    let id: PropertyID
+    let reference: PropertyValue?
+    let compared: PropertyValue?
+    let referenceDisplayValue: Double?
+    let comparedDisplayValue: Double?
+    let displayUnit: String?
+
+    var difference: Double? {
+        guard
+            let referenceDisplayValue,
+            let comparedDisplayValue,
+            displayUnit != nil
+        else {
+            return nil
+        }
+        return comparedDisplayValue - referenceDisplayValue
+    }
+}
+
+struct CalculationComparison: Equatable {
+    let reference: CalculationRecord
+    let compared: CalculationRecord
+    let properties: [PropertyComparison]
+
+    init(reference: CalculationRecord, compared: CalculationRecord) {
+        self.reference = reference
+        self.compared = compared
+
+        let referenceProperties = Self.propertyMap(reference.response.properties)
+        let comparedProperties = Self.propertyMap(compared.response.properties)
+        let propertyIDs = Set(referenceProperties.keys).union(comparedProperties.keys)
+
+        properties = propertyIDs
+            .sorted { $0.displayName < $1.displayName }
+            .map { propertyID in
+                let referenceProperty = referenceProperties[propertyID]
+                let comparedProperty = comparedProperties[propertyID]
+                let referenceDisplay = Self.displayValue(for: referenceProperty)
+                let comparedDisplay = Self.displayValue(for: comparedProperty)
+                let commonUnit: String?
+                if
+                    let referenceUnit = referenceDisplay?.unit,
+                    let comparedUnit = comparedDisplay?.unit,
+                    !referenceUnit.isEmpty,
+                    referenceUnit == comparedUnit
+                {
+                    commonUnit = referenceUnit
+                } else {
+                    commonUnit = nil
+                }
+
+                return PropertyComparison(
+                    id: propertyID,
+                    reference: referenceProperty,
+                    compared: comparedProperty,
+                    referenceDisplayValue: referenceDisplay?.value,
+                    comparedDisplayValue: comparedDisplay?.value,
+                    displayUnit: commonUnit
+                )
+            }
+    }
+
+    var pressureDifferenceBar: Double {
+        (compared.input.pressurePa - reference.input.pressurePa) / 100_000
+    }
+
+    var temperatureDifferenceCelsius: Double {
+        compared.input.temperatureK - reference.input.temperatureK
+    }
+
+    var usesSameComposition: Bool {
+        let referenceComposition = Self.compositionMap(reference.request.composition)
+        let comparedComposition = Self.compositionMap(compared.request.composition)
+        guard Set(referenceComposition.keys) == Set(comparedComposition.keys) else {
+            return false
+        }
+        return referenceComposition.allSatisfy { component, moleFraction in
+            guard let comparedValue = comparedComposition[component] else {
+                return false
+            }
+            return abs(moleFraction - comparedValue) <= 1e-12
+        }
+    }
+
+    var comparableProperties: [PropertyComparison] {
+        properties.filter { $0.difference != nil }
+    }
+
+    var nonComparableProperties: [PropertyComparison] {
+        properties.filter { $0.difference == nil }
+    }
+
+    private static func displayValue(
+        for property: PropertyValue?
+    ) -> (value: Double, unit: String)? {
+        guard
+            let property,
+            property.hasFiniteCalculatedValue,
+            let value = property.value
+        else {
+            return nil
+        }
+
+        if property.property == .dynamicViscosity, property.unit == "Pa·s" {
+            return (
+                DynamicViscosityUnit.millipascalSecond.fromPascalSeconds(value),
+                DynamicViscosityUnit.millipascalSecond.rawValue
+            )
+        }
+        return (value, property.unit)
+    }
+
+    private static func propertyMap(
+        _ properties: [PropertyValue]
+    ) -> [PropertyID: PropertyValue] {
+        properties.reduce(into: [:]) { result, property in
+            result[property.property] = property
+        }
+    }
+
+    private static func compositionMap(
+        _ composition: [MixtureComponent]
+    ) -> [ComponentID: Double] {
+        composition.reduce(into: [:]) { result, component in
+            result[component.component] = component.moleFraction
+        }
+    }
+}
+
 struct SavedCasesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SavedCalculation.updatedAt, order: .reverse)
@@ -201,6 +331,16 @@ struct SavedCasesView: View {
             .navigationTitle("Saved Cases")
             .searchable(text: $searchText, prompt: "Search name, notes or model")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        SavedCaseComparisonView(savedCases: savedCases)
+                    } label: {
+                        Label("Compare", systemImage: "arrow.left.arrow.right")
+                    }
+                    .disabled(savedCases.count < 2)
+                    .accessibilityIdentifier("compare-saved-cases")
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu("Sort", systemImage: "arrow.up.arrow.down") {
                         Picker("Sort", selection: $sort) {
@@ -262,6 +402,286 @@ struct SavedCasesView: View {
             modelContext.rollback()
             persistenceError = error.localizedDescription
         }
+    }
+}
+
+private struct SavedCaseComparisonView: View {
+    let savedCases: [SavedCalculation]
+    @State private var referenceID: UUID
+    @State private var comparedID: UUID
+
+    init(savedCases: [SavedCalculation]) {
+        self.savedCases = savedCases
+        _referenceID = State(initialValue: savedCases.first?.id ?? UUID())
+        _comparedID = State(initialValue: savedCases.dropFirst().first?.id ?? UUID())
+    }
+
+    private var referenceCase: SavedCalculation? {
+        savedCases.first { $0.id == referenceID }
+    }
+
+    private var comparedCase: SavedCalculation? {
+        savedCases.first { $0.id == comparedID }
+    }
+
+    private var comparison: CalculationComparison? {
+        guard
+            let reference = referenceCase?.calculationRecord,
+            let compared = comparedCase?.calculationRecord
+        else {
+            return nil
+        }
+        return CalculationComparison(reference: reference, compared: compared)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                ScientificStatusBanner(
+                    title: "Comparison is not an accuracy assessment",
+                    message: "Differences are compared case minus reference case. They do not establish which model or result is more accurate."
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+
+            Section("Cases") {
+                Picker("Reference case", selection: $referenceID) {
+                    ForEach(savedCases) { savedCase in
+                        Text(savedCase.name).tag(savedCase.id)
+                    }
+                }
+                Picker("Compared case", selection: $comparedID) {
+                    ForEach(savedCases) { savedCase in
+                        Text(savedCase.name).tag(savedCase.id)
+                    }
+                }
+            }
+
+            if let comparison {
+                comparisonSections(comparison)
+            } else {
+                Section {
+                    ContentUnavailableView(
+                        "Comparison Unavailable",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text("One or both saved calculation records could not be decoded.")
+                    )
+                }
+            }
+        }
+        .navigationTitle("Compare Cases")
+        .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: referenceID) { _, newValue in
+            if newValue == comparedID,
+               let replacement = savedCases.first(where: { $0.id != newValue }) {
+                comparedID = replacement.id
+            }
+        }
+        .onChange(of: comparedID) { _, newValue in
+            if newValue == referenceID,
+               let replacement = savedCases.first(where: { $0.id != newValue }) {
+                referenceID = replacement.id
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func comparisonSections(_ comparison: CalculationComparison) -> some View {
+        Section("Operating point") {
+            ComparisonValueRow(
+                title: "Pressure",
+                reference: "\(number(comparison.reference.input.pressurePa / 100_000)) bar abs",
+                compared: "\(number(comparison.compared.input.pressurePa / 100_000)) bar abs",
+                difference: "\(signed(comparison.pressureDifferenceBar)) bar"
+            )
+            ComparisonValueRow(
+                title: "Temperature",
+                reference: "\(number(comparison.reference.input.temperatureK - 273.15)) °C",
+                compared: "\(number(comparison.compared.input.temperatureK - 273.15)) °C",
+                difference: "\(signed(comparison.temperatureDifferenceCelsius)) °C"
+            )
+        }
+
+        Section("Model and phase") {
+            ComparisonValueRow(
+                title: "Model",
+                reference: modelLabel(comparison.reference),
+                compared: modelLabel(comparison.compared)
+            )
+            ComparisonValueRow(
+                title: "Model status",
+                reference: comparison.reference.response.model.availability.rawValue.capitalized,
+                compared: comparison.compared.response.model.availability.rawValue.capitalized
+            )
+            ComparisonValueRow(
+                title: "Phase",
+                reference: comparison.reference.response.phase.displayName,
+                compared: comparison.compared.response.phase.displayName
+            )
+        }
+
+        if
+            !comparison.reference.response.warnings.isEmpty
+                || !comparison.compared.response.warnings.isEmpty
+        {
+            Section("Recorded warnings") {
+                ComparisonValueRow(
+                    title: "Warnings",
+                    reference: warningLabel(comparison.reference),
+                    compared: warningLabel(comparison.compared)
+                )
+            }
+        }
+
+        Section("Composition") {
+            ComparisonValueRow(
+                title: "Mixture",
+                reference: compositionLabel(comparison.reference),
+                compared: compositionLabel(comparison.compared)
+            )
+            LabeledContent(
+                "Composition match",
+                value: comparison.usesSameComposition ? "Same" : "Different"
+            )
+        }
+
+        if !comparison.comparableProperties.isEmpty {
+            Section("Comparable properties") {
+                ForEach(comparison.comparableProperties) { property in
+                    PropertyComparisonView(property: property)
+                }
+            }
+        }
+
+        if !comparison.nonComparableProperties.isEmpty {
+            Section {
+                DisclosureGroup(
+                    "Unavailable or non-comparable (\(comparison.nonComparableProperties.count))"
+                ) {
+                    ForEach(comparison.nonComparableProperties) { property in
+                        PropertyComparisonView(property: property)
+                    }
+                }
+            } footer: {
+                Text("A numerical difference is shown only when both results are finite, calculated values expressed in the same display unit.")
+            }
+        }
+
+        Section("Traceability") {
+            ComparisonValueRow(
+                title: "Calculation ID",
+                reference: comparison.reference.response.calculationID.uuidString,
+                compared: comparison.compared.response.calculationID.uuidString
+            )
+            ComparisonValueRow(
+                title: "Calculated at",
+                reference: comparison.reference.response.calculatedAt.formatted(
+                    .dateTime.year().month().day().hour().minute().second()
+                ),
+                compared: comparison.compared.response.calculatedAt.formatted(
+                    .dateTime.year().month().day().hour().minute().second()
+                )
+            )
+        }
+    }
+
+    private func modelLabel(_ record: CalculationRecord) -> String {
+        "\(record.response.model.name) \(record.response.model.modelVersion)"
+    }
+
+    private func compositionLabel(_ record: CalculationRecord) -> String {
+        record.request.composition.map {
+            "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%"
+        }.joined(separator: ", ")
+    }
+
+    private func warningLabel(_ record: CalculationRecord) -> String {
+        record.response.warnings.isEmpty
+            ? "None recorded"
+            : record.response.warnings.joined(separator: " ")
+    }
+
+    private func number(_ value: Double) -> String {
+        guard value.isFinite else { return "Invalid" }
+        return value.formatted(.number.precision(.significantDigits(1...8)))
+    }
+
+    private func signed(_ value: Double) -> String {
+        guard value.isFinite else { return "Invalid" }
+        if value > 0 { return "+\(number(value))" }
+        if value < 0 { return "−\(number(abs(value)))" }
+        return number(value)
+    }
+}
+
+private struct ComparisonValueRow: View {
+    let title: String
+    let reference: String
+    let compared: String
+    var difference: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline)
+            LabeledContent("Reference", value: reference)
+            LabeledContent("Compared", value: compared)
+            if let difference {
+                LabeledContent("Difference", value: difference)
+                    .foregroundStyle(Color.ifePrimary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct PropertyComparisonView: View {
+    let property: PropertyComparison
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(property.id.displayName)
+                .font(.headline)
+            LabeledContent("Reference", value: display(property.reference, property.referenceDisplayValue))
+            LabeledContent("Compared", value: display(property.compared, property.comparedDisplayValue))
+            if let difference = property.difference, let unit = property.displayUnit {
+                LabeledContent("Difference", value: "\(signed(difference)) \(unit)")
+                    .foregroundStyle(Color.ifePrimary)
+            } else {
+                Text("No numerical difference available")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func display(_ property: PropertyValue?, _ displayValue: Double?) -> String {
+        guard let property else { return "Not requested" }
+        guard let displayValue, let unit = displayUnit(for: property) else {
+            return property.hasFiniteCalculatedValue
+                ? "Unit mismatch"
+                : property.status.displayName
+        }
+        return "\(number(displayValue)) \(unit)"
+    }
+
+    private func displayUnit(for property: PropertyValue) -> String? {
+        if property.property == .dynamicViscosity, property.unit == "Pa·s" {
+            return DynamicViscosityUnit.millipascalSecond.rawValue
+        }
+        return property.unit.isEmpty ? nil : property.unit
+    }
+
+    private func number(_ value: Double) -> String {
+        value.formatted(.number.precision(.significantDigits(1...8)))
+    }
+
+    private func signed(_ value: Double) -> String {
+        if value > 0 { return "+\(number(value))" }
+        if value < 0 { return "−\(number(abs(value)))" }
+        return number(value)
     }
 }
 
