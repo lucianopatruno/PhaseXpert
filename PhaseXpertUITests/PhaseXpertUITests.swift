@@ -37,4 +37,17 @@ final class PhaseXpertUITests: XCTestCase {
         app.buttons["OK"].tap()
         XCTAssertFalse(app.buttons["OK"].exists)
     }
+
+    func testPhaseDiagramRequiresARealCalculation() {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.tabBars.buttons["Phase Diagram"].tap()
+
+        XCTAssertTrue(app.navigationBars["Phase Diagram"].waitForExistence(timeout: 2))
+        XCTAssertTrue(
+            app.otherElements["phase-diagram-no-calculation"].exists
+                || app.staticTexts["No operating point"].exists
+        )
+    }
 }

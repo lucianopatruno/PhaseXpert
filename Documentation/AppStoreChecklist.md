@@ -4,7 +4,7 @@
 
 - Set the Apple Developer team and confirm the bundle identifier.
 - Create an App Store Connect record and internal TestFlight group.
-- Supply an approved 1024×1024 app icon; the current icon slot is empty.
+- Confirm the approved 1024×1024 light and dark app icons in the archived build.
 - Confirm IFE trademark/logo approval for the app context.
 - Build on a clean Mac, run unit/UI tests and archive with Xcode 26.
 - Verify version/build numbering and export-compliance answers.
@@ -24,4 +24,3 @@
 - Produce acknowledgements and model/reference disclosures.
 - Perform accessibility audit and localization review.
 - Decide public, unlisted or custom/internal distribution with IFE.
-
