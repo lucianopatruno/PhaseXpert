@@ -2,6 +2,7 @@ import CoreGraphics
 import CoreText
 import Foundation
 import PhaseXpertCore
+import UIKit
 
 /// Printable, provider-independent rendering of an immutable saved calculation.
 ///
@@ -104,6 +105,7 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
             position: CGPoint(x: PDFReportLayout.margin, y: 784),
             context: context
         )
+        drawIFELogo(in: context)
 
         context.setStrokeColor(PDFReportPalette.rule)
         context.setLineWidth(0.6)
@@ -115,6 +117,34 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
             )
         )
         context.strokePath()
+        context.restoreGState()
+    }
+
+    private func drawIFELogo(in context: CGContext) {
+        guard let logo = UIImage(named: "IFELogoEnglish")?.cgImage else {
+            return
+        }
+
+        let bounds = PDFReportLayout.logoBounds
+        let aspectRatio = CGFloat(logo.width) / CGFloat(logo.height)
+        let width = min(bounds.width, bounds.height * aspectRatio)
+        let height = width / aspectRatio
+        let rect = CGRect(
+            x: bounds.maxX - width,
+            y: bounds.midY - height / 2,
+            width: width,
+            height: height
+        )
+
+        context.saveGState()
+        context.translateBy(x: rect.minX, y: rect.maxY)
+        context.scaleBy(x: 1, y: -1)
+        context.interpolationQuality = .high
+        context.draw(
+            logo,
+            in: CGRect(origin: .zero, size: rect.size),
+            intent: .defaultIntent
+        )
         context.restoreGState()
     }
 
@@ -166,6 +196,12 @@ private enum PDFReportLayout {
         y: 58,
         width: pageRect.width - 2 * margin,
         height: 706
+    )
+    static let logoBounds = CGRect(
+        x: pageRect.maxX - margin - 150,
+        y: 781,
+        width: 150,
+        height: 42
     )
 }
 
