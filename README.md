@@ -66,6 +66,8 @@ swift test
 - local JSON, CSV and paginated PDF calculation-report export preserving the
   saved record, units, warnings and provider provenance
 - versioned future IFE API data-transfer contract
+- a gated, versioned experimental-density validation contract that refuses
+  evaluation until dataset review and acceptance-policy approval are recorded
 - core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
 
@@ -77,7 +79,8 @@ local library or remote IFE service does not require changing persistence or
 views.
 
 See [Architecture](Documentation/Architecture.md),
-[Scientific Models](Documentation/ScientificModels.md), and
+[Scientific Models](Documentation/ScientificModels.md),
+[CO₂-N₂ Density Validation](Documentation/CO2N2DensityValidation.md), and
 [IFE API Contract](Documentation/IFEModelAPI.md).
 
 ## Dependencies and licences
@@ -92,10 +95,11 @@ the generated artifact and must be included in distribution review. See
 
 Tests cover absolute/gauge pressure and temperature conversion, composition
 totals, explicit normalization, duplicates, CO₂ dominance, provider lookup,
-unsupported components, provider-specific N₂ limits, API and calculation
-response serialization, selected published pure-CO₂ reference points, and
-persistence round trips, and searchable multipage PDF calculation reports. Each
-scientific tolerance is
+unsupported components, provider-specific N₂ limits, API and calculation response serialization,
+selected published pure-CO₂ reference points, persistence round trips,
+searchable multipage PDF reports, and the experimental-density evidence gate.
+Synthetic evaluator tests verify the validation machinery but are never
+presented as scientific reference values. Each scientific tolerance is
 documented with its source and purpose.
 
 This environment does not contain Xcode, so the committed project must be
@@ -128,6 +132,7 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - [CoolProp integration spike](Documentation/CoolPropIntegration.md)
 - [IFE Model API contract](Documentation/IFEModelAPI.md)
 - [Validation strategy](Documentation/ValidationStrategy.md)
+- [CO₂-N₂ density validation](Documentation/CO2N2DensityValidation.md)
 - [Adding providers and components](Documentation/ExtendingPhaseXpert.md)
 - [References and licences](Documentation/ReferencesAndLicences.md)
 - [App Store preparation](Documentation/AppStoreChecklist.md)
