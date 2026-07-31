@@ -81,7 +81,7 @@ final class CalculationExportTests: XCTestCase {
         )
     }
 
-    func testNonFinitePropertyStopsJSONAndCSVExport() {
+    func testNonFinitePropertyStopsEveryExportFormat() {
         let snapshot = makeSnapshot(propertyValue: .nan)
         let exporter = CalculationExporter()
 
@@ -113,7 +113,7 @@ final class CalculationExportTests: XCTestCase {
         )
     }
 
-    func testFileStoreCreatesBothArtifactsWithMatchingContents() throws {
+    func testFileStoreCreatesAllArtifactsWithMatchingContents() throws {
         let testDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("PhaseXpertExportTests-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: testDirectory) }
