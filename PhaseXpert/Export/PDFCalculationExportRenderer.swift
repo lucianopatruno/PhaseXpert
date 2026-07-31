@@ -164,7 +164,7 @@ private enum PDFReportLayout {
         y: 58,
         width: pageRect.width - 2 * margin,
         height: 706
-    ) }
+    )
 }
 
 private enum PDFReportPalette {
