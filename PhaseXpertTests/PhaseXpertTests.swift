@@ -15,6 +15,22 @@ final class PhaseXpertTests: XCTestCase {
         )
     }
 
+    func testSavedCaseDefaultNameIncludesActiveMixtureComposition() {
+        XCTAssertEqual(
+            SavedCaseNameFormatter.compositionLabel(for: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ]),
+            "CO₂ 95 mol% + N₂ 5 mol%"
+        )
+        XCTAssertEqual(
+            SavedCaseNameFormatter.compositionLabel(for: [
+                .init(component: .carbonDioxide, moleFraction: 1)
+            ]),
+            "CO₂"
+        )
+    }
+
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
         #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
         .preliminary
