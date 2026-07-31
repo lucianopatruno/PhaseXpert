@@ -37,12 +37,17 @@ final class CalculatorViewModel {
         validationReport.normalizedComposition != nil
     }
 
-    func addImpurity() {
+    @discardableResult
+    func addImpurity() -> UUID? {
         let selected = Set(composition.map(\.component))
         guard let component = ComponentID.allCases.first(where: {
             $0 != .carbonDioxide && !selected.contains($0)
-        }) else { return }
-        composition.append(CompositionInput(component: component, molPercent: "0"))
+        }) else {
+            return nil
+        }
+        let input = CompositionInput(component: component, molPercent: "")
+        composition.append(input)
+        return input.id
     }
 
     func removeImpurities(at offsets: IndexSet) {
