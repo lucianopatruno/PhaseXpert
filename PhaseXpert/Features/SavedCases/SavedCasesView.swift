@@ -717,6 +717,7 @@ private struct SavedCaseDetailView: View {
 
     let savedCase: SavedCalculation
     @State private var isEditing = false
+    @State private var isExporting = false
     @State private var isConfirmingDeletion = false
     @State private var persistenceError: String?
 
@@ -770,6 +771,11 @@ private struct SavedCaseDetailView: View {
                         modelContext.insert(savedCase.duplicate())
                         saveContext()
                     }
+                    Button("Export JSON or CSV", systemImage: "square.and.arrow.up") {
+                        isExporting = true
+                    }
+                    .disabled(savedCase.calculationRecord == nil)
+                    .accessibilityIdentifier("export-saved-case")
                     Button("Delete", systemImage: "trash", role: .destructive) {
                         isConfirmingDeletion = true
                     }
@@ -780,6 +786,9 @@ private struct SavedCaseDetailView: View {
             EditSavedCaseSheet(savedCase: savedCase) {
                 saveContext()
             }
+        }
+        .sheet(isPresented: $isExporting) {
+            SavedCaseExportView(savedCase: savedCase)
         }
         .confirmationDialog(
             "Delete \(savedCase.name)?",
