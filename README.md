@@ -61,6 +61,8 @@ swift test
 - a preliminary pure-CO₂ pressure–temperature saturation diagram calculated
   by the linked CoolProp HEOS provider, including the critical point and the
   current operating point
+- local JSON, CSV and paginated PDF calculation-report export preserving the
+  saved record, units, warnings and provider provenance
 - versioned future IFE API data-transfer contract
 - core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
@@ -89,7 +91,8 @@ the generated artifact and must be included in distribution review. See
 Tests cover absolute/gauge pressure and temperature conversion, composition
 totals, explicit normalization, duplicates, CO₂ dominance, provider lookup,
 unsupported components, API serialization, selected published pure-CO₂
-reference points, and persistence round trips. Each scientific tolerance is
+reference points, persistence round trips, and searchable multipage PDF
+calculation reports. Each scientific tolerance is
 documented with its source and purpose.
 
 This environment does not contain Xcode, so the committed project must be
