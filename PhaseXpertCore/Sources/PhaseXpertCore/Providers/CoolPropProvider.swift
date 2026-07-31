@@ -151,6 +151,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
 
     private static var saturationPointCount: Int { 81 }
     private static var maximumNitrogenMoleFraction: Double { 0.10 }
+    private static var binaryCompositionSumTolerance: Double { 1e-10 }
 
     private enum SupportedComposition {
         case pureCarbonDioxide
@@ -191,7 +192,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Preliminary integration; no production accuracy claim.",
                 "CO₂-N₂ dynamic viscosity is unavailable pending separate validation.",
                 "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
-            
+
             ],
             references: [
                 SourceReference(
@@ -229,18 +230,36 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             .filter { $0.component == .nitrogen && $0.moleFraction.isFinite }
             .reduce(0) { $0 + $1.moleFraction }
 
-        guard nitrogenFraction > Self.maximumNitrogenMoleFraction
+        var issues: [ValidationIssue] = []
+        if nitrogenFraction > Self.maximumNitrogenMoleFraction
             + CalculationValidator.compositionTolerance
-        else {
-            return []
-        }
-        return [
-            ValidationIssue(
-                code: .componentOutsideModelRange,
-                severity: .error,
-                message: "The preliminary CO₂-N₂ spike is limited to at most 10 mol% N₂. This temporary cap is not a validated accuracy range."
+        {
+            issues.append(
+                ValidationIssue(
+                    code: .componentOutsideModelRange,
+                    severity: .error,
+                    message: "The preliminary CO₂-N₂ spike is limited to at most 10 mol% N₂. This temporary cap is not a validated accuracy range."
+                )
             )
-        ]
+        }
+
+        let total = composition.reduce(0) { $0 + $1.moleFraction }
+        let deviation = abs(total - 1)
+        if
+            nitrogenFraction > CalculationValidator.compositionTolerance,
+            total.isFinite,
+            deviation > Self.binaryCompositionSumTolerance,
+            deviation <= CalculationValidator.compositionTolerance
+        {
+            issues.append(
+                ValidationIssue(
+                    code: .compositionTotal,
+                    severity: .error,
+                    message: "CO₂-N₂ mole fractions must sum to 100 mol% without implicit native normalization. Adjust the entered values explicitly."
+                )
+            )
+        }
+        return issues
     }
 
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
@@ -498,6 +517,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             }
             throw ProviderError.invalidRequest(
                 "The preliminary CoolProp provider accepts pure CO₂ or the restricted CO₂-N₂ binary only."
+            )
+        }
+        guard abs(
+            carbonDioxide.moleFraction + nitrogen.moleFraction - 1
+        ) <= Self.binaryCompositionSumTolerance else {
+            throw ProviderError.invalidRequest(
+                "CO₂-N₂ mole fractions must sum to 100 mol% without implicit normalization."
             )
         }
         guard carbonDioxide.moleFraction > nitrogen.moleFraction else {
