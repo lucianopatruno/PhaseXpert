@@ -164,52 +164,68 @@ private enum PDFReportLayout {
         y: 58,
         width: pageRect.width - 2 * margin,
         height: 706
-    )
+    ) }
 }
 
 private enum PDFReportPalette {
     // IFEPrimary light-appearance colour from the PhaseXpert asset catalogue.
-    static let primary = CGColor(
+    static var primary: CGColor { CGColor(
         srgbRed: 0.161,
         green: 0.192,
         blue: 0.447,
         alpha: 1
-    )
-    static let bodyText = CGColor(
+    ) }
+    static var bodyText: CGColor { CGColor(
         srgbRed: 0.08,
         green: 0.08,
         blue: 0.10,
         alpha: 1
-    )
-    static let secondaryText = CGColor(
+    ) }
+    static var secondaryText: CGColor { CGColor(
         srgbRed: 0.36,
         green: 0.36,
         blue: 0.40,
         alpha: 1
-    )
-    static let warning = CGColor(
+    ) }
+    static var warning: CGColor { CGColor(
         srgbRed: 0.42,
         green: 0.21,
         blue: 0.02,
         alpha: 1
-    )
-    static let rule = CGColor(
+    ) }
+    static var rule: CGColor { CGColor(
         srgbRed: 0.78,
         green: 0.79,
         blue: 0.84,
         alpha: 1
-    )
+    ) }
 }
 
 private enum PDFReportFonts {
-    static let header = CTFontCreateWithName("Helvetica-Bold" as CFString, 16, nil)
-    static let title = CTFontCreateWithName("Helvetica-Bold" as CFString, 22, nil)
-    static let subtitle = CTFontCreateWithName("Helvetica" as CFString, 10, nil)
-    static let section = CTFontCreateWithName("Helvetica-Bold" as CFString, 13, nil)
-    static let label = CTFontCreateWithName("Helvetica-Bold" as CFString, 9.5, nil)
-    static let body = CTFontCreateWithName("Helvetica" as CFString, 9.5, nil)
-    static let small = CTFontCreateWithName("Helvetica" as CFString, 8.5, nil)
-    static let footer = CTFontCreateWithName("Helvetica" as CFString, 7.5, nil)
+    static var header: CTFont {
+        CTFontCreateWithName("Helvetica-Bold" as CFString, 16, nil)
+    }
+    static var title: CTFont {
+        CTFontCreateWithName("Helvetica-Bold" as CFString, 22, nil)
+    }
+    static var subtitle: CTFont {
+        CTFontCreateWithName("Helvetica" as CFString, 10, nil)
+    }
+    static var section: CTFont {
+        CTFontCreateWithName("Helvetica-Bold" as CFString, 13, nil)
+    }
+    static var label: CTFont {
+        CTFontCreateWithName("Helvetica-Bold" as CFString, 9.5, nil)
+    }
+    static var body: CTFont {
+        CTFontCreateWithName("Helvetica" as CFString, 9.5, nil)
+    }
+    static var small: CTFont {
+        CTFontCreateWithName("Helvetica" as CFString, 8.5, nil)
+    }
+    static var footer: CTFont {
+        CTFontCreateWithName("Helvetica" as CFString, 7.5, nil)
+    }
 }
 
 private enum PDFReportText {
@@ -228,7 +244,7 @@ private struct PDFReportContent {
     let snapshot: SavedCaseExportSnapshot
 
     func attributedString() -> NSAttributedString {
-        let document = NSMutableAttributedString()
+        let document = NSMutableAttributedString(string: "")
         let record = snapshot.calculation
         let input = record.input
         let request = record.request
