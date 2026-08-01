@@ -458,6 +458,7 @@ struct CalculationResultSections: View {
         case derived = "Derived"
         case thermodynamic = "Thermodynamic"
         case transport = "Transport and acoustic"
+        case additional = "Additional"
 
         var properties: Set<PropertyID> {
             switch self {
@@ -471,6 +472,12 @@ struct CalculationResultSections: View {
                 ]
             case .transport:
                 [.dynamicViscosity, .thermalConductivity, .speedOfSound]
+            case .additional:
+                [
+                    .isothermalCompressibility,
+                    .thermalExpansionCoefficient,
+                    .vapourFraction
+                ]
             }
         }
     }
