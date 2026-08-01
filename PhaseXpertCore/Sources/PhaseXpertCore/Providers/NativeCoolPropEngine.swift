@@ -94,6 +94,53 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         return result
     }
 
+    public func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropBinaryEngineResult {
+        try Task.checkCancellation()
+        let fractions = Dictionary(
+            uniqueKeysWithValues: composition.map { ($0.component, $0.moleFraction) }
+        )
+        let carbonDioxide = fractions[.carbonDioxide] ?? 0
+        let nitrogen = fractions[.nitrogen] ?? 0
+        let oxygen = fractions[.oxygen] ?? 0
+        let argon = fractions[.argon] ?? 0
+        let methane = fractions[.methane] ?? 0
+        let hydrogen = fractions[.hydrogen] ?? 0
+
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXCoolPropBinaryResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_calculate_dry_co2_mixture(
+                pressurePa,
+                temperatureK,
+                carbonDioxide,
+                nitrogen,
+                oxygen,
+                argon,
+                methane,
+                hydrogen,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp dry-mixture calculation failed." : message
+                )
+            }
+            return CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+    }
+
     public func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
         try Task.checkCancellation()
         let limits = try await Task.detached(priority: .userInitiated) {
