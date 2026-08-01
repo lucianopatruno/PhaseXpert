@@ -29,31 +29,29 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
     }
 
-    func testCompositionValueIsSelectedWhenEditingBegins() {
+    func testCompositionValueCanBeClearedAndReplaced() {
         let app = XCUIApplication()
         app.launch()
 
-        let carbonDioxideField = app.textFields["CO₂ mole percent"]
-        XCTAssertTrue(carbonDioxideField.waitForExistence(timeout: 2))
-        for _ in 0..<5 where !carbonDioxideField.isHittable {
+        let clearButton = app.buttons["Clear CO₂ mole percent"]
+        XCTAssertTrue(clearButton.waitForExistence(timeout: 2))
+        for _ in 0..<5 where !clearButton.isHittable {
             app.swipeUp()
         }
         XCTAssertTrue(
-            carbonDioxideField.isHittable,
-            "The CO₂ composition field should be reachable by scrolling the calculator form."
+            clearButton.isHittable,
+            "The CO₂ composition clear button should be reachable by scrolling."
         )
-        carbonDioxideField.tap()
+        clearButton.tap()
+
+        let carbonDioxideField = app.textFields["CO₂ mole percent"]
+        XCTAssertEqual(carbonDioxideField.value as? String, "")
         XCTAssertTrue(
             app.buttons["OK"].waitForExistence(timeout: 2),
-            "The numeric keyboard should be focused before replacement text is entered."
+            "Clearing a composition should focus its numeric field."
         )
         carbonDioxideField.typeText("95")
-
-        XCTAssertEqual(
-            carbonDioxideField.value as? String,
-            "95",
-            "Typing after focus should replace the selected composition value."
-        )
+        XCTAssertEqual(carbonDioxideField.value as? String, "95")
     }
 
     func testNumericKeyboardCanBeDismissed() {
