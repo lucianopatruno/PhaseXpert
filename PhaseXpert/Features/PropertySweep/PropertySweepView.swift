@@ -82,10 +82,14 @@ struct PropertySweepView: View {
                         viewModel.cancel()
                     }
                 } else {
-                    Button("Run property sweep", systemImage: "chart.xyaxis.line") {
+                    Button {
                         viewModel.start()
+                    } label: {
+                        Label("Run property sweep", systemImage: "chart.xyaxis.line")
+                            .frame(maxWidth: .infinity, alignment: .center)
                     }
                     .buttonStyle(.borderedProminent)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .disabled(viewModel.availableProperties.isEmpty)
                     .accessibilityIdentifier("run-property-sweep")
                 }
