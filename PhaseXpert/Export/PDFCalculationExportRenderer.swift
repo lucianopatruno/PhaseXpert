@@ -132,8 +132,11 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         context.restoreGState()
 
         let response = attachment.response
+        let boundaryDescription = response.boundaryKind == .mixtureEnvelope
+            ? "CO₂-N₂ bubble/dew envelope"
+            : "pure-fluid CO₂ saturation"
         drawLine(
-            "Boundary: pure-fluid CO₂ saturation • \(response.points.count) provider-calculated points",
+            "Boundary: \(boundaryDescription) • \(response.points.count) provider-calculated points",
             font: PDFReportFonts.body,
             color: PDFReportPalette.bodyText,
             position: CGPoint(x: PDFReportLayout.margin, y: 176),
