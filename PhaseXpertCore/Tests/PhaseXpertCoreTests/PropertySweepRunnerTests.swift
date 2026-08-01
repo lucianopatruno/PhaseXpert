@@ -154,6 +154,23 @@ final class PropertySweepRunnerTests: XCTestCase {
         }
     }
 
+    func testCancellationStopsSweepWithoutReturningPartialResult() async {
+        let task = Task {
+            try await PropertySweepRunner(provider: MockProvider())
+                .run(request(count: PropertySweepRequest.maximumPointCount))
+        }
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("Cancelled sweep should not return a result.")
+        } catch is CancellationError {
+            // Expected.
+        } catch {
+            XCTFail("Expected CancellationError, received \(error)")
+        }
+    }
+
     func testRejectsOutOfDomainRangeAndPointCount() async {
         let runner = PropertySweepRunner(provider: MockProvider())
 
