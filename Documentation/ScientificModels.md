@@ -147,7 +147,8 @@ additional CoolProp equation-of-state calls:
 Calculations use Pa, K, kg/m³ and kg/mol internally. Molar mass is presented in
 g/mol, specific volume in m³/kg, and Z is dimensionless. CO₂ (44.0095 g/mol)
 and N₂ (28.0134 g/mol) molecular weights are recorded from NIST Chemistry
-WebBook SRD 69. A component without reviewed molar-mass data produces an
+WebBook SRD 69 (DOI `10.18434/T4D303`). The gas constant is the NIST 2022
+CODATA value. A component without reviewed molar-mass data produces an
 unavailable result; an invalid pressure, temperature or density produces a
 failed result. Inputs are never normalized in this layer. The values inherit
 the preliminary validation status of the provider density and composition.
