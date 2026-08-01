@@ -146,7 +146,9 @@ final class PropertySweepRunnerTests: XCTestCase {
             _ = try await runner.run(request(start: 20_000_000, end: 2_000_000))
             XCTFail("Reversed bounds should fail.")
         } catch {
-            guard case .invalidRange = error as? PropertySweepError else {
+            guard let sweepError = error as? PropertySweepError,
+                  case .invalidRange = sweepError
+            else {
                 return XCTFail("Expected invalidRange, received \(error)")
             }
         }
