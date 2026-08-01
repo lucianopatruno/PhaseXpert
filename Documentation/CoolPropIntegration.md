@@ -129,3 +129,13 @@ Additional candidate references are listed in
 - Add independently sourced density cases with inputs, values, uncertainty and
   justified tolerances.
 - Complete scientific review and remove no warning until approval is recorded.
+
+## Restricted CO₂–N₂ phase-envelope spike
+
+For compositions containing only CO₂ and more than 0 but no more than 10 mol% N₂, the native bridge uses CoolProp 8.0.0's low-level HEOS `AbstractState` interface. It sets the entered mole fractions, calls `build_phase_envelope("none")`, and copies the returned temperature, pressure, quality-based branch and critical-point index. PhaseXpert does not call `apply_simple_mixing_rule`, overwrite binary interaction parameters, interpolate a missing branch, or draw a fallback curve.
+
+The bridge requires a complete finite envelope, caller-supplied storage, and explicit bubble and dew branches. Swift rejects incomplete, non-finite, non-positive, unclosed or structurally insufficient responses. The result remains preliminary because successful CoolProp execution is not independent scientific validation.
+
+The 10 mol% N₂ limit is an implementation restriction selected for this spike, not an accuracy statement or validated range. CoolProp documents that mixture calculations are substantially more complex than pure-fluid calculations and that only a restricted set of mixture input pairs is supported: https://coolprop.org/fluid_properties/Mixtures.html
+
+This milestone changes the native bridge ABI. Developers must remove and rebuild the ignored `Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework` before building the app.
