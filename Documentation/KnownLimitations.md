@@ -7,7 +7,8 @@
   a temporary 10 mol% N₂ cap that is not a validated accuracy range.
 - No independently sourced numeric CO₂-N₂ cases have yet been approved and
   ingested. Mixture results must not be used for engineering decisions.
-- CO₂-N₂ dynamic viscosity and every mixture phase envelope are unavailable.
+- CO₂-N₂ dynamic viscosity is unavailable. A phase envelope is available only
+  for the restricted CO₂-N₂ spike; other mixture envelopes remain unavailable.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
 - The broad input envelope is a test-planning domain, not a validated range.
@@ -15,10 +16,10 @@
   executable mixture support. Their identifiers remain future scaffolding.
 - Saved-case comparison is pairwise only. It does not rank models or establish
   accuracy, and it does not yet export a comparison report.
-- The phase chart does not support mixtures, bubble/dew separation, a
-  two-phase area, cricondenbar or cricondentherm. The calculation PDF does not
-  yet embed a phase-envelope record or the interactive phase chart; standalone
-  chart-image export remains a placeholder.
+- The phase chart supports pure CO₂ and the restricted CO₂-N₂ spike only.
+  It does not provide envelopes for other mixtures, or report cricondenbar or
+  cricondentherm. Exported PNG and PDF diagrams contain calculated provider
+  points rather than an interactive chart.
 - Saved cases are local-only. Backup, sync and recovery UI are not implemented.
 - The first SwiftData schema is versioned; no historical migration stage exists
   yet because there is no prior released schema.
@@ -27,7 +28,9 @@
 - Xcode is unavailable in the implementation environment; a clean Xcode 26
   build and test run is required on the user's Mac.
 
-- Phase-diagram PNG and PDF embedding currently support only a real pure-CO₂ saturation boundary. CO₂-rich mixture phase envelopes remain unavailable and are never estimated for display or export.
+- Phase-diagram PNG and PDF embedding support calculated pure-CO₂ saturation
+  data and the restricted CO₂-N₂ envelope only. Unsupported mixture boundaries
+  remain unavailable and are never estimated for display or export.
 - PDF phase-diagram embedding recalculates the boundary with the installed provider and therefore requires an exact recorded/current model-version and provider-version match.
 
 - The CO₂-N₂ phase envelope is a preliminary CoolProp HEOS implementation spike restricted to more than 0 and at most 10 mol% N₂. The cap is not a validated accuracy range.
