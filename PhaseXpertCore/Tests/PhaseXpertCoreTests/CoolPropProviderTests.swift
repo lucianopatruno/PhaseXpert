@@ -65,7 +65,14 @@ final class CoolPropProviderTests: XCTestCase {
             pressurePa: 15_000_000,
             temperatureK: 293.15,
             composition: [.init(component: .carbonDioxide, moleFraction: 1)],
-            requestedProperties: [.density, .dynamicViscosity, .enthalpy],
+            requestedProperties: [
+                .density,
+                .dynamicViscosity,
+                .molarMass,
+                .compressibilityFactor,
+                .specificVolume,
+                .enthalpy
+            ],
             clientVersion: "test"
         )
 
@@ -84,6 +91,20 @@ final class CoolPropProviderTests: XCTestCase {
             response.properties.first { $0.property == .dynamicViscosity }?.unit,
             "Pa·s"
         )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .molarMass }?.value,
+            44.0095,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .specificVolume }?.status,
+            .calculated
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .compressibilityFactor }?.status,
+            .calculated
+        )
+        XCTAssertTrue(response.solver.method.contains("Z=pM/(ρRT)"))
         XCTAssertEqual(
             response.properties.first { $0.property == .enthalpy }?.status,
             .unavailable
