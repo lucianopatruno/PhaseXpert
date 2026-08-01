@@ -19,7 +19,7 @@ not be used for engineering, safety, commercial or regulatory decisions.
 - CO₂-N₂ binary: density and phase only
 - Temporary binary cap: `0 < x(N₂) <= 0.10`
 - CO₂-N₂ viscosity: unavailable
-- CO₂-N₂ phase envelope: unavailable
+- CO₂-N₂ phase envelope: preliminary and restricted to the same binary cap
 
 The 10 mol% N₂ cap is an implementation-test restriction, not a validated
 accuracy range. The bridge uses only the CO₂-N₂ interaction data distributed
@@ -93,7 +93,8 @@ permitted.
 - marks every successful value as preliminary and validation-pending;
 - reports mixture viscosity as unavailable rather than fabricating a value;
 - returns one pure-CO₂ saturation boundary and a critical point;
-- returns no phase boundary for mixtures or when the binary is absent.
+- returns calculated phase boundaries for pure CO₂ and the restricted CO₂-N₂
+  binary only, and none when the native binary is absent.
 
 Tests use a deterministic mock engine to verify orchestration, rejection,
 serialization and status handling. Mock values are never registered in the
@@ -124,7 +125,8 @@ Additional candidate references are listed in
 - Retain MIT notices and attribution.
 - Run pure-CO₂ regression tests after rebuilding the bridge.
 - Verify 95/5 mol% CO₂/N₂ density and phase execute on device and simulator.
-- Verify mixture viscosity and phase envelope remain explicitly unavailable.
+- Verify mixture viscosity remains explicitly unavailable and the restricted
+  CO₂-N₂ phase envelope contains distinct bubble and dew branches.
 - Verify N₂ above 10 mol% and any third component are blocked.
 - Add independently sourced density cases with inputs, values, uncertainty and
   justified tolerances.
