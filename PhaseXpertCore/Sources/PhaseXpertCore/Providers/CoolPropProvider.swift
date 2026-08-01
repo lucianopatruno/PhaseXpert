@@ -132,7 +132,7 @@ public extension CoolPropEngine {
         composition: [MixtureComponent]
     ) async throws -> CoolPropBinaryEngineResult {
         let active = composition.filter {
-            $0.moleFraction > CalculationValidator.compositionTolerance
+            $0.moleFraction > 0
         }
         guard
             active.count == 2,
@@ -642,7 +642,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             )
         }
         let active = composition.filter {
-            $0.moleFraction > CalculationValidator.compositionTolerance
+            $0.moleFraction > 0
         }
         if isPureCarbonDioxide(active) {
             return .pureCarbonDioxide
