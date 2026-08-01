@@ -147,7 +147,7 @@ public struct PropertySweepRunner: Sendable {
         progress: ProgressHandler? = nil
     ) async throws -> PropertySweepResult {
         try validate(request)
-        let started = ContinuousClock.now
+        let started = Date()
         var samples: [PropertySweepSample] = []
         samples.reserveCapacity(request.pointCount)
 
@@ -251,11 +251,7 @@ public struct PropertySweepRunner: Sendable {
         return String(describing: error)
     }
 
-    private func durationMilliseconds(
-        since start: ContinuousClock.Instant
-    ) -> Double {
-        let duration = start.duration(to: .now)
-        return Double(duration.components.seconds) * 1_000
-            + Double(duration.components.attoseconds) / 1e15
+    private func durationMilliseconds(since start: Date) -> Double {
+        Date().timeIntervalSince(start) * 1_000
     }
 }
