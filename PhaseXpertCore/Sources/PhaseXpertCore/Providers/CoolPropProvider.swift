@@ -219,6 +219,18 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     title: "Pressure-Density-Temperature Measurements of Binary Mixtures Rich in CO₂ for Pipeline Transportation in the CCS Process",
                     year: 2012,
                     doiOrURL: "https://doi.org/10.1021/je300590v"
+                ),
+                SourceReference(
+                    authors: "Linstrom and Mallard (editors)",
+                    title: "NIST Chemistry WebBook, NIST Standard Reference Database Number 69",
+                    year: 2025,
+                    doiOrURL: "https://doi.org/10.18434/T4D303"
+                ),
+                SourceReference(
+                    authors: "CODATA Task Group on Fundamental Constants",
+                    title: "2022 CODATA recommended values of the fundamental physical constants",
+                    year: 2022,
+                    doiOrURL: "https://physics.nist.gov/cuu/Constants/"
                 )
             ]
         )
