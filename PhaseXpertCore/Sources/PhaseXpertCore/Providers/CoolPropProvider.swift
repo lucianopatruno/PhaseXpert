@@ -112,6 +112,12 @@ public protocol CoolPropEngine: Sendable {
         nitrogenMoleFraction: Double
     ) async throws -> CoolPropBinaryEngineResult
 
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropBinaryEngineResult
+
     func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits
 
     func pureCarbonDioxideSaturationPressure(
@@ -120,6 +126,31 @@ public protocol CoolPropEngine: Sendable {
 }
 
 public extension CoolPropEngine {
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropBinaryEngineResult {
+        let active = composition.filter {
+            $0.moleFraction > CalculationValidator.compositionTolerance
+        }
+        guard
+            active.count == 2,
+            let carbonDioxide = active.first(where: { $0.component == .carbonDioxide }),
+            let nitrogen = active.first(where: { $0.component == .nitrogen })
+        else {
+            throw ProviderError.modelUnavailable(
+                "The CoolProp engine does not expose the dry-mixture bridge."
+            )
+        }
+        return try await calculateCarbonDioxideNitrogen(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            carbonDioxideMoleFraction: carbonDioxide.moleFraction,
+            nitrogenMoleFraction: nitrogen.moleFraction
+        )
+    }
+
     func calculateCarbonDioxideNitrogen(
         pressurePa: Double,
         temperatureK: Double,
@@ -182,7 +213,7 @@ private actor PureCarbonDioxideEnvelopeCache {
     }
 }
 
-/// Preliminary established-model provider for pure CO₂ and a restricted CO₂-N₂ spike.
+/// Preliminary established-model provider for pure CO₂ and restricted dry CO₂-rich mixtures.
 ///
 /// Availability does not imply scientific validation. Every successful result
 /// carries an explicit validation-pending warning.
@@ -191,12 +222,15 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     private let envelopeCache: PureCarbonDioxideEnvelopeCache
 
     private static var saturationPointCount: Int { 81 }
-    private static var maximumNitrogenMoleFraction: Double { 0.10 }
-    private static var binaryCompositionSumTolerance: Double { 1e-10 }
+    private static var maximumTotalImpurityMoleFraction: Double { 0.10 }
+    private static var mixtureCompositionSumTolerance: Double { 1e-10 }
+    private static var supportedDryComponents: Set<ComponentID> {
+        [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
+    }
 
     private enum SupportedComposition {
         case pureCarbonDioxide
-        case carbonDioxideNitrogen(carbonDioxide: Double, nitrogen: Double)
+        case dryMixture([MixtureComponent])
     }
 
     private struct ResolvedState {
@@ -219,10 +253,12 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.6.0",
+            providerVersion: "0.7.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
-            supportedComponents: engine.isAvailable ? [.carbonDioxide, .nitrogen] : [],
+            supportedComponents: engine.isAvailable
+                ? [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
+                : [],
             supportedProperties: engine.isAvailable
                 ? [
                     .density,
@@ -242,15 +278,16 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ]
                 : [],
             domain: .initialCO2Transport,
-            scientificBasis: "CoolProp HEOS pure-fluid CO₂ and restricted CO₂-N₂ binary mixture backend.",
-            equationOrMethod: "CoolProp HEOS; pure-CO₂ thermodynamic, acoustic and transport values come from one AbstractState(P,T) update. Cp/Cv, molar mass, specific volume and Z are derived transparently. The CO₂-N₂ pair uses only interaction data shipped by the pinned release; no estimated mixing rule is applied.",
+            scientificBasis: "CoolProp HEOS pure-fluid CO₂ and restricted dry CO₂-rich mixture backend.",
+            equationOrMethod: "CoolProp HEOS; pure-CO₂ thermodynamic, acoustic and transport values come from one AbstractState(P,T) update. Cp/Cv, molar mass, specific volume and Z are derived transparently. Dry mixtures use only interaction entries shipped by the pinned release; no estimated mixing rule is applied.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
                 "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties.",
-                "CO₂-N₂ remains restricted to density, phase and three explicitly derived engineering properties with 0 < N₂ ≤ 10 mol%; expanded pure-fluid properties are unavailable for mixtures.",
+                "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄ and H₂ with total impurity in (0, 10] mol%; this temporary product guardrail is not a validated accuracy range.",
+                "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.",
                 "Preliminary integration; no production accuracy claim.",
-                "CO₂-N₂ viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
+                "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
                 "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
             ],
             references: [
@@ -309,17 +346,21 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     public func applicabilityIssues(
         for composition: [MixtureComponent]
     ) -> [ValidationIssue] {
-        let nitrogenFraction = composition
-            .filter { $0.component == .nitrogen && $0.moleFraction.isFinite }
+        let totalImpurity = composition
+            .filter {
+                $0.component != .carbonDioxide
+                    && $0.moleFraction.isFinite
+                    && $0.moleFraction > 0
+            }
             .reduce(0) { $0 + $1.moleFraction }
 
         var issues: [ValidationIssue] = []
-        if nitrogenFraction > Self.maximumNitrogenMoleFraction {
+        if totalImpurity > Self.maximumTotalImpurityMoleFraction {
             issues.append(
                 ValidationIssue(
                     code: .componentOutsideModelRange,
                     severity: .error,
-                    message: "The preliminary CO₂-N₂ spike is limited to at most 10 mol% N₂. This temporary cap is not a validated accuracy range."
+                    message: "The preliminary dry-mixture scope is limited to at most 10 mol% total impurity. This temporary product guardrail is not a validated accuracy range."
                 )
             )
         }
@@ -327,16 +368,16 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         let total = composition.reduce(0) { $0 + $1.moleFraction }
         let deviation = abs(total - 1)
         if
-            nitrogenFraction > CalculationValidator.compositionTolerance,
+            totalImpurity > CalculationValidator.compositionTolerance,
             total.isFinite,
-            deviation > Self.binaryCompositionSumTolerance,
+            deviation > Self.mixtureCompositionSumTolerance,
             deviation <= CalculationValidator.compositionTolerance
         {
             issues.append(
                 ValidationIssue(
                     code: .compositionTotal,
                     severity: .error,
-                    message: "CO₂-N₂ mole fractions must sum to 100 mol% without implicit native normalization. Adjust the entered values explicitly."
+                    message: "Dry-mixture mole fractions must sum to 100 mol% without implicit native normalization. Adjust the entered values explicitly."
                 )
             )
         }
@@ -388,12 +429,11 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     "Enthalpy, entropy and internal energy use the pinned CoolProp default reference state."
                 ]
             )
-        case let .carbonDioxideNitrogen(carbonDioxide, nitrogen):
-            let raw = try await engine.calculateCarbonDioxideNitrogen(
+        case let .dryMixture(activeComposition):
+            let raw = try await engine.calculateDryCarbonDioxideMixture(
                 pressurePa: request.pressurePa,
                 temperatureK: request.temperatureK,
-                carbonDioxideMoleFraction: carbonDioxide,
-                nitrogenMoleFraction: nitrogen
+                composition: activeComposition
             )
             state = ResolvedState(
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
@@ -401,10 +441,11 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 phaseIdentifier: raw.phaseIdentifier,
                 isPureCarbonDioxide: false,
                 expandedProperties: nil,
-                solverMethod: "CoolProp PropsSI(P,T), HEOS CO₂-N₂ binary; pinned library interaction data only",
+                solverMethod: "CoolProp PropsSI(P,T), HEOS dry CO₂-rich mixture; pinned library interaction entries only",
                 warnings: [
-                    "CO₂-N₂ MIXTURE SPIKE: density and phase have not completed independent validation.",
-                    "Mixture dynamic viscosity and mixture phase envelopes are not enabled."
+                    "DRY MIXTURE — VALIDATION PENDING: density and phase have not completed independent validation.",
+                    "The 10 mol% total-impurity cap is a PhaseXpert product guardrail, not a validated accuracy range.",
+                    "Mixture dynamic viscosity, expanded properties and mixture phase envelopes are not enabled."
                 ]
             )
         }
@@ -480,7 +521,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         guard isPureCarbonDioxide(request.composition) else {
             return unavailableEnvelope(
                 requestID: request.requestID,
-                warning: "Mixture phase envelopes are not enabled in the CO₂-N₂ spike; the phase diagram supports exactly 100 mol% CO₂ only."
+                warning: "Mixture phase envelopes are not enabled; the phase diagram supports exactly 100 mol% CO₂ only."
             )
         }
 
@@ -591,59 +632,54 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
         let grouped = Dictionary(grouping: composition, by: \.component)
         guard grouped.values.allSatisfy({ $0.count == 1 }) else {
-            throw ProviderError.invalidRequest(
-                "Each component may appear only once."
-            )
+            throw ProviderError.invalidRequest("Each component may appear only once.")
         }
+
         let total = composition.reduce(0) { $0 + $1.moleFraction }
         guard abs(total - 1) <= CalculationValidator.compositionTolerance else {
             throw ProviderError.invalidRequest(
                 "Composition must total 100 mol% before CoolProp calculation."
             )
         }
-
         let active = composition.filter {
             $0.moleFraction > CalculationValidator.compositionTolerance
         }
         if isPureCarbonDioxide(active) {
             return .pureCarbonDioxide
         }
+        if let unsupported = active.first(where: {
+            !Self.supportedDryComponents.contains($0.component)
+        }) {
+            throw ProviderError.unsupportedComponent(unsupported.component)
+        }
         guard
-            active.count == 2,
-            let carbonDioxide = active.first(where: { $0.component == .carbonDioxide }),
-            let nitrogen = active.first(where: { $0.component == .nitrogen })
+            active.count >= 2,
+            let carbonDioxide = active.first(where: { $0.component == .carbonDioxide })
         else {
-            let unsupported = active.first {
-                $0.component != .carbonDioxide && $0.component != .nitrogen
-            }
-            if let unsupported {
-                throw ProviderError.unsupportedComponent(unsupported.component)
-            }
             throw ProviderError.invalidRequest(
-                "The preliminary CoolProp provider accepts pure CO₂ or the restricted CO₂-N₂ binary only."
+                "The preliminary provider requires CO₂ plus at least one supported dry impurity."
             )
         }
-        guard abs(
-            carbonDioxide.moleFraction + nitrogen.moleFraction - 1
-        ) <= Self.binaryCompositionSumTolerance else {
+        guard active.allSatisfy({
+            $0.component == .carbonDioxide
+                || carbonDioxide.moleFraction > $0.moleFraction
+        }) else {
+            throw ProviderError.invalidRequest("CO₂ must be the unique largest component.")
+        }
+        let totalImpurity = active
+            .filter { $0.component != .carbonDioxide }
+            .reduce(0) { $0 + $1.moleFraction }
+        guard totalImpurity <= Self.maximumTotalImpurityMoleFraction else {
             throw ProviderError.invalidRequest(
-                "CO₂-N₂ mole fractions must sum to 100 mol% without implicit normalization."
+                "The dry-mixture scope is temporarily limited to at most 10 mol% total impurity."
             )
         }
-        guard carbonDioxide.moleFraction > nitrogen.moleFraction else {
+        guard abs(total - 1) <= Self.mixtureCompositionSumTolerance else {
             throw ProviderError.invalidRequest(
-                "CO₂ must be the unique largest component."
+                "Dry-mixture mole fractions must sum to 100 mol% without implicit normalization."
             )
         }
-        guard nitrogen.moleFraction <= Self.maximumNitrogenMoleFraction else {
-            throw ProviderError.invalidRequest(
-                "The CO₂-N₂ spike is temporarily limited to at most 10 mol% N₂."
-            )
-        }
-        return .carbonDioxideNitrogen(
-            carbonDioxide: carbonDioxide.moleFraction,
-            nitrogen: nitrogen.moleFraction
-        )
+        return .dryMixture(active)
     }
 
     private func isPureCarbonDioxide(_ composition: [MixtureComponent]) -> Bool {
@@ -712,7 +748,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     property,
                     unit: "Pa·s",
                     state: state,
-                    mixtureMessage: "CO₂-N₂ dynamic viscosity is not enabled pending independent validation."
+                    mixtureMessage: "Mixture dynamic viscosity is not enabled pending independent validation."
                 )
             }
         case .enthalpy:
