@@ -163,10 +163,12 @@ final class PropertySweepRunnerTests: XCTestCase {
     }
 
     func testCancellationStopsSweepWithoutReturningPartialResult() async {
+        let sweepRequest = request(count: PropertySweepRequest.maximumPointCount)
+        let runner = PropertySweepRunner(
+            provider: MockProvider(delayNanoseconds: 10_000_000)
+        )
         let task = Task {
-            try await PropertySweepRunner(
-                provider: MockProvider(delayNanoseconds: 10_000_000)
-            ).run(request(count: PropertySweepRequest.maximumPointCount))
+            try await runner.run(sweepRequest)
         }
         task.cancel()
 
