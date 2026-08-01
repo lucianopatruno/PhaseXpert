@@ -37,8 +37,8 @@ struct AboutView: View {
                     IFECard {
                         Toggle(isOn: $prefersDarkAppearance) {
                             Label(
-                                prefersDarkAppearance ? "Dark mode" : "Light mode",
-                                systemImage: prefersDarkAppearance ? "moon.fill" : "sun.max.fill"
+                                "Dark mode",
+                                systemImage: "moon.fill"
                             )
                         }
                         .tint(.ifePrimary)
