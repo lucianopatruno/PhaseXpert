@@ -218,7 +218,7 @@ struct CalculatorView: View {
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
             .onChange(of: focusedField) { _, newField in
-                guard case let .composition(id) = newField else { return }
+                guard case let .composition(id)? = newField else { return }
                 selectAllCompositionText(for: id)
             }
             .onSubmit { viewModel.validate() }
