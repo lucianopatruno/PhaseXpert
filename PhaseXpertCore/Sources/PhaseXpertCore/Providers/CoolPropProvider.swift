@@ -279,6 +279,18 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     doiOrURL: "https://doi.org/10.1021/je300590v"
                 ),
                 SourceReference(
+                    authors: "Huber, Sykioti, Assael and Perkins",
+                    title: "Reference Correlation of the Thermal Conductivity of Carbon Dioxide from the Triple Point to 1100 K and up to 200 MPa",
+                    year: 2016,
+                    doiOrURL: "https://doi.org/10.1063/1.4940892"
+                ),
+                SourceReference(
+                    authors: "Laesecke and Muzny",
+                    title: "Reference Correlation for the Viscosity of Carbon Dioxide",
+                    year: 2017,
+                    doiOrURL: "https://doi.org/10.1063/1.4977429"
+                ),
+                SourceReference(
                     authors: "Linstrom and Mallard (editors)",
                     title: "NIST Chemistry WebBook, NIST Standard Reference Database Number 69",
                     year: 2025,
