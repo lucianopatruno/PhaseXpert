@@ -783,13 +783,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         case .jouleThomsonCoefficient:
             expandedProperty(
                 property,
-                unit: "K/MPa",
+                unit: "°C/bar",
                 value: state.expandedProperties.map {
-                    $0.jouleThomsonKelvinPerPascal * 1_000_000
+                    $0.jouleThomsonKelvinPerPascal * 100_000
                 },
                 requiresPositiveValue: false,
                 state: state,
-                message: "CoolProp single-phase derivative (∂T/∂p)h; converted from K/Pa."
+                message: "CoolProp single-phase derivative (∂T/∂p)h; converted from K/Pa to °C/bar."
             )
         default:
             PropertyValue(
