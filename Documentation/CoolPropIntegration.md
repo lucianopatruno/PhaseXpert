@@ -15,7 +15,9 @@ not be used for engineering, safety, commercial or regulatory decisions.
 - CoolProp tag: `v8.0.0`
 - Licence: MIT
 - Backend: `HEOS`
-- Pure CO₂: density, dynamic viscosity, phase and saturation boundary
+- Pure CO₂: density, dynamic viscosity, phase, enthalpy, entropy, internal
+  energy, Cp, Cv, Cp/Cv, speed of sound, thermal conductivity,
+  Joule–Thomson coefficient and saturation boundary
 - CO₂-N₂ binary: density and phase only
 - Temporary binary cap: `0 < x(N₂) <= 0.10`
 - CO₂-N₂ viscosity: unavailable
@@ -64,8 +66,9 @@ native ABI. Do not download an unverified binary from an unofficial source.
 
 `PhaseXpertCoolPropBridge.h` exposes:
 
-- pure-CO₂ density, dynamic viscosity and phase from pressure in Pa and
-  temperature in K;
+- pure-CO₂ density, dynamic viscosity, enthalpy, entropy, internal energy,
+  Cp, Cv, speed of sound, thermal conductivity, Joule–Thomson coefficient and
+  phase from pressure in Pa and temperature in K;
 - restricted CO₂-N₂ density and phase from SI state and mole fractions;
 - linked library version;
 - pure-CO₂ saturation pressure and triple/critical limits;
@@ -74,7 +77,10 @@ native ABI. Do not download an unverified binary from an unofficial source.
 The binary function rejects non-finite or non-positive state input,
 non-normalized or negative fractions, CO₂ that is not the largest component and
 N₂ above the temporary cap. C++ exceptions never cross the C or Swift boundary.
-Native output is checked for finiteness and physical sign.
+Native output is checked for finiteness and physical sign. The pure-fluid path
+uses one HEOS AbstractState update per operating point; the Joule–Thomson
+coefficient uses the single-phase derivative (∂T/∂p)h. Cp/Cv is derived in
+Swift from the two returned heat capacities.
 
 The mixture fluid string uses the explicit supplied mole fractions with
 `HEOS::CarbonDioxide&Nitrogen`. No fallback pair or estimated mixing rule is
@@ -91,7 +97,8 @@ permitted.
 - rejects states outside the preliminary app domain;
 - checks cancellation and native output;
 - marks every successful value as preliminary and validation-pending;
-- reports mixture viscosity as unavailable rather than fabricating a value;
+- reports mixture viscosity and every expanded pure-fluid-only property as
+  unavailable rather than fabricating a value;
 - returns one pure-CO₂ saturation boundary and a critical point;
 - returns no phase boundary for mixtures or when the binary is absent.
 
@@ -123,9 +130,27 @@ Additional candidate references are listed in
 - Record the CoolProp version and resolved Git revision.
 - Retain MIT notices and attribution.
 - Run pure-CO₂ regression tests after rebuilding the bridge.
+- Verify all expanded pure-CO₂ outputs are finite on device and simulator.
+- Confirm signed Joule–Thomson values and CoolProp reference-state caloric
+  values are preserved rather than rejected as non-positive.
 - Verify 95/5 mol% CO₂/N₂ density and phase execute on device and simulator.
 - Verify mixture viscosity and phase envelope remain explicitly unavailable.
 - Verify N₂ above 10 mol% and any third component are blocked.
 - Add independently sourced density cases with inputs, values, uncertainty and
   justified tolerances.
 - Complete scientific review and remove no warning until approval is recorded.
+
+
+## Expanded pure-CO₂ property status
+
+Provider version 0.6.0 exposes caloric, heat-capacity, acoustic, conductivity
+and Joule–Thomson results only for exactly 100 mol% CO₂. The C bridge returns SI
+values from the pinned CoolProp HEOS state. Swift converts the Joule–Thomson
+coefficient from K/Pa to °C/bar for presentation and derives Cp/Cv.
+
+Enthalpy, entropy and internal energy use the pinned CoolProp default reference
+state; saved records retain that model/library version. CoolProp documents the
+CO₂ equation of state as Span and Wagner (1996), thermal conductivity as Huber
+et al. (2016), and viscosity as Laesecke and Muzny (2017). These references
+identify the implemented formulations but do not constitute independent
+PhaseXpert validation.

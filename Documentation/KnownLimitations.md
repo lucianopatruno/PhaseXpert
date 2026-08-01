@@ -1,17 +1,22 @@
 # Known limitations
 
 - The architecture demo produces no scientific values.
-- The CoolProp provider remains preliminary. Pure CO₂ supports density,
-  dynamic viscosity, phase identification and a pure-fluid saturation
-  boundary. The restricted CO₂-N₂ spike supports density and phase, with
+- The CoolProp provider remains preliminary. Pure CO₂ now exposes density,
+  viscosity, phase, caloric and heat-capacity properties, speed of sound,
+  conductivity, Joule–Thomson coefficient and a pure-fluid saturation
+  boundary. These expanded outputs have not completed independent PhaseXpert
+  validation. The restricted CO₂-N₂ spike supports density and phase, with
   a temporary 10 mol% N₂ cap that is not a validated accuracy range. Both
   executable paths report molar mass, specific volume and Z as transparent
   derived values rather than independent EOS outputs.
 - Derived values inherit the validation status and uncertainty of their
   recorded composition and calculated density inputs.
+- Enthalpy, entropy and internal energy use CoolProp's default reference state;
+  comparisons require matching recorded model and provider versions.
 - No independently sourced numeric CO₂-N₂ cases have yet been approved and
   ingested. Mixture results must not be used for engineering decisions.
-- CO₂-N₂ dynamic viscosity and every mixture phase envelope are unavailable.
+- CO₂-N₂ viscosity, caloric, heat-capacity, acoustic, conductivity and
+  derivative properties and every mixture phase envelope are unavailable.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
 - The broad input envelope is a test-planning domain, not a validated range.

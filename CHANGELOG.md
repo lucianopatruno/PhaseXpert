@@ -59,3 +59,10 @@
 - Added reviewed NIST molecular weights for the executable CO₂-N₂ domain and
   explicit unavailable/failed states when required inputs are unsupported or
   non-physical.
+
+- Expanded the pure-CO₂ native bridge and provider with enthalpy, entropy,
+  internal energy, Cp, Cv, Cp/Cv, speed of sound, thermal conductivity and the
+  Joule–Thomson coefficient using one HEOS state update.
+- Added signed-value handling, finite/physical safeguards, reference-state
+  provenance, pure-fluid gating, mixture-unavailable behavior and contract
+  tests for the expanded property set.

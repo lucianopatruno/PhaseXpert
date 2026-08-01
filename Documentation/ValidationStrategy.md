@@ -89,3 +89,21 @@ pipeline states, points on both sides of the critical region and explicit
 single-/two-phase classification checks. Mixture viscosity and mixture phase
 envelopes remain disabled until property-specific references and acceptance
 criteria are approved.
+
+
+## Expanded pure-CO₂ property validation plan
+
+The expanded provider contract is covered initially by deterministic
+orchestration and safeguard tests. Those tests verify units, signed-value
+handling, Cp/Cv derivation, mixture gating and non-finite rejection; their mock
+numbers are not scientific reference values.
+
+Before any production accuracy statement, IFE must approve independent cases
+for enthalpy, entropy, internal energy, Cp, Cv, speed of sound, thermal
+conductivity and Joule–Thomson coefficient across ship, pipeline and capture
+states. Caloric comparisons must use a documented matching reference state.
+Thermal-conductivity cases should be traced to Huber et al. (2016), DOI
+10.1063/1.4940892, or an independent experimental dataset. Joule–Thomson
+testing must include positive, zero-crossing-near and negative cases and avoid
+undefined two-phase derivatives. Tolerances remain unset until reference
+uncertainty and the intended claim are approved.
