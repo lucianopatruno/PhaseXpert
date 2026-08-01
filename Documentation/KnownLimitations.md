@@ -29,3 +29,7 @@
 
 - Phase-diagram PNG and PDF embedding currently support only a real pure-CO₂ saturation boundary. CO₂-rich mixture phase envelopes remain unavailable and are never estimated for display or export.
 - PDF phase-diagram embedding recalculates the boundary with the installed provider and therefore requires an exact recorded/current model-version and provider-version match.
+
+- The CO₂-N₂ phase envelope is a preliminary CoolProp HEOS implementation spike restricted to more than 0 and at most 10 mol% N₂. The cap is not a validated accuracy range.
+- Mixture-envelope convergence depends on CoolProp's low-level mixture solver. An incomplete, open, non-finite or branch-deficient result is rejected rather than displayed.
+- No independent CO₂-N₂ phase-equilibrium dataset has yet been accepted for PhaseXpert validation; the envelope must not be used for engineering decisions.
