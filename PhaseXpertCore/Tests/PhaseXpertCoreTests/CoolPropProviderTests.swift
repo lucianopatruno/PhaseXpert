@@ -14,6 +14,22 @@ final class CoolPropProviderTests: XCTestCase {
             densityKilogramsPerCubicMetre: 760.2,
             phaseIdentifier: "supercritical_liquid"
         )
+        var mixtureEnvelope = CoolPropMixtureEnvelopeEngineResult(
+            points: [
+                .init(temperatureK: 220, pressurePa: 1_000_000, branch: .dew),
+                .init(temperatureK: 240, pressurePa: 2_000_000, branch: .dew),
+                .init(temperatureK: 260, pressurePa: 4_000_000, branch: .dew),
+                .init(temperatureK: 280, pressurePa: 7_000_000, branch: .dew),
+                .init(temperatureK: 295, pressurePa: 9_000_000, branch: .critical),
+                .init(temperatureK: 282, pressurePa: 7_500_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 4_500_000, branch: .bubble),
+                .init(temperatureK: 238, pressurePa: 2_200_000, branch: .bubble),
+                .init(temperatureK: 220, pressurePa: 1_000_000, branch: .bubble)
+            ],
+            isClosed: true,
+            maximumTemperatureK: 295,
+            maximumPressurePa: 9_000_000
+        )
         var saturationLimits = CoolPropSaturationLimits(
             triplePointTemperatureK: 216.6,
             criticalPointTemperatureK: 304.1,
@@ -37,6 +53,13 @@ final class CoolPropProviderTests: XCTestCase {
             nitrogenMoleFraction: Double
         ) async throws -> CoolPropBinaryEngineResult {
             binaryResult
+        }
+
+        func carbonDioxideNitrogenPhaseEnvelope(
+            carbonDioxideMoleFraction: Double,
+            nitrogenMoleFraction: Double
+        ) async throws -> CoolPropMixtureEnvelopeEngineResult {
+            mixtureEnvelope
         }
 
         func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
@@ -331,21 +354,59 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertEqual(critical.pressurePa, 7_377_000, accuracy: 1e-12)
     }
 
-    func testMixtureSaturationBoundaryIsExplicitlyUnavailable() async throws {
+    func testCO2NitrogenEnvelopeReturnsRealBubbleAndDewBranches() async throws {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = PhaseEnvelopeRequest(
             modelID: provider.descriptor.id,
             composition: [
-                .init(component: .carbonDioxide, moleFraction: 0.99),
-                .init(component: .nitrogen, moleFraction: 0.01)
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
             ]
         )
 
         let response = try await provider.phaseEnvelope(request)
 
-        XCTAssertFalse(response.isAvailable)
-        XCTAssertTrue(response.points.isEmpty)
-        XCTAssertTrue(response.warnings.contains { $0.contains("100 mol% CO₂") })
+        XCTAssertTrue(response.isAvailable)
+        XCTAssertEqual(response.boundaryKind, .mixtureEnvelope)
+        XCTAssertGreaterThanOrEqual(response.points.filter { $0.branch == .bubble }.count, 2)
+        XCTAssertGreaterThanOrEqual(response.points.filter { $0.branch == .dew }.count, 2)
+        XCTAssertEqual(response.points.filter { $0.branch == .critical }.count, 1)
+        XCTAssertTrue(response.warnings.contains { $0.contains("VALIDATION PENDING") })
+        XCTAssertTrue(response.solver?.method.contains("build_phase_envelope") == true)
+    }
+
+    func testIncompleteCO2NitrogenEnvelopeIsRejected() async {
+        let incomplete = CoolPropMixtureEnvelopeEngineResult(
+            points: [
+                .init(temperatureK: 250, pressurePa: 2_000_000, branch: .dew),
+                .init(temperatureK: 260, pressurePa: 3_000_000, branch: .bubble)
+            ],
+            isClosed: false,
+            maximumTemperatureK: 260,
+            maximumPressurePa: 3_000_000
+        )
+        let provider = CoolPropProvider(engine: MockEngine(mixtureEnvelope: incomplete))
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ]
+        )
+
+        do {
+            _ = try await provider.phaseEnvelope(request)
+            XCTFail("An incomplete native envelope must not be displayed.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .malformedResponse(
+                    "CoolProp did not return a closed CO₂-N₂ phase envelope with enough calculated points."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     func testNonFiniteSaturationPressureIsRejected() async {
