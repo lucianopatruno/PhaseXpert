@@ -2,6 +2,7 @@
 
 #include "CoolProp.h"
 #include "AbstractState.h"
+#include "PhaseEnvelope.h"
 
 #include <algorithm>
 #include <cmath>
