@@ -40,7 +40,20 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             return CoolPropEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
                 dynamicViscosityPascalSeconds: nativeResult.dynamic_viscosity_pa_s,
-                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
+                expandedProperties: CoolPropPureFluidProperties(
+                    enthalpyJoulesPerKilogram: nativeResult.enthalpy_j_kg,
+                    entropyJoulesPerKilogramKelvin: nativeResult.entropy_j_kg_k,
+                    internalEnergyJoulesPerKilogram: nativeResult.internal_energy_j_kg,
+                    isobaricHeatCapacityJoulesPerKilogramKelvin:
+                        nativeResult.isobaric_heat_capacity_j_kg_k,
+                    isochoricHeatCapacityJoulesPerKilogramKelvin:
+                        nativeResult.isochoric_heat_capacity_j_kg_k,
+                    speedOfSoundMetresPerSecond: nativeResult.speed_of_sound_m_s,
+                    thermalConductivityWattsPerMetreKelvin:
+                        nativeResult.thermal_conductivity_w_m_k,
+                    jouleThomsonKelvinPerPascal: nativeResult.joule_thomson_k_pa
+                )
             )
         }.value
         try Task.checkCancellation()
