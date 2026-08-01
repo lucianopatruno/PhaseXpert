@@ -139,3 +139,5 @@ The bridge requires a complete finite envelope, caller-supplied storage, and exp
 The 10 mol% N₂ limit is an implementation restriction selected for this spike, not an accuracy statement or validated range. CoolProp documents that mixture calculations are substantially more complex than pure-fluid calculations and that only a restricted set of mixture input pairs is supported: https://coolprop.org/fluid_properties/Mixtures.html
 
 This milestone changes the native bridge ABI. Developers must remove and rebuild the ignored `Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework` before building the app.
+
+The operating-point relationship uses the provider's state classification for inside/outside. “Near” is a presentation-only proximity flag when linear interpolation between adjacent calculated points places a bubble or dew boundary within 1% pressure at the operating temperature; it is not an uncertainty or accuracy claim.
