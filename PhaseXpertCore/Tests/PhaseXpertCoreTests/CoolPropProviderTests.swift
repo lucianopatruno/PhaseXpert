@@ -328,7 +328,7 @@ final class CoolPropProviderTests: XCTestCase {
             XCTAssertEqual(
                 error,
                 .invalidRequest(
-                    "Composition must total 100 mol% before CoolProp calculation."
+                    "Dry-mixture mole fractions must sum to 100 mol% without implicit normalization."
                 )
             )
         } catch {
