@@ -28,6 +28,22 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
     }
 
+    func testCompositionValueIsSelectedWhenEditingBegins() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let carbonDioxideField = app.textFields["CO₂ mole percent"]
+        XCTAssertTrue(carbonDioxideField.waitForExistence(timeout: 2))
+        carbonDioxideField.tap()
+        carbonDioxideField.typeText("95")
+
+        XCTAssertEqual(
+            carbonDioxideField.value as? String,
+            "95",
+            "Typing after focus should replace the selected composition value."
+        )
+    }
+
     func testNumericKeyboardCanBeDismissed() {
         let app = XCUIApplication()
         app.launch()
