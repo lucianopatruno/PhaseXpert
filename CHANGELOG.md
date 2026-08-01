@@ -52,3 +52,10 @@
 - Added the calculated phase diagram and searchable phase-boundary provenance to PDF reports when the saved provider versions match the installed provider.
 - Made the calculator shield open scientific traceability, aligned pressure and temperature inputs with composition fields, and added keyboard previous/next navigation.
 - Added a persisted light/dark appearance toggle, selected CoolProp by default, and standardized absolute-pressure labels as `bar(a)`.
+
+- Added safeguarded, provider-independent derivation of mixture molar mass,
+  specific volume and compressibility factor from recorded mole fractions, SI
+  state and calculated density, with explicit formulas and provenance.
+- Added reviewed NIST molecular weights for the executable CO₂-N₂ domain and
+  explicit unavailable/failed states when required inputs are unsupported or
+  non-physical.
