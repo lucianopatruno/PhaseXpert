@@ -91,11 +91,10 @@ final class CoolPropProviderTests: XCTestCase {
             response.properties.first { $0.property == .dynamicViscosity }?.unit,
             "Pa·s"
         )
-        XCTAssertEqual(
-            response.properties.first { $0.property == .molarMass }?.value,
-            44.0095,
-            accuracy: 1e-12
+        let molarMass = try XCTUnwrap(
+            response.properties.first { $0.property == .molarMass }?.value
         )
+        XCTAssertEqual(molarMass, 44.0095, accuracy: 1e-12)
         XCTAssertEqual(
             response.properties.first { $0.property == .specificVolume }?.status,
             .calculated
