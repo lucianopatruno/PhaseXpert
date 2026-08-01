@@ -514,7 +514,8 @@ private struct PropertySweepCSVExporter {
     }
 
     private func escape(_ value: String) -> String {
-        let escaped = value.replacingOccurrences(of: """, with: """")
-        return ""\(escaped)""
+        let quote = String(Character(UnicodeScalar(34)))
+        let escaped = value.replacingOccurrences(of: quote, with: quote + quote)
+        return quote + escaped + quote
     }
 }
