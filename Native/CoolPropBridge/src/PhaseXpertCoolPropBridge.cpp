@@ -3,6 +3,7 @@
 #include "CoolProp/AbstractState.h"
 #include "CoolProp/CoolProp.h"
 
+#include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -126,6 +127,118 @@ int px_coolprop_calculate_pure_co2(
     }
 }
 
+int px_coolprop_calculate_dry_co2_mixture(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Mixture-result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+
+    const std::array<double, 6> fractions = {
+        carbon_dioxide_mole_fraction,
+        nitrogen_mole_fraction,
+        oxygen_mole_fraction,
+        argon_mole_fraction,
+        methane_mole_fraction,
+        hydrogen_mole_fraction
+    };
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    double total = 0;
+    for (const double fraction : fractions) {
+        if (!std::isfinite(fraction) || fraction < 0) {
+            copy_text("Mole fractions must be finite and non-negative.", error_buffer, error_buffer_size);
+            return 3;
+        }
+        total += fraction;
+    }
+    const double total_impurity = 1.0 - carbon_dioxide_mole_fraction;
+    bool carbon_dioxide_is_unique_largest = carbon_dioxide_mole_fraction > 0;
+    for (size_t index = 1; index < fractions.size(); ++index) {
+        carbon_dioxide_is_unique_largest =
+            carbon_dioxide_is_unique_largest
+            && carbon_dioxide_mole_fraction > fractions[index];
+    }
+    if (std::abs(total - 1.0) > 1e-10
+        || total_impurity <= 0
+        || total_impurity > 0.10 + 1e-12
+        || !carbon_dioxide_is_unique_largest) {
+        copy_text(
+            "Dry mixtures require CO2 as the unique largest component, total impurity in (0, 0.10], and fractions summing to one.",
+            error_buffer,
+            error_buffer_size
+        );
+        return 4;
+    }
+
+    try {
+        constexpr std::array<const char *, 6> names = {
+            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen"
+        };
+        std::string fluid = "HEOS::";
+        bool first = true;
+        char component[96];
+        for (size_t index = 0; index < fractions.size(); ++index) {
+            if (fractions[index] <= 1e-14) {
+                continue;
+            }
+            const int length = std::snprintf(
+                component,
+                sizeof(component),
+                "%s%s[%.17g]",
+                first ? "" : "&",
+                names[index],
+                fractions[index]
+            );
+            if (length <= 0 || static_cast<size_t>(length) >= sizeof(component)) {
+                copy_text("Could not construct the bounded dry-mixture identifier.", error_buffer, error_buffer_size);
+                return 5;
+            }
+            fluid += component;
+            first = false;
+        }
+
+        // CoolProp resolves only interaction entries shipped in version 8.0.0.
+        // This bridge never calls apply_simple_mixing_rule and never mutates
+        // binary interaction parameters.
+        const double density = CoolProp::PropsSI(
+            "Dmass", "P", pressure_pa, "T", temperature_k, fluid
+        );
+        const std::string phase = CoolProp::PhaseSI(
+            "P", pressure_pa, "T", temperature_k, fluid
+        );
+        if (!std::isfinite(density) || density <= 0) {
+            copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        result->density_kg_m3 = density;
+        result->phase = map_phase(phase);
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp dry-mixture calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
+    }
+}
+
 int px_coolprop_calculate_co2_n2(
     double pressure_pa,
     double temperature_k,
@@ -135,65 +248,19 @@ int px_coolprop_calculate_co2_n2(
     char *error_buffer,
     size_t error_buffer_size
 ) {
-    if (result == nullptr) {
-        copy_text("Binary-result pointer is null.", error_buffer, error_buffer_size);
-        return 1;
-    }
-    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
-        || pressure_pa <= 0 || temperature_k <= 0
-        || !std::isfinite(carbon_dioxide_mole_fraction)
-        || !std::isfinite(nitrogen_mole_fraction)) {
-        copy_text("Pressure, temperature, and mole fractions must be finite and positive.", error_buffer, error_buffer_size);
-        return 2;
-    }
-    if (carbon_dioxide_mole_fraction <= 0.5
-        || nitrogen_mole_fraction <= 0
-        || nitrogen_mole_fraction > 0.10
-        || std::abs(carbon_dioxide_mole_fraction + nitrogen_mole_fraction - 1.0) > 1e-10) {
-        copy_text("The binary spike requires CO2 as the largest component, 0 < N2 <= 0.10, and mole fractions summing to one.", error_buffer, error_buffer_size);
-        return 3;
-    }
-
-    try {
-        char fluid[192];
-        const int length = std::snprintf(
-            fluid,
-            sizeof(fluid),
-            "HEOS::CarbonDioxide[%.17g]&Nitrogen[%.17g]",
-            carbon_dioxide_mole_fraction,
-            nitrogen_mole_fraction
-        );
-        if (length <= 0 || static_cast<size_t>(length) >= sizeof(fluid)) {
-            copy_text("Could not construct the bounded CO2-N2 mixture identifier.", error_buffer, error_buffer_size);
-            return 4;
-        }
-
-        // PropsSI resolves the CarbonDioxide-Nitrogen pair already present in
-        // CoolProp 8.0.0. This bridge never calls apply_simple_mixing_rule or
-        // mutates binary interaction parameters.
-        const double density = CoolProp::PropsSI(
-            "Dmass", "P", pressure_pa, "T", temperature_k, fluid
-        );
-        const std::string phase = CoolProp::PhaseSI(
-            "P", pressure_pa, "T", temperature_k, fluid
-        );
-
-        if (!std::isfinite(density) || density <= 0) {
-            copy_text("CoolProp returned a non-finite or non-positive binary-mixture density.", error_buffer, error_buffer_size);
-            return 5;
-        }
-
-        result->density_kg_m3 = density;
-        result->phase = map_phase(phase);
-        copy_text("", error_buffer, error_buffer_size);
-        return 0;
-    } catch (const std::exception &error) {
-        copy_text(error.what(), error_buffer, error_buffer_size);
-        return 6;
-    } catch (...) {
-        copy_text("CoolProp CO2-N2 calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
-        return 7;
-    }
+    return px_coolprop_calculate_dry_co2_mixture(
+        pressure_pa,
+        temperature_k,
+        carbon_dioxide_mole_fraction,
+        nitrogen_mole_fraction,
+        0,
+        0,
+        0,
+        0,
+        result,
+        error_buffer,
+        error_buffer_size
+    );
 }
 
 int px_coolprop_pure_co2_saturation_limits(
