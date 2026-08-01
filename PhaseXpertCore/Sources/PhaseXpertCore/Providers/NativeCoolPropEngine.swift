@@ -100,9 +100,9 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         composition: [MixtureComponent]
     ) async throws -> CoolPropBinaryEngineResult {
         try Task.checkCancellation()
-        let fractions = Dictionary(
-            uniqueKeysWithValues: composition.map { ($0.component, $0.moleFraction) }
-        )
+        let fractions = composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
         let carbonDioxide = fractions[.carbonDioxide] ?? 0
         let nitrogen = fractions[.nitrogen] ?? 0
         let oxygen = fractions[.oxygen] ?? 0
