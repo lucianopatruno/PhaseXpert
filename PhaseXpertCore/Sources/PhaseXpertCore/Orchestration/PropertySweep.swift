@@ -244,6 +244,20 @@ public struct PropertySweepRunner: Sendable {
     }
 
     private func message(for error: Error) -> String {
+        if let providerError = error as? ProviderError {
+            switch providerError {
+            case let .modelUnavailable(message),
+                 let .invalidRequest(message),
+                 let .malformedResponse(message):
+                return message
+            case let .unsupportedComponent(component):
+                return "\(component.symbol) is not supported by the provider."
+            case .timeout:
+                return "The provider calculation timed out."
+            case .cancelled:
+                return "The provider calculation was cancelled."
+            }
+        }
         if let localized = error as? LocalizedError,
            let description = localized.errorDescription {
             return description
