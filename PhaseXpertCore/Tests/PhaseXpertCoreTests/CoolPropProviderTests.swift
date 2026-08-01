@@ -156,8 +156,14 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertEqual(byProperty[.speedOfSound]?.unit, "m/s")
         XCTAssertEqual(byProperty[.thermalConductivity]?.unit, "W/(m·K)")
         XCTAssertEqual(byProperty[.jouleThomsonCoefficient]?.unit, "K/MPa")
-        XCTAssertEqual(byProperty[.jouleThomsonCoefficient]?.value, -2, accuracy: 1e-12)
-        XCTAssertEqual(byProperty[.heatCapacityRatio]?.value, 2.2, accuracy: 1e-12)
+        let jouleThomson = try XCTUnwrap(
+            byProperty[.jouleThomsonCoefficient]?.value
+        )
+        let heatCapacityRatio = try XCTUnwrap(
+            byProperty[.heatCapacityRatio]?.value
+        )
+        XCTAssertEqual(jouleThomson, -2, accuracy: 1e-12)
+        XCTAssertEqual(heatCapacityRatio, 2.2, accuracy: 1e-12)
         XCTAssertTrue(response.solver.method.contains("single P,T state update"))
     }
 
