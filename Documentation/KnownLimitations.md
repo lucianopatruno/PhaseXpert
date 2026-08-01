@@ -3,8 +3,12 @@
 - The architecture demo produces no scientific values.
 - The CoolProp provider remains preliminary. Pure CO₂ supports density,
   dynamic viscosity, phase identification and a pure-fluid saturation
-  boundary. The restricted CO₂-N₂ spike supports density and phase only, with
-  a temporary 10 mol% N₂ cap that is not a validated accuracy range.
+  boundary. The restricted CO₂-N₂ spike supports density and phase, with
+  a temporary 10 mol% N₂ cap that is not a validated accuracy range. Both
+  executable paths report molar mass, specific volume and Z as transparent
+  derived values rather than independent EOS outputs.
+- Derived values inherit the validation status and uncertainty of their
+  recorded composition and calculated density inputs.
 - No independently sourced numeric CO₂-N₂ cases have yet been approved and
   ingested. Mixture results must not be used for engineering decisions.
 - CO₂-N₂ dynamic viscosity and every mixture phase envelope are unavailable.
