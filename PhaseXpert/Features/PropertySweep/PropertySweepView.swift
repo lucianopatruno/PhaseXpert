@@ -491,7 +491,7 @@ private struct PropertySweepCSVExporter {
                 property?.status.rawValue ?? "failed",
                 display.map { String($0.value) } ?? "",
                 display?.unit ?? "",
-                property?.value.map(String.init) ?? "",
+                property?.value.map { String($0) } ?? "",
                 property?.unit ?? "",
                 sample.response?.calculationID.uuidString ?? "",
                 sample.response.map { String($0.solver.durationMilliseconds) } ?? "",
@@ -506,7 +506,10 @@ private struct PropertySweepCSVExporter {
             .joined(separator: "\r\n")
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("PhaseXpert-Sweep-\(result.id.uuidString).csv")
-        try csv.data(using: .utf8)?.write(to: url, options: .atomic)
+        guard let data = csv.data(using: .utf8) else {
+            throw CocoaError(.fileWriteInapplicableStringEncoding)
+        }
+        try data.write(to: url, options: .atomic)
         return url
     }
 
