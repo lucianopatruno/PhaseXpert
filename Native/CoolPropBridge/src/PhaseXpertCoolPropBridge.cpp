@@ -1,11 +1,13 @@
 #include "PhaseXpertCoolPropBridge.h"
 
-#include "CoolProp.h"
+#include "CoolProp/AbstractState.h"
+#include "CoolProp/CoolProp.h"
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <memory>
 #include <string>
 
 namespace {
@@ -61,24 +63,57 @@ int px_coolprop_calculate_pure_co2(
     }
 
     try {
-        const double density = CoolProp::PropsSI(
-            "Dmass", "P", pressure_pa, "T", temperature_k, kFluid
+        std::shared_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory("HEOS", "CarbonDioxide")
         );
-        const double viscosity = CoolProp::PropsSI(
-            "VISCOSITY", "P", pressure_pa, "T", temperature_k, kFluid
+        state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
+
+        const double density = state->rhomass();
+        const double viscosity = state->viscosity();
+        const double enthalpy = state->hmass();
+        const double entropy = state->smass();
+        const double internal_energy = state->umass();
+        const double isobaric_heat_capacity = state->cpmass();
+        const double isochoric_heat_capacity = state->cvmass();
+        const double speed_of_sound = state->speed_sound();
+        const double thermal_conductivity = state->conductivity();
+        const double joule_thomson = state->first_partial_deriv(
+            CoolProp::iT,
+            CoolProp::iP,
+            CoolProp::iHmass
         );
         const std::string phase = CoolProp::PhaseSI(
             "P", pressure_pa, "T", temperature_k, kFluid
         );
 
-        if (!std::isfinite(density) || density <= 0
-            || !std::isfinite(viscosity) || viscosity <= 0) {
-            copy_text("CoolProp returned a non-finite or non-positive property.", error_buffer, error_buffer_size);
+        const bool invalid_positive_property =
+            !std::isfinite(density) || density <= 0
+            || !std::isfinite(viscosity) || viscosity <= 0
+            || !std::isfinite(isobaric_heat_capacity) || isobaric_heat_capacity <= 0
+            || !std::isfinite(isochoric_heat_capacity) || isochoric_heat_capacity <= 0
+            || !std::isfinite(speed_of_sound) || speed_of_sound <= 0
+            || !std::isfinite(thermal_conductivity) || thermal_conductivity <= 0;
+        const bool invalid_signed_property =
+            !std::isfinite(enthalpy)
+            || !std::isfinite(entropy)
+            || !std::isfinite(internal_energy)
+            || !std::isfinite(joule_thomson);
+
+        if (invalid_positive_property || invalid_signed_property) {
+            copy_text("CoolProp returned an invalid pure-CO2 property.", error_buffer, error_buffer_size);
             return 3;
         }
 
         result->density_kg_m3 = density;
         result->dynamic_viscosity_pa_s = viscosity;
+        result->enthalpy_j_kg = enthalpy;
+        result->entropy_j_kg_k = entropy;
+        result->internal_energy_j_kg = internal_energy;
+        result->isobaric_heat_capacity_j_kg_k = isobaric_heat_capacity;
+        result->isochoric_heat_capacity_j_kg_k = isochoric_heat_capacity;
+        result->speed_of_sound_m_s = speed_of_sound;
+        result->thermal_conductivity_w_m_k = thermal_conductivity;
+        result->joule_thomson_k_pa = joule_thomson;
         result->phase = map_phase(phase);
         copy_text("", error_buffer, error_buffer_size);
         return 0;
