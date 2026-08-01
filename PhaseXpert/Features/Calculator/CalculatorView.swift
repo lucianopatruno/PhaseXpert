@@ -80,7 +80,7 @@ struct CalculatorView: View {
                                     .accessibilityLabel("Carbon dioxide")
                             } else {
                                 Picker("Impurity", selection: $entry.component) {
-                                    ForEach(ComponentID.allCases.filter { $0 != .carbonDioxide }) { component in
+                                    ForEach(viewModel.impurityOptions(including: entry.component)) { component in
                                         Text(component.symbol).tag(component)
                                     }
                                 }
@@ -134,7 +134,7 @@ struct CalculatorView: View {
                             focusedField = .composition(addedID)
                         }
                     }
-                    .disabled(viewModel.composition.count >= 21)
+                    .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
                 } header: {
                     HStack {
                         Text("Composition")
@@ -454,7 +454,7 @@ struct CalculatorView: View {
                 ? "Workflow demonstration only. No thermophysical values are calculated."
                 : "Review the model domain and limitations before calculating."
         case .preliminary:
-            "Pure CO₂: density, viscosity, caloric and heat-capacity properties, sound speed, conductivity, Joule–Thomson coefficient and derived values. CO₂-N₂ up to 10 mol% N₂ remains limited to density, phase and derived values. Validation remains incomplete."
+            "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
         case .unavailable:
             "This provider cannot perform calculations in the current build."
         }
