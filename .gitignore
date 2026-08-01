@@ -15,3 +15,4 @@ Secrets.xcconfig
 Vendor/CoolProp/*.xcframework/
 Vendor/CoolProp/COOLPROP-LICENSE.txt
 Vendor/CoolProp/COOLPROP-REVISION.txt
+Vendor/CoolProp/BRIDGE-SOURCE-SHA256.txt
