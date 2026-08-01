@@ -203,6 +203,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         let densityKilogramsPerCubicMetre: Double
         let dynamicViscosityPascalSeconds: Double?
         let phaseIdentifier: String
+        let isPureCarbonDioxide: Bool
         let expandedProperties: CoolPropPureFluidProperties?
         let solverMethod: String
         let warnings: [String]
@@ -367,9 +368,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
                 dynamicViscosityPascalSeconds: raw.dynamicViscosityPascalSeconds,
                 phaseIdentifier: raw.phaseIdentifier,
+                isPureCarbonDioxide: true,
                 expandedProperties: raw.expandedProperties,
                 solverMethod: "CoolProp AbstractState(HEOS, CO₂), single P,T state update",
-                warnings: []
+                warnings: [
+                    "Expanded pure-CO₂ caloric, acoustic, conductivity and derivative properties have not completed independent PhaseXpert validation.",
+                    "Enthalpy, entropy and internal energy use the pinned CoolProp default reference state."
+                ]
             )
         case let .carbonDioxideNitrogen(carbonDioxide, nitrogen):
             let raw = try await engine.calculateCarbonDioxideNitrogen(
@@ -382,6 +387,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
                 dynamicViscosityPascalSeconds: nil,
                 phaseIdentifier: raw.phaseIdentifier,
+                isPureCarbonDioxide: false,
                 expandedProperties: nil,
                 solverMethod: "CoolProp PropsSI(P,T), HEOS CO₂-N₂ binary; pinned library interaction data only",
                 warnings: [
@@ -690,14 +696,89 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     status: .calculated
                 )
             } else {
-                PropertyValue(
-                    property: property,
-                    value: nil,
+                unavailablePureProperty(
+                    property,
                     unit: "Pa·s",
-                    status: .unavailable,
-                    message: "CO₂-N₂ dynamic viscosity is not enabled pending independent validation."
+                    state: state,
+                    mixtureMessage: "CO₂-N₂ dynamic viscosity is not enabled pending independent validation."
                 )
             }
+        case .enthalpy:
+            expandedProperty(
+                property,
+                unit: "J/kg",
+                value: state.expandedProperties?.enthalpyJoulesPerKilogram,
+                requiresPositiveValue: false,
+                state: state,
+                message: "CoolProp HEOS mass-specific enthalpy; default reference state."
+            )
+        case .entropy:
+            expandedProperty(
+                property,
+                unit: "J/(kg·K)",
+                value: state.expandedProperties?.entropyJoulesPerKilogramKelvin,
+                requiresPositiveValue: false,
+                state: state,
+                message: "CoolProp HEOS mass-specific entropy; default reference state."
+            )
+        case .internalEnergy:
+            expandedProperty(
+                property,
+                unit: "J/kg",
+                value: state.expandedProperties?.internalEnergyJoulesPerKilogram,
+                requiresPositiveValue: false,
+                state: state,
+                message: "CoolProp HEOS mass-specific internal energy; default reference state."
+            )
+        case .isobaricHeatCapacity:
+            expandedProperty(
+                property,
+                unit: "J/(kg·K)",
+                value: state.expandedProperties?.isobaricHeatCapacityJoulesPerKilogramKelvin,
+                requiresPositiveValue: true,
+                state: state,
+                message: "CoolProp HEOS mass-specific Cp."
+            )
+        case .isochoricHeatCapacity:
+            expandedProperty(
+                property,
+                unit: "J/(kg·K)",
+                value: state.expandedProperties?.isochoricHeatCapacityJoulesPerKilogramKelvin,
+                requiresPositiveValue: true,
+                state: state,
+                message: "CoolProp HEOS mass-specific Cv."
+            )
+        case .heatCapacityRatio:
+            heatCapacityRatio(state: state)
+        case .speedOfSound:
+            expandedProperty(
+                property,
+                unit: "m/s",
+                value: state.expandedProperties?.speedOfSoundMetresPerSecond,
+                requiresPositiveValue: true,
+                state: state,
+                message: "CoolProp HEOS equilibrium speed of sound."
+            )
+        case .thermalConductivity:
+            expandedProperty(
+                property,
+                unit: "W/(m·K)",
+                value: state.expandedProperties?.thermalConductivityWattsPerMetreKelvin,
+                requiresPositiveValue: true,
+                state: state,
+                message: "Pinned CoolProp pure-CO₂ thermal-conductivity correlation."
+            )
+        case .jouleThomsonCoefficient:
+            expandedProperty(
+                property,
+                unit: "K/MPa",
+                value: state.expandedProperties.map {
+                    $0.jouleThomsonKelvinPerPascal * 1_000_000
+                },
+                requiresPositiveValue: false,
+                state: state,
+                message: "CoolProp single-phase derivative (∂T/∂p)h; converted from K/Pa."
+            )
         default:
             PropertyValue(
                 property: property,
@@ -707,6 +788,86 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 message: "This property is not enabled in the CoolProp spike."
             )
         }
+    }
+
+    private func expandedProperty(
+        _ property: PropertyID,
+        unit: String,
+        value: Double?,
+        requiresPositiveValue: Bool,
+        state: ResolvedState,
+        message: String
+    ) -> PropertyValue {
+        guard let value else {
+            return unavailablePureProperty(
+                property,
+                unit: unit,
+                state: state,
+                mixtureMessage: "This expanded property is enabled for pure CO₂ only."
+            )
+        }
+        guard value.isFinite, !requiresPositiveValue || value > 0 else {
+            return PropertyValue(
+                property: property,
+                value: nil,
+                unit: unit,
+                status: .failed,
+                message: "CoolProp returned a non-finite or non-physical value."
+            )
+        }
+        return PropertyValue(
+            property: property,
+            value: value,
+            unit: unit,
+            status: .calculated,
+            message: message
+        )
+    }
+
+    private func heatCapacityRatio(state: ResolvedState) -> PropertyValue {
+        guard let expanded = state.expandedProperties else {
+            return unavailablePureProperty(
+                .heatCapacityRatio,
+                unit: "1",
+                state: state,
+                mixtureMessage: "Cp/Cv is enabled for pure CO₂ only."
+            )
+        }
+        let ratio = expanded.isobaricHeatCapacityJoulesPerKilogramKelvin
+            / expanded.isochoricHeatCapacityJoulesPerKilogramKelvin
+        guard ratio.isFinite, ratio > 0 else {
+            return PropertyValue(
+                property: .heatCapacityRatio,
+                value: nil,
+                unit: "1",
+                status: .failed,
+                message: "Cp/Cv could not be derived from finite, positive heat capacities."
+            )
+        }
+        return PropertyValue(
+            property: .heatCapacityRatio,
+            value: ratio,
+            unit: "1",
+            status: .calculated,
+            message: "Derived from the CoolProp HEOS mass-specific Cp/Cv values."
+        )
+    }
+
+    private func unavailablePureProperty(
+        _ property: PropertyID,
+        unit: String,
+        state: ResolvedState,
+        mixtureMessage: String
+    ) -> PropertyValue {
+        PropertyValue(
+            property: property,
+            value: nil,
+            unit: unit,
+            status: state.isPureCarbonDioxide ? .failed : .unavailable,
+            message: state.isPureCarbonDioxide
+                ? "The pure-CO₂ engine did not return this advertised property."
+                : mixtureMessage
+        )
     }
 
     private func phaseRegion(for identifier: String) -> PhaseRegion {
