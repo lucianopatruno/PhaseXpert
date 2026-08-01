@@ -65,9 +65,9 @@ final class PhaseXpertTests: XCTestCase {
 
         let displayedEnthalpy = EngineeringPropertyFormatter.measurement(for: enthalpy)
         let displayedViscosity = EngineeringPropertyFormatter.measurement(for: viscosity)
-        XCTAssertEqual(displayedEnthalpy?.value, 300, accuracy: 1e-12)
+        XCTAssertEqual(displayedEnthalpy?.value ?? .nan, 300, accuracy: 1e-12)
         XCTAssertEqual(displayedEnthalpy?.unit, "kJ/kg")
-        XCTAssertEqual(displayedViscosity?.value, 0.093, accuracy: 1e-12)
+        XCTAssertEqual(displayedViscosity?.value ?? .nan, 0.093, accuracy: 1e-12)
         XCTAssertEqual(displayedViscosity?.unit, "mPa·s")
         XCTAssertEqual(enthalpy.value, 300_000)
         XCTAssertEqual(enthalpy.unit, "J/kg")
