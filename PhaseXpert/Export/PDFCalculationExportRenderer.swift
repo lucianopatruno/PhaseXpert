@@ -150,7 +150,7 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         }
         if let solver = response.solver {
             drawLine(
-                "Method: \(solver.method) • Converged: \(solver.converged ? "Yes" : "No") • Duration: \(number(solver.durationMilliseconds)) ms",
+                "Method: \(solver.method) • Converged: \(solver.converged ? "Yes" : "No") • Duration: \(reportNumber(solver.durationMilliseconds)) ms",
                 font: PDFReportFonts.small,
                 color: PDFReportPalette.secondaryText,
                 position: CGPoint(x: PDFReportLayout.margin, y: 140),
@@ -166,6 +166,15 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         )
         drawFooter(in: context, pageNumber: pageNumber)
         context.endPDFPage()
+    }
+
+    private func reportNumber(_ value: Double) -> String {
+        value.formatted(
+            .number
+                .locale(Locale(identifier: "en_US_POSIX"))
+                .grouping(.automatic)
+                .precision(.fractionLength(0...6))
+        )
     }
 
     private func drawHeader(in context: CGContext, pageNumber: Int) {
