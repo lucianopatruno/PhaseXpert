@@ -49,6 +49,14 @@ final class CoolPropProviderTests: XCTestCase {
             binaryResult
         }
 
+        func calculateDryCarbonDioxideMixture(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropBinaryEngineResult {
+            binaryResult
+        }
+
         func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
             saturationLimits
         }
@@ -239,7 +247,7 @@ final class CoolPropProviderTests: XCTestCase {
         let provider = CoolPropProvider(engine: MockEngine())
         XCTAssertEqual(
             provider.descriptor.supportedComponents,
-            [.carbonDioxide, .nitrogen]
+            [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
         )
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
@@ -256,8 +264,8 @@ final class CoolPropProviderTests: XCTestCase {
         let response = try await provider.calculate(request)
 
         XCTAssertEqual(response.phase, .dense)
-        XCTAssertTrue(response.warnings.contains { $0.contains("CO₂-N₂ MIXTURE SPIKE") })
-        XCTAssertTrue(response.solver.method.contains("interaction data only"))
+        XCTAssertTrue(response.warnings.contains { $0.contains("DRY MIXTURE") })
+        XCTAssertTrue(response.solver.method.contains("interaction entries only"))
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.value,
             760.2
@@ -320,7 +328,7 @@ final class CoolPropProviderTests: XCTestCase {
             XCTAssertEqual(
                 error,
                 .invalidRequest(
-                    "CO₂-N₂ mole fractions must sum to 100 mol% without implicit normalization."
+                    "Composition must total 100 mol% before CoolProp calculation."
                 )
             )
         } catch {
@@ -349,7 +357,7 @@ final class CoolPropProviderTests: XCTestCase {
             XCTAssertEqual(
                 error,
                 .invalidRequest(
-                    "The CO₂-N₂ spike is temporarily limited to at most 10 mol% N₂."
+                    "The dry-mixture scope is temporarily limited to at most 10 mol% total impurity."
                 )
             )
         } catch {
@@ -357,16 +365,46 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
-    func testUnapprovedThirdComponentIsRejected() async {
+    func testSupportedDryMulticomponentMixtureCalculatesDensityAndDerivedValues() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 15_000_000,
+                temperatureK: 293.15,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.94),
+                    .init(component: .nitrogen, moleFraction: 0.02),
+                    .init(component: .oxygen, moleFraction: 0.01),
+                    .init(component: .argon, moleFraction: 0.01),
+                    .init(component: .methane, moleFraction: 0.01),
+                    .init(component: .hydrogen, moleFraction: 0.01)
+                ],
+                requestedProperties: [
+                    .density, .molarMass, .compressibilityFactor,
+                    .specificVolume, .dynamicViscosity
+                ],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .molarMass }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .dynamicViscosity }?.status, .unavailable)
+        XCTAssertTrue(response.warnings.contains { $0.contains("product guardrail") })
+    }
+
+    func testUnsupportedWetComponentIsRejected() async {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
             pressurePa: 15_000_000,
             temperatureK: 293.15,
             composition: [
-                .init(component: .carbonDioxide, moleFraction: 0.98),
-                .init(component: .nitrogen, moleFraction: 0.01),
-                .init(component: .oxygen, moleFraction: 0.01)
+                .init(component: .carbonDioxide, moleFraction: 0.99),
+                .init(component: .water, moleFraction: 0.01)
             ],
             requestedProperties: [.density],
             clientVersion: "test"
@@ -374,9 +412,9 @@ final class CoolPropProviderTests: XCTestCase {
 
         do {
             _ = try await provider.calculate(request)
-            XCTFail("An unapproved binary pair must not be calculated.")
+            XCTFail("Water is outside the approved dry-mixture scope.")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .unsupportedComponent(.oxygen))
+            XCTAssertEqual(error, .unsupportedComponent(.water))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
