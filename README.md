@@ -36,11 +36,17 @@ Capabilities**, enable automatic signing, and select your Apple Developer team.
 Keep the bundle identifier `no.ife.phasexpert` unless IFE has reserved a
 different identifier. No signing material or team identifier belongs in Git.
 
-The `PhaseXpertCore` local Swift package can also be tested from its directory:
+The repository provides staged validation commands to avoid repeating slow UI
+tests during every compiler correction:
 
 ```sh
-swift test
+bash Scripts/validate-phase-xpert.sh fast
+bash Scripts/validate-phase-xpert.sh standard
+bash Scripts/validate-phase-xpert.sh release
 ```
+
+See [Development Workflow](Documentation/DevelopmentWorkflow.md) for the
+validation tiers, simulator override and conditional CoolProp rebuild behavior.
 
 ## Current milestone
 
@@ -123,6 +129,7 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
 ## Documentation
 
+- [Development workflow](Documentation/DevelopmentWorkflow.md)
 - [Architecture and directory structure](Documentation/Architecture.md)
 - [Scientific models and phase-envelope strategy](Documentation/ScientificModels.md)
 - [CoolProp integration spike](Documentation/CoolPropIntegration.md)
