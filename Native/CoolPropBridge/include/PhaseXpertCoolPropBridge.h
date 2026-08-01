@@ -20,6 +20,14 @@ typedef enum PXCoolPropPhase {
 typedef struct PXCoolPropResult {
     double density_kg_m3;
     double dynamic_viscosity_pa_s;
+    double enthalpy_j_kg;
+    double entropy_j_kg_k;
+    double internal_energy_j_kg;
+    double isobaric_heat_capacity_j_kg_k;
+    double isochoric_heat_capacity_j_kg_k;
+    double speed_of_sound_m_s;
+    double thermal_conductivity_w_m_k;
+    double joule_thomson_k_pa;
     PXCoolPropPhase phase;
 } PXCoolPropResult;
 
@@ -34,6 +42,10 @@ typedef struct PXCoolPropSaturationLimits {
     double critical_pressure_pa;
 } PXCoolPropSaturationLimits;
 
+/// Calculates the pure-CO2 state using one HEOS state update. Returned caloric,
+/// acoustic, transport and derivative values use SI units. Enthalpy, entropy,
+/// internal energy and the Joule-Thomson coefficient may be negative; all
+/// other numeric outputs must be finite and positive.
 /// Returns zero on success. On failure, writes a diagnostic to `error_buffer`.
 int px_coolprop_calculate_pure_co2(
     double pressure_pa,
