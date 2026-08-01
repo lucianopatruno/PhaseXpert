@@ -48,6 +48,33 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(viewModel.composition.last?.molPercent, "")
     }
 
+    @MainActor
+    func testEngineeringFormatterConvertsDisplayUnitsWithoutChangingSIValue() {
+        let enthalpy = PropertyValue(
+            property: .enthalpy,
+            value: 300_000,
+            unit: "J/kg",
+            status: .calculated
+        )
+        let viscosity = PropertyValue(
+            property: .dynamicViscosity,
+            value: 0.000_093,
+            unit: "Pa·s",
+            status: .calculated
+        )
+
+        XCTAssertEqual(
+            EngineeringPropertyFormatter.measurement(for: enthalpy),
+            EngineeringDisplayMeasurement(value: 300, unit: "kJ/kg")
+        )
+        XCTAssertEqual(
+            EngineeringPropertyFormatter.measurement(for: viscosity),
+            EngineeringDisplayMeasurement(value: 0.093, unit: "mPa·s")
+        )
+        XCTAssertEqual(enthalpy.value, 300_000)
+        XCTAssertEqual(enthalpy.unit, "J/kg")
+    }
+
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
         #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
         .preliminary
