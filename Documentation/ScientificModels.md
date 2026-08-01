@@ -161,7 +161,7 @@ Provider version 0.6.0 uses one CoolProp HEOS AbstractState update at the
 recorded pressure and temperature for exactly 100 mol% CO₂. It returns
 mass-specific enthalpy, entropy and internal energy, Cp, Cv, speed of sound,
 thermal conductivity and the single-phase Joule–Thomson derivative. PhaseXpert
-derives Cp/Cv and converts the derivative from K/Pa to K/MPa for display.
+derives Cp/Cv and converts the derivative from K/Pa to °C/bar for display.
 
 All native outputs must be finite. Density, viscosity, Cp, Cv, speed of sound
 and conductivity must also be positive; caloric values and the Joule–Thomson
