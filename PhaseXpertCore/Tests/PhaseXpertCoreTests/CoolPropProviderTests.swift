@@ -8,7 +8,17 @@ final class CoolPropProviderTests: XCTestCase {
         var result = CoolPropEngineResult(
             densityKilogramsPerCubicMetre: 821.4,
             dynamicViscosityPascalSeconds: 0.000071,
-            phaseIdentifier: "supercritical_liquid"
+            phaseIdentifier: "supercritical_liquid",
+            expandedProperties: CoolPropPureFluidProperties(
+                enthalpyJoulesPerKilogram: 300_000,
+                entropyJoulesPerKilogramKelvin: 1_500,
+                internalEnergyJoulesPerKilogram: 280_000,
+                isobaricHeatCapacityJoulesPerKilogramKelvin: 2_200,
+                isochoricHeatCapacityJoulesPerKilogramKelvin: 1_000,
+                speedOfSoundMetresPerSecond: 300,
+                thermalConductivityWattsPerMetreKelvin: 0.08,
+                jouleThomsonKelvinPerPascal: -0.000_002
+            )
         )
         var binaryResult = CoolPropBinaryEngineResult(
             densityKilogramsPerCubicMetre: 760.2,
@@ -106,8 +116,117 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertTrue(response.solver.method.contains("Z=pM/(ρRT)"))
         XCTAssertEqual(
             response.properties.first { $0.property == .enthalpy }?.status,
-            .unavailable
+            .calculated
         )
+        XCTAssertTrue(response.warnings.contains { $0.contains("default reference state") })
+    }
+
+    func testPureCO2ExpandedPropertiesAreCalculatedWithTraceableUnits() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let requested: Set<PropertyID> = [
+            .enthalpy,
+            .entropy,
+            .internalEnergy,
+            .isobaricHeatCapacity,
+            .isochoricHeatCapacity,
+            .heatCapacityRatio,
+            .speedOfSound,
+            .thermalConductivity,
+            .jouleThomsonCoefficient
+        ]
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            requestedProperties: requested,
+            clientVersion: "test"
+        )
+
+        let response = try await provider.calculate(request)
+        let byProperty = Dictionary(
+            uniqueKeysWithValues: response.properties.map { ($0.property, $0) }
+        )
+
+        XCTAssertEqual(Set(byProperty.keys), requested)
+        XCTAssertTrue(byProperty.values.allSatisfy { $0.status == .calculated })
+        XCTAssertEqual(byProperty[.enthalpy]?.unit, "J/kg")
+        XCTAssertEqual(byProperty[.entropy]?.unit, "J/(kg·K)")
+        XCTAssertEqual(byProperty[.isobaricHeatCapacity]?.unit, "J/(kg·K)")
+        XCTAssertEqual(byProperty[.speedOfSound]?.unit, "m/s")
+        XCTAssertEqual(byProperty[.thermalConductivity]?.unit, "W/(m·K)")
+        XCTAssertEqual(byProperty[.jouleThomsonCoefficient]?.unit, "K/MPa")
+        XCTAssertEqual(byProperty[.jouleThomsonCoefficient]?.value, -2, accuracy: 1e-12)
+        XCTAssertEqual(byProperty[.heatCapacityRatio]?.value, 2.2, accuracy: 1e-12)
+        XCTAssertTrue(response.solver.method.contains("single P,T state update"))
+    }
+
+    func testCO2NitrogenExpandedPureFluidPropertiesRemainUnavailable() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let requested: Set<PropertyID> = [
+            .enthalpy,
+            .entropy,
+            .internalEnergy,
+            .isobaricHeatCapacity,
+            .isochoricHeatCapacity,
+            .heatCapacityRatio,
+            .speedOfSound,
+            .thermalConductivity,
+            .jouleThomsonCoefficient
+        ]
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 15_000_000,
+                temperatureK: 293.15,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.95),
+                    .init(component: .nitrogen, moleFraction: 0.05)
+                ],
+                requestedProperties: requested,
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(Set(response.properties.map(\.property)), requested)
+        XCTAssertTrue(response.properties.allSatisfy { $0.status == .unavailable })
+        XCTAssertTrue(response.properties.allSatisfy { $0.value == nil })
+    }
+
+    func testNonFiniteExpandedPropertyProducesExplicitFailure() async throws {
+        let expanded = CoolPropPureFluidProperties(
+            enthalpyJoulesPerKilogram: 300_000,
+            entropyJoulesPerKilogramKelvin: 1_500,
+            internalEnergyJoulesPerKilogram: 280_000,
+            isobaricHeatCapacityJoulesPerKilogramKelvin: .nan,
+            isochoricHeatCapacityJoulesPerKilogramKelvin: 1_000,
+            speedOfSoundMetresPerSecond: 300,
+            thermalConductivityWattsPerMetreKelvin: 0.08,
+            jouleThomsonKelvinPerPascal: -0.000_002
+        )
+        let provider = CoolPropProvider(
+            engine: MockEngine(
+                result: CoolPropEngineResult(
+                    densityKilogramsPerCubicMetre: 821.4,
+                    dynamicViscosityPascalSeconds: 0.000071,
+                    phaseIdentifier: "supercritical_liquid",
+                    expandedProperties: expanded
+                )
+            )
+        )
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 15_000_000,
+                temperatureK: 293.15,
+                composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+                requestedProperties: [.isobaricHeatCapacity, .heatCapacityRatio],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertTrue(response.properties.allSatisfy { $0.status == .failed })
+        XCTAssertTrue(response.properties.allSatisfy { $0.value == nil })
     }
 
     func testCO2NitrogenDensityIsPreliminaryAndViscosityRemainsUnavailable() async throws {
