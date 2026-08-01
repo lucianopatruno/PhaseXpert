@@ -1,19 +1,60 @@
 import Foundation
 
+/// Expanded pure-fluid values returned from the native CoolProp state.
+///
+/// Values use SI units. Enthalpy, entropy, internal energy and the
+/// Joule-Thomson coefficient are signed; the remaining values must be positive.
+public struct CoolPropPureFluidProperties: Equatable, Sendable {
+    public let enthalpyJoulesPerKilogram: Double
+    public let entropyJoulesPerKilogramKelvin: Double
+    public let internalEnergyJoulesPerKilogram: Double
+    public let isobaricHeatCapacityJoulesPerKilogramKelvin: Double
+    public let isochoricHeatCapacityJoulesPerKilogramKelvin: Double
+    public let speedOfSoundMetresPerSecond: Double
+    public let thermalConductivityWattsPerMetreKelvin: Double
+    public let jouleThomsonKelvinPerPascal: Double
+
+    public init(
+        enthalpyJoulesPerKilogram: Double,
+        entropyJoulesPerKilogramKelvin: Double,
+        internalEnergyJoulesPerKilogram: Double,
+        isobaricHeatCapacityJoulesPerKilogramKelvin: Double,
+        isochoricHeatCapacityJoulesPerKilogramKelvin: Double,
+        speedOfSoundMetresPerSecond: Double,
+        thermalConductivityWattsPerMetreKelvin: Double,
+        jouleThomsonKelvinPerPascal: Double
+    ) {
+        self.enthalpyJoulesPerKilogram = enthalpyJoulesPerKilogram
+        self.entropyJoulesPerKilogramKelvin = entropyJoulesPerKilogramKelvin
+        self.internalEnergyJoulesPerKilogram = internalEnergyJoulesPerKilogram
+        self.isobaricHeatCapacityJoulesPerKilogramKelvin =
+            isobaricHeatCapacityJoulesPerKilogramKelvin
+        self.isochoricHeatCapacityJoulesPerKilogramKelvin =
+            isochoricHeatCapacityJoulesPerKilogramKelvin
+        self.speedOfSoundMetresPerSecond = speedOfSoundMetresPerSecond
+        self.thermalConductivityWattsPerMetreKelvin =
+            thermalConductivityWattsPerMetreKelvin
+        self.jouleThomsonKelvinPerPascal = jouleThomsonKelvinPerPascal
+    }
+}
+
 /// Raw values returned by a CoolProp bridge for one pure-CO₂ state point.
 public struct CoolPropEngineResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
     public let dynamicViscosityPascalSeconds: Double
     public let phaseIdentifier: String
+    public let expandedProperties: CoolPropPureFluidProperties?
 
     public init(
         densityKilogramsPerCubicMetre: Double,
         dynamicViscosityPascalSeconds: Double,
-        phaseIdentifier: String
+        phaseIdentifier: String,
+        expandedProperties: CoolPropPureFluidProperties? = nil
     ) {
         self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
         self.dynamicViscosityPascalSeconds = dynamicViscosityPascalSeconds
         self.phaseIdentifier = phaseIdentifier
+        self.expandedProperties = expandedProperties
     }
 }
 
@@ -162,6 +203,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         let densityKilogramsPerCubicMetre: Double
         let dynamicViscosityPascalSeconds: Double?
         let phaseIdentifier: String
+        let expandedProperties: CoolPropPureFluidProperties?
         let solverMethod: String
         let warnings: [String]
     }
@@ -176,23 +218,38 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.5.0",
+            providerVersion: "0.6.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable ? [.carbonDioxide, .nitrogen] : [],
             supportedProperties: engine.isAvailable
-                ? [.density, .dynamicViscosity, .molarMass, .compressibilityFactor, .specificVolume]
+                ? [
+                    .density,
+                    .dynamicViscosity,
+                    .molarMass,
+                    .compressibilityFactor,
+                    .specificVolume,
+                    .enthalpy,
+                    .entropy,
+                    .internalEnergy,
+                    .isobaricHeatCapacity,
+                    .isochoricHeatCapacity,
+                    .heatCapacityRatio,
+                    .speedOfSound,
+                    .thermalConductivity,
+                    .jouleThomsonCoefficient
+                ]
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "CoolProp HEOS pure-fluid CO₂ and restricted CO₂-N₂ binary mixture backend.",
-            equationOrMethod: "CoolProp HEOS; the CO₂-N₂ pair uses only interaction data shipped by the pinned CoolProp release. Molar mass, specific volume and Z are derived from recorded inputs and calculated density. No estimated mixing rule is applied.",
+            equationOrMethod: "CoolProp HEOS; pure-CO₂ thermodynamic, acoustic and transport values come from one AbstractState(P,T) update. Cp/Cv, molar mass, specific volume and Z are derived transparently. The CO₂-N₂ pair uses only interaction data shipped by the pinned release; no estimated mixing rule is applied.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
-                "Pure CO₂ supports density, dynamic viscosity and three explicitly derived engineering properties.",
-                "CO₂-N₂ is restricted to density, phase and three explicitly derived engineering properties with 0 < N₂ ≤ 10 mol%; this is an implementation test cap, not a validated accuracy range.",
+                "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties.",
+                "CO₂-N₂ remains restricted to density, phase and three explicitly derived engineering properties with 0 < N₂ ≤ 10 mol%; expanded pure-fluid properties are unavailable for mixtures.",
                 "Preliminary integration; no production accuracy claim.",
-                "CO₂-N₂ dynamic viscosity is unavailable pending separate validation.",
+                "CO₂-N₂ viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
                 "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
             ],
             references: [
@@ -310,7 +367,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
                 dynamicViscosityPascalSeconds: raw.dynamicViscosityPascalSeconds,
                 phaseIdentifier: raw.phaseIdentifier,
-                solverMethod: "CoolProp PropsSI(P,T), HEOS pure CO₂",
+                expandedProperties: raw.expandedProperties,
+                solverMethod: "CoolProp AbstractState(HEOS, CO₂), single P,T state update",
                 warnings: []
             )
         case let .carbonDioxideNitrogen(carbonDioxide, nitrogen):
@@ -324,6 +382,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
                 dynamicViscosityPascalSeconds: nil,
                 phaseIdentifier: raw.phaseIdentifier,
+                expandedProperties: nil,
                 solverMethod: "CoolProp PropsSI(P,T), HEOS CO₂-N₂ binary; pinned library interaction data only",
                 warnings: [
                     "CO₂-N₂ MIXTURE SPIKE: density and phase have not completed independent validation.",
