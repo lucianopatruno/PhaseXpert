@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct AboutView: View {
+    @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -29,8 +31,19 @@ struct AboutView: View {
 
                     ScientificStatusBanner(
                         title: "Development build",
-                        message: "No validated thermodynamic engine is included in this milestone. Do not use demonstration output for engineering, safety, commercial, or regulatory decisions."
+                        message: "CoolProp HEOS is included as a preliminary provider with incomplete PhaseXpert validation. Do not use preliminary output for engineering, safety, commercial, or regulatory decisions."
                     )
+
+                    IFECard {
+                        Toggle(isOn: $prefersDarkAppearance) {
+                            Label(
+                                "Dark mode",
+                                systemImage: "moon.fill"
+                            )
+                        }
+                        .tint(.ifePrimary)
+                        .accessibilityHint("Changes the appearance throughout PhaseXpert.")
+                    }
 
                     IFECard {
                         VStack(alignment: .leading, spacing: IFESpacing.small) {

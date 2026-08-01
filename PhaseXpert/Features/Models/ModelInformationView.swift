@@ -70,7 +70,7 @@ private struct ModelDetailView: View {
                 )
                 LabeledContent(
                     "Pressure",
-                    value: "\((descriptor.domain.minimumPressurePa / 100_000).formatted())–\((descriptor.domain.maximumPressurePa / 100_000).formatted()) bar abs"
+                    value: "\((descriptor.domain.minimumPressurePa / 100_000).formatted())–\((descriptor.domain.maximumPressurePa / 100_000).formatted()) bar(a)"
                 )
             }
 

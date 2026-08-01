@@ -75,3 +75,9 @@ Tests verify:
 
 The Xcode UI and share sheet must also be tested on a simulator or physical
 iPhone before the milestone is accepted.
+
+## Phase-diagram export
+
+PhaseXpert can share a PNG only when the active provider returns a real, finite pure-CO₂ saturation boundary. The exported image contains the operating point, critical point, provider-calculated boundary, model versions, and preliminary-status warning. Mixtures and unavailable boundaries never receive a decorative or estimated export.
+
+For a saved pure-CO₂ case, PDF generation requests a fresh boundary only when the installed model and provider versions exactly match the versions retained by the saved calculation. The PDF adds the diagram on a dedicated page with searchable boundary, model, solver, convergence, and warning text. If the provider is absent, its version differs, or boundary calculation fails, the calculation report is still exported and the app explains why no diagram was embedded.

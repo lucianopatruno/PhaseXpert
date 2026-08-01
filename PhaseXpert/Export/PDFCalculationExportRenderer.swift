@@ -10,6 +10,11 @@ import UIKit
 /// remains searchable, paginates long records and is independent of appearance.
 struct PDFCalculationExportRenderer: CalculationExportRendering {
     let format = CalculationExportFormat.pdf
+    let phaseDiagram: PhaseDiagramReportAttachment?
+
+    init(phaseDiagram: PhaseDiagramReportAttachment? = nil) {
+        self.phaseDiagram = phaseDiagram
+    }
 
     func render(_ snapshot: SavedCaseExportSnapshot) throws -> Data {
         let output = NSMutableData()
@@ -73,8 +78,103 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
             context.endPDFPage()
         } while textLocation < body.length
 
+        if let phaseDiagram {
+            pageNumber += 1
+            try drawPhaseDiagramPage(
+                phaseDiagram,
+                in: context,
+                pageNumber: pageNumber
+            )
+        }
+
         context.closePDF()
         return output as Data
+    }
+
+    private func drawPhaseDiagramPage(
+        _ attachment: PhaseDiagramReportAttachment,
+        in context: CGContext,
+        pageNumber: Int
+    ) throws {
+        guard let image = UIImage(data: attachment.pngData)?.cgImage else {
+            throw CalculationExportError.pdfRenderingFailed(
+                "PhaseXpert could not decode the calculated phase-diagram image."
+            )
+        }
+
+        context.beginPDFPage(nil)
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
+        context.fill(PDFReportLayout.pageRect)
+        drawHeader(in: context, pageNumber: pageNumber)
+
+        drawLine(
+            "Calculated phase diagram",
+            font: PDFReportFonts.section,
+            color: PDFReportPalette.primary,
+            position: CGPoint(x: PDFReportLayout.margin, y: 748),
+            context: context
+        )
+
+        let target = CGRect(x: PDFReportLayout.margin, y: 205, width: 515, height: 515)
+        let imageAspect = CGFloat(image.width) / CGFloat(image.height)
+        let targetAspect = target.width / target.height
+        let renderedRect: CGRect
+        if imageAspect > targetAspect {
+            let height = target.width / imageAspect
+            renderedRect = CGRect(x: target.minX, y: target.midY - height / 2, width: target.width, height: height)
+        } else {
+            let width = target.height * imageAspect
+            renderedRect = CGRect(x: target.midX - width / 2, y: target.minY, width: width, height: target.height)
+        }
+        context.saveGState()
+        context.interpolationQuality = .high
+        context.draw(image, in: renderedRect)
+        context.restoreGState()
+
+        let response = attachment.response
+        drawLine(
+            "Boundary: pure-fluid CO₂ saturation • \(response.points.count) provider-calculated points",
+            font: PDFReportFonts.body,
+            color: PDFReportPalette.bodyText,
+            position: CGPoint(x: PDFReportLayout.margin, y: 176),
+            context: context
+        )
+        if let model = response.model {
+            drawLine(
+                "Model: \(model.name) • Model \(model.modelVersion) • Provider \(model.providerVersion)",
+                font: PDFReportFonts.small,
+                color: PDFReportPalette.secondaryText,
+                position: CGPoint(x: PDFReportLayout.margin, y: 158),
+                context: context
+            )
+        }
+        if let solver = response.solver {
+            drawLine(
+                "Method: \(solver.method) • Converged: \(solver.converged ? "Yes" : "No") • Duration: \(reportNumber(solver.durationMilliseconds)) ms",
+                font: PDFReportFonts.small,
+                color: PDFReportPalette.secondaryText,
+                position: CGPoint(x: PDFReportLayout.margin, y: 140),
+                context: context
+            )
+        }
+        drawLine(
+            "PRELIMINARY — VALIDATION PENDING. No estimated or decorative boundary is included.",
+            font: PDFReportFonts.small,
+            color: PDFReportPalette.warning,
+            position: CGPoint(x: PDFReportLayout.margin, y: 116),
+            context: context
+        )
+        drawFooter(in: context, pageNumber: pageNumber)
+        context.endPDFPage()
+    }
+
+    private func reportNumber(_ value: Double) -> String {
+        value.formatted(
+            .number
+                .locale(Locale(identifier: "en_US_POSIX"))
+                .grouping(.automatic)
+                .precision(.fractionLength(0...6))
+        )
     }
 
     private func drawHeader(in context: CGContext, pageNumber: Int) {
@@ -426,7 +526,7 @@ private struct PDFReportContent {
         row("Equation or method", model.equationOrMethod, in: document)
         row(
             "Recorded domain",
-            "\(number(model.domain.minimumPressurePa / 100_000))–\(number(model.domain.maximumPressurePa / 100_000)) bar abs; \(number(model.domain.minimumTemperatureK - 273.15))–\(number(model.domain.maximumTemperatureK - 273.15)) °C",
+            "\(number(model.domain.minimumPressurePa / 100_000))–\(number(model.domain.maximumPressurePa / 100_000)) bar(a); \(number(model.domain.minimumTemperatureK - 273.15))–\(number(model.domain.maximumTemperatureK - 273.15)) °C",
             in: document
         )
         if !model.requiredResources.isEmpty {
@@ -602,7 +702,7 @@ private struct PDFReportContent {
 
     private func pressureUnit(_ unit: PressureUnit) -> String {
         switch unit {
-        case .bara: "bar abs"
+        case .bara: "bar(a)"
         case .barg: "bar gauge"
         default: unit.rawValue
         }

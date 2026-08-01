@@ -1,6 +1,7 @@
 import Foundation
 import PDFKit
 import PhaseXpertCore
+import UIKit
 import XCTest
 @testable import PhaseXpert
 
@@ -53,13 +54,54 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(text.contains("PhaseXpert"))
         XCTAssertTrue(text.contains("IFE Flow Technology Department"))
         XCTAssertTrue(text.contains("Pipeline inlet"))
-        XCTAssertTrue(text.contains("150 bar abs"))
+        XCTAssertTrue(text.contains("150 bar(a)"))
         XCTAssertTrue(text.contains("Density"))
         XCTAssertTrue(text.contains("903.5 kg/m³"))
         XCTAssertTrue(text.contains("PRELIMINARY — validation pending."))
         XCTAssertTrue(text.contains("export-test-provider"))
         XCTAssertTrue(text.contains(calculationID.uuidString))
         XCTAssertTrue(text.contains("Test Reference"))
+    }
+
+    func testPDFReportAddsSearchableCalculatedPhaseDiagramPage() throws {
+        let snapshot = makeSnapshot()
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 400)).image { context in
+            UIColor.white.setFill()
+            context.cgContext.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
+            UIColor.systemBlue.setStroke()
+            context.cgContext.move(to: CGPoint(x: 40, y: 350))
+            context.cgContext.addLine(to: CGPoint(x: 560, y: 40))
+            context.cgContext.strokePath()
+        }
+        let response = PhaseEnvelopeResponse(
+            requestID: snapshot.calculation.request.requestID,
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)
+            ],
+            warnings: ["PRELIMINARY — validation pending."],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: snapshot.calculation.response.model,
+            generatedAt: fixedDate,
+            solver: snapshot.calculation.response.solver
+        )
+        let attachment = PhaseDiagramReportAttachment(
+            pngData: try XCTUnwrap(image.pngData()),
+            response: response
+        )
+
+        let data = try CalculationExporter().data(
+            for: snapshot,
+            format: .pdf,
+            phaseDiagram: attachment
+        )
+        let document = try XCTUnwrap(PDFDocument(data: data))
+        XCTAssertGreaterThanOrEqual(document.pageCount, 2)
+        let finalText = try XCTUnwrap(document.page(at: document.pageCount - 1)?.string)
+        XCTAssertTrue(finalText.contains("Calculated phase diagram"))
+        XCTAssertTrue(finalText.contains("pure-fluid CO₂ saturation"))
+        XCTAssertTrue(finalText.contains("Deterministic test solver"))
     }
 
     func testPDFReportPaginatesLongSavedCaseNotes() throws {

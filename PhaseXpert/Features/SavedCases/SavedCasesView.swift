@@ -491,8 +491,8 @@ private struct SavedCaseComparisonView: View {
         Section("Operating point") {
             ComparisonValueRow(
                 title: "Pressure",
-                reference: "\(number(comparison.reference.input.pressurePa / 100_000)) bar abs",
-                compared: "\(number(comparison.compared.input.pressurePa / 100_000)) bar abs",
+                reference: "\(number(comparison.reference.input.pressurePa / 100_000)) bar(a)",
+                compared: "\(number(comparison.compared.input.pressurePa / 100_000)) bar(a)",
                 difference: "\(signed(comparison.pressureDifferenceBar)) bar"
             )
             ComparisonValueRow(
@@ -692,7 +692,7 @@ private struct SavedCaseRow: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(savedCase.name)
                 .font(.headline)
-            Text("\(number(savedCase.pressureBarAbsolute)) bar abs · \(number(savedCase.temperatureCelsius)) °C")
+            Text("\(number(savedCase.pressureBarAbsolute)) bar(a) · \(number(savedCase.temperatureCelsius)) °C")
                 .font(.subheadline)
             HStack {
                 Text(savedCase.modelName)

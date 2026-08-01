@@ -13,7 +13,7 @@ struct CompositionInput: Identifiable, Equatable {
 final class CalculatorViewModel {
     var pressureText = "150"
     var temperatureText = "20"
-    var selectedModelID = "architecture-demo"
+    var selectedModelID = "coolprop-heos"
     var composition: [CompositionInput] = [
         CompositionInput(component: .carbonDioxide, molPercent: "100")
     ]

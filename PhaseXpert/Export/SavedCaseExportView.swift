@@ -1,3 +1,4 @@
+import PhaseXpertCore
 import SwiftUI
 
 struct SavedCaseExportView: View {
@@ -7,6 +8,7 @@ struct SavedCaseExportView: View {
     @State private var artifacts: [CalculationExportArtifact] = []
     @State private var errorMessage: String?
     @State private var isPreparing = true
+    @State private var phaseDiagramNote: String?
 
     var body: some View {
         NavigationStack {
@@ -70,6 +72,13 @@ struct SavedCaseExportView: View {
                     Text("JSON retains the complete versioned record. CSV provides a long-form data table. The PDF Report is a printable, human-readable calculation record with warnings and scientific provenance.")
                 }
 
+                if let phaseDiagramNote {
+                    Section("Phase diagram in PDF") {
+                        Text(phaseDiagramNote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section("Privacy") {
                     Text("Files are generated locally. PhaseXpert sends nothing automatically; data leaves the device only through the destination you select in the iOS share sheet.")
                 }
@@ -82,15 +91,16 @@ struct SavedCaseExportView: View {
                 }
             }
             .task(id: savedCase.id) {
-                prepareArtifacts()
+                await prepareArtifacts()
             }
         }
     }
 
-    private func prepareArtifacts() {
+    private func prepareArtifacts() async {
         isPreparing = true
         errorMessage = nil
         artifacts = []
+        phaseDiagramNote = nil
 
         guard let record = savedCase.calculationRecord else {
             errorMessage = CalculationExportError.noStoredCalculation.localizedDescription
@@ -107,11 +117,60 @@ struct SavedCaseExportView: View {
             calculation: record
         )
         do {
-            artifacts = try CalculationExportFileStore().createArtifacts(for: snapshot)
+            let diagram = await phaseDiagramAttachment(for: record)
+            artifacts = try CalculationExportFileStore().createArtifacts(
+                for: snapshot,
+                phaseDiagram: diagram
+            )
         } catch {
             errorMessage = error.localizedDescription
         }
         isPreparing = false
+    }
+
+    private func phaseDiagramAttachment(
+        for record: CalculationRecord
+    ) async -> PhaseDiagramReportAttachment? {
+        let composition = record.request.composition.filter { $0.moleFraction > 1e-12 }
+        guard composition.count == 1,
+              composition[0].component == .carbonDioxide,
+              abs(composition[0].moleFraction - 1) <= 1e-9
+        else {
+            phaseDiagramNote = "No diagram was embedded because the active provider does not calculate a real mixture phase envelope."
+            return nil
+        }
+
+        let registry = ProviderRegistry()
+        guard let provider = registry.provider(id: record.request.modelID) else {
+            phaseDiagramNote = "No diagram was embedded because the recorded provider is not installed."
+            return nil
+        }
+        let current = provider.descriptor
+        let recorded = record.response.model
+        guard current.modelVersion == recorded.modelVersion,
+              current.providerVersion == recorded.providerVersion
+        else {
+            phaseDiagramNote = "No diagram was embedded because the installed model/provider version differs from the saved calculation provenance."
+            return nil
+        }
+
+        do {
+            let response = try await provider.phaseEnvelope(
+                PhaseEnvelopeRequest(
+                    modelID: record.request.modelID,
+                    composition: record.request.composition
+                )
+            )
+            let attachment = try PhaseDiagramImageExporter().attachment(
+                for: record,
+                response: response
+            )
+            phaseDiagramNote = "The PDF includes a newly calculated pure CO₂ boundary from the same recorded model and provider versions."
+            return attachment
+        } catch {
+            phaseDiagramNote = "No diagram was embedded: \(error.localizedDescription)"
+            return nil
+        }
     }
 
     private func icon(for format: CalculationExportFormat) -> String {

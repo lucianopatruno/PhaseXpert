@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class PhaseXpertUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -11,7 +12,7 @@ final class PhaseXpertUITests: XCTestCase {
 
         XCTAssertTrue(app.tabBars.buttons["Calculator"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["Pressure"].exists)
-        XCTAssertTrue(app.staticTexts["bar abs"].exists)
+        XCTAssertTrue(app.staticTexts["bar(a)"].exists)
         XCTAssertTrue(app.staticTexts["Temperature"].exists)
         XCTAssertTrue(app.staticTexts["°C"].exists)
 

@@ -26,3 +26,6 @@
   confirmation.
 - Xcode is unavailable in the implementation environment; a clean Xcode 26
   build and test run is required on the user's Mac.
+
+- Phase-diagram PNG and PDF embedding currently support only a real pure-CO₂ saturation boundary. CO₂-rich mixture phase envelopes remain unavailable and are never estimated for display or export.
+- PDF phase-diagram embedding recalculates the boundary with the installed provider and therefore requires an exact recorded/current model-version and provider-version match.

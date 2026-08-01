@@ -1,6 +1,7 @@
 import PhaseXpertCore
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct CalculatorView: View {
     private enum InputField: Hashable {
@@ -16,6 +17,8 @@ struct CalculatorView: View {
     @State private var recordToSave: CalculationRecord?
     @State private var saveConfirmation: String?
     @State private var saveError: String?
+    @State private var showsScientificTraceability = false
+    @State private var compositionSelections: [UUID: TextSelection] = [:]
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -47,39 +50,21 @@ struct CalculatorView: View {
                 }
 
                 Section("Operating point") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Pressure")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.ifeText)
+                    operatingPointRow(
+                        title: "Pressure",
+                        value: $viewModel.pressureText,
+                        unit: "bar(a)",
+                        keyboardType: .decimalPad,
+                        field: .pressure
+                    )
 
-                        HStack(spacing: 12) {
-                            TextField("Value", text: $viewModel.pressureText)
-                                .keyboardType(.decimalPad)
-                                .focused($focusedField, equals: .pressure)
-                                .accessibilityLabel("Pressure value")
-
-                            Text("bar abs")
-                                .foregroundStyle(.secondary)
-                                .frame(width: 64, alignment: .trailing)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Temperature")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.ifeText)
-
-                        HStack(spacing: 12) {
-                            TextField("Value", text: $viewModel.temperatureText)
-                                .keyboardType(.numbersAndPunctuation)
-                                .focused($focusedField, equals: .temperature)
-                                .accessibilityLabel("Temperature value")
-
-                            Text("°C")
-                                .foregroundStyle(.secondary)
-                                .frame(width: 64, alignment: .trailing)
-                        }
-                    }
+                    operatingPointRow(
+                        title: "Temperature",
+                        value: $viewModel.temperatureText,
+                        unit: "°C",
+                        keyboardType: .numbersAndPunctuation,
+                        field: .temperature
+                    )
                 }
 
                 Section {
@@ -103,7 +88,11 @@ struct CalculatorView: View {
 
                             Spacer(minLength: 8)
 
-                            TextField("Value", text: $entry.molPercent)
+                            TextField(
+                                "Value",
+                                text: $entry.molPercent,
+                                selection: compositionSelectionBinding(for: entry.id)
+                            )
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .composition(entry.id))
                                 .multilineTextAlignment(.trailing)
@@ -228,12 +217,25 @@ struct CalculatorView: View {
                 loadPendingSavedCase()
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
+            .onChange(of: focusedField) { _, newField in
+                guard case let .composition(id)? = newField else { return }
+                Task { @MainActor in
+                    // Let SwiftUI finish making the field first responder before
+                    // changing its selection. Updating selection in the same
+                    // transaction can cause the numeric keyboard to lose focus.
+                    await Task.yield()
+                    guard focusedField == .composition(id) else { return }
+                    selectAllCompositionText(for: id)
+                }
+            }
             .onSubmit { viewModel.validate() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Validate", systemImage: "checkmark.shield") {
+                    Button("Scientific traceability", systemImage: "checkmark.shield") {
                         viewModel.validate()
+                        showsScientificTraceability = true
                     }
+                    .accessibilityHint("Opens model and latest calculation provenance.")
                 }
 
                 ToolbarItemGroup(placement: .keyboard) {
@@ -261,6 +263,12 @@ struct CalculatorView: View {
                     }
                     .fontWeight(.semibold)
                 }
+            }
+            .sheet(isPresented: $showsScientificTraceability) {
+                ScientificTraceabilityView(
+                    descriptor: viewModel.selectedDescriptor,
+                    record: viewModel.calculationRecord
+                )
             }
             .sheet(item: $recordToSave) { record in
                 SaveCalculationSheet(record: record) { name, notes in
@@ -290,6 +298,74 @@ struct CalculatorView: View {
                 Text(saveError ?? "")
             }
         }
+    }
+
+    private func compositionSelectionBinding(
+        for id: UUID
+    ) -> Binding<TextSelection?> {
+        Binding(
+            get: { compositionSelections[id] },
+            set: { selection in
+                if let selection {
+                    compositionSelections[id] = selection
+                } else {
+                    compositionSelections.removeValue(forKey: id)
+                }
+            }
+        )
+    }
+
+    private func selectAllCompositionText(for id: UUID) {
+        guard let value = viewModel.composition.first(where: { $0.id == id })?.molPercent,
+              !value.isEmpty
+        else {
+            compositionSelections.removeValue(forKey: id)
+            return
+        }
+        compositionSelections[id] = TextSelection(
+            range: value.startIndex..<value.endIndex
+        )
+    }
+
+    private func operatingPointRow(
+        title: String,
+        value: Binding<String>,
+        unit: String,
+        keyboardType: UIKeyboardType,
+        field: InputField
+    ) -> some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.body.weight(.medium))
+            Spacer(minLength: 8)
+            TextField("Value", text: value)
+                .keyboardType(keyboardType)
+                .focused($focusedField, equals: field)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 104)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.secondary.opacity(0.08))
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            focusedField == field
+                                ? Color.ifePrimary
+                                : Color.secondary.opacity(0.22),
+                            lineWidth: focusedField == field ? 1.5 : 1
+                        )
+                }
+                .contentShape(Rectangle())
+                .accessibilityLabel("\(title) value")
+            Text(unit)
+                .foregroundStyle(.secondary)
+                .frame(width: 50, alignment: .leading)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .contain)
     }
 
     private var orderedInputFields: [InputField] {
@@ -386,7 +462,7 @@ struct CalculationResultSections: View {
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
 
-                LabeledContent("Pressure", value: "\(number(record.input.pressureValue)) bar abs")
+                LabeledContent("Pressure", value: "\(number(record.input.pressureValue)) bar(a)")
                 LabeledContent("Temperature", value: "\(number(record.input.temperatureValue)) °C")
                 LabeledContent("Phase", value: record.response.phase.displayName)
 
@@ -431,7 +507,7 @@ struct CalculationResultSections: View {
                 .textSelection(.enabled)
         }
 
-        LabeledContent("Pressure — displayed", value: "\(number(record.input.pressureValue)) bar abs")
+        LabeledContent("Pressure — displayed", value: "\(number(record.input.pressureValue)) bar(a)")
         LabeledContent("Pressure — SI", value: "\(number(record.input.pressurePa)) Pa")
         LabeledContent("Temperature — displayed", value: "\(number(record.input.temperatureValue)) °C")
         LabeledContent("Temperature — SI", value: "\(number(record.input.temperatureK)) K")
@@ -543,7 +619,7 @@ private struct SaveCalculationSheet: View {
                 Section("Calculation") {
                     LabeledContent(
                         "Pressure",
-                        value: "\(number(record.input.pressurePa / 100_000)) bar abs"
+                        value: "\(number(record.input.pressurePa / 100_000)) bar(a)"
                     )
                     LabeledContent(
                         "Temperature",

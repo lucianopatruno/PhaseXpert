@@ -88,7 +88,8 @@ protocol CalculationExportRendering: Sendable {
 struct CalculationExporter: Sendable {
     func data(
         for snapshot: SavedCaseExportSnapshot,
-        format: CalculationExportFormat
+        format: CalculationExportFormat,
+        phaseDiagram: PhaseDiagramReportAttachment? = nil
     ) throws -> Data {
         try validateFiniteValues(in: snapshot)
         switch format {
@@ -97,7 +98,7 @@ struct CalculationExporter: Sendable {
         case .csv:
             return try CSVCalculationExportRenderer().render(snapshot)
         case .pdf:
-            return try PDFCalculationExportRenderer().render(snapshot)
+            return try PDFCalculationExportRenderer(phaseDiagram: phaseDiagram).render(snapshot)
         }
     }
 
@@ -197,7 +198,8 @@ struct CalculationExportFileStore {
 
     func createArtifacts(
         for snapshot: SavedCaseExportSnapshot,
-        exporter: CalculationExporter = CalculationExporter()
+        exporter: CalculationExporter = CalculationExporter(),
+        phaseDiagram: PhaseDiagramReportAttachment? = nil
     ) throws -> [CalculationExportArtifact] {
         let exportDirectory = baseDirectory
             .appendingPathComponent("PhaseXpertExports", isDirectory: true)
@@ -213,7 +215,11 @@ struct CalculationExportFileStore {
                     exporter.filename(for: snapshot, format: format),
                     isDirectory: false
                 )
-                let data = try exporter.data(for: snapshot, format: format)
+                let data = try exporter.data(
+                    for: snapshot,
+                    format: format,
+                    phaseDiagram: format == .pdf ? phaseDiagram : nil
+                )
                 try data.write(to: url, options: .atomic)
                 return CalculationExportArtifact(format: format, fileURL: url)
             }
