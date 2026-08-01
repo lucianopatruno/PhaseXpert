@@ -1,12 +1,17 @@
 #include "PhaseXpertCoolPropBridge.h"
 
 #include "CoolProp.h"
+#include "AbstractState.h"
+#include "PhaseEnvelope.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -157,6 +162,89 @@ int px_coolprop_calculate_co2_n2(
         return 6;
     } catch (...) {
         copy_text("CoolProp CO2-N2 calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_coolprop_co2_n2_phase_envelope(
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    PXCoolPropEnvelopePoint *points,
+    size_t point_capacity,
+    PXCoolPropEnvelopeSummary *summary,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (points == nullptr || summary == nullptr || point_capacity == 0) {
+        copy_text("Envelope output storage is null or empty.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(carbon_dioxide_mole_fraction)
+        || !std::isfinite(nitrogen_mole_fraction)
+        || carbon_dioxide_mole_fraction <= 0.5
+        || nitrogen_mole_fraction <= 0
+        || nitrogen_mole_fraction > 0.10
+        || std::abs(carbon_dioxide_mole_fraction + nitrogen_mole_fraction - 1.0) > 1e-10) {
+        copy_text("The phase-envelope spike requires CO2 as the largest component, 0 < N2 <= 0.10, and mole fractions summing to one.", error_buffer, error_buffer_size);
+        return 2;
+    }
+
+    try {
+        std::unique_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory("HEOS", "CarbonDioxide&Nitrogen")
+        );
+        state->set_mole_fractions({
+            carbon_dioxide_mole_fraction,
+            nitrogen_mole_fraction
+        });
+        state->build_phase_envelope("none");
+        const CoolProp::PhaseEnvelopeData &envelope = state->get_phase_envelope_data();
+
+        if (!envelope.built || envelope.T.empty()
+            || envelope.T.size() != envelope.p.size()
+            || envelope.T.size() != envelope.Q.size()) {
+            copy_text("CoolProp did not return a complete CO2-N2 phase envelope.", error_buffer, error_buffer_size);
+            return 3;
+        }
+        if (envelope.T.size() > point_capacity) {
+            copy_text("CoolProp phase envelope exceeds the caller-provided point capacity.", error_buffer, error_buffer_size);
+            return 4;
+        }
+
+        for (size_t index = 0; index < envelope.T.size(); ++index) {
+            const double temperature = envelope.T[index];
+            const double pressure = envelope.p[index];
+            if (!std::isfinite(temperature) || temperature <= 0
+                || !std::isfinite(pressure) || pressure <= 0) {
+                copy_text("CoolProp returned a non-finite or non-positive phase-envelope point.", error_buffer, error_buffer_size);
+                return 5;
+            }
+            PXCoolPropEnvelopeBranch branch = envelope.Q[index] >= 0.5
+                ? PXCoolPropEnvelopeBranchDew
+                : PXCoolPropEnvelopeBranchBubble;
+            if (envelope.icrit < envelope.T.size() && index == envelope.icrit) {
+                branch = PXCoolPropEnvelopeBranchCritical;
+            }
+            points[index].temperature_k = temperature;
+            points[index].pressure_pa = pressure;
+            points[index].branch = branch;
+        }
+
+        summary->point_count = envelope.T.size();
+        summary->is_closed = envelope.closed ? 1 : 0;
+        summary->maximum_temperature_k = *std::max_element(
+            envelope.T.begin(), envelope.T.end()
+        );
+        summary->maximum_pressure_pa = *std::max_element(
+            envelope.p.begin(), envelope.p.end()
+        );
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("CoolProp CO2-N2 phase-envelope construction failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 7;
     }
 }

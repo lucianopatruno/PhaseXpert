@@ -71,6 +71,39 @@ int px_coolprop_pure_co2_saturation_pressure(
     size_t error_buffer_size
 );
 
+typedef enum PXCoolPropEnvelopeBranch {
+    PXCoolPropEnvelopeBranchBubble = 0,
+    PXCoolPropEnvelopeBranchDew = 1,
+    PXCoolPropEnvelopeBranchCritical = 2
+} PXCoolPropEnvelopeBranch;
+
+typedef struct PXCoolPropEnvelopePoint {
+    double temperature_k;
+    double pressure_pa;
+    PXCoolPropEnvelopeBranch branch;
+} PXCoolPropEnvelopePoint;
+
+typedef struct PXCoolPropEnvelopeSummary {
+    size_t point_count;
+    int is_closed;
+    double maximum_temperature_k;
+    double maximum_pressure_pa;
+} PXCoolPropEnvelopeSummary;
+
+/// Builds the restricted CO2-N2 HEOS phase envelope using the binary
+/// interaction data shipped by the pinned CoolProp release. No estimated
+/// mixing rule is applied. The caller supplies storage for every returned
+/// point; insufficient capacity is an explicit failure.
+int px_coolprop_co2_n2_phase_envelope(
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    PXCoolPropEnvelopePoint *points,
+    size_t point_capacity,
+    PXCoolPropEnvelopeSummary *summary,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
 /// Copies the linked CoolProp version into `version_buffer`.
 int px_coolprop_copy_version(
     char *version_buffer,

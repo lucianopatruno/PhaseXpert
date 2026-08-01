@@ -132,11 +132,20 @@ struct SavedCaseExportView: View {
         for record: CalculationRecord
     ) async -> PhaseDiagramReportAttachment? {
         let composition = record.request.composition.filter { $0.moleFraction > 1e-12 }
-        guard composition.count == 1,
-              composition[0].component == .carbonDioxide,
-              abs(composition[0].moleFraction - 1) <= 1e-9
-        else {
-            phaseDiagramNote = "No diagram was embedded because the active provider does not calculate a real mixture phase envelope."
+        let isPure = composition.count == 1
+            && composition[0].component == .carbonDioxide
+            && abs(composition[0].moleFraction - 1) <= 1e-9
+        let isRestrictedBinary = composition.count == 2
+            && composition.contains {
+                $0.component == .carbonDioxide && $0.moleFraction > 0.5
+            }
+            && composition.contains {
+                $0.component == .nitrogen
+                    && $0.moleFraction > 0
+                    && $0.moleFraction <= 0.10
+            }
+        guard isPure || isRestrictedBinary else {
+            phaseDiagramNote = "No diagram was embedded because the active provider does not calculate a real envelope for this composition."
             return nil
         }
 
@@ -165,7 +174,9 @@ struct SavedCaseExportView: View {
                 for: record,
                 response: response
             )
-            phaseDiagramNote = "The PDF includes a newly calculated pure CO₂ boundary from the same recorded model and provider versions."
+            phaseDiagramNote = response.boundaryKind == .mixtureEnvelope
+                ? "The PDF includes a newly calculated CO₂-N₂ bubble/dew envelope from the same recorded model and provider versions."
+                : "The PDF includes a newly calculated pure CO₂ boundary from the same recorded model and provider versions."
             return attachment
         } catch {
             phaseDiagramNote = "No diagram was embedded: \(error.localizedDescription)"

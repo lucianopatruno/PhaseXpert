@@ -64,20 +64,32 @@ struct PhaseDiagramImageExporter {
         response: PhaseEnvelopeResponse
     ) throws {
         let composition = record.request.composition.filter { $0.moleFraction > 1e-12 }
-        guard composition.count == 1,
-              composition[0].component == .carbonDioxide,
-              abs(composition[0].moleFraction - 1) <= 1e-9
-        else {
+        let isPure = composition.count == 1
+            && composition[0].component == .carbonDioxide
+            && abs(composition[0].moleFraction - 1) <= 1e-9
+        let isRestrictedBinary = composition.count == 2
+            && composition.contains {
+                $0.component == .carbonDioxide && $0.moleFraction > 0.5
+            }
+            && composition.contains {
+                $0.component == .nitrogen
+                    && $0.moleFraction > 0
+                    && $0.moleFraction <= 0.10
+            }
+        guard isPure || isRestrictedBinary else {
             throw PhaseDiagramExportError.unavailable(
-                "Phase-diagram export is available only for a real pure CO₂ boundary."
+                "Phase-diagram export requires pure CO₂ or the restricted CO₂-N₂ binary."
             )
         }
+        let expectedKind: PhaseEnvelopeResponse.BoundaryKind = isPure
+            ? .pureFluidSaturation
+            : .mixtureEnvelope
         guard response.isAvailable,
-              response.boundaryKind == .pureFluidSaturation,
+              response.boundaryKind == expectedKind,
               !response.points.isEmpty
         else {
             throw PhaseDiagramExportError.unavailable(
-                "The selected provider did not return an exportable pure CO₂ boundary."
+                "The selected provider did not return an exportable calculated phase boundary."
             )
         }
         guard response.points.allSatisfy({
@@ -115,8 +127,18 @@ private struct PhaseDiagramExportCanvas: View {
         }
     }
 
-    private var saturation: [Sample] {
+    private var bubble: [Sample] {
         samples.filter { $0.branch == .bubble }
+    }
+
+    private var dew: [Sample] {
+        samples.filter { $0.branch == .dew }
+    }
+
+    private var bubbleSeriesName: String {
+        response.boundaryKind == .mixtureEnvelope
+            ? "Bubble-point curve"
+            : "CO₂ saturation boundary"
     }
 
     private var critical: Sample? {
@@ -130,7 +152,9 @@ private struct PhaseDiagramExportCanvas: View {
                     Text("PhaseXpert")
                         .font(.system(size: 42, weight: .bold))
                         .foregroundStyle(Color.ifePrimary)
-                    Text("Pure CO₂ pressure–temperature diagram")
+                    Text(response.boundaryKind == .mixtureEnvelope
+                        ? "CO₂–N₂ pressure–temperature envelope"
+                        : "Pure CO₂ pressure–temperature diagram")
                         .font(.system(size: 28, weight: .semibold))
                     Text("PRELIMINARY — VALIDATION PENDING")
                         .font(.system(size: 19, weight: .bold))
@@ -144,12 +168,20 @@ private struct PhaseDiagramExportCanvas: View {
             }
 
             Chart {
-                ForEach(saturation) { sample in
+                ForEach(bubble) { sample in
                     LineMark(
                         x: .value("Temperature (°C)", sample.temperatureCelsius),
                         y: .value("Pressure (bar(a))", sample.pressureBar)
                     )
-                    .foregroundStyle(by: .value("Series", "CO₂ saturation boundary"))
+                    .foregroundStyle(by: .value("Series", bubbleSeriesName))
+                    .interpolationMethod(.linear)
+                }
+                ForEach(dew) { sample in
+                    LineMark(
+                        x: .value("Temperature (°C)", sample.temperatureCelsius),
+                        y: .value("Pressure (bar(a))", sample.pressureBar)
+                    )
+                    .foregroundStyle(by: .value("Series", "Dew-point curve"))
                     .interpolationMethod(.linear)
                 }
                 if let critical {
@@ -168,7 +200,8 @@ private struct PhaseDiagramExportCanvas: View {
                 .foregroundStyle(by: .value("Series", "Operating point"))
             }
             .chartForegroundStyleScale([
-                "CO₂ saturation boundary": Color.ifePrimary,
+                bubbleSeriesName: Color.ifePrimary,
+                "Dew-point curve": Color.ifeBlue,
                 "Critical point": Color.ifeSignal,
                 "Operating point": Color.ifeText
             ])
@@ -187,7 +220,9 @@ private struct PhaseDiagramExportCanvas: View {
             Text("Model: \(response.model?.name ?? record.response.model.name) • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Provider \(response.model?.providerVersion ?? record.response.model.providerVersion)")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
-            Text("Straight line segments connect provider-calculated points. No estimated or decorative boundary is generated.")
+            Text(response.boundaryKind == .mixtureEnvelope
+                ? "Straight line segments connect provider-calculated bubble and dew points. No estimated or decorative boundary is generated."
+                : "Straight line segments connect provider-calculated points. No estimated or decorative boundary is generated.")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
         }
