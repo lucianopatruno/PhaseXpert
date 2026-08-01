@@ -25,12 +25,20 @@ final class PropertySweepRunnerTests: XCTestCase {
         )
 
         let failingPressurePa: Double?
+        let delayNanoseconds: UInt64
 
-        init(failingPressurePa: Double? = nil) {
+        init(
+            failingPressurePa: Double? = nil,
+            delayNanoseconds: UInt64 = 0
+        ) {
             self.failingPressurePa = failingPressurePa
+            self.delayNanoseconds = delayNanoseconds
         }
 
         func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            if delayNanoseconds > 0 {
+                try await Task.sleep(nanoseconds: delayNanoseconds)
+            }
             if request.pressurePa == failingPressurePa {
                 throw ProviderError.malformedResponse("Injected point failure.")
             }
@@ -156,8 +164,9 @@ final class PropertySweepRunnerTests: XCTestCase {
 
     func testCancellationStopsSweepWithoutReturningPartialResult() async {
         let task = Task {
-            try await PropertySweepRunner(provider: MockProvider())
-                .run(request(count: PropertySweepRequest.maximumPointCount))
+            try await PropertySweepRunner(
+                provider: MockProvider(delayNanoseconds: 10_000_000)
+            ).run(request(count: PropertySweepRequest.maximumPointCount))
         }
         task.cancel()
 
