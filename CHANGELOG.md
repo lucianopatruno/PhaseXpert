@@ -52,3 +52,7 @@
 - Added the calculated phase diagram and searchable phase-boundary provenance to PDF reports when the saved provider versions match the installed provider.
 - Made the calculator shield open scientific traceability, aligned pressure and temperature inputs with composition fields, and added keyboard previous/next navigation.
 - Added a persisted light/dark appearance toggle, selected CoolProp by default, and standardized absolute-pressure labels as `bar(a)`.
+
+- Added a restricted preliminary CO₂-N₂ HEOS phase-envelope bridge for 0 < N₂ ≤ 10 mol%, using only interaction data shipped by pinned CoolProp.
+- Added real bubble/dew plotting, PNG sharing and PDF embedding for accepted CO₂-N₂ envelopes.
+- Added failure handling and tests for incomplete or branch-deficient native envelopes; no estimated fallback curve is produced.
