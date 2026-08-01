@@ -192,6 +192,22 @@ struct CalculatorView: View {
                         }
                         .accessibilityIdentifier("view-phase-diagram")
 
+                        NavigationLink {
+                            PropertySweepView(record: record)
+                        } label: {
+                            Label("Explore property sweep", systemImage: "chart.xyaxis.line")
+                        }
+                        .accessibilityIdentifier("open-property-sweep")
+
+                        Button("Copy result summary", systemImage: "doc.on.doc") {
+                            UIPasteboard.general.string = CalculationSummaryFormatter.text(for: record)
+                        }
+                        .accessibilityIdentifier("copy-calculation-summary")
+
+                        ShareLink(item: CalculationSummaryFormatter.text(for: record)) {
+                            Label("Share result summary", systemImage: "square.and.arrow.up")
+                        }
+
                         Button("Save case", systemImage: "square.and.arrow.down") {
                             recordToSave = record
                         }
@@ -438,9 +454,41 @@ struct CalculatorView: View {
 struct CalculationResultSections: View {
     let record: CalculationRecord
 
-    private var calculatedProperties: [PropertyValue] {
+    private enum ResultGroup: String, CaseIterable {
+        case derived = "Derived"
+        case thermodynamic = "Thermodynamic"
+        case transport = "Transport and acoustic"
+        case additional = "Additional"
+
+        var properties: Set<PropertyID> {
+            switch self {
+            case .derived:
+                [.molarMass, .compressibilityFactor, .specificVolume]
+            case .thermodynamic:
+                [
+                    .enthalpy, .entropy, .internalEnergy,
+                    .isobaricHeatCapacity, .isochoricHeatCapacity,
+                    .heatCapacityRatio, .jouleThomsonCoefficient
+                ]
+            case .transport:
+                [.dynamicViscosity, .thermalConductivity, .speedOfSound]
+            case .additional:
+                [
+                    .isothermalCompressibility,
+                    .thermalExpansionCoefficient,
+                    .vapourFraction
+                ]
+            }
+        }
+    }
+
+    private var stateProperties: [PropertyValue] {
+        calculatedProperties(in: [.density])
+    }
+
+    private func calculatedProperties(in identifiers: Set<PropertyID>) -> [PropertyValue] {
         record.response.properties
-            .filter { $0.status == .calculated }
+            .filter { $0.status == .calculated && identifiers.contains($0.property) }
             .sorted { $0.property.displayName < $1.property.displayName }
     }
 
@@ -452,7 +500,7 @@ struct CalculationResultSections: View {
 
     var body: some View {
         Group {
-            Section("Results") {
+            Section("State") {
                 ScientificStatusBanner(
                     title: record.response.isScientificResult
                         ? "Preliminary — validation incomplete"
@@ -466,8 +514,19 @@ struct CalculationResultSections: View {
                 LabeledContent("Temperature", value: "\(number(record.input.temperatureValue)) °C")
                 LabeledContent("Phase", value: record.response.phase.displayName)
 
-                ForEach(calculatedProperties, id: \.property) { property in
+                ForEach(stateProperties, id: \.property) { property in
                     PropertyResultRow(property: property)
+                }
+            }
+
+            ForEach(ResultGroup.allCases, id: \.self) { group in
+                let properties = calculatedProperties(in: group.properties)
+                if !properties.isEmpty {
+                    Section(group.rawValue) {
+                        ForEach(properties, id: \.property) { property in
+                            PropertyResultRow(property: property)
+                        }
+                    }
                 }
             }
 
@@ -714,24 +773,11 @@ private struct PropertyResultRow: View {
     }
 
     private var effectiveStatus: PropertyStatus {
-        property.status == .calculated && !property.hasFiniteCalculatedValue
-            ? .failed
-            : property.status
+        EngineeringPropertyFormatter.effectiveStatus(for: property)
     }
 
     private var displayValue: String {
-        guard property.hasFiniteCalculatedValue, let value = property.value else {
-            return effectiveStatus.displayName
-        }
-        if property.property == .dynamicViscosity, property.unit == "Pa·s" {
-            let converted = DynamicViscosityUnit.millipascalSecond.fromPascalSeconds(value)
-            return "\(format(converted)) \(DynamicViscosityUnit.millipascalSecond.rawValue)"
-        }
-        return "\(format(value)) \(property.unit)"
-    }
-
-    private func format(_ value: Double) -> String {
-        value.formatted(.number.precision(.significantDigits(1...7)))
+        EngineeringPropertyFormatter.text(for: property)
     }
 }
 
