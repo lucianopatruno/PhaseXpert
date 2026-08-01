@@ -74,3 +74,15 @@
 - Added bounded pressure and temperature property sweeps that execute the
   selected provider at every point, preserve per-point provenance, expose
   progress/cancellation, leave failures as chart gaps and export traceable CSV.
+
+- Expanded the preliminary mixture scope to dry CO₂-rich combinations of N₂,
+  O₂, Ar, CH₄ and H₂ using only interaction entries shipped by CoolProp 8.0.0.
+- Enforced a visible 10 mol% total-impurity product guardrail without claiming
+  it as a validated accuracy range; mixture expanded properties and phase
+  envelopes remain unavailable.
+- Added reviewed NIST molar masses for transparent mixture M, v and Z
+  derivations.
+- Fixed select-all editing for pressure and temperature, centered the property
+  sweep action, and made each scientific reference open its own destination.
+- Declared that PhaseXpert uses no non-exempt encryption in generated app
+  metadata for App Store Connect export-compliance processing.
