@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class PhaseXpertUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -34,7 +35,18 @@ final class PhaseXpertUITests: XCTestCase {
 
         let carbonDioxideField = app.textFields["CO₂ mole percent"]
         XCTAssertTrue(carbonDioxideField.waitForExistence(timeout: 2))
+        for _ in 0..<5 where !carbonDioxideField.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(
+            carbonDioxideField.isHittable,
+            "The CO₂ composition field should be reachable by scrolling the calculator form."
+        )
         carbonDioxideField.tap()
+        XCTAssertTrue(
+            app.buttons["OK"].waitForExistence(timeout: 2),
+            "The numeric keyboard should be focused before replacement text is entered."
+        )
         carbonDioxideField.typeText("95")
 
         XCTAssertEqual(
