@@ -66,7 +66,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   derived transparently from recorded inputs and calculated density; an
   unavailable IFE provider, and a
   non-scientific demo provider
-- immutable results with concise and expert scientific traceability views
+- immutable results grouped into state, thermodynamic, transport/acoustic and
+  derived sections, with presentation-only engineering units, copy/share actions
+  and concise or expert scientific traceability
 - versioned, local-only SwiftData saved cases with search, sorting, metadata
   editing, duplication, confirmed deletion and edit/rerun
 - pairwise saved-case comparison for operating points, composition, model
@@ -76,6 +78,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   current operating point
 - local JSON, CSV and paginated PDF calculation-report export preserving the
   saved record, units, warnings and provider provenance
+- bounded, cancellable pressure or temperature property sweeps using a real
+  provider calculation at every point, with explicit gaps, phase labels,
+  selected-point inspection and provenance-rich CSV export
 - versioned future IFE API data-transfer contract
 - core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
@@ -129,7 +134,9 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - derived molar mass, specific volume and Z inherit the validation status of
   their composition and density inputs and are not independent EOS outputs;
 - the phase diagram is pure CO₂ only and is not a validated mixture envelope;
-- phase-diagram image/PDF export remains a placeholder;
+- property-sweep charts connect adjacent successful calculations for
+  visualization only; failures are gaps, and sweep charts are not yet embedded
+  in PDF reports;
 - comparison is currently pairwise and reports numerical differences, not
   model accuracy;
 - saved cases are local-only and do not sync between devices;
