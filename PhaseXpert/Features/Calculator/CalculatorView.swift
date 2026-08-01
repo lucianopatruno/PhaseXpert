@@ -18,6 +18,7 @@ struct CalculatorView: View {
     @State private var saveConfirmation: String?
     @State private var saveError: String?
     @State private var showsScientificTraceability = false
+    @State private var compositionSelections: [UUID: TextSelection] = [:]
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -87,7 +88,11 @@ struct CalculatorView: View {
 
                             Spacer(minLength: 8)
 
-                            TextField("Value", text: $entry.molPercent)
+                            TextField(
+                                "Value",
+                                text: $entry.molPercent,
+                                selection: compositionSelectionBinding(for: entry.id)
+                            )
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .composition(entry.id))
                                 .multilineTextAlignment(.trailing)
@@ -212,6 +217,10 @@ struct CalculatorView: View {
                 loadPendingSavedCase()
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
+            .onChange(of: focusedField) { _, newField in
+                guard case let .composition(id) = newField else { return }
+                selectAllCompositionText(for: id)
+            }
             .onSubmit { viewModel.validate() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -282,6 +291,33 @@ struct CalculatorView: View {
                 Text(saveError ?? "")
             }
         }
+    }
+
+    private func compositionSelectionBinding(
+        for id: UUID
+    ) -> Binding<TextSelection?> {
+        Binding(
+            get: { compositionSelections[id] },
+            set: { selection in
+                if let selection {
+                    compositionSelections[id] = selection
+                } else {
+                    compositionSelections.removeValue(forKey: id)
+                }
+            }
+        )
+    }
+
+    private func selectAllCompositionText(for id: UUID) {
+        guard let value = viewModel.composition.first(where: { $0.id == id })?.molPercent,
+              !value.isEmpty
+        else {
+            compositionSelections.removeValue(forKey: id)
+            return
+        }
+        compositionSelections[id] = TextSelection(
+            range: value.startIndex..<value.endIndex
+        )
     }
 
     private func operatingPointRow(
