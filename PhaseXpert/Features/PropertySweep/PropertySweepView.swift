@@ -5,8 +5,16 @@ import PhaseXpertCore
 import SwiftUI
 
 struct PropertySweepView: View {
+    private enum LimitField: Hashable {
+        case start
+        case end
+    }
+
     let record: CalculationRecord
     @State private var viewModel: PropertySweepViewModel
+    @FocusState private var focusedLimit: LimitField?
+    @State private var startSelection: TextSelection?
+    @State private var endSelection: TextSelection?
 
     init(record: CalculationRecord) {
         self.record = record
@@ -43,28 +51,20 @@ struct PropertySweepView: View {
                 LabeledContent("Fixed composition", value: viewModel.compositionText)
                 LabeledContent(viewModel.fixedConditionLabel, value: viewModel.fixedConditionText)
 
-                HStack {
-                    Text("Start")
-                    Spacer()
-                    TextField("Start", text: $viewModel.startText)
-                        .keyboardType(.numbersAndPunctuation)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 110)
-                    Text(viewModel.axisUnit)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 52, alignment: .leading)
-                }
-                HStack {
-                    Text("End")
-                    Spacer()
-                    TextField("End", text: $viewModel.endText)
-                        .keyboardType(.numbersAndPunctuation)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 110)
-                    Text(viewModel.axisUnit)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 52, alignment: .leading)
-                }
+                sweepLimitRow(
+                    title: "Start",
+                    text: $viewModel.startText,
+                    selection: $startSelection,
+                    field: .start,
+                    unit: viewModel.axisUnit
+                )
+                sweepLimitRow(
+                    title: "End",
+                    text: $viewModel.endText,
+                    selection: $endSelection,
+                    field: .end,
+                    unit: viewModel.axisUnit
+                )
                 Stepper(
                     "Calculated points: \(viewModel.pointCount)",
                     value: $viewModel.pointCount,
@@ -157,7 +157,100 @@ struct PropertySweepView: View {
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
         .background(Color.ifeBackground)
+        .onChange(of: focusedLimit) { _, newField in
+            guard let newField else { return }
+            Task { @MainActor in
+                await Task.yield()
+                guard focusedLimit == newField else { return }
+                selectAll(in: newField)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button {
+                    focusedLimit = .start
+                } label: {
+                    Image(systemName: "chevron.up")
+                }
+                .disabled(focusedLimit != .end)
+                .accessibilityLabel("Previous sweep limit")
+
+                Button {
+                    focusedLimit = .end
+                } label: {
+                    Image(systemName: "chevron.down")
+                }
+                .disabled(focusedLimit != .start)
+                .accessibilityLabel("Next sweep limit")
+
+                Spacer()
+
+                Button("OK") {
+                    focusedLimit = nil
+                }
+                .fontWeight(.semibold)
+            }
+        }
         .onDisappear { viewModel.cancel() }
+    }
+
+    private func sweepLimitRow(
+        title: String,
+        text: Binding<String>,
+        selection: Binding<TextSelection?>,
+        field: LimitField,
+        unit: String
+    ) -> some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.body.weight(.medium))
+            Spacer(minLength: 8)
+            TextField(title, text: text, selection: selection)
+                .keyboardType(.numbersAndPunctuation)
+                .focused($focusedLimit, equals: field)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 110)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.secondary.opacity(0.08))
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            focusedLimit == field
+                                ? Color.ifePrimary
+                                : Color.secondary.opacity(0.22),
+                            lineWidth: focusedLimit == field ? 1.5 : 1
+                        )
+                }
+                .contentShape(Rectangle())
+                .accessibilityLabel("\(title) sweep limit")
+            Text(unit)
+                .foregroundStyle(.secondary)
+                .frame(width: 52, alignment: .leading)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private func selectAll(in field: LimitField) {
+        let value: String
+        switch field {
+        case .start:
+            value = viewModel.startText
+        case .end:
+            value = viewModel.endText
+        }
+        guard !value.isEmpty else { return }
+        let selection = TextSelection(range: value.startIndex..<value.endIndex)
+        switch field {
+        case .start:
+            startSelection = selection
+        case .end:
+            endSelection = selection
+        }
     }
 }
 
