@@ -218,6 +218,42 @@ private struct PhaseBoundaryChart: View {
         ].compactMap { $0 })
     }
 
+    private var operatingPointRelationship: String {
+        guard response.boundaryKind == .mixtureEnvelope else {
+            return "Pure-fluid boundary; provider phase shown above"
+        }
+        if record.response.phase == .twoPhase {
+            return "Inside two-phase envelope — provider state classification"
+        }
+        if isNearCalculatedBoundary {
+            return "Near boundary — within 1% pressure at operating temperature"
+        }
+        return "Outside two-phase envelope — provider state classification"
+    }
+
+    private var isNearCalculatedBoundary: Bool {
+        let operatingTemperature = operatingTemperatureCelsius
+        let operatingPressure = operatingPressureBar
+        for branch in [bubble, dew] {
+            for (first, second) in zip(branch, branch.dropFirst()) {
+                let low = min(first.temperatureCelsius, second.temperatureCelsius)
+                let high = max(first.temperatureCelsius, second.temperatureCelsius)
+                guard operatingTemperature >= low, operatingTemperature <= high else {
+                    continue
+                }
+                let span = second.temperatureCelsius - first.temperatureCelsius
+                guard abs(span) > 1e-12 else { continue }
+                let fraction = (operatingTemperature - first.temperatureCelsius) / span
+                let boundaryPressure = first.pressureBar
+                    + fraction * (second.pressureBar - first.pressureBar)
+                if abs(operatingPressure - boundaryPressure) / max(boundaryPressure, 1) <= 0.01 {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     private var selectedSample: Sample? {
         guard let selectedTemperatureCelsius else { return nil }
         return plottedBoundary.min {
@@ -274,6 +310,10 @@ private struct PhaseBoundaryChart: View {
                             value: "\(number(operatingTemperatureCelsius)) °C"
                         )
                         LabeledContent("Provider phase", value: record.response.phase.displayName)
+                        LabeledContent("Operating-point relationship") {
+                            Text(operatingPointRelationship)
+                                .multilineTextAlignment(.trailing)
+                        }
                         Text(
                             response.boundaryKind == .mixtureEnvelope
                                 ? "The bubble and dew branches bound the provider-calculated two-phase region. The operating phase shown above comes from the independent state-point calculation."
