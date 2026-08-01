@@ -219,7 +219,14 @@ struct CalculatorView: View {
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
             .onChange(of: focusedField) { _, newField in
                 guard case let .composition(id)? = newField else { return }
-                selectAllCompositionText(for: id)
+                Task { @MainActor in
+                    // Let SwiftUI finish making the field first responder before
+                    // changing its selection. Updating selection in the same
+                    // transaction can cause the numeric keyboard to lose focus.
+                    await Task.yield()
+                    guard focusedField == .composition(id) else { return }
+                    selectAllCompositionText(for: id)
+                }
             }
             .onSubmit { viewModel.validate() }
             .toolbar {
