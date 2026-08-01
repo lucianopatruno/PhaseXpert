@@ -573,11 +573,9 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             PhaseEnvelopePoint(
                 temperatureK: point.temperatureK,
                 pressurePa: point.pressurePa,
-                branch: switch point.branch {
-                case .bubble: .bubble
-                case .dew: .dew
-                case .critical: .critical
-                }
+                branch: point.branch == .bubble
+                    ? .bubble
+                    : (point.branch == .dew ? .dew : .critical)
             )
         }
         let generatedAt = Date()
