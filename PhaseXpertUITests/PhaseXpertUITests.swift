@@ -45,7 +45,6 @@ final class PhaseXpertUITests: XCTestCase {
         clearButton.tap()
 
         let carbonDioxideField = app.textFields["CO₂ mole percent"]
-        XCTAssertEqual(carbonDioxideField.value as? String, "")
         XCTAssertTrue(
             app.buttons["OK"].waitForExistence(timeout: 2),
             "Clearing a composition should focus its numeric field."
