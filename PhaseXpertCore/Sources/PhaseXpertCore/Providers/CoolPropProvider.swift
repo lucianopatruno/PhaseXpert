@@ -51,6 +51,43 @@ public struct CoolPropSaturationLimits: Equatable, Sendable {
     }
 }
 
+public struct CoolPropEnvelopeEnginePoint: Equatable, Sendable {
+    public enum Branch: Equatable, Sendable {
+        case bubble
+        case dew
+        case critical
+    }
+
+    public let temperatureK: Double
+    public let pressurePa: Double
+    public let branch: Branch
+
+    public init(temperatureK: Double, pressurePa: Double, branch: Branch) {
+        self.temperatureK = temperatureK
+        self.pressurePa = pressurePa
+        self.branch = branch
+    }
+}
+
+public struct CoolPropMixtureEnvelopeEngineResult: Equatable, Sendable {
+    public let points: [CoolPropEnvelopeEnginePoint]
+    public let isClosed: Bool
+    public let maximumTemperatureK: Double
+    public let maximumPressurePa: Double
+
+    public init(
+        points: [CoolPropEnvelopeEnginePoint],
+        isClosed: Bool,
+        maximumTemperatureK: Double,
+        maximumPressurePa: Double
+    ) {
+        self.points = points
+        self.isClosed = isClosed
+        self.maximumTemperatureK = maximumTemperatureK
+        self.maximumPressurePa = maximumPressurePa
+    }
+}
+
 /// Narrow seam between the provider and a local CoolProp binary.
 ///
 /// The protocol keeps C/C++ symbols out of the domain and presentation layers
@@ -71,6 +108,11 @@ public protocol CoolPropEngine: Sendable {
         nitrogenMoleFraction: Double
     ) async throws -> CoolPropBinaryEngineResult
 
+    func carbonDioxideNitrogenPhaseEnvelope(
+        carbonDioxideMoleFraction: Double,
+        nitrogenMoleFraction: Double
+    ) async throws -> CoolPropMixtureEnvelopeEngineResult
+
     func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits
 
     func pureCarbonDioxideSaturationPressure(
@@ -79,6 +121,15 @@ public protocol CoolPropEngine: Sendable {
 }
 
 public extension CoolPropEngine {
+    func carbonDioxideNitrogenPhaseEnvelope(
+        carbonDioxideMoleFraction: Double,
+        nitrogenMoleFraction: Double
+    ) async throws -> CoolPropMixtureEnvelopeEngineResult {
+        throw ProviderError.modelUnavailable(
+            "The CoolProp engine does not expose CO₂-N₂ phase-envelope construction."
+        )
+    }
+
     func calculateCarbonDioxideNitrogen(
         pressurePa: Double,
         temperatureK: Double,
@@ -176,7 +227,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.4.0",
+            providerVersion: "0.5.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable ? [.carbonDioxide, .nitrogen] : [],
@@ -191,7 +242,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "CO₂-N₂ is restricted to density and phase with 0 < N₂ ≤ 10 mol%; this is an implementation test cap, not a validated accuracy range.",
                 "Preliminary integration; no production accuracy claim.",
                 "CO₂-N₂ dynamic viscosity is unavailable pending separate validation.",
-                "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
+                "CO₂-N₂ bubble/dew envelopes are an implementation spike and have not completed independent validation."
             ],
             references: [
                 SourceReference(
@@ -313,7 +364,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 solverMethod: "CoolProp PropsSI(P,T), HEOS CO₂-N₂ binary; pinned library interaction data only",
                 warnings: [
                     "CO₂-N₂ MIXTURE SPIKE: density and phase have not completed independent validation.",
-                    "Mixture dynamic viscosity and mixture phase envelopes are not enabled."
+                    "Mixture dynamic viscosity is not enabled."
                 ]
             )
         }
@@ -370,10 +421,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "The phase-envelope request model ID does not match CoolProp."
             )
         }
-        guard isPureCarbonDioxide(request.composition) else {
-            return unavailableEnvelope(
-                requestID: request.requestID,
-                warning: "Mixture phase envelopes are not enabled in the CO₂-N₂ spike; the phase diagram supports exactly 100 mol% CO₂ only."
+        let supported = try supportedComposition(request.composition)
+        if case let .carbonDioxideNitrogen(carbonDioxide, nitrogen) = supported {
+            return try await carbonDioxideNitrogenEnvelope(
+                request: request,
+                carbonDioxideMoleFraction: carbonDioxide,
+                nitrogenMoleFraction: nitrogen,
+                startedAt: startedAt
             )
         }
 
@@ -463,6 +517,90 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             warnings: warnings,
             isAvailable: true,
             boundaryKind: .pureFluidSaturation,
+            model: descriptor,
+            generatedAt: generatedAt,
+            solver: solver
+        )
+    }
+
+    private func carbonDioxideNitrogenEnvelope(
+        request: PhaseEnvelopeRequest,
+        carbonDioxideMoleFraction: Double,
+        nitrogenMoleFraction: Double,
+        startedAt: Date
+    ) async throws -> PhaseEnvelopeResponse {
+        let cacheKey = "\(engine.libraryVersion)-co2-\(carbonDioxideMoleFraction)-n2-\(nitrogenMoleFraction)"
+        if let cached = await envelopeCache.entry(for: cacheKey) {
+            return PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: cached.points,
+                warnings: cached.warnings,
+                isAvailable: true,
+                boundaryKind: .mixtureEnvelope,
+                model: descriptor,
+                generatedAt: cached.generatedAt,
+                solver: cached.solver
+            )
+        }
+
+        let raw = try await engine.carbonDioxideNitrogenPhaseEnvelope(
+            carbonDioxideMoleFraction: carbonDioxideMoleFraction,
+            nitrogenMoleFraction: nitrogenMoleFraction
+        )
+        try Task.checkCancellation()
+        guard raw.isClosed, raw.points.count >= 8 else {
+            throw ProviderError.malformedResponse(
+                "CoolProp did not return a closed CO₂-N₂ phase envelope with enough calculated points."
+            )
+        }
+        guard raw.points.allSatisfy({
+            $0.temperatureK.isFinite && $0.temperatureK > 0
+                && $0.pressurePa.isFinite && $0.pressurePa > 0
+        }) else {
+            throw ProviderError.malformedResponse(
+                "CoolProp returned a non-finite or non-positive CO₂-N₂ phase-envelope point."
+            )
+        }
+        let bubbleCount = raw.points.filter { $0.branch == .bubble }.count
+        let dewCount = raw.points.filter { $0.branch == .dew }.count
+        guard bubbleCount >= 2, dewCount >= 2 else {
+            throw ProviderError.malformedResponse(
+                "CoolProp did not identify both bubble and dew branches for CO₂-N₂."
+            )
+        }
+
+        let points = raw.points.map { point in
+            PhaseEnvelopePoint(
+                temperatureK: point.temperatureK,
+                pressurePa: point.pressurePa,
+                branch: switch point.branch {
+                case .bubble: .bubble
+                case .dew: .dew
+                case .critical: .critical
+                }
+            )
+        }
+        let generatedAt = Date()
+        let warnings = [
+            "PRELIMINARY CO₂-N₂ ENVELOPE — VALIDATION PENDING: do not use this boundary for engineering, safety, commercial, or regulatory decisions.",
+            "Bubble and dew branches are returned directly by the pinned CoolProp HEOS mixture phase-envelope solver; no estimated mixing rule or decorative curve is used.",
+            "The 10 mol% N₂ cap is an implementation restriction, not a validated accuracy range."
+        ]
+        let solver = SolverMetadata(
+            method: "CoolProp AbstractState.build_phase_envelope, HEOS CO₂-N₂; pinned binary interaction data",
+            converged: true,
+            durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+        )
+        await envelopeCache.store(
+            .init(points: points, warnings: warnings, generatedAt: generatedAt, solver: solver),
+            for: cacheKey
+        )
+        return PhaseEnvelopeResponse(
+            requestID: request.requestID,
+            points: points,
+            warnings: warnings,
+            isAvailable: true,
+            boundaryKind: .mixtureEnvelope,
             model: descriptor,
             generatedAt: generatedAt,
             solver: solver
