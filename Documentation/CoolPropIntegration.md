@@ -146,7 +146,7 @@ Additional candidate references are listed in
 Provider version 0.6.0 exposes caloric, heat-capacity, acoustic, conductivity
 and Joule–Thomson results only for exactly 100 mol% CO₂. The C bridge returns SI
 values from the pinned CoolProp HEOS state. Swift converts the Joule–Thomson
-coefficient from K/Pa to K/MPa for presentation and derives Cp/Cv.
+coefficient from K/Pa to °C/bar for presentation and derives Cp/Cv.
 
 Enthalpy, entropy and internal energy use the pinned CoolProp default reference
 state; saved records retain that model/library version. CoolProp documents the
