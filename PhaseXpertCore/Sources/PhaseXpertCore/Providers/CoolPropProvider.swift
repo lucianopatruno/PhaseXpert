@@ -176,19 +176,21 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.4.0",
+            providerVersion: "0.5.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable ? [.carbonDioxide, .nitrogen] : [],
-            supportedProperties: engine.isAvailable ? [.density, .dynamicViscosity] : [],
+            supportedProperties: engine.isAvailable
+                ? [.density, .dynamicViscosity, .molarMass, .compressibilityFactor, .specificVolume]
+                : [],
             domain: .initialCO2Transport,
             scientificBasis: "CoolProp HEOS pure-fluid CO₂ and restricted CO₂-N₂ binary mixture backend.",
-            equationOrMethod: "CoolProp HEOS; the CO₂-N₂ pair uses only interaction data shipped by the pinned CoolProp release. No estimated mixing rule is applied.",
+            equationOrMethod: "CoolProp HEOS; the CO₂-N₂ pair uses only interaction data shipped by the pinned CoolProp release. Molar mass, specific volume and Z are derived from recorded inputs and calculated density. No estimated mixing rule is applied.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
-                "Pure CO₂ supports density and dynamic viscosity.",
-                "CO₂-N₂ is restricted to density and phase with 0 < N₂ ≤ 10 mol%; this is an implementation test cap, not a validated accuracy range.",
+                "Pure CO₂ supports density, dynamic viscosity and three explicitly derived engineering properties.",
+                "CO₂-N₂ is restricted to density, phase and three explicitly derived engineering properties with 0 < N₂ ≤ 10 mol%; this is an implementation test cap, not a validated accuracy range.",
                 "Preliminary integration; no production accuracy claim.",
                 "CO₂-N₂ dynamic viscosity is unavailable pending separate validation.",
                 "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
@@ -217,6 +219,18 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     title: "Pressure-Density-Temperature Measurements of Binary Mixtures Rich in CO₂ for Pipeline Transportation in the CCS Process",
                     year: 2012,
                     doiOrURL: "https://doi.org/10.1021/je300590v"
+                ),
+                SourceReference(
+                    authors: "Linstrom and Mallard (editors)",
+                    title: "NIST Chemistry WebBook, NIST Standard Reference Database Number 69",
+                    year: 2025,
+                    doiOrURL: "https://doi.org/10.18434/T4D303"
+                ),
+                SourceReference(
+                    authors: "CODATA Task Group on Fundamental Constants",
+                    title: "2022 CODATA recommended values of the fundamental physical constants",
+                    year: 2022,
+                    doiOrURL: "https://physics.nist.gov/cuu/Constants/"
                 )
             ]
         )
@@ -335,9 +349,25 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             }
         }
 
+        let derivedValues = DerivedPropertyCalculator().values(
+            requestedProperties: request.requestedProperties,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            composition: request.composition,
+            densityKilogramsPerCubicMetre: state.densityKilogramsPerCubicMetre
+        )
+        let derivedByProperty = Dictionary(
+            uniqueKeysWithValues: derivedValues.map { ($0.property, $0) }
+        )
         let values = request.requestedProperties
             .sorted { $0.rawValue < $1.rawValue }
-            .map { propertyValue(for: $0, state: state) }
+            .map { property in
+                derivedByProperty[property]
+                    ?? propertyValue(for: property, state: state)
+            }
+        let derivedMethod = derivedValues.isEmpty
+            ? ""
+            : "; derived M=ΣxᵢMᵢ, v=1/ρ, Z=pM/(ρRT)"
 
         return CalculationResponse(
             requestID: request.requestID,
@@ -345,7 +375,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             phase: phaseRegion(for: state.phaseIdentifier),
             properties: values,
             solver: SolverMetadata(
-                method: state.solverMethod,
+                method: state.solverMethod + derivedMethod,
                 converged: true,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             ),

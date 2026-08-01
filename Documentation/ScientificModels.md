@@ -63,7 +63,7 @@ provider proves support.
 ## Planned property stages
 
 1. Phase/region, density and dynamic viscosity.
-2. Molar mass, compressibility factor and specific volume.
+2. Molar mass, compressibility factor and specific volume. **Implemented as\n   explicit derived properties for the executable CO₂ and CO₂-N₂ paths.**
 3. Enthalpy, entropy, internal energy, heat capacities, speed of sound and
    thermal conductivity where validated.
 4. Response properties and vapour/liquid fractions where the provider defines
@@ -108,7 +108,7 @@ Mixtures and the unavailable IFE provider return no boundary.
 
 ### Implemented restricted CO₂-N₂ calculation
 
-Provider version 0.4.0 admits exactly two executable composition families:
+Provider version 0.5.0 admits exactly two executable composition families:
 
 - 100 mol% CO₂, retaining the existing density, viscosity and saturation path;
 - a binary CO₂-N₂ mixture with CO₂ uniquely largest and
@@ -131,3 +131,24 @@ CoolProp 8.0.0 identifies Span and Wagner (1996), DOI
 fluid implementation. PhaseXpert records that source with the provider
 metadata; citing the formulation does not constitute independent validation of
 the compiled implementation.
+
+
+### Implemented derived engineering properties
+
+PhaseXpert derives three values after a provider returns a finite, positive
+calculated density. These are transparent post-processing definitions, not
+additional CoolProp equation-of-state calls:
+
+- mixture molar mass: M = Σ xᵢMᵢ;
+- specific volume: v = 1/ρ;
+- compressibility factor: Z = pM/(ρRT), using
+  R = 8.31446261815324 J/(mol·K).
+
+Calculations use Pa, K, kg/m³ and kg/mol internally. Molar mass is presented in
+g/mol, specific volume in m³/kg, and Z is dimensionless. CO₂ (44.0095 g/mol)
+and N₂ (28.0134 g/mol) molecular weights are recorded from NIST Chemistry
+WebBook SRD 69 (DOI `10.18434/T4D303`). The gas constant is the NIST 2022
+CODATA value. A component without reviewed molar-mass data produces an
+unavailable result; an invalid pressure, temperature or density produces a
+failed result. Inputs are never normalized in this layer. The values inherit
+the preliminary validation status of the provider density and composition.

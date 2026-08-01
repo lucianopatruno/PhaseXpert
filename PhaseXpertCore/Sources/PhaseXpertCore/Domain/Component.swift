@@ -50,6 +50,24 @@ public enum ComponentID: String, CaseIterable, Codable, Hashable, Sendable, Iden
         case .propane: "Propane"
         }
     }
+
+    /// Molar mass in kg/mol when a reviewed value is available.
+    ///
+    /// PhaseXpert currently enables derived mixture properties only for the
+    /// preliminary CO₂-N₂ calculation domain. Values are from the NIST
+    /// Chemistry WebBook, SRD 69:
+    /// - CO₂: 44.0095 g/mol
+    /// - N₂: 28.0134 g/mol
+    public var molarMassKilogramsPerMole: Double? {
+        switch self {
+        case .carbonDioxide:
+            0.044_009_5
+        case .nitrogen:
+            0.028_013_4
+        default:
+            nil
+        }
+    }
 }
 
 public struct MixtureComponent: Codable, Equatable, Sendable, Identifiable {
