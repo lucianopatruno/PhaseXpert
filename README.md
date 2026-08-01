@@ -5,8 +5,8 @@ phase-property calculations for CO₂-rich mixtures.
 
 > **Scientific status:** the optional native CoolProp 8.0.0 bridge provides
 > preliminary pure-CO₂ density, viscosity, phase, caloric, heat-capacity,
-> acoustic, conductivity and Joule–Thomson results plus a restricted CO₂-N₂
-> density/phase spike up to 10 mol% N₂. Both paths also report explicitly
+> acoustic, conductivity and Joule–Thomson results plus restricted dry CO₂-rich
+> density/phase calculations containing N₂, O₂, Ar, CH₄ and H₂ up to 10 mol% total impurity. Both paths also report explicitly
 > derived molar mass, specific volume and compressibility factor. Validation is incomplete, so
 > these results must not be used for engineering, safety, commercial or
 > regulatory decisions. The IFE Model remains unavailable.
@@ -61,7 +61,7 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
 - composition and model-domain validation with explicit normalization
 - provider-independent request, response, metadata and phase-envelope contracts
 - a CoolProp 8.0.0 provider with expanded pure-CO₂ thermodynamic, acoustic and
-  transport outputs plus a restricted CO₂-N₂ density/phase spike; molar mass,
+  transport outputs plus restricted dry CO₂-rich mixture density/phase calculations; molar mass,
   specific volume and Z are
   derived transparently from recorded inputs and calculated density; an
   unavailable IFE provider, and a
@@ -108,7 +108,7 @@ the generated artifact and must be included in distribution review. See
 
 Tests cover absolute/gauge pressure and temperature conversion, composition
 totals, explicit normalization, duplicates, CO₂ dominance, provider lookup,
-unsupported components, provider-specific N₂ limits, API and calculation
+unsupported components, provider-specific dry-mixture limits, API and calculation
 response serialization, selected published pure-CO₂ reference points, and
 persistence round trips, and searchable multipage PDF calculation reports. Each
 scientific tolerance is
@@ -129,8 +129,8 @@ Certificate validation must never be bypassed.
 See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 
 - CoolProp calculations are preliminary; expanded pure-CO₂ properties have
-  not completed independent PhaseXpert validation, while CO₂-N₂ remains
-  limited to density and phase with at most 10 mol% N₂;
+  not completed independent PhaseXpert validation, while dry mixtures containing N₂, O₂, Ar, CH₄ or H₂ remain
+  limited to density and phase with at most 10 mol% total impurity;
 - derived molar mass, specific volume and Z inherit the validation status of
   their composition and density inputs and are not independent EOS outputs;
 - the phase diagram is pure CO₂ only and is not a validated mixture envelope;
