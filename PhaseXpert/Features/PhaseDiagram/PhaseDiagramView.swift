@@ -407,7 +407,7 @@ private struct PhaseBoundaryChart: View {
                                 value: "\(number(selectedSample.temperatureCelsius)) °C"
                             )
                             LabeledContent(
-                                "Selected saturation pressure",
+                                "Selected boundary pressure",
                                 value: "\(number(selectedSample.pressureBar)) bar(a)"
                             )
                         }
