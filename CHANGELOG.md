@@ -66,3 +66,11 @@
 - Added signed-value handling, finite/physical safeguards, reference-state
   provenance, pure-fluid gating, mixture-unavailable behavior and contract
   tests for the expanded property set.
+
+
+- Grouped calculation results into state, thermodynamic, transport/acoustic,
+  derived and additional sections, with display-only engineering unit
+  conversions and copy/share summaries.
+- Added bounded pressure and temperature property sweeps that execute the
+  selected provider at every point, preserve per-point provenance, expose
+  progress/cancellation, leave failures as chart gaps and export traceable CSV.
