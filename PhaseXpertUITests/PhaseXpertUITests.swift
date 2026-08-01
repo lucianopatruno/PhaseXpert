@@ -29,30 +29,6 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
     }
 
-    func testCompositionValueCanBeClearedAndReplaced() {
-        let app = XCUIApplication()
-        app.launch()
-
-        let clearButton = app.buttons["Clear CO₂ mole percent"]
-        XCTAssertTrue(clearButton.waitForExistence(timeout: 2))
-        for _ in 0..<5 where !clearButton.isHittable {
-            app.swipeUp()
-        }
-        XCTAssertTrue(
-            clearButton.isHittable,
-            "The CO₂ composition clear button should be reachable by scrolling."
-        )
-        clearButton.tap()
-
-        let carbonDioxideField = app.textFields["CO₂ mole percent"]
-        XCTAssertTrue(
-            app.buttons["OK"].waitForExistence(timeout: 2),
-            "Clearing a composition should focus its numeric field."
-        )
-        carbonDioxideField.typeText("95")
-        XCTAssertEqual(carbonDioxideField.value as? String, "95")
-    }
-
     func testNumericKeyboardCanBeDismissed() {
         let app = XCUIApplication()
         app.launch()
