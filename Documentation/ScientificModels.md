@@ -64,8 +64,9 @@ provider proves support.
 
 1. Phase/region, density and dynamic viscosity.
 2. Molar mass, compressibility factor and specific volume. **Implemented as\n   explicit derived properties for the executable CO₂ and CO₂-N₂ paths.**
-3. Enthalpy, entropy, internal energy, heat capacities, speed of sound and
-   thermal conductivity where validated.
+3. Enthalpy, entropy, internal energy, heat capacities, speed of sound,
+   thermal conductivity and Joule–Thomson coefficient. **Implemented for pure
+   CO₂ as preliminary CoolProp outputs; independent validation remains open.**
 4. Response properties and vapour/liquid fractions where the provider defines
    them unambiguously.
 
@@ -152,3 +153,24 @@ CODATA value. A component without reviewed molar-mass data produces an
 unavailable result; an invalid pressure, temperature or density produces a
 failed result. Inputs are never normalized in this layer. The values inherit
 the preliminary validation status of the provider density and composition.
+
+
+### Implemented expanded pure-CO₂ state
+
+Provider version 0.6.0 uses one CoolProp HEOS AbstractState update at the
+recorded pressure and temperature for exactly 100 mol% CO₂. It returns
+mass-specific enthalpy, entropy and internal energy, Cp, Cv, speed of sound,
+thermal conductivity and the single-phase Joule–Thomson derivative. PhaseXpert
+derives Cp/Cv and converts the derivative from K/Pa to K/MPa for display.
+
+All native outputs must be finite. Density, viscosity, Cp, Cv, speed of sound
+and conductivity must also be positive; caloric values and the Joule–Thomson
+coefficient remain signed. Missing or malformed values are never replaced by
+plausible numbers. Enthalpy, entropy and internal energy retain CoolProp's
+default reference state, which is recorded in warnings and provenance.
+
+CoolProp identifies Span and Wagner (1996), DOI 10.1063/1.555991, as the CO₂
+equation of state; Huber et al. (2016), DOI 10.1063/1.4940892, for thermal
+conductivity; and Laesecke and Muzny (2017), DOI 10.1063/1.4977429, for
+viscosity. Formulation traceability is not an accuracy-validation claim.
+Expanded properties remain unavailable for CO₂-N₂.
