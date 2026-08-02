@@ -112,15 +112,15 @@ int px_coolprop_pure_co2_saturation_pressure(
     size_t error_buffer_size
 );
 
-/// Samples real HEOS bubble and dew states for a supported dry CO2-rich mixture
-/// with bounded PQ flashes over the PhaseXpert pressure domain, 80000 to
-/// 30000000 Pa. Fractions use the same order and product guardrail as the state
-/// calculation. No estimated mixing rule or interpolated scientific point is
-/// introduced. Each branch stops at its first provider failure after starting,
-/// so missing scientific values are never bridged. Attempted and failed flash
-/// counts are returned explicitly. A successful bounded sampling pass sets
-/// `is_complete`; `is_closed` remains zero because pointwise sampling does
-/// not infer a critical point or geometric closure.
+/// Builds the real HEOS phase envelope for a supported dry CO2-rich mixture.
+/// Fractions use the same order and product guardrail as the state calculation.
+/// No estimated mixing rule or interpolated scientific point is introduced.
+/// Continuation starts at the PhaseXpert domain minimum of 80000 Pa, requests
+/// no optional refinement, and is capped by the tracked PhaseXpert CoolProp
+/// source patch at 256 successfully calculated provider steps. Reaching the cap
+/// leaves `is_complete` and `is_closed` zero while preserving returned points.
+/// A nonzero `is_complete` means CoolProp reached its native exit condition;
+/// `is_closed` separately reports CoolProp's pressure-closure condition.
 int px_coolprop_dry_co2_mixture_phase_envelope(
     double carbon_dioxide_mole_fraction,
     double nitrogen_mole_fraction,
@@ -131,8 +131,6 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     PXCoolPropEnvelopePoint *points,
     size_t point_capacity,
     size_t *point_count,
-    size_t *attempted_point_count,
-    size_t *failed_point_count,
     int *is_complete,
     int *is_closed,
     char *error_buffer,
