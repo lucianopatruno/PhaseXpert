@@ -202,7 +202,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let nativeResult = try await Task.detached(priority: .userInitiated) {
             var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
             var pointCount = 0
-            var isClosed = 0
+            var isClosed: Int32 = 0
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_dry_co2_mixture_phase_envelope(
                 fractions[.carbonDioxide] ?? 0,
