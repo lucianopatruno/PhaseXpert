@@ -197,10 +197,6 @@ private struct PhaseBoundaryChart: View {
     @State private var exportedDiagramURL: URL?
     @State private var exportErrorMessage: String?
     @State private var isPreparingExport = false
-    @State private var xVisibleLength: Double = 1
-    @State private var yVisibleLength: Double = 1
-    @State private var xScrollPosition: Double = 0
-    @State private var yScrollPosition: Double = 0
 
     private var samples: [Sample] {
         response.points.enumerated().map { index, point in
@@ -336,12 +332,8 @@ private struct PhaseBoundaryChart: View {
 
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
-                        HStack {
-                            Text("Pressure–temperature diagram")
-                                .font(.headline)
-                            Spacer()
-                            viewportControls
-                        }
+                        Text("Pressure–temperature diagram")
+                            .font(.headline)
 
                         Chart {
                             ForEach(bubble) { sample in
@@ -401,15 +393,11 @@ private struct PhaseBoundaryChart: View {
                         ])
                         .chartXScale(domain: xDomain)
                         .chartYScale(domain: yDomain)
-                        .chartScrollableAxes([.horizontal, .vertical])
-                        .chartXVisibleDomain(length: xVisibleLength)
-                        .chartYVisibleDomain(length: yVisibleLength)
-                        .chartScrollPosition(x: $xScrollPosition)
-                        .chartScrollPosition(y: $yScrollPosition)
                         .chartXSelection(value: $selectedTemperatureCelsius)
                         .chartXAxisLabel("Temperature (°C)")
                         .chartYAxisLabel("Pressure (bar(a))")
                         .frame(minHeight: 360)
+                        .accessibilityIdentifier("phase-boundary-chart")
                         .accessibilityLabel(
                             response.boundaryKind == .mixtureEnvelope
                                 ? "Carbon dioxide mixture bubble and dew phase envelope with operating point"
@@ -484,8 +472,6 @@ private struct PhaseBoundaryChart: View {
             }
             .padding(IFESpacing.medium)
         }
-        .onAppear(perform: resetViewport)
-        .onChange(of: response.requestID) { _, _ in resetViewport() }
         .accessibilityIdentifier("phase-diagram-available")
     }
 
@@ -507,36 +493,6 @@ private struct PhaseBoundaryChart: View {
             }
             isPreparingExport = false
         }
-    }
-
-    private var viewportControls: some View {
-        HStack(spacing: 4) {
-            Button("Zoom in", systemImage: "plus.magnifyingglass") {
-                xVisibleLength = max(xVisibleLength * 0.75, (xDomain.upperBound - xDomain.lowerBound) * 0.1)
-                yVisibleLength = max(yVisibleLength * 0.75, (yDomain.upperBound - yDomain.lowerBound) * 0.1)
-            }
-            .labelStyle(.iconOnly)
-
-            Button("Zoom out", systemImage: "minus.magnifyingglass") {
-                xVisibleLength = min(xVisibleLength / 0.75, xDomain.upperBound - xDomain.lowerBound)
-                yVisibleLength = min(yVisibleLength / 0.75, yDomain.upperBound - yDomain.lowerBound)
-            }
-            .labelStyle(.iconOnly)
-
-            Button("Reset chart", systemImage: "arrow.counterclockwise") {
-                resetViewport()
-            }
-            .labelStyle(.iconOnly)
-        }
-        .buttonStyle(.bordered)
-    }
-
-    private func resetViewport() {
-        xVisibleLength = xDomain.upperBound - xDomain.lowerBound
-        yVisibleLength = yDomain.upperBound - yDomain.lowerBound
-        xScrollPosition = xDomain.lowerBound
-        yScrollPosition = yDomain.lowerBound
-        selectedTemperatureCelsius = nil
     }
 
     private func paddedDomain(values: [Double]) -> ClosedRange<Double> {
