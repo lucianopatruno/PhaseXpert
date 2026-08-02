@@ -96,17 +96,23 @@ public struct CoolPropSaturationLimits: Equatable, Sendable {
 public struct CoolPropMixtureEnvelopeResult: Equatable, Sendable {
     public let points: [PhaseEnvelopePoint]
     public let solverMethod: String
+    public let attemptedPointCount: Int
+    public let failedPointCount: Int
     public let isComplete: Bool
     public let isClosed: Bool
 
     public init(
         points: [PhaseEnvelopePoint],
         solverMethod: String,
+        attemptedPointCount: Int? = nil,
+        failedPointCount: Int = 0,
         isComplete: Bool = true,
         isClosed: Bool = true
     ) {
         self.points = points
         self.solverMethod = solverMethod
+        self.attemptedPointCount = attemptedPointCount ?? points.count
+        self.failedPointCount = failedPointCount
         self.isComplete = isComplete
         self.isClosed = isClosed
     }
@@ -556,7 +562,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 .sorted { $0.component.rawValue < $1.component.rawValue }
                 .map { "\($0.component.rawValue)=\(String(format: "%.17g", $0.moleFraction))" }
                 .joined(separator: ";")
-            let cacheKey = "\(engine.libraryVersion)-mixture-start-80000-none-\(compositionKey)"
+            let cacheKey = "\(engine.libraryVersion)-mixture-pq80-v1-\(compositionKey)"
             if let cached = await envelopeCache.entry(for: cacheKey) {
                 return PhaseEnvelopeResponse(
                     requestID: request.requestID,
@@ -578,12 +584,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             let generatedAt = Date()
             let warnings = [
                 "PRELIMINARY — VALIDATION PENDING: the calculated mixture envelope must not be used for engineering, safety, commercial, or regulatory decisions.",
-                "Bubble and dew points are returned directly by CoolProp HEOS. PhaseXpert does not interpolate or estimate scientific values.",
-                "Phase-envelope construction starts at 0.8 bar(a), the declared PhaseXpert pressure-domain minimum, with CoolProp refinement disabled. Lower-pressure points are not requested, interpolated or extrapolated."
+                "Bubble and dew points are returned directly by bounded CoolProp HEOS PQ flashes. PhaseXpert does not interpolate or estimate scientific values.",
+                "The provider samples 80 logarithmic pressures per branch over 0.8–300 bar(a). Each branch stops at its first failed flash after starting, so unavailable scientific values are not bridged.",
+                "Provider flashes attempted: \(native.attemptedPointCount); unavailable or failed: \(native.failedPointCount)."
             ] + (native.isComplete ? [] : [
-                "CoolProp stopped before completing phase-envelope construction. PhaseXpert plots only the finite provider-returned bubble/dew points, marks the trace incomplete and does not extrapolate it."
+                "CoolProp stopped before completing the bounded pressure sampling. PhaseXpert plots only the finite provider-returned bubble/dew points, marks the trace incomplete and does not extrapolate it."
             ]) + (native.isClosed ? [] : [
-                "CoolProp did not report pressure closure. PhaseXpert plots only the returned provider points and does not close the trace."
+                "Bounded pointwise sampling did not report pressure closure. PhaseXpert plots only the returned provider points and does not close the trace."
             ])
             let solver = SolverMetadata(
                 method: native.solverMethod,
