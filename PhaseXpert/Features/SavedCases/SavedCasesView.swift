@@ -462,19 +462,18 @@ private struct SavedCaseComparisonView: View {
 
             if let comparison {
                 comparisonSections(comparison)
-                Section("Export comparison") {
-                    Button("Prepare searchable PDF and CSV", systemImage: "doc.badge.arrow.up") {
+                Section {
+                    Button {
                         prepareComparisonExport(comparison)
+                    } label: {
+                        Label("Prepare searchable PDF and CSV", systemImage: "doc.badge.arrow.up")
                     }
                     .accessibilityIdentifier("export-saved-case-comparison")
                     ForEach(exportArtifacts) { artifact in
-                        ShareLink(item: artifact.fileURL) {
-                            Label(
-                                artifact.id == .comparisonPDF ? "Share PDF report" : "Share CSV data",
-                                systemImage: artifact.id == .comparisonPDF ? "doc.richtext" : "tablecells"
-                            )
-                        }
+                        comparisonShareLink(for: artifact)
                     }
+                } header: {
+                    Text("Export comparison")
                 } footer: {
                     Text("Both files preserve compared-minus-reference semantics, immutable calculation identifiers, units, statuses, warnings and provider provenance. They do not assess model accuracy.")
                 }
@@ -543,6 +542,21 @@ private struct SavedCaseComparisonView: View {
             exportArtifacts = []
             exportError = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
         }
+    }
+
+    @ViewBuilder
+    private func comparisonShareLink(for artifact: ReportingExportArtifact) -> some View {
+        ShareLink(item: artifact.fileURL) {
+            Label(comparisonShareTitle(for: artifact.id), systemImage: comparisonShareIcon(for: artifact.id))
+        }
+    }
+
+    private func comparisonShareTitle(for kind: ReportingArtifactKind) -> String {
+        kind == .comparisonPDF ? "Share PDF report" : "Share CSV data"
+    }
+
+    private func comparisonShareIcon(for kind: ReportingArtifactKind) -> String {
+        kind == .comparisonPDF ? "doc.richtext" : "tablecells"
     }
 
     @ViewBuilder
