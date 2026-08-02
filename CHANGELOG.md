@@ -123,3 +123,7 @@
   0.8 bar(a) PhaseXpert pressure-domain minimum, disabled CoolProp's optional
   refinement pass, retained only real provider points in-domain and recorded
   the truncation and solver settings in reportable provenance.
+- Replaced non-terminating CoolProp mixture-envelope continuation with bounded
+  pointwise HEOS PQ bubble/dew sampling over 0.8–300 bar(a), stopping branches
+  at the first post-start provider failure and reporting attempted/failed
+  provider flashes without interpolation or inferred closure.
