@@ -150,8 +150,12 @@ calculation failure.
 Mixture output remains limited to density, provider phase, and the transparent
 derived values M, v and Z. Mixture viscosity, caloric, acoustic, conductivity,
 derivative properties are deliberately unavailable. Phase envelopes use the
-provider routine described above and remain validation pending. Every
-result records exact composition, library/provider version, method and
+provider routine described above and remain validation pending. Mixture
+continuation starts at 80000 Pa, matching the declared 0.8 bar(a) minimum of
+the PhaseXpert input domain, and requests CoolProp's unrefined continuation.
+Only finite provider-returned points at or above that pressure are retained;
+PhaseXpert does not interpolate, extrapolate or cosmetically close the trace.
+Every result records exact composition, library/provider version, method and
 validation-pending warnings. Contract coverage is not independent numeric
 validation.
 
