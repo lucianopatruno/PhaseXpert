@@ -20,9 +20,9 @@ not be used for engineering, safety, commercial or regulatory decisions.
   Joule–Thomson coefficient and saturation boundary
 - Dry CO₂-rich mixtures containing N₂, O₂, Ar, CH₄ or H₂: density, phase and
   provider bubble/dew phase envelope
-- Mixture-envelope continuation: CoolProp's unrefined provider trace beginning
-  at 80000 Pa, the PhaseXpert input-domain minimum; no lower-pressure values
-  are requested, interpolated or extrapolated
+- Mixture phase-boundary solver: bounded CoolProp HEOS PQ flashes at 80
+  logarithmic pressures per branch over 80000–30000000 Pa; each branch stops
+  at its first post-start provider failure and no missing value is bridged
 - Temporary total-impurity cap: `0 < Σx(impurity) <= 0.10`
 - Mixture viscosity and expanded state properties: unavailable
 
