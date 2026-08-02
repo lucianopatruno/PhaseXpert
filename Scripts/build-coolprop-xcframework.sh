@@ -10,6 +10,7 @@ simulator_build="${work_root}/build-iphonesimulator"
 output_root="${project_root}/Vendor/CoolProp"
 bridge_source="${project_root}/Native/CoolPropBridge/src/PhaseXpertCoolPropBridge.cpp"
 bridge_headers="${project_root}/Native/CoolPropBridge/include"
+coolprop_patch="${project_root}/Native/CoolPropBridge/patches/CoolProp-v8.0.0-phase-envelope-iteration-cap.patch"
 deployment_target="18.0"
 
 for command_name in git cmake xcodebuild xcrun; do
@@ -61,6 +62,24 @@ if [[ ! -d "${source_root}/.git" ]]; then
         --shallow-submodules \
         https://github.com/CoolProp/CoolProp.git \
         "${source_root}"
+fi
+
+if [[ ! -f "${coolprop_patch}" ]]; then
+    echo "Missing required CoolProp source patch: ${coolprop_patch}" >&2
+    exit 1
+fi
+
+# Reapply the tracked downstream guard from a clean pinned source checkout.
+# The patch changes no equation, coefficient or converged provider point; it
+# only stops CoolProp's otherwise unbounded mixture-envelope continuation after
+# a deterministic number of successfully calculated provider steps.
+git -C "${source_root}" reset --hard HEAD
+git -C "${source_root}" apply --check "${coolprop_patch}"
+git -C "${source_root}" apply "${coolprop_patch}"
+if ! grep -q "kPhaseXpertMaximumEnvelopeIterations = 256" \
+    "${source_root}/src/Backends/Helmholtz/PhaseEnvelopeRoutines.cpp"; then
+    echo "CoolProp phase-envelope iteration guard was not applied." >&2
+    exit 1
 fi
 
 build_coolprop() {
