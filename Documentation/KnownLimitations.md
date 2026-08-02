@@ -33,14 +33,13 @@
   displays only finite provider-returned points when both branches are present,
   marks the trace incomplete/open and convergence false, and never joins,
   extrapolates or completes the trace cosmetically.
-- Native mixture phase boundaries use bounded pointwise CoolProp PQ flashes
-  rather than CoolProp's monolithic phase-envelope continuation. Eighty
-  logarithmic pressures per branch are requested over 0.8–300 bar(a). A branch
-  stops at its first failed flash after starting, and failed attempts are
-  reported; PhaseXpert does not bridge the missing state, infer a critical point
-  or claim geometric closure. Each individual CoolProp flash remains
-  synchronous, while the phase-diagram UI retains its 30-second presentation
-  deadline and can display a late successful response.
+- CoolProp 8.0.0's native mixture-envelope continuation has no upstream
+  iteration bound and may not reach its pressure-closure or near-pure-phase exit
+  for some CO₂/N₂ compositions. PhaseXpert applies a tracked downstream cap of
+  256 successfully calculated continuation steps, starts at 0.8 bar(a), and
+  disables optional refinement. Reaching the cap returns only real accumulated
+  provider points with incomplete/open status; PhaseXpert does not extrapolate
+  or close the trace. The UI retains its 30-second presentation deadline.
 - Phase-diagram PNG rendering uses SwiftUI `ImageRenderer` on the main actor.
   It is never started automatically when provider points arrive; the live chart
   renders first and image generation begins only after an explicit user action.
