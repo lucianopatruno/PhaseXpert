@@ -119,3 +119,7 @@
 - Removed automatic main-actor PNG rendering from phase-diagram appearance;
   the calculated chart now renders first and image export starts only after an
   explicit user action.
+- Bounded native dry-mixture phase-envelope continuation to the declared
+  0.8 bar(a) PhaseXpert pressure-domain minimum, disabled CoolProp's optional
+  refinement pass, retained only real provider points in-domain and recorded
+  the truncation and solver settings in reportable provenance.
