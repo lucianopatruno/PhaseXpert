@@ -5,7 +5,14 @@ import PhaseXpertCore
 struct CompositionInput: Identifiable, Equatable {
     let id = UUID()
     var component: ComponentID
-    var molPercent: String
+    var value: String
+}
+
+enum CompositionInputBasis: String, CaseIterable, Identifiable {
+    case partsPerMillion = "ppm"
+    case molePercent = "mol%"
+
+    var id: String { rawValue }
 }
 
 @MainActor
@@ -14,8 +21,9 @@ final class CalculatorViewModel {
     var pressureText = "150"
     var temperatureText = "20"
     var selectedModelID = "coolprop-heos"
+    var compositionBasis: CompositionInputBasis = .partsPerMillion
     var composition: [CompositionInput] = [
-        CompositionInput(component: .carbonDioxide, molPercent: "100")
+        CompositionInput(component: .carbonDioxide, value: "1000000")
     ]
     private(set) var validationReport = ValidationReport(issues: [], normalizedComposition: nil)
     private(set) var calculationRecord: CalculationRecord?
@@ -34,7 +42,7 @@ final class CalculatorViewModel {
     }
 
     var canNormalize: Bool {
-        validationReport.normalizedComposition != nil
+        compositionBasis == .molePercent && validationReport.normalizedComposition != nil
     }
 
     var supportedImpurityComponents: [ComponentID] {
@@ -58,7 +66,7 @@ final class CalculatorViewModel {
         }) else {
             return nil
         }
-        let input = CompositionInput(component: component, molPercent: "")
+        let input = CompositionInput(component: component, value: "")
         composition.append(input)
         return input.id
     }
@@ -106,6 +114,16 @@ final class CalculatorViewModel {
             domain: descriptor.domain
         )
         var issues = coreReport.issues
+        if compositionBasis == .partsPerMillion, impurityPartsPerMillion > 1_000_000 {
+            issues.insert(
+                .init(
+                    code: .compositionTotal,
+                    severity: .error,
+                    message: "Total impurity cannot exceed 1,000,000 ppm; CO₂ is the remainder."
+                ),
+                at: 0
+            )
+        }
         if
             descriptor.availability != .unavailable,
             let provider = registry.provider(id: selectedModelID)
@@ -129,13 +147,14 @@ final class CalculatorViewModel {
     }
 
     func normalizeComposition() {
+        guard compositionBasis == .molePercent else { return }
         guard let normalized = validationReport.normalizedComposition else { return }
         compositionBeforeNormalization = compositionSnapshot()
         lastNormalizedComposition = normalized
         composition = normalized.map {
-            CompositionInput(
+            return CompositionInput(
                 component: $0.component,
-                molPercent: String(format: "%.8g", $0.moleFraction * 100)
+                value: String(format: "%.8g", $0.moleFraction * 100)
             )
         }
         validate()
@@ -147,17 +166,71 @@ final class CalculatorViewModel {
         if registry.provider(id: record.request.modelID) != nil {
             selectedModelID = record.request.modelID
         }
-        composition = record.request.composition.map {
-            CompositionInput(
-                component: $0.component,
-                molPercent: String(format: "%.8g", $0.moleFraction * 100)
-            )
+        if !record.input.originalComposition.isEmpty,
+           record.input.originalComposition.allSatisfy({ $0.unit == .partsPerMillion }) {
+            compositionBasis = .partsPerMillion
+            composition = record.input.originalComposition.map {
+                CompositionInput(component: $0.component, value: String(format: "%.12g", $0.value))
+            }
+        } else {
+            compositionBasis = .molePercent
+            composition = record.request.composition.map {
+                CompositionInput(
+                    component: $0.component,
+                    value: String(format: "%.8g", $0.moleFraction * 100)
+                )
+            }
         }
         compositionBeforeNormalization = nil
         lastNormalizedComposition = nil
         calculationRecord = nil
         calculationError = nil
         validate()
+    }
+
+    func changeCompositionBasis(to newBasis: CompositionInputBasis) {
+        guard newBasis != compositionBasis else { return }
+        let oldBasis = compositionBasis
+        let oldCarbonDioxideValue = oldBasis == .partsPerMillion
+            ? carbonDioxidePartsPerMillion
+            : nil
+        compositionBasis = newBasis
+        composition = composition.map { entry in
+            let oldValue = oldCarbonDioxideValue.flatMap {
+                entry.component == .carbonDioxide ? $0 : nil
+            } ?? parse(entry.value)
+            guard let oldValue else {
+                return CompositionInput(component: entry.component, value: "")
+            }
+            let moleFraction = oldValue / (oldBasis == .partsPerMillion ? 1_000_000 : 100)
+            return CompositionInput(
+                component: entry.component,
+                value: String(
+                    format: newBasis == .partsPerMillion ? "%.12g" : "%.8g",
+                    moleFraction * (newBasis == .partsPerMillion ? 1_000_000 : 100)
+                )
+            )
+        }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        validate()
+    }
+
+    var impurityPartsPerMillion: Double {
+        composition
+            .filter { $0.component != .carbonDioxide }
+            .reduce(0) { $0 + (parse($1.value) ?? 0) }
+    }
+
+    var carbonDioxidePartsPerMillion: Double {
+        1_000_000 - impurityPartsPerMillion
+    }
+
+    func displayedCompositionValue(for entry: CompositionInput) -> String {
+        if compositionBasis == .partsPerMillion, entry.component == .carbonDioxide {
+            return String(format: "%.12g", carbonDioxidePartsPerMillion)
+        }
+        return entry.value
     }
 
     func calculate() async {
@@ -211,20 +284,28 @@ final class CalculatorViewModel {
     }
 
     private func domainComposition() -> [MixtureComponent] {
-        composition.map {
-            MixtureComponent(
-                component: $0.component,
-                moleFraction: (parse($0.molPercent) ?? .nan) / 100
+        composition.map { entry in
+            let enteredValue = compositionBasis == .partsPerMillion
+                && entry.component == .carbonDioxide
+                ? carbonDioxidePartsPerMillion
+                : parse(entry.value) ?? .nan
+            return MixtureComponent(
+                component: entry.component,
+                moleFraction: enteredValue / (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
             )
         }
     }
 
     private func compositionSnapshot() -> [CompositionInputSnapshot] {
-        composition.map {
-            CompositionInputSnapshot(
-                component: $0.component,
-                value: parse($0.molPercent) ?? .nan,
-                unit: .molePercent
+        composition.map { entry in
+            let enteredValue = compositionBasis == .partsPerMillion
+                && entry.component == .carbonDioxide
+                ? carbonDioxidePartsPerMillion
+                : parse(entry.value) ?? .nan
+            return CompositionInputSnapshot(
+                component: entry.component,
+                value: enteredValue,
+                unit: compositionBasis == .partsPerMillion ? .partsPerMillion : .molePercent
             )
         }
     }

@@ -32,6 +32,16 @@ final class CoolPropProviderTests: XCTestCase {
         var saturationPressure: @Sendable (Double) -> Double = { temperature in
             temperature * 20_000
         }
+        var mixtureEnvelope = CoolPropMixtureEnvelopeResult(
+            points: [
+                .init(temperatureK: 230, pressurePa: 1_000_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 3_000_000, branch: .bubble),
+                .init(temperatureK: 265, pressurePa: 3_100_000, branch: .critical),
+                .init(temperatureK: 255, pressurePa: 2_800_000, branch: .dew),
+                .init(temperatureK: 225, pressurePa: 900_000, branch: .dew)
+            ],
+            solverMethod: "Mock CoolProp phase envelope"
+        )
 
         func calculatePureCarbonDioxide(
             pressurePa: Double,
@@ -65,6 +75,12 @@ final class CoolPropProviderTests: XCTestCase {
             temperatureK: Double
         ) async throws -> Double {
             saturationPressure(temperatureK)
+        }
+
+        func dryCarbonDioxideMixturePhaseEnvelope(
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropMixtureEnvelopeResult {
+            mixtureEnvelope
         }
     }
 
@@ -514,7 +530,7 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertEqual(critical.pressurePa, 7_377_000, accuracy: 1e-12)
     }
 
-    func testMixtureSaturationBoundaryIsExplicitlyUnavailable() async throws {
+    func testMixturePhaseEnvelopePreservesProviderBubbleAndDewPoints() async throws {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = PhaseEnvelopeRequest(
             modelID: provider.descriptor.id,
@@ -526,9 +542,47 @@ final class CoolPropProviderTests: XCTestCase {
 
         let response = try await provider.phaseEnvelope(request)
 
-        XCTAssertFalse(response.isAvailable)
-        XCTAssertTrue(response.points.isEmpty)
-        XCTAssertTrue(response.warnings.contains { $0.contains("100 mol% CO₂") })
+        XCTAssertTrue(response.isAvailable)
+        XCTAssertEqual(response.boundaryKind, .mixtureEnvelope)
+        XCTAssertEqual(response.points.filter { $0.branch == .bubble }.count, 2)
+        XCTAssertEqual(response.points.filter { $0.branch == .dew }.count, 2)
+        XCTAssertEqual(response.points.filter { $0.branch == .critical }.count, 1)
+        XCTAssertEqual(response.solver?.method, "Mock CoolProp phase envelope")
+        XCTAssertTrue(response.warnings.contains { $0.contains("does not interpolate") })
+    }
+
+    func testNonFiniteMixtureEnvelopePointIsRejected() async {
+        let invalid = CoolPropMixtureEnvelopeResult(
+            points: [
+                .init(temperatureK: 230, pressurePa: 1_000_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: .nan, branch: .bubble),
+                .init(temperatureK: 255, pressurePa: 2_800_000, branch: .dew),
+                .init(temperatureK: 225, pressurePa: 900_000, branch: .dew)
+            ],
+            solverMethod: "Mock"
+        )
+        let provider = CoolPropProvider(engine: MockEngine(mixtureEnvelope: invalid))
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.99),
+                .init(component: .nitrogen, moleFraction: 0.01)
+            ]
+        )
+
+        do {
+            _ = try await provider.phaseEnvelope(request)
+            XCTFail("A non-finite mixture-envelope point must be rejected.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .malformedResponse(
+                    "CoolProp returned a non-finite or non-positive mixture phase-envelope point."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
     func testNonFiniteSaturationPressureIsRejected() async {

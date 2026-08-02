@@ -133,7 +133,7 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
 
         let response = attachment.response
         drawLine(
-            "Boundary: pure-fluid CO₂ saturation • \(response.points.count) provider-calculated points",
+            "Boundary: \(response.boundaryKind == .mixtureEnvelope ? "mixture bubble/dew envelope" : "pure-fluid CO₂ saturation") • \(response.points.count) provider-calculated points",
             font: PDFReportFonts.body,
             color: PDFReportPalette.bodyText,
             position: CGPoint(x: PDFReportLayout.margin, y: 176),
@@ -158,10 +158,17 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
             )
         }
         drawLine(
-            "PRELIMINARY — VALIDATION PENDING. No estimated or decorative boundary is included.",
+            "Envelope request ID: \(response.requestID.uuidString)",
+            font: PDFReportFonts.small,
+            color: PDFReportPalette.secondaryText,
+            position: CGPoint(x: PDFReportLayout.margin, y: 122),
+            context: context
+        )
+        drawLine(
+            "PRELIMINARY — VALIDATION PENDING. No scientific values are interpolated or estimated.",
             font: PDFReportFonts.small,
             color: PDFReportPalette.warning,
-            position: CGPoint(x: PDFReportLayout.margin, y: 116),
+            position: CGPoint(x: PDFReportLayout.margin, y: 100),
             context: context
         )
         drawFooter(in: context, pageNumber: pageNumber)
@@ -711,6 +718,7 @@ private struct PDFReportContent {
     private func compositionUnit(_ unit: CompositionUnit) -> String {
         switch unit {
         case .molePercent: "mol%"
+        case .partsPerMillion: "ppm"
         case .moleFraction: "mole fraction"
         case .massFraction: "mass fraction"
         }

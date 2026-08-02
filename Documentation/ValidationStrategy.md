@@ -57,10 +57,10 @@ added only after IFE accepts an independent authoritative reference value and
 a tolerance justified from that reference's uncertainty or precision.
 
 
-## CO₂-N₂ spike validation plan
+## Dry CO₂-rich mixture validation plan
 
-The current binary implementation is a software-integration spike, not a
-validated property model. Its 10 mol% N₂ cap limits first-release testing and
+The current mixture implementation is a software-integration milestone, not a
+validated property model. Its 10 mol% total-impurity cap limits testing and
 must not be described as an accuracy range.
 
 Candidate independent experimental sources are:
@@ -86,9 +86,9 @@ is inspected.
 
 Initial coverage should include ship/capture low-temperature states, dense
 pipeline states, points on both sides of the critical region and explicit
-single-/two-phase classification checks. Mixture viscosity and mixture phase
-envelopes remain disabled until property-specific references and acceptance
-criteria are approved.
+single-/two-phase classification checks. Mixture viscosity remains disabled.
+Mixture phase envelopes remain explicitly preliminary until independently
+sourced bubble/dew cases, uncertainties and acceptance criteria are approved.
 
 
 ## Expanded pure-CO₂ property validation plan

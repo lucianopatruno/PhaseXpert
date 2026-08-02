@@ -94,3 +94,14 @@
   connected, while failed and unavailable points remain gaps.
 - Added reporting snapshot serialization and focused pagination, unavailable-
   value, non-finite-value, content and traceability tests.
+- Made molar ppm the default impurity input basis, with CO₂ calculated as the
+  exact remainder to 1,000,000 ppm; retained explicit mol% entry and preserved
+  the original basis in immutable calculation snapshots.
+- Added real CoolProp HEOS dry-mixture bubble/dew phase envelopes for the
+  existing supported component set and 10 mol% product guardrail, with no
+  estimated mixing rule, fallback curve or interpolated scientific values.
+- Extended phase-diagram PNG and searchable PDF reporting with mixture
+  composition, bubble/dew legends, solver/model provenance and calculation
+  traceability.
+- Replaced system disclosure labels with a reusable app-owned expandable row
+  so expandable options use the same body typography as neighboring actions.

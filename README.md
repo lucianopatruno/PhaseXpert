@@ -6,7 +6,8 @@ phase-property calculations for CO₂-rich mixtures.
 > **Scientific status:** the optional native CoolProp 8.0.0 bridge provides
 > preliminary pure-CO₂ density, viscosity, phase, caloric, heat-capacity,
 > acoustic, conductivity and Joule–Thomson results plus restricted dry CO₂-rich
-> density/phase calculations containing N₂, O₂, Ar, CH₄ and H₂ up to 10 mol% total impurity. Both paths also report explicitly
+> density/phase calculations and provider bubble/dew envelopes containing N₂,
+> O₂, Ar, CH₄ and H₂ up to 10 mol% total impurity. Both state paths also report explicitly
 > derived molar mass, specific volume and compressibility factor. Validation is incomplete, so
 > these results must not be used for engineering, safety, commercial or
 > regulatory decisions. The IFE Model remains unavailable.
@@ -59,6 +60,8 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
 - SI-first pressure and temperature conversions, including explicit gauge
   pressure reference
 - composition and model-domain validation with explicit normalization
+- default molar-ppm impurity entry with CO₂ completed as the exact remainder,
+  while retaining explicit mol% entry as an alternative
 - provider-independent request, response, metadata and phase-envelope contracts
 - a CoolProp 8.0.0 provider with expanded pure-CO₂ thermodynamic, acoustic and
   transport outputs plus restricted dry CO₂-rich mixture density/phase calculations; molar mass,
@@ -74,9 +77,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
 - pairwise saved-case comparison for operating points, composition, model
   snapshots, phase and compatible property values, with searchable PDF and
   long-form CSV compared-minus-reference reports
-- a preliminary pure-CO₂ pressure–temperature saturation diagram calculated
-  by the linked CoolProp HEOS provider, including the critical point and the
-  current operating point
+- preliminary provider-calculated pressure–temperature diagrams: one
+  saturation boundary for pure CO₂ and separate bubble/dew branches for the
+  supported dry CO₂-rich mixtures, including the current operating point
 - local JSON, CSV and paginated PDF calculation-report export preserving the
   saved record, units, warnings and provider provenance
 - bounded, cancellable pressure or temperature property sweeps using a real
@@ -135,7 +138,8 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   limited to density and phase with at most 10 mol% total impurity;
 - derived molar mass, specific volume and Z inherit the validation status of
   their composition and density inputs and are not independent EOS outputs;
-- the phase diagram is pure CO₂ only and is not a validated mixture envelope;
+- dry-mixture phase envelopes are preliminary CoolProp outputs and have not
+  completed independent PhaseXpert validation;
 - property-sweep charts connect adjacent successful calculations for
   visualization only; failures and unavailable values remain explicit gaps in
   both interactive and PDF charts;

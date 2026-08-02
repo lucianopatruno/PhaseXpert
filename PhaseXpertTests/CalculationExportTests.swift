@@ -104,6 +104,44 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(finalText.contains("Deterministic test solver"))
     }
 
+    func testPDFReportLabelsMixtureEnvelopeBranchesSearchably() throws {
+        let snapshot = makeSnapshot()
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 400)).image { context in
+            UIColor.white.setFill()
+            context.cgContext.fill(CGRect(x: 0, y: 0, width: 600, height: 400))
+        }
+        let response = PhaseEnvelopeResponse(
+            requestID: snapshot.calculation.request.requestID,
+            points: [
+                .init(temperatureK: 240, pressurePa: 1_000_000, branch: .bubble),
+                .init(temperatureK: 270, pressurePa: 3_000_000, branch: .bubble),
+                .init(temperatureK: 268, pressurePa: 2_900_000, branch: .dew),
+                .init(temperatureK: 235, pressurePa: 900_000, branch: .dew)
+            ],
+            warnings: ["PRELIMINARY — validation pending."],
+            isAvailable: true,
+            boundaryKind: .mixtureEnvelope,
+            model: snapshot.calculation.response.model,
+            generatedAt: fixedDate,
+            solver: snapshot.calculation.response.solver
+        )
+        let attachment = PhaseDiagramReportAttachment(
+            pngData: try XCTUnwrap(image.pngData()),
+            response: response
+        )
+
+        let data = try CalculationExporter().data(
+            for: snapshot,
+            format: .pdf,
+            phaseDiagram: attachment
+        )
+        let document = try XCTUnwrap(PDFDocument(data: data))
+        let finalText = try XCTUnwrap(document.page(at: document.pageCount - 1)?.string)
+        XCTAssertTrue(finalText.contains("mixture bubble/dew envelope"))
+        XCTAssertTrue(finalText.contains("No scientific values are interpolated or estimated"))
+        XCTAssertTrue(finalText.contains(response.requestID.uuidString))
+    }
+
     func testPDFReportPaginatesLongSavedCaseNotes() throws {
         let longNotes = Array(
             repeating: "Long traceable engineering note retained in the report.",

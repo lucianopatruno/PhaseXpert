@@ -72,6 +72,19 @@ struct CalculatorView: View {
                 }
 
                 Section {
+                    Picker(
+                        "Composition basis",
+                        selection: Binding(
+                            get: { viewModel.compositionBasis },
+                            set: { viewModel.changeCompositionBasis(to: $0) }
+                        )
+                    ) {
+                        ForEach(CompositionInputBasis.allCases) { basis in
+                            Text(basis.rawValue).tag(basis)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
                     ForEach($viewModel.composition) { $entry in
                         HStack(spacing: 10) {
                             if entry.component == .carbonDioxide {
@@ -92,11 +105,25 @@ struct CalculatorView: View {
 
                             Spacer(minLength: 8)
 
-                            TextField(
-                                "Value",
-                                text: $entry.molPercent,
-                                selection: compositionSelectionBinding(for: entry.id)
-                            )
+                            if viewModel.compositionBasis == .partsPerMillion,
+                               entry.component == .carbonDioxide {
+                                Text(viewModel.displayedCompositionValue(for: entry))
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 104)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 7)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.secondary.opacity(0.08))
+                                    )
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityLabel("Calculated carbon dioxide remainder")
+                            } else {
+                                TextField(
+                                    "Value",
+                                    text: $entry.value,
+                                    selection: compositionSelectionBinding(for: entry.id)
+                                )
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .composition(entry.id))
                                 .multilineTextAlignment(.trailing)
@@ -117,11 +144,14 @@ struct CalculatorView: View {
                                         )
                                 }
                                 .contentShape(Rectangle())
-                                .accessibilityLabel("\(entry.component.symbol) mole percent")
+                                .accessibilityLabel(
+                                    "\(entry.component.symbol) \(viewModel.compositionBasis.rawValue)"
+                                )
+                            }
 
-                            Text("mol%")
+                            Text(viewModel.compositionBasis.rawValue)
                                 .foregroundStyle(.secondary)
-                                .frame(width: 42, alignment: .leading)
+                                .frame(width: 48, alignment: .leading)
                                 .accessibilityHidden(true)
                         }
                         .accessibilityElement(children: .contain)
@@ -142,7 +172,11 @@ struct CalculatorView: View {
                         EditButton()
                     }
                 } footer: {
-                    Text("Values are entered as mol%. The app never normalizes composition silently.")
+                    Text(
+                        viewModel.compositionBasis == .partsPerMillion
+                            ? "Enter impurities in molar ppm. CO₂ is calculated exactly as 1,000,000 ppm minus the impurity total."
+                            : "Values are entered as mol%. The app never normalizes composition silently."
+                    )
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {
@@ -342,7 +376,7 @@ struct CalculatorView: View {
         case .temperature:
             temperatureSelection = fullSelection(for: viewModel.temperatureText)
         case let .composition(id):
-            let value = viewModel.composition.first(where: { $0.id == id })?.molPercent ?? ""
+            let value = viewModel.composition.first(where: { $0.id == id })?.value ?? ""
             compositionSelections[id] = fullSelection(for: value)
         }
     }
@@ -542,25 +576,17 @@ struct CalculationResultSections: View {
 
             if !unavailableProperties.isEmpty {
                 Section {
-                    DisclosureGroup {
+                    IFEExpandableRow("Unavailable properties (\(unavailableProperties.count))") {
                         ForEach(unavailableProperties, id: \.property) { property in
                             PropertyResultRow(property: property)
                         }
-                    } label: {
-                        Text("Unavailable properties (\(unavailableProperties.count))")
-                            .font(.body)
-                            .fontWeight(.regular)
                     }
                 }
             }
 
             Section("Scientific traceability") {
-                DisclosureGroup {
+                IFEExpandableRow("Calculation details") {
                     traceabilityContent
-                } label: {
-                    Text("Calculation details")
-                        .font(.body)
-                        .fontWeight(.regular)
                 }
             }
         }

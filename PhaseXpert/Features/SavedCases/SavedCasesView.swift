@@ -629,14 +629,10 @@ private struct SavedCaseComparisonView: View {
 
         if !comparison.nonComparableProperties.isEmpty {
             Section {
-                DisclosureGroup {
+                IFEExpandableRow("Unavailable or non-comparable (\(comparison.nonComparableProperties.count))") {
                     ForEach(comparison.nonComparableProperties) { property in
                         PropertyComparisonView(property: property)
                     }
-                } label: {
-                    Text("Unavailable or non-comparable (\(comparison.nonComparableProperties.count))")
-                        .font(.body)
-                        .fontWeight(.regular)
                 }
             } footer: {
                 Text("A numerical difference is shown only when both results are finite, calculated values expressed in the same display unit.")

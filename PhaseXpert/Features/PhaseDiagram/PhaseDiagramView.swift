@@ -110,7 +110,7 @@ struct PhaseDiagramView: View {
         if viewModel.isLoading {
             VStack(spacing: IFESpacing.medium) {
                 ProgressView()
-                Text("Calculating pure CO₂ saturation boundary…")
+                Text("Calculating provider phase boundary…")
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -143,6 +143,7 @@ private struct PhaseBoundaryChart: View {
         let id: Int
         let temperatureCelsius: Double
         let pressureBar: Double
+        let branch: PhaseEnvelopePoint.Branch
     }
 
     let record: CalculationRecord
@@ -156,16 +157,19 @@ private struct PhaseBoundaryChart: View {
     @State private var xScrollPosition: Double = 0
     @State private var yScrollPosition: Double = 0
 
-    private var saturation: [Sample] {
-        response.points.enumerated().compactMap { index, point in
-            guard point.branch == .bubble else { return nil }
-            return Sample(
+    private var samples: [Sample] {
+        response.points.enumerated().map { index, point in
+            Sample(
                 id: index,
                 temperatureCelsius: point.temperatureK - 273.15,
-                pressureBar: point.pressurePa / 100_000
+                pressureBar: point.pressurePa / 100_000,
+                branch: point.branch
             )
         }
     }
+
+    private var bubble: [Sample] { samples.filter { $0.branch == .bubble } }
+    private var dew: [Sample] { samples.filter { $0.branch == .dew } }
 
     private var critical: Sample? {
         guard let point = response.points.first(where: { $0.branch == .critical }) else {
@@ -174,7 +178,8 @@ private struct PhaseBoundaryChart: View {
         return Sample(
             id: response.points.count,
             temperatureCelsius: point.temperatureK - 273.15,
-            pressureBar: point.pressurePa / 100_000
+            pressureBar: point.pressurePa / 100_000,
+            branch: .critical
         )
     }
 
@@ -187,14 +192,14 @@ private struct PhaseBoundaryChart: View {
     }
 
     private var xDomain: ClosedRange<Double> {
-        paddedDomain(values: saturation.map(\.temperatureCelsius) + [
+        paddedDomain(values: samples.map(\.temperatureCelsius) + [
             critical?.temperatureCelsius,
             operatingTemperatureCelsius
         ].compactMap { $0 })
     }
 
     private var yDomain: ClosedRange<Double> {
-        paddedDomain(values: saturation.map(\.pressureBar) + [
+        paddedDomain(values: samples.map(\.pressureBar) + [
             critical?.pressureBar,
             operatingPressureBar
         ].compactMap { $0 })
@@ -202,7 +207,7 @@ private struct PhaseBoundaryChart: View {
 
     private var selectedSample: Sample? {
         guard let selectedTemperatureCelsius else { return nil }
-        return saturation.min {
+        return samples.filter { $0.branch != .critical }.min {
             abs($0.temperatureCelsius - selectedTemperatureCelsius)
                 < abs($1.temperatureCelsius - selectedTemperatureCelsius)
         }
@@ -212,7 +217,9 @@ private struct PhaseBoundaryChart: View {
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
                 ScientificStatusBanner(
-                    title: "Preliminary pure CO₂ boundary",
+                    title: response.boundaryKind == .mixtureEnvelope
+                        ? "Preliminary mixture phase envelope"
+                        : "Preliminary pure CO₂ boundary",
                     message: response.warnings.joined(separator: " ")
                 )
 
@@ -255,7 +262,9 @@ private struct PhaseBoundaryChart: View {
                         )
                         LabeledContent("Provider phase", value: record.response.phase.displayName)
                         Text(
-                            "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the provider calculation."
+                            response.boundaryKind == .mixtureEnvelope
+                                ? "Bubble and dew branches are provider-calculated for the recorded composition. The operating phase shown above comes from the source calculation."
+                                : "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the provider calculation."
                         )
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -272,12 +281,26 @@ private struct PhaseBoundaryChart: View {
                         }
 
                         Chart {
-                            ForEach(saturation) { sample in
+                            ForEach(bubble) { sample in
                                 LineMark(
                                     x: .value("Temperature (°C)", sample.temperatureCelsius),
                                     y: .value("Pressure (bar(a))", sample.pressureBar)
                                 )
-                                .foregroundStyle(by: .value("Series", "CO₂ saturation boundary"))
+                                .foregroundStyle(by: .value(
+                                    "Series",
+                                    response.boundaryKind == .mixtureEnvelope
+                                        ? "Bubble branch"
+                                        : "CO₂ saturation boundary"
+                                ))
+                                .interpolationMethod(.linear)
+                            }
+
+                            ForEach(dew) { sample in
+                                LineMark(
+                                    x: .value("Temperature (°C)", sample.temperatureCelsius),
+                                    y: .value("Pressure (bar(a))", sample.pressureBar)
+                                )
+                                .foregroundStyle(by: .value("Series", "Dew branch"))
                                 .interpolationMethod(.linear)
                             }
 
@@ -308,6 +331,8 @@ private struct PhaseBoundaryChart: View {
                         }
                         .chartForegroundStyleScale([
                             "CO₂ saturation boundary": Color.ifePrimary,
+                            "Bubble branch": Color.ifePrimary,
+                            "Dew branch": Color.ifeSignal,
                             "Critical point": Color.ifeSignal,
                             "Operating point": Color.ifeText
                         ])
@@ -323,7 +348,9 @@ private struct PhaseBoundaryChart: View {
                         .chartYAxisLabel("Pressure (bar(a))")
                         .frame(minHeight: 360)
                         .accessibilityLabel(
-                            "Pure carbon dioxide saturation boundary with critical point and operating point"
+                            response.boundaryKind == .mixtureEnvelope
+                                ? "Carbon dioxide mixture bubble and dew phase envelope with operating point"
+                                : "Pure carbon dioxide saturation boundary with critical point and operating point"
                         )
 
                         if let selectedSample {
@@ -333,7 +360,9 @@ private struct PhaseBoundaryChart: View {
                                 value: "\(number(selectedSample.temperatureCelsius)) °C"
                             )
                             LabeledContent(
-                                "Selected saturation pressure",
+                                selectedSample.branch == .dew
+                                    ? "Selected dew pressure"
+                                    : "Selected bubble pressure",
                                 value: "\(number(selectedSample.pressureBar)) bar(a)"
                             )
                         }
@@ -341,21 +370,27 @@ private struct PhaseBoundaryChart: View {
                 }
 
                 Text(
-                    "Straight line segments connect calculated CoolProp points for display. No mixture phase envelope or decorative curve is generated."
+                    "Straight line segments connect adjacent provider-calculated points within each branch for display only. No scientific values are interpolated or estimated."
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, IFESpacing.small)
 
                 IFECard {
-                    DisclosureGroup("Phase-boundary traceability") {
+                    IFEExpandableRow("Phase-boundary traceability") {
                         LabeledContent(
                             "Boundary type",
                             value: response.boundaryKind == .pureFluidSaturation
                                 ? "Pure-fluid saturation"
-                                : "Not specified"
+                                : "Mixture bubble/dew envelope"
                         )
-                        LabeledContent("Calculated points", value: "\(saturation.count)")
+                        LabeledContent("Calculated points", value: "\(response.points.count)")
+                        LabeledContent("Composition") {
+                            Text(record.request.composition.map {
+                                "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%"
+                            }.joined(separator: ", "))
+                            .multilineTextAlignment(.trailing)
+                        }
                         if let model = response.model {
                             LabeledContent("Model", value: model.name)
                             LabeledContent("Model version", value: model.modelVersion)

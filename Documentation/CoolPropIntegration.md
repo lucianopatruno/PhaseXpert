@@ -18,13 +18,13 @@ not be used for engineering, safety, commercial or regulatory decisions.
 - Pure CO₂: density, dynamic viscosity, phase, enthalpy, entropy, internal
   energy, Cp, Cv, Cp/Cv, speed of sound, thermal conductivity,
   Joule–Thomson coefficient and saturation boundary
-- CO₂-N₂ binary: density and phase only
-- Temporary binary cap: `0 < x(N₂) <= 0.10`
-- CO₂-N₂ viscosity: unavailable
-- CO₂-N₂ phase envelope: unavailable
+- Dry CO₂-rich mixtures containing N₂, O₂, Ar, CH₄ or H₂: density, phase and
+  provider bubble/dew phase envelope
+- Temporary total-impurity cap: `0 < Σx(impurity) <= 0.10`
+- Mixture viscosity and expanded state properties: unavailable
 
-The 10 mol% N₂ cap is an implementation-test restriction, not a validated
-accuracy range. The bridge uses only the CO₂-N₂ interaction data distributed
+The 10 mol% total-impurity cap is an implementation-test restriction, not a validated
+accuracy range. The bridge uses only interaction data distributed
 with the pinned CoolProp release. PhaseXpert does not call
 `apply_simple_mixing_rule`, does not overwrite binary interaction parameters
 and does not invent missing coefficients.
@@ -69,30 +69,32 @@ native ABI. Do not download an unverified binary from an unofficial source.
 - pure-CO₂ density, dynamic viscosity, enthalpy, entropy, internal energy,
   Cp, Cv, speed of sound, thermal conductivity, Joule–Thomson coefficient and
   phase from pressure in Pa and temperature in K;
-- restricted CO₂-N₂ density and phase from SI state and mole fractions;
+- restricted dry-mixture density and phase from SI state and mole fractions;
 - linked library version;
 - pure-CO₂ saturation pressure and triple/critical limits;
+- a bounded array of bubble, dew and provider-critical mixture-envelope points;
 - bounded diagnostic buffers and integer error codes.
 
-The binary function rejects non-finite or non-positive state input,
+The mixture functions reject non-finite or non-positive state input,
 non-normalized or negative fractions, CO₂ that is not the largest component and
-N₂ above the temporary cap. C++ exceptions never cross the C or Swift boundary.
+total impurity above the temporary cap. C++ exceptions never cross the C or Swift boundary.
 Native output is checked for finiteness and physical sign. The pure-fluid path
 uses one HEOS AbstractState update per operating point; the Joule–Thomson
 coefficient uses the single-phase derivative (∂T/∂p)h. Cp/Cv is derived in
 Swift from the two returned heat capacities.
 
-The mixture fluid string uses the explicit supplied mole fractions with
-`HEOS::CarbonDioxide&Nitrogen`. No fallback pair or estimated mixing rule is
-permitted.
+The state calculation fluid string and phase-envelope `AbstractState` use the
+explicit supplied fractions and fixed supported component list. The envelope
+must be built and closed by CoolProp and fit the bounded output array. No
+fallback pair, estimated mixing rule or inserted scientific point is permitted.
 
 ## Swift contract
 
 `CoolPropEngine` is independent of C++. `CoolPropProvider`:
 
 - declares no capabilities when the binary is absent;
-- accepts pure CO₂ or the restricted CO₂-N₂ binary only;
-- exposes the N₂ cap through provider applicability validation before
+- accepts pure CO₂ or the restricted dry-mixture component set only;
+- exposes the total-impurity cap through provider applicability validation before
   calculation;
 - rejects states outside the preliminary app domain;
 - checks cancellation and native output;
@@ -100,7 +102,8 @@ permitted.
 - reports mixture viscosity and every expanded pure-fluid-only property as
   unavailable rather than fabricating a value;
 - returns one pure-CO₂ saturation boundary and a critical point;
-- returns no phase boundary for mixtures or when the binary is absent.
+- returns the real provider bubble/dew envelope for an accepted dry mixture;
+- rejects incomplete, non-finite or branch-deficient envelopes.
 
 Tests use a deterministic mock engine to verify orchestration, rejection,
 serialization and status handling. Mock values are never registered in the
@@ -134,8 +137,10 @@ Additional candidate references are listed in
 - Confirm signed Joule–Thomson values and CoolProp reference-state caloric
   values are preserved rather than rejected as non-positive.
 - Verify 95/5 mol% CO₂/N₂ density and phase execute on device and simulator.
-- Verify mixture viscosity and phase envelope remain explicitly unavailable.
-- Verify N₂ above 10 mol% and any third component are blocked.
+- Verify mixture viscosity remains explicitly unavailable.
+- Verify binary and multicomponent dry-mixture bubble/dew envelopes execute,
+  preserve branches and export without estimated points.
+- Verify total impurity above 10 mol% and unsupported components are blocked.
 - Add independently sourced density cases with inputs, values, uncertainty and
   justified tolerances.
 - Complete scientific review and remove no warning until approval is recorded.

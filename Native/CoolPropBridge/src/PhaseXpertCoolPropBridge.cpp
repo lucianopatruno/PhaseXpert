@@ -10,6 +10,7 @@
 #include <exception>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -338,6 +339,123 @@ int px_coolprop_pure_co2_saturation_pressure(
     } catch (...) {
         copy_text("CoolProp saturation calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 5;
+    }
+}
+
+int px_coolprop_dry_co2_mixture_phase_envelope(
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    PXCoolPropEnvelopePoint *points,
+    size_t point_capacity,
+    size_t *point_count,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (points == nullptr || point_count == nullptr || point_capacity == 0) {
+        copy_text("Phase-envelope output buffer is invalid.", error_buffer, error_buffer_size);
+        return 1;
+    }
+
+    const std::array<double, 6> fractions = {
+        carbon_dioxide_mole_fraction,
+        nitrogen_mole_fraction,
+        oxygen_mole_fraction,
+        argon_mole_fraction,
+        methane_mole_fraction,
+        hydrogen_mole_fraction
+    };
+    double total = 0;
+    for (const double fraction : fractions) {
+        if (!std::isfinite(fraction) || fraction < 0) {
+            copy_text("Mole fractions must be finite and non-negative.", error_buffer, error_buffer_size);
+            return 2;
+        }
+        total += fraction;
+    }
+    const double total_impurity = 1.0 - carbon_dioxide_mole_fraction;
+    bool carbon_dioxide_is_unique_largest = carbon_dioxide_mole_fraction > 0;
+    for (size_t index = 1; index < fractions.size(); ++index) {
+        carbon_dioxide_is_unique_largest = carbon_dioxide_is_unique_largest
+            && carbon_dioxide_mole_fraction > fractions[index];
+    }
+    if (std::abs(total - 1.0) > 1e-10
+        || total_impurity <= 0
+        || total_impurity > 0.10 + 1e-12
+        || !carbon_dioxide_is_unique_largest) {
+        copy_text(
+            "Dry-mixture phase envelopes require total impurity in (0, 0.10] and fractions summing to one.",
+            error_buffer,
+            error_buffer_size
+        );
+        return 3;
+    }
+
+    try {
+        constexpr std::array<const char *, 6> names = {
+            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen"
+        };
+        std::vector<std::string> active_names;
+        std::vector<double> active_fractions;
+        for (size_t index = 0; index < fractions.size(); ++index) {
+            if (fractions[index] > 1e-14) {
+                active_names.emplace_back(names[index]);
+                active_fractions.push_back(fractions[index]);
+            }
+        }
+        std::string fluids;
+        for (size_t index = 0; index < active_names.size(); ++index) {
+            if (index > 0) {
+                fluids += "&";
+            }
+            fluids += active_names[index];
+        }
+
+        std::shared_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory("HEOS", fluids)
+        );
+        state->set_mole_fractions(active_fractions);
+        state->build_phase_envelope("dummy");
+        const CoolProp::PhaseEnvelopeData &envelope = state->get_phase_envelope_data();
+        if (!envelope.built || !envelope.closed || envelope.T.size() != envelope.p.size()
+            || envelope.T.size() != envelope.Q.size() || envelope.T.size() < 4) {
+            copy_text("CoolProp did not return a complete closed phase envelope.", error_buffer, error_buffer_size);
+            return 4;
+        }
+        if (envelope.T.size() > point_capacity) {
+            copy_text("CoolProp phase envelope exceeds the bounded output capacity.", error_buffer, error_buffer_size);
+            return 5;
+        }
+
+        for (size_t index = 0; index < envelope.T.size(); ++index) {
+            if (!std::isfinite(envelope.T[index]) || envelope.T[index] <= 0
+                || !std::isfinite(envelope.p[index]) || envelope.p[index] <= 0
+                || !std::isfinite(envelope.Q[index])) {
+                copy_text("CoolProp returned a non-finite phase-envelope point.", error_buffer, error_buffer_size);
+                return 6;
+            }
+            points[index].temperature_k = envelope.T[index];
+            points[index].pressure_pa = envelope.p[index];
+            if (index == envelope.icrit) {
+                points[index].branch = PXCoolPropEnvelopeCritical;
+            } else {
+                points[index].branch = envelope.Q[index] < 0.5
+                    ? PXCoolPropEnvelopeBubble
+                    : PXCoolPropEnvelopeDew;
+            }
+        }
+        *point_count = envelope.T.size();
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp mixture phase-envelope calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
     }
 }
 

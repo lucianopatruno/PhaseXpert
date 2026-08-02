@@ -15,8 +15,9 @@
   comparisons require matching recorded model and provider versions.
 - No independently sourced numeric dry CO₂-rich mixture cases have yet been approved and
   ingested. Mixture results must not be used for engineering decisions.
-- dry CO₂-rich mixture viscosity, caloric, heat-capacity, acoustic, conductivity and
-  derivative properties and every mixture phase envelope are unavailable.
+- Dry CO₂-rich mixture viscosity, caloric, heat-capacity, acoustic, conductivity and
+  derivative properties remain unavailable. Mixture phase envelopes are
+  provider-calculated but have not completed independent PhaseXpert validation.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
 - The broad input envelope is a test-planning domain, not a validated range.
@@ -24,9 +25,9 @@
   executable mixture support. Their identifiers remain future scaffolding.
 - Saved-case comparison and its PDF/CSV reports are pairwise only. They do not
   rank models or establish accuracy.
-- The phase chart does not support mixtures, bubble/dew separation, a
-  two-phase area, cricondenbar or cricondentherm. Property-sweep PDFs contain
-  the calculated sweep chart, but do not convert it into a phase envelope.
+- The phase chart separates provider bubble/dew branches but does not calculate
+  or label cricondenbar or cricondentherm and does not infer a validated
+  two-phase operating region from the display geometry.
 - Saved cases are local-only. Backup, sync and recovery UI are not implemented.
 - Persisted saved-case import remains deliberately deferred until schema
   validation, duplicate handling, provenance protection and migration
@@ -38,7 +39,9 @@
 - Xcode is unavailable in the implementation environment; a clean Xcode 26
   build and test run is required on the user's Mac.
 
-- Phase-diagram PNG and PDF embedding currently support only a real pure-CO₂ saturation boundary. CO₂-rich mixture phase envelopes remain unavailable and are never estimated for display or export.
+- Phase-diagram PNG and PDF embedding support real pure-CO₂ saturation and
+  supported dry-mixture envelopes. A failed or unavailable provider envelope
+  remains unavailable and is never replaced with an estimated display curve.
 - PDF phase-diagram embedding recalculates the boundary with the installed provider and therefore requires an exact recorded/current model-version and provider-version match.
 
 
@@ -48,4 +51,5 @@ The executable mixture component set is CO₂, N₂, O₂, Ar, CH₄ and H₂. T
 impurity is capped at 10 mol% as a temporary product guardrail, not a validated
 accuracy range. Only density, provider phase, molar mass, specific volume and
 compressibility factor are enabled. Mixture transport, caloric, acoustic,
-derivative and phase-envelope results remain unavailable.
+derivative results remain unavailable. Phase envelopes are preliminary,
+validation-pending provider outputs.
