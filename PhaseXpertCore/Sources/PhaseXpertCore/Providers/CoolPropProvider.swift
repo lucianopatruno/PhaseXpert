@@ -556,7 +556,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 .sorted { $0.component.rawValue < $1.component.rawValue }
                 .map { "\($0.component.rawValue)=\(String(format: "%.17g", $0.moleFraction))" }
                 .joined(separator: ";")
-            let cacheKey = "\(engine.libraryVersion)-mixture-\(compositionKey)"
+            let cacheKey = "\(engine.libraryVersion)-mixture-start-80000-none-\(compositionKey)"
             if let cached = await envelopeCache.entry(for: cacheKey) {
                 return PhaseEnvelopeResponse(
                     requestID: request.requestID,
@@ -578,7 +578,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             let generatedAt = Date()
             let warnings = [
                 "PRELIMINARY — VALIDATION PENDING: the calculated mixture envelope must not be used for engineering, safety, commercial, or regulatory decisions.",
-                "Bubble and dew points are returned directly by CoolProp HEOS. PhaseXpert does not interpolate or estimate scientific values."
+                "Bubble and dew points are returned directly by CoolProp HEOS. PhaseXpert does not interpolate or estimate scientific values.",
+                "Phase-envelope construction starts at 0.8 bar(a), the declared PhaseXpert pressure-domain minimum, with CoolProp refinement disabled. Lower-pressure points are not requested, interpolated or extrapolated."
             ] + (native.isComplete ? [] : [
                 "CoolProp stopped before completing phase-envelope construction. PhaseXpert plots only the finite provider-returned bubble/dew points, marks the trace incomplete and does not extrapolate it."
             ]) + (native.isClosed ? [] : [
