@@ -132,3 +132,8 @@
   working density continuation and added a deterministic 256-provider-step
   downstream cap to its upstream-unbounded loop, with focused regression
   coverage for both 3 and 10 mol% N₂.
+- Refreshed Xcode's local-package graph whenever the ignored CoolProp
+  XCFramework is confirmed or rebuilt, and restored the prior framework after
+  failed rebuilds so a temporary missing artifact cannot remain cached.
+- Added end-to-end provider/view-model coverage for 3 and 10 mol% N₂ plus a
+  visible-app regression for the 3 mol% N₂ phase diagram.
