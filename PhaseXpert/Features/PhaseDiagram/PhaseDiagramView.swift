@@ -11,21 +11,32 @@ final class PhaseDiagramViewModel {
     private(set) var errorMessage: String?
 
     private let registry: ProviderRegistry
+    private let timeoutNanoseconds: UInt64
     private var loadingRecordID: UUID?
+    private var calculationTask: Task<PhaseEnvelopeResponse, Error>?
+    private var monitorTask: Task<Void, Never>?
+    private var timeoutTask: Task<Void, Never>?
 
-    init(registry: ProviderRegistry = ProviderRegistry()) {
+    init(
+        registry: ProviderRegistry = ProviderRegistry(),
+        timeoutNanoseconds: UInt64 = 30_000_000_000
+    ) {
         self.registry = registry
+        self.timeoutNanoseconds = timeoutNanoseconds
     }
 
-    func load(for record: CalculationRecord?) async {
+    func load(for record: CalculationRecord?) {
         guard let record else {
+            cancelLoading()
             loadingRecordID = nil
             response = nil
             errorMessage = nil
             isLoading = false
             return
         }
-        guard loadingRecordID != record.id || response == nil else { return }
+        guard loadingRecordID != record.id else { return }
+
+        cancelLoading()
         loadingRecordID = record.id
         response = nil
         errorMessage = nil
@@ -37,25 +48,58 @@ final class PhaseDiagramViewModel {
             return
         }
 
-        do {
-            let envelope = try await provider.phaseEnvelope(
-                PhaseEnvelopeRequest(
-                    modelID: record.request.modelID,
-                    composition: record.request.composition
-                )
-            )
-            try Task.checkCancellation()
-            guard loadingRecordID == record.id else { return }
-            response = envelope
-            isLoading = false
-        } catch is CancellationError {
-            guard loadingRecordID == record.id else { return }
-            isLoading = false
-        } catch {
-            guard loadingRecordID == record.id else { return }
-            errorMessage = userMessage(for: error)
-            isLoading = false
+        let recordID = record.id
+        let request = PhaseEnvelopeRequest(
+            modelID: record.request.modelID,
+            composition: record.request.composition
+        )
+        let calculation = Task.detached(priority: .userInitiated) {
+            try await provider.phaseEnvelope(request)
         }
+        calculationTask = calculation
+
+        monitorTask = Task { [weak self] in
+            do {
+                let envelope = try await calculation.value
+                guard !Task.isCancelled, let self,
+                      self.loadingRecordID == recordID else { return }
+                self.timeoutTask?.cancel()
+                self.response = envelope
+                self.errorMessage = nil
+                self.isLoading = false
+            } catch is CancellationError {
+                // A replacement record owns the visible state.
+            } catch {
+                guard !Task.isCancelled, let self,
+                      self.loadingRecordID == recordID else { return }
+                self.timeoutTask?.cancel()
+                self.errorMessage = self.userMessage(for: error)
+                self.isLoading = false
+            }
+        }
+
+        let timeoutNanoseconds = self.timeoutNanoseconds
+        timeoutTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: timeoutNanoseconds)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled, let self,
+                  self.loadingRecordID == recordID,
+                  self.response == nil else { return }
+            self.isLoading = false
+            self.errorMessage = "CoolProp did not finish the phase-boundary calculation within 30 seconds. The provider calculation continues in the background; the diagram will appear automatically if it completes."
+        }
+    }
+
+    private func cancelLoading() {
+        monitorTask?.cancel()
+        timeoutTask?.cancel()
+        calculationTask?.cancel()
+        monitorTask = nil
+        timeoutTask = nil
+        calculationTask = nil
     }
 
     private func userMessage(for error: Error) -> String {
@@ -100,7 +144,7 @@ struct PhaseDiagramView: View {
             .background(Color.ifeBackground.ignoresSafeArea())
             .navigationTitle("Phase Diagram")
             .task(id: navigationState.latestCalculationRecord?.id) {
-                await viewModel.load(for: navigationState.latestCalculationRecord)
+                viewModel.load(for: navigationState.latestCalculationRecord)
             }
         }
     }

@@ -33,6 +33,10 @@
   displays only finite provider-returned points when both branches are present,
   marks the trace incomplete/open and convergence false, and never joins,
   extrapolates or completes the trace cosmetically.
+- Native mixture-envelope continuation is synchronous and cannot be interrupted
+  inside CoolProp. The phase-diagram UI stops its indefinite loading state after
+  30 seconds while the existing provider task continues in the background; a
+  late successful provider response is displayed automatically.
 - Saved cases are local-only. Backup, sync and recovery UI are not implemented.
 - Persisted saved-case import remains deliberately deferred until schema
   validation, duplicate handling, provenance protection and migration

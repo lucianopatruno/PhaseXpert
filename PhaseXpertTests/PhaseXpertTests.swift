@@ -4,6 +4,27 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    private struct DelayedPhaseEnvelopeProvider: ThermodynamicModelProvider {
+        let descriptor = ArchitectureDemoProvider().descriptor
+        let delayNanoseconds: UInt64
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            try await ArchitectureDemoProvider().calculate(request)
+        }
+
+        func phaseEnvelope(
+            _ request: PhaseEnvelopeRequest
+        ) async throws -> PhaseEnvelopeResponse {
+            try await Task.sleep(nanoseconds: delayNanoseconds)
+            return PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [],
+                warnings: ["Delayed test provider completed."],
+                isAvailable: false
+            )
+        }
+    }
+
     func testDefaultRegistryContainsBothFutureProductionProviders() {
         let registry = ProviderRegistry()
         let identifiers = Set(registry.descriptors.map(\.id))
@@ -41,6 +62,28 @@ final class PhaseXpertTests: XCTestCase {
         })
     }
     #endif
+
+    @MainActor
+    func testPhaseDiagramStopsSpinningAndAcceptsLateProviderCompletion() async throws {
+        let record = try await makeRecord()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                DelayedPhaseEnvelopeProvider(delayNanoseconds: 120_000_000)
+            ]),
+            timeoutNanoseconds: 20_000_000
+        )
+
+        viewModel.load(for: record)
+        XCTAssertTrue(viewModel.isLoading)
+
+        try await Task.sleep(nanoseconds: 60_000_000)
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertTrue(viewModel.errorMessage?.contains("continues in the background") == true)
+
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.response)
+    }
 
     @MainActor
     func testCalculatorStartsWithCoolPropSelected() {

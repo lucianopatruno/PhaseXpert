@@ -111,5 +111,8 @@
 - Preserved finite, branch-complete provider points when CoolProp stops before
   setting its construction-complete flag, while marking the trace incomplete,
   open and non-converged without extrapolating or closing it.
-- Matched expandable-row labels and chevrons to the body typography used by
-  neighboring Form actions.
+- Matched expandable-row labels and chevrons to the body typography and IFE
+  blue action color used by neighboring Form actions.
+- Replaced the unbounded phase-diagram loading state with a 30-second
+  presentation deadline while retaining the original provider calculation in
+  the background and automatically displaying any late successful response.

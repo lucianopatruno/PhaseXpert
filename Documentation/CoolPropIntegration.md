@@ -115,6 +115,12 @@ Tests use a deterministic mock engine to verify orchestration, rejection,
 serialization and status handling. Mock values are never registered in the
 running app and are not scientific reference values.
 
+The native mixture-envelope routine is synchronous. The SwiftUI boundary loader
+therefore applies a 30-second presentation deadline without cancelling or
+altering the provider calculation. It exits the indefinite spinner with an
+explicit status, keeps the original calculation in the background and displays
+its unmodified result automatically if it later completes.
+
 ## Scientific validation gate
 
 The selected first density-validation source is:
