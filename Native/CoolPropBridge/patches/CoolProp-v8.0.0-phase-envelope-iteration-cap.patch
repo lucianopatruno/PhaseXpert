@@ -1,0 +1,25 @@
+diff --git a/src/Backends/Helmholtz/PhaseEnvelopeRoutines.cpp b/src/Backends/Helmholtz/PhaseEnvelopeRoutines.cpp
+index 5caa2c2e..094c8b75 100644
+--- a/src/Backends/Helmholtz/PhaseEnvelopeRoutines.cpp
++++ b/src/Backends/Helmholtz/PhaseEnvelopeRoutines.cpp
+@@ -167,8 +167,19 @@ void PhaseEnvelopeRoutines::build(HelmholtzEOSMixtureBackend& HEOS, const std::s
+           iter0 = 0;           //< A reference point for the counter, can be increased to go back to linear interpolation
+         CoolPropDbl factor = 1.05;
+ 
++        // PhaseXpert downstream safety guard. The upstream continuation loop
++        // has no iteration limit and may never satisfy its pressure-closure or
++        // near-pure-phase exit for some CO2-rich mixtures. Returning here keeps
++        // PhaseEnvelope.built false and preserves every provider-calculated
++        // point already stored without extrapolating or closing the trace.
++        constexpr std::size_t kPhaseXpertMaximumEnvelopeIterations = 256;
++
+         for (;;) {
+         top_of_loop:;  // A goto label so that nested loops can break out to the top of this loop
+ 
++            if (iter >= kPhaseXpertMaximumEnvelopeIterations) {
++                return;
++            }
++
+             if (failure_count > 5) {
+                 // Stop since we are stuck at a bad point
+                 //throw SolutionError("stuck");
