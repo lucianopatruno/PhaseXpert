@@ -18,6 +18,8 @@ struct CalculatorView: View {
     @State private var saveConfirmation: String?
     @State private var saveError: String?
     @State private var showsScientificTraceability = false
+    @State private var pressureSelection: TextSelection?
+    @State private var temperatureSelection: TextSelection?
     @State private var compositionSelections: [UUID: TextSelection] = [:]
 
     var body: some View {
@@ -53,6 +55,7 @@ struct CalculatorView: View {
                     operatingPointRow(
                         title: "Pressure",
                         value: $viewModel.pressureText,
+                        selection: $pressureSelection,
                         unit: "bar(a)",
                         keyboardType: .decimalPad,
                         field: .pressure
@@ -61,6 +64,7 @@ struct CalculatorView: View {
                     operatingPointRow(
                         title: "Temperature",
                         value: $viewModel.temperatureText,
+                        selection: $temperatureSelection,
                         unit: "°C",
                         keyboardType: .numbersAndPunctuation,
                         field: .temperature
@@ -76,7 +80,7 @@ struct CalculatorView: View {
                                     .accessibilityLabel("Carbon dioxide")
                             } else {
                                 Picker("Impurity", selection: $entry.component) {
-                                    ForEach(ComponentID.allCases.filter { $0 != .carbonDioxide }) { component in
+                                    ForEach(viewModel.impurityOptions(including: entry.component)) { component in
                                         Text(component.symbol).tag(component)
                                     }
                                 }
@@ -130,7 +134,7 @@ struct CalculatorView: View {
                             focusedField = .composition(addedID)
                         }
                     }
-                    .disabled(viewModel.composition.count >= 21)
+                    .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
                 } header: {
                     HStack {
                         Text("Composition")
@@ -234,14 +238,14 @@ struct CalculatorView: View {
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
             .onChange(of: focusedField) { _, newField in
-                guard case let .composition(id)? = newField else { return }
+                guard let newField else { return }
                 Task { @MainActor in
                     // Let SwiftUI finish making the field first responder before
                     // changing its selection. Updating selection in the same
                     // transaction can cause the numeric keyboard to lose focus.
                     await Task.yield()
-                    guard focusedField == .composition(id) else { return }
-                    selectAllCompositionText(for: id)
+                    guard focusedField == newField else { return }
+                    selectAllText(in: newField)
                 }
             }
             .onSubmit { viewModel.validate() }
@@ -331,21 +335,27 @@ struct CalculatorView: View {
         )
     }
 
-    private func selectAllCompositionText(for id: UUID) {
-        guard let value = viewModel.composition.first(where: { $0.id == id })?.molPercent,
-              !value.isEmpty
-        else {
-            compositionSelections.removeValue(forKey: id)
-            return
+    private func selectAllText(in field: InputField) {
+        switch field {
+        case .pressure:
+            pressureSelection = fullSelection(for: viewModel.pressureText)
+        case .temperature:
+            temperatureSelection = fullSelection(for: viewModel.temperatureText)
+        case let .composition(id):
+            let value = viewModel.composition.first(where: { $0.id == id })?.molPercent ?? ""
+            compositionSelections[id] = fullSelection(for: value)
         }
-        compositionSelections[id] = TextSelection(
-            range: value.startIndex..<value.endIndex
-        )
+    }
+
+    private func fullSelection(for value: String) -> TextSelection? {
+        guard !value.isEmpty else { return nil }
+        return TextSelection(range: value.startIndex..<value.endIndex)
     }
 
     private func operatingPointRow(
         title: String,
         value: Binding<String>,
+        selection: Binding<TextSelection?>,
         unit: String,
         keyboardType: UIKeyboardType,
         field: InputField
@@ -354,7 +364,7 @@ struct CalculatorView: View {
             Text(title)
                 .font(.body.weight(.medium))
             Spacer(minLength: 8)
-            TextField("Value", text: value)
+            TextField("Value", text: value, selection: selection)
                 .keyboardType(keyboardType)
                 .focused($focusedField, equals: field)
                 .multilineTextAlignment(.trailing)
@@ -444,7 +454,7 @@ struct CalculatorView: View {
                 ? "Workflow demonstration only. No thermophysical values are calculated."
                 : "Review the model domain and limitations before calculating."
         case .preliminary:
-            "Pure CO₂: density, viscosity, caloric and heat-capacity properties, sound speed, conductivity, Joule–Thomson coefficient and derived values. CO₂-N₂ up to 10 mol% N₂ remains limited to density, phase and derived values. Validation remains incomplete."
+            "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
         case .unavailable:
             "This provider cannot perform calculations in the current build."
         }
@@ -618,26 +628,48 @@ struct CalculationResultSections: View {
         )
 
         if !record.response.model.references.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Scientific references")
-                    .font(.subheadline.weight(.semibold))
-                ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { _, reference in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(reference.authors) (\(reference.year))")
-                            .font(.caption.weight(.semibold))
-                        Text(reference.title)
-                            .font(.caption)
-                        if
-                            let address = reference.doiOrURL,
-                            let url = URL(string: address)
-                        {
-                            Link(address, destination: url)
-                                .font(.caption)
-                        }
+            Text("Scientific references")
+                .font(.subheadline.weight(.semibold))
+
+            ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { index, reference in
+                if
+                    let address = reference.doiOrURL,
+                    let url = URL(string: address)
+                {
+                    Link(destination: url) {
+                        scientificReferenceLabel(reference, address: address)
                     }
+                    .id("scientific-reference-\(index)-\(address)")
+                    .accessibilityLabel(
+                        "\(reference.authors), \(reference.title), open reference"
+                    )
+                    .accessibilityHint("Opens this reference in the browser.")
+                } else {
+                    scientificReferenceLabel(reference, address: nil)
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func scientificReferenceLabel(
+        _ reference: SourceReference,
+        address: String?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("\(reference.authors) (\(reference.year))")
+                .font(.caption.weight(.semibold))
+            Text(reference.title)
+                .font(.caption)
+            if let address {
+                Label(address, systemImage: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(Color.ifePrimary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
 
     private var originalCompositionText: String {

@@ -50,10 +50,11 @@ engineering scope for test planning, not a validated model-accuracy statement.
 | Dense-phase pipeline | 0 to 50 °C | 70 to 300 bar abs |
 | Capture/compression | 0 to 150 °C | 0.8 to 300 bar abs |
 
-The current executable mixture spike accepts 90–100 mol% CO₂ with N₂ as the
-only impurity and applies a temporary maximum of 10 mol% N₂. This cap is a
-software-integration boundary, not a validated accuracy statement. Other
-component-specific maxima must come from source data and model validation.
+The current executable dry-mixture scope accepts 90–100 mol% CO₂ with any
+combination of N₂, O₂, Ar, CH₄ and H₂ and applies a temporary maximum of
+10 mol% total impurity. The cap is a software-product guardrail, not a validated
+accuracy statement. Wet, acid-gas and heavier-hydrocarbon components remain
+unsupported until their executable model paths and validation evidence exist.
 
 Candidate identifiers currently scaffolded are CO₂, N₂, O₂, Ar, H₂O, CH₄, H₂,
 CO, H₂S, He, ethane and propane. This is not a claim of calculation support.
@@ -107,32 +108,27 @@ saturation-pressure reference cases have not yet been accepted, so the curve
 must not be used for engineering, safety, commercial or regulatory decisions.
 Mixtures and the unavailable IFE provider return no boundary.
 
-### Implemented restricted CO₂-N₂ calculation
+### Implemented restricted dry CO₂-rich calculation
 
-Provider version 0.5.0 admits exactly two executable composition families:
+Provider version 0.7.0 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
+one or more of N₂, O₂, Ar, CH₄ and H₂. CO₂ must be uniquely largest, the
+fractions must sum explicitly to one, and total impurity must be in (0, 0.10].
+The upper bound is a temporary PhaseXpert product guardrail and is not presented
+as a validated model-accuracy range.
 
-- 100 mol% CO₂, retaining the existing density, viscosity and saturation path;
-- a binary CO₂-N₂ mixture with CO₂ uniquely largest and
-  `0 < x(N₂) <= 0.10`, returning density and provider phase only.
+The native bridge constructs fluid identifiers from a fixed component list and
+uses only mixture interaction entries shipped with pinned CoolProp 8.0.0.
+PhaseXpert never calls CoolProp's estimated simple mixing rule, never overwrites
+binary interaction parameters, never silently normalizes fractions and has no
+fallback correlation. A missing pair or numerical failure is returned as a
+calculation failure.
 
-The binary calculation uses CoolProp HEOS and only the CO₂-N₂ interaction data
-shipped with the pinned CoolProp 8.0.0 release. PhaseXpert supplies explicit
-mole fractions and never enables CoolProp's estimated simple mixing rules or
-overwrites pair parameters. If the pair data is unavailable or calculation
-fails, the request fails; there is no fallback correlation.
-
-Mixture dynamic viscosity and mixture phase envelopes are deliberately
-unavailable. All binary results carry validation-pending warnings, the exact
-model/library version and the numerical method. The implementation has
-contract and serialization tests but no independently sourced numeric
-acceptance cases yet; see `ValidationStrategy.md`.
-
-CoolProp 8.0.0 identifies Span and Wagner (1996), DOI
-`10.1063/1.555991`, as the equation-of-state reference for its carbon-dioxide
-fluid implementation. PhaseXpert records that source with the provider
-metadata; citing the formulation does not constitute independent validation of
-the compiled implementation.
-
+Mixture output remains limited to density, provider phase, and the transparent
+derived values M, v and Z. Mixture viscosity, caloric, acoustic, conductivity,
+derivative properties and phase envelopes are deliberately unavailable. Every
+result records exact composition, library/provider version, method and
+validation-pending warnings. Contract coverage is not independent numeric
+validation.
 
 ### Implemented derived engineering properties
 
@@ -146,9 +142,8 @@ additional CoolProp equation-of-state calls:
   R = 8.31446261815324 J/(mol·K).
 
 Calculations use Pa, K, kg/m³ and kg/mol internally. Molar mass is presented in
-g/mol, specific volume in m³/kg, and Z is dimensionless. CO₂ (44.0095 g/mol)
-and N₂ (28.0134 g/mol) molecular weights are recorded from NIST Chemistry
-WebBook SRD 69 (DOI `10.18434/T4D303`). The gas constant is the NIST 2022
+g/mol, specific volume in m³/kg, and Z is dimensionless. CO₂, N₂, O₂, Ar, CH₄ and H₂ molecular weights are recorded
+from NIST Chemistry WebBook SRD 69 (DOI `10.18434/T4D303`). The gas constant is the NIST 2022
 CODATA value. A component without reviewed molar-mass data produces an
 unavailable result; an invalid pressure, temperature or density produces a
 failed result. Inputs are never normalized in this layer. The values inherit
@@ -173,4 +168,4 @@ CoolProp identifies Span and Wagner (1996), DOI 10.1063/1.555991, as the CO₂
 equation of state; Huber et al. (2016), DOI 10.1063/1.4940892, for thermal
 conductivity; and Laesecke and Muzny (2017), DOI 10.1063/1.4977429, for
 viscosity. Formulation traceability is not an accuracy-validation claim.
-Expanded properties remain unavailable for CO₂-N₂.
+Expanded properties remain unavailable for every mixture.

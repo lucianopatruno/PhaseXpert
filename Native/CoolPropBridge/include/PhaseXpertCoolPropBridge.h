@@ -55,9 +55,26 @@ int px_coolprop_calculate_pure_co2(
     size_t error_buffer_size
 );
 
-/// Calculates the restricted CO2-N2 binary state using only the interaction
-/// data shipped by the pinned CoolProp release. No estimated mixing rule is
-/// applied. Nitrogen is temporarily capped at 10 mol% for this spike.
+/// Calculates a restricted dry CO2-rich state using only interaction entries
+/// shipped by the pinned CoolProp release. No estimated mixing rule is applied.
+/// Fractions are ordered CO2, N2, O2, Ar, CH4 and H2. Total impurity is
+/// temporarily capped at 10 mol%; this product guardrail is not an accuracy
+/// or validation claim.
+int px_coolprop_calculate_dry_co2_mixture(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Backwards-compatible entry point for the restricted CO2-N2 subset.
 int px_coolprop_calculate_co2_n2(
     double pressure_pa,
     double temperature_k,

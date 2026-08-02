@@ -37,11 +37,24 @@ final class CalculatorViewModel {
         validationReport.normalizedComposition != nil
     }
 
+    var supportedImpurityComponents: [ComponentID] {
+        let supported = selectedDescriptor?.supportedComponents ?? []
+        return ComponentID.allCases.filter {
+            $0 != .carbonDioxide && supported.contains($0)
+        }
+    }
+
+    func impurityOptions(including current: ComponentID) -> [ComponentID] {
+        supportedImpurityComponents.contains(current)
+            ? supportedImpurityComponents
+            : [current] + supportedImpurityComponents
+    }
+
     @discardableResult
     func addImpurity() -> UUID? {
         let selected = Set(composition.map(\.component))
-        guard let component = ComponentID.allCases.first(where: {
-            $0 != .carbonDioxide && !selected.contains($0)
+        guard let component = supportedImpurityComponents.first(where: {
+            !selected.contains($0)
         }) else {
             return nil
         }
