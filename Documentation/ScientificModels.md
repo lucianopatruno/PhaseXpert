@@ -134,7 +134,7 @@ approved. These envelopes are provider outputs, not validated PhaseXpert data.
 
 ### Implemented restricted dry CO₂-rich calculation
 
-Provider version 0.8.0 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
+Provider version 0.8.1 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
 one or more of N₂, O₂, Ar, CH₄ and H₂. CO₂ must be uniquely largest, the
 fractions must sum explicitly to one, and total impurity must be in (0, 0.10].
 The upper bound is a temporary PhaseXpert product guardrail and is not presented

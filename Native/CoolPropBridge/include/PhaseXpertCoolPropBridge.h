@@ -125,6 +125,7 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     PXCoolPropEnvelopePoint *points,
     size_t point_capacity,
     size_t *point_count,
+    int *is_closed,
     char *error_buffer,
     size_t error_buffer_size
 );

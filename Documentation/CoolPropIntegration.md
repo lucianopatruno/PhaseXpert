@@ -85,8 +85,12 @@ Swift from the two returned heat capacities.
 
 The state calculation fluid string and phase-envelope `AbstractState` use the
 explicit supplied fractions and fixed supported component list. The envelope
-must be built and closed by CoolProp and fit the bounded output array. No
-fallback pair, estimated mixing rule or inserted scientific point is permitted.
+trace must be built, contain consistent finite bubble/dew data and fit the
+bounded output array. CoolProp's pressure-closure flag is preserved separately:
+an open trace is shown only when both branches remain usable, with convergence
+reported as false and an explicit warning. PhaseXpert never closes that trace
+itself. No fallback pair, estimated mixing rule or inserted scientific point is
+permitted.
 
 ## Swift contract
 

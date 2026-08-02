@@ -28,6 +28,10 @@
 - The phase chart separates provider bubble/dew branches but does not calculate
   or label cricondenbar or cricondentherm and does not infer a validated
   two-phase operating region from the display geometry.
+- CoolProp can return usable bubble/dew points without setting its
+  pressure-closure flag for some supported compositions. PhaseXpert displays
+  only those returned points, marks convergence false and warns that the trace
+  is open; it never joins the endpoints cosmetically.
 - Saved cases are local-only. Backup, sync and recovery UI are not implemented.
 - Persisted saved-case import remains deliberately deferred until schema
   validation, duplicate handling, provenance protection and migration

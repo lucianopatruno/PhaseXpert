@@ -133,7 +133,7 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
 
         let response = attachment.response
         drawLine(
-            "Boundary: \(response.boundaryKind == .mixtureEnvelope ? "mixture bubble/dew envelope" : "pure-fluid CO₂ saturation") • \(response.points.count) provider-calculated points",
+            "Boundary: \(response.boundaryKind == .mixtureEnvelope ? (response.solver?.converged == false ? "open provider bubble/dew trace" : "mixture bubble/dew envelope") : "pure-fluid CO₂ saturation") • \(response.points.count) provider-calculated points",
             font: PDFReportFonts.body,
             color: PDFReportPalette.bodyText,
             position: CGPoint(x: PDFReportLayout.margin, y: 176),

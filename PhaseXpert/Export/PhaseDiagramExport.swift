@@ -135,7 +135,9 @@ private struct PhaseDiagramExportCanvas: View {
                         .font(.system(size: 42, weight: .bold))
                         .foregroundStyle(Color.ifePrimary)
                     Text(response.boundaryKind == .mixtureEnvelope
-                        ? "CO₂ mixture pressure–temperature envelope"
+                        ? (response.solver?.converged == false
+                            ? "CO₂ mixture pressure–temperature trace"
+                            : "CO₂ mixture pressure–temperature envelope")
                         : "Pure CO₂ pressure–temperature diagram")
                         .font(.system(size: 28, weight: .semibold))
                     Text("PRELIMINARY — VALIDATION PENDING")

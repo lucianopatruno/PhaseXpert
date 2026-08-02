@@ -104,4 +104,9 @@
   composition, bubble/dew legends, solver/model provenance and calculation
   traceability.
 - Replaced system disclosure labels with a reusable app-owned expandable row
-  so expandable options use the same body typography as neighboring actions.
+  so expandable options use the same typography as neighboring actions.
+- Allowed usable provider bubble/dew traces to remain visible when CoolProp
+  does not set its pressure-closure flag, while marking convergence false and
+  explicitly refusing to close the trace cosmetically.
+- Matched expandable-row labels and chevrons to the larger typography used by
+  neighboring Form actions.

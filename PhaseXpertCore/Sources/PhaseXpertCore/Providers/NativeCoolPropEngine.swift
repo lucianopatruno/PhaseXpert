@@ -199,9 +199,10 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let fractions = composition.reduce(into: [ComponentID: Double]()) {
             $0[$1.component, default: 0] += $1.moleFraction
         }
-        let nativePoints = try await Task.detached(priority: .userInitiated) {
+        let nativeResult = try await Task.detached(priority: .userInitiated) {
             var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
             var pointCount = 0
+            var isClosed = 0
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_dry_co2_mixture_phase_envelope(
                 fractions[.carbonDioxide] ?? 0,
@@ -213,6 +214,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 &points,
                 points.count,
                 &pointCount,
+                &isClosed,
                 &errorBuffer,
                 errorBuffer.count
             )
@@ -222,7 +224,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                     message.isEmpty ? "CoolProp mixture phase-envelope calculation failed." : message
                 )
             }
-            return points.prefix(pointCount).map { point in
+            let mappedPoints = points.prefix(pointCount).map { point in
                 let branch: PhaseEnvelopePoint.Branch = switch point.branch {
                 case PXCoolPropEnvelopeDew: .dew
                 case PXCoolPropEnvelopeCritical: .critical
@@ -234,11 +236,13 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                     branch: branch
                 )
             }
+            return (points: mappedPoints, isClosed: isClosed != 0)
         }.value
         try Task.checkCancellation()
         return CoolPropMixtureEnvelopeResult(
-            points: nativePoints,
-            solverMethod: "CoolProp AbstractState.build_phase_envelope, HEOS dry CO₂-rich mixture"
+            points: nativeResult.points,
+            solverMethod: "CoolProp AbstractState.build_phase_envelope, HEOS dry CO₂-rich mixture",
+            isClosed: nativeResult.isClosed
         )
     }
 }

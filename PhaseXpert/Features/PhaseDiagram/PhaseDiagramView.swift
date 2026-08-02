@@ -218,7 +218,9 @@ private struct PhaseBoundaryChart: View {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
                 ScientificStatusBanner(
                     title: response.boundaryKind == .mixtureEnvelope
-                        ? "Preliminary mixture phase envelope"
+                        ? (response.solver?.converged == false
+                            ? "Preliminary mixture phase-boundary trace"
+                            : "Preliminary mixture phase envelope")
                         : "Preliminary pure CO₂ boundary",
                     message: response.warnings.joined(separator: " ")
                 )
@@ -382,7 +384,9 @@ private struct PhaseBoundaryChart: View {
                             "Boundary type",
                             value: response.boundaryKind == .pureFluidSaturation
                                 ? "Pure-fluid saturation"
-                                : "Mixture bubble/dew envelope"
+                                : (response.solver?.converged == false
+                                    ? "Open provider bubble/dew trace"
+                                    : "Mixture bubble/dew envelope")
                         )
                         LabeledContent("Calculated points", value: "\(response.points.count)")
                         LabeledContent("Composition") {

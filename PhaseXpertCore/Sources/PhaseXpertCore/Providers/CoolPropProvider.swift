@@ -96,10 +96,16 @@ public struct CoolPropSaturationLimits: Equatable, Sendable {
 public struct CoolPropMixtureEnvelopeResult: Equatable, Sendable {
     public let points: [PhaseEnvelopePoint]
     public let solverMethod: String
+    public let isClosed: Bool
 
-    public init(points: [PhaseEnvelopePoint], solverMethod: String) {
+    public init(
+        points: [PhaseEnvelopePoint],
+        solverMethod: String,
+        isClosed: Bool = true
+    ) {
         self.points = points
         self.solverMethod = solverMethod
+        self.isClosed = isClosed
     }
 }
 
@@ -276,7 +282,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.8.0",
+            providerVersion: "0.8.1",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
@@ -570,10 +576,12 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             let warnings = [
                 "PRELIMINARY — VALIDATION PENDING: the calculated mixture envelope must not be used for engineering, safety, commercial, or regulatory decisions.",
                 "Bubble and dew points are returned directly by CoolProp HEOS. PhaseXpert does not interpolate or estimate scientific values."
-            ]
+            ] + (native.isClosed ? [] : [
+                "CoolProp returned usable bubble/dew points but did not report pressure closure. PhaseXpert plots only the returned provider points and does not close the trace."
+            ])
             let solver = SolverMetadata(
                 method: native.solverMethod,
-                converged: true,
+                converged: native.isClosed,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             )
             await envelopeCache.store(

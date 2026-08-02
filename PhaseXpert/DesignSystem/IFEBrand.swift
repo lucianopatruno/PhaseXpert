@@ -36,8 +36,8 @@ struct IFECard<Content: View>: View {
     }
 }
 
-/// App-owned disclosure row whose label uses the same body typography as
-/// neighboring Form actions on every supported iOS version.
+/// App-owned disclosure row whose label matches the larger action typography
+/// used by neighboring Form buttons and navigation links.
 struct IFEExpandableRow<Content: View>: View {
     let title: String
     private let content: Content
@@ -57,12 +57,12 @@ struct IFEExpandableRow<Content: View>: View {
             } label: {
                 HStack {
                     Text(title)
-                        .font(.body)
+                        .font(.title3)
                         .fontWeight(.regular)
                         .foregroundStyle(.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.body.weight(.semibold))
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(.primary)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
