@@ -20,9 +20,9 @@ not be used for engineering, safety, commercial or regulatory decisions.
   Joule–Thomson coefficient and saturation boundary
 - Dry CO₂-rich mixtures containing N₂, O₂, Ar, CH₄ or H₂: density, phase and
   provider bubble/dew phase envelope
-- Mixture phase-boundary solver: bounded CoolProp HEOS PQ flashes at 80
-  logarithmic pressures per branch over 80000–30000000 Pa; each branch stops
-  at its first post-start provider failure and no missing value is bridged
+- Mixture phase-boundary solver: CoolProp HEOS density continuation beginning
+  at 80000 Pa with refinement disabled and a tracked downstream cap of 256
+  successfully calculated provider steps
 - Temporary total-impurity cap: `0 < Σx(impurity) <= 0.10`
 - Mixture viscosity and expanded state properties: unavailable
 
@@ -31,6 +31,13 @@ accuracy range. The bridge uses only interaction data distributed
 with the pinned CoolProp release. PhaseXpert does not call
 `apply_simple_mixing_rule`, does not overwrite binary interaction parameters
 and does not invent missing coefficients.
+
+The build applies
+`Native/CoolPropBridge/patches/CoolProp-v8.0.0-phase-envelope-iteration-cap.patch`
+to the clean pinned source. The patch changes no equation, coefficient,
+interaction parameter or converged point. It adds a deterministic exit to
+CoolProp's otherwise unbounded mixture continuation and leaves
+`PhaseEnvelope.built` false when reached.
 
 The build script records the resolved upstream Git revision beside the
 generated artifact. It also copies the upstream licence. The checked-in licence
