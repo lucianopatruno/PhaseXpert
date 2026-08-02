@@ -223,14 +223,15 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 )
             }
             return points.prefix(pointCount).map { point in
-                PhaseEnvelopePoint(
+                let branch: PhaseEnvelopePoint.Branch = switch point.branch {
+                case PXCoolPropEnvelopeDew: .dew
+                case PXCoolPropEnvelopeCritical: .critical
+                default: .bubble
+                }
+                return PhaseEnvelopePoint(
                     temperatureK: point.temperature_k,
                     pressurePa: point.pressure_pa,
-                    branch: switch point.branch {
-                    case PXCoolPropEnvelopeDew: .dew
-                    case PXCoolPropEnvelopeCritical: .critical
-                    default: .bubble
-                    }
+                    branch: branch
                 )
             }
         }.value
