@@ -37,33 +37,39 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
-    func testNativeCoolPropTenPercentNitrogenTraceUsesBoundedSampling() async throws {
-        let result = try await NativeCoolPropEngine()
-            .dryCarbonDioxideMixturePhaseEnvelope(
-                composition: [
-                    .init(component: .carbonDioxide, moleFraction: 0.90),
-                    .init(component: .nitrogen, moleFraction: 0.10)
-                ]
-            )
+    func testNativeCoolPropThreeAndTenPercentNitrogenTracesAreBounded() async throws {
+        for nitrogenMoleFraction in [0.03, 0.10] {
+            let result = try await NativeCoolPropEngine()
+                .dryCarbonDioxideMixturePhaseEnvelope(
+                    composition: [
+                        .init(
+                            component: .carbonDioxide,
+                            moleFraction: 1 - nitrogenMoleFraction
+                        ),
+                        .init(
+                            component: .nitrogen,
+                            moleFraction: nitrogenMoleFraction
+                        )
+                    ]
+                )
 
-        XCTAssertTrue(result.isComplete)
-        XCTAssertFalse(result.isClosed)
-        XCTAssertEqual(
-            result.attemptedPointCount,
-            result.points.count + result.failedPointCount
-        )
-        XCTAssertGreaterThanOrEqual(
-            result.points.filter { $0.branch == .bubble }.count,
-            2
-        )
-        XCTAssertGreaterThanOrEqual(
-            result.points.filter { $0.branch == .dew }.count,
-            2
-        )
-        XCTAssertTrue(result.points.allSatisfy {
-            $0.temperatureK.isFinite && $0.temperatureK > 0
-                && $0.pressurePa.isFinite && $0.pressurePa > 0
-        })
+            XCTAssertLessThanOrEqual(result.points.count, 256)
+            XCTAssertGreaterThanOrEqual(
+                result.points.filter { $0.branch == .bubble }.count,
+                2,
+                "Missing bubble branch at \(nitrogenMoleFraction * 100) mol% N₂"
+            )
+            XCTAssertGreaterThanOrEqual(
+                result.points.filter { $0.branch == .dew }.count,
+                2,
+                "Missing dew branch at \(nitrogenMoleFraction * 100) mol% N₂"
+            )
+            XCTAssertTrue(result.points.allSatisfy {
+                $0.temperatureK.isFinite && $0.temperatureK > 0
+                    && $0.pressurePa.isFinite && $0.pressurePa >= 80_000
+            })
+            XCTAssertTrue(result.solverMethod.contains("maximum 256"))
+        }
     }
     #endif
 
