@@ -72,7 +72,8 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
 - versioned, local-only SwiftData saved cases with search, sorting, metadata
   editing, duplication, confirmed deletion and edit/rerun
 - pairwise saved-case comparison for operating points, composition, model
-  snapshots, phase and compatible property values
+  snapshots, phase and compatible property values, with searchable PDF and
+  long-form CSV compared-minus-reference reports
 - a preliminary pure-CO₂ pressure–temperature saturation diagram calculated
   by the linked CoolProp HEOS provider, including the critical point and the
   current operating point
@@ -80,7 +81,8 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   saved record, units, warnings and provider provenance
 - bounded, cancellable pressure or temperature property sweeps using a real
   provider calculation at every point, with explicit gaps, phase labels,
-  selected-point inspection and provenance-rich CSV export
+  selected-point inspection, provenance-rich CSV export and searchable PDF
+  reports containing vector charts of successful provider points
 - versioned future IFE API data-transfer contract
 - core, scientific-reference, persistence and workflow UI tests
 - empty privacy manifest: no tracking and no collected data
@@ -135,10 +137,10 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   their composition and density inputs and are not independent EOS outputs;
 - the phase diagram is pure CO₂ only and is not a validated mixture envelope;
 - property-sweep charts connect adjacent successful calculations for
-  visualization only; failures are gaps, and sweep charts are not yet embedded
-  in PDF reports;
-- comparison is currently pairwise and reports numerical differences, not
-  model accuracy;
+  visualization only; failures and unavailable values remain explicit gaps in
+  both interactive and PDF charts;
+- comparison is pairwise and its PDF/CSV exports report numerical differences,
+  not model accuracy;
 - saved cases are local-only and do not sync between devices;
 - impurity-specific validated limits are not established.
 

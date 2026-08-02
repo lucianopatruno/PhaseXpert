@@ -542,17 +542,25 @@ struct CalculationResultSections: View {
 
             if !unavailableProperties.isEmpty {
                 Section {
-                    DisclosureGroup("Unavailable properties (\(unavailableProperties.count))") {
+                    DisclosureGroup {
                         ForEach(unavailableProperties, id: \.property) { property in
                             PropertyResultRow(property: property)
                         }
+                    } label: {
+                        Text("Unavailable properties (\(unavailableProperties.count))")
+                            .font(.body)
+                            .fontWeight(.regular)
                     }
                 }
             }
 
             Section("Scientific traceability") {
-                DisclosureGroup("Calculation details") {
+                DisclosureGroup {
                     traceabilityContent
+                } label: {
+                    Text("Calculation details")
+                        .font(.body)
+                        .fontWeight(.regular)
                 }
             }
         }

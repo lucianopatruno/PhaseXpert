@@ -74,6 +74,21 @@ provider proves support.
 Every value carries one of: calculated, unavailable, outside validated range,
 extrapolated, or failed. Unsupported values never receive fabricated numbers.
 
+## Reporting safeguards
+
+Pairwise comparison reports use the immutable saved calculation records on
+both sides. Every numeric difference is defined as compared minus reference;
+the report never ranks the models or implies that the smaller or larger value
+is more accurate. PDF and CSV output retain units, status, warnings, model and
+provider versions, provenance and calculation/request identifiers.
+
+Property-sweep PDF charts use only finite values whose recorded status is
+calculated. Straight segments are drawn only between adjacent successful
+provider samples. A failed, unavailable or non-finite sample breaks the path;
+PhaseXpert never fills the gap or interpolates a scientific value. The chart
+is a visualization of the serialized provider responses, not an accuracy or
+validation claim.
+
 ## Phase-envelope approach
 
 The selected provider must generate the envelope from equilibrium calculations.

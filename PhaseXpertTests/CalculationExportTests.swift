@@ -187,6 +187,106 @@ final class CalculationExportTests: XCTestCase {
         }
     }
 
+    func testComparisonCSVAndSearchablePDFPreserveSemanticsStatusesAndProvenance() throws {
+        let reference = makeSnapshot(name: "Reference pipeline case")
+        let compared = makeSnapshot(name: "Compared ship case", propertyValue: 910)
+        let snapshot = ComparisonExportSnapshot(
+            exportedAt: fixedDate,
+            reference: reference,
+            compared: compared
+        )
+        let exporter = ComparisonReportExporter()
+        let csv = String(decoding: try exporter.csvData(for: snapshot).dropFirst(3), as: UTF8.self)
+        XCTAssertTrue(csv.contains("compared minus reference"))
+        XCTAssertTrue(csv.contains("Numerical differences do not establish"))
+        XCTAssertTrue(csv.contains(calculationID.uuidString))
+        XCTAssertTrue(csv.contains("export-test-provider"))
+        XCTAssertTrue(csv.contains("unavailable"))
+
+        let document = try XCTUnwrap(PDFDocument(data: exporter.pdfData(for: snapshot)))
+        let text = (0..<document.pageCount).compactMap { document.page(at: $0)?.string }.joined(separator: "\n")
+        XCTAssertTrue(text.contains("Compared case minus reference case"))
+        XCTAssertTrue(text.contains("Reference pipeline case"))
+        XCTAssertTrue(text.contains("Compared ship case"))
+        XCTAssertTrue(text.contains("export-test-provider"))
+        XCTAssertTrue(text.contains("Not comparable"))
+    }
+
+    func testComparisonSnapshotSerializationAndLongPDFPagination() throws {
+        let longNotes = Array(repeating: "Retained comparison provenance note.", count: 500).joined(separator: " ")
+        let snapshot = ComparisonExportSnapshot(
+            exportedAt: fixedDate,
+            reference: makeSnapshot(notes: longNotes),
+            compared: makeSnapshot(name: "Second case", notes: longNotes)
+        )
+        let encoded = try JSONEncoder().encode(snapshot)
+        XCTAssertEqual(try JSONDecoder().decode(ComparisonExportSnapshot.self, from: encoded), snapshot)
+        let document = try XCTUnwrap(PDFDocument(data: ComparisonReportExporter().pdfData(for: snapshot)))
+        XCTAssertGreaterThan(document.pageCount, 1)
+    }
+
+    func testComparisonExportRejectsNonFiniteProperty() {
+        let snapshot = ComparisonExportSnapshot(
+            reference: makeSnapshot(),
+            compared: makeSnapshot(propertyValue: .infinity)
+        )
+        XCTAssertThrowsError(try ComparisonReportExporter().csvData(for: snapshot))
+        XCTAssertThrowsError(try ComparisonReportExporter().pdfData(for: snapshot))
+    }
+
+    func testSweepPDFIsSearchableShowsGapsAxesUnitsLegendAndTraceability() throws {
+        let snapshot = makeSweepSnapshot()
+        let encoded = try JSONEncoder().encode(snapshot)
+        XCTAssertEqual(try JSONDecoder().decode(SweepReportSnapshot.self, from: encoded), snapshot)
+
+        let document = try XCTUnwrap(PDFDocument(data: SweepReportExporter().pdfData(for: snapshot)))
+        XCTAssertGreaterThanOrEqual(document.pageCount, 2)
+        let text = (0..<document.pageCount).compactMap { document.page(at: $0)?.string }.joined(separator: "\n")
+        XCTAssertTrue(text.contains("Property-sweep report"))
+        XCTAssertTrue(text.contains("Failed or unavailable points"))
+        XCTAssertTrue(text.contains("gaps = failed/unavailable"))
+        XCTAssertTrue(text.contains("Pressure (bar(a))"))
+        XCTAssertTrue(text.contains("Density (kg/m³)"))
+        XCTAssertTrue(text.contains("125"))
+        XCTAssertTrue(text.contains("175"))
+        XCTAssertTrue(text.contains("no scientific value is interpolated"))
+        XCTAssertTrue(text.contains(snapshot.sweep.id.uuidString))
+        XCTAssertTrue(text.contains(calculationID.uuidString))
+    }
+
+    func testSweepPDFRejectsNonFiniteCalculatedPoint() {
+        let snapshot = makeSweepSnapshot(propertyValue: .nan)
+        XCTAssertThrowsError(try SweepReportExporter().pdfData(for: snapshot))
+    }
+
+    private func makeSweepSnapshot(propertyValue: Double = 903.5) -> SweepReportSnapshot {
+        let source = makeSnapshot(propertyValue: propertyValue).calculation
+        let request = PropertySweepRequest(
+            id: UUID(uuidString: "BBBBBBBB-1111-2222-3333-CCCCCCCCCCCC")!,
+            baseRequest: source.request,
+            axis: .pressure,
+            startValueSI: 10_000_000,
+            endValueSI: 20_000_000,
+            pointCount: 3,
+            property: .density
+        )
+        let samples = [
+            PropertySweepSample(index: 0, pressurePa: 10_000_000, temperatureK: source.input.temperatureK, response: source.response, errorMessage: nil),
+            PropertySweepSample(index: 1, pressurePa: 15_000_000, temperatureK: source.input.temperatureK, response: nil, errorMessage: "Provider failed at this operating point."),
+            PropertySweepSample(index: 2, pressurePa: 20_000_000, temperatureK: source.input.temperatureK, response: source.response, errorMessage: nil)
+        ]
+        return SweepReportSnapshot(
+            exportedAt: fixedDate,
+            sourceCalculation: source,
+            sweep: PropertySweepResult(
+                request: request,
+                generatedAt: fixedDate,
+                durationMilliseconds: 12.5,
+                samples: samples
+            )
+        )
+    }
+
     private func makeSnapshot(
         name: String = "Pipeline inlet",
         notes: String = "He said \"check\"\nsecond line",

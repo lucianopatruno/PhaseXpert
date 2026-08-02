@@ -22,13 +22,15 @@
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.
-- Saved-case comparison is pairwise only. It does not rank models or establish
-  accuracy, and it does not yet export a comparison report.
+- Saved-case comparison and its PDF/CSV reports are pairwise only. They do not
+  rank models or establish accuracy.
 - The phase chart does not support mixtures, bubble/dew separation, a
-  two-phase area, cricondenbar or cricondentherm. The calculation PDF does not
-  yet embed a phase-envelope record or the interactive phase chart; standalone
-  chart-image export remains a placeholder.
+  two-phase area, cricondenbar or cricondentherm. Property-sweep PDFs contain
+  the calculated sweep chart, but do not convert it into a phase envelope.
 - Saved cases are local-only. Backup, sync and recovery UI are not implemented.
+- Persisted saved-case import remains deliberately deferred until schema
+  validation, duplicate handling, provenance protection and migration
+  safeguards are designed and tested.
 - The first SwiftData schema is versioned; no historical migration stage exists
   yet because there is no prior released schema.
 - The support contact, copyright owner/year and final disclaimer need IFE
