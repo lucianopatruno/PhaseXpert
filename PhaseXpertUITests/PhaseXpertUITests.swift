@@ -51,4 +51,42 @@ final class PhaseXpertUITests: XCTestCase {
                 || app.staticTexts["No operating point"].exists
         )
     }
+    func testThreePercentNitrogenDisplaysProviderPhaseDiagram() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let addImpurityButton = app.buttons["Add impurity"]
+        XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
+        addImpurityButton.tap()
+
+        let nitrogenField = app.textFields["N₂ ppm"]
+        XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
+        nitrogenField.typeText("30000")
+        XCTAssertTrue(app.buttons["OK"].waitForExistence(timeout: 2))
+        app.buttons["OK"].tap()
+
+        let runCalculationButton = app.buttons["run-calculation"]
+        for _ in 0..<6 where !runCalculationButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(runCalculationButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(runCalculationButton.isEnabled)
+        runCalculationButton.tap()
+
+        let viewPhaseDiagramButton = app.buttons["view-phase-diagram"]
+        for _ in 0..<18 where !viewPhaseDiagramButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(
+            viewPhaseDiagramButton.waitForExistence(timeout: 5),
+            "The 3 mol% N₂ operating-point calculation did not finish."
+        )
+        viewPhaseDiagramButton.tap()
+
+        XCTAssertTrue(
+            app.otherElements["phase-diagram-available"].waitForExistence(timeout: 10),
+            "The provider phase diagram did not become visible for 3 mol% N₂."
+        )
+    }
+
 }
