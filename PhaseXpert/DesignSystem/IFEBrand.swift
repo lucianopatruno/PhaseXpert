@@ -57,18 +57,12 @@ struct IFEExpandableRow<Content: View>: View {
             } label: {
                 HStack {
                     Text(title)
-                        .font(.body)
-                        .fontWeight(.regular)
-                        .foregroundStyle(Color.ifePrimary)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.ifePrimary)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
             .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
 
             if isExpanded {
