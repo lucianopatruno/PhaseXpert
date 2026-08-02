@@ -138,10 +138,10 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   limited to density and phase with at most 10 mol% total impurity;
 - derived molar mass, specific volume and Z inherit the validation status of
   their composition and density inputs and are not independent EOS outputs;
-- dry-mixture phase envelopes are preliminary CoolProp outputs and have not
-  completed independent PhaseXpert validation; continuation begins at the
-  declared 0.8 bar(a) PhaseXpert domain minimum and does not represent the
-  lower-pressure envelope;
+- dry-mixture phase boundaries are preliminary CoolProp outputs and have not
+  completed independent PhaseXpert validation; they use bounded, pointwise
+  bubble/dew flashes over 0.8–300 bar(a), omit failed provider states and do not
+  infer a critical point or closed envelope;
 - property-sweep charts connect adjacent successful calculations for
   visualization only; failures and unavailable values remain explicit gaps in
   both interactive and PDF charts;
