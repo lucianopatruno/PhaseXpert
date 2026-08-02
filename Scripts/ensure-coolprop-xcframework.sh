@@ -7,6 +7,7 @@ stamp_path="${project_root}/Vendor/CoolProp/BRIDGE-SOURCE-SHA256.txt"
 bridge_header="${project_root}/Native/CoolPropBridge/include/PhaseXpertCoolPropBridge.h"
 bridge_source="${project_root}/Native/CoolPropBridge/src/PhaseXpertCoolPropBridge.cpp"
 build_script="${project_root}/Scripts/build-coolprop-xcframework.sh"
+coolprop_patch="${project_root}/Native/CoolPropBridge/patches/CoolProp-v8.0.0-phase-envelope-iteration-cap.patch"
 coolprop_version="${COOLPROP_VERSION:-v8.0.0}"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -28,7 +29,7 @@ done
 source_fingerprint="$(
     {
         printf 'CoolProp=%s\n' "${coolprop_version}"
-        shasum -a 256 "${bridge_header}" "${bridge_source}" "${build_script}"
+        shasum -a 256 "${bridge_header}" "${bridge_source}" "${build_script}" "${coolprop_patch}"
     } | shasum -a 256 | awk '{print $1}'
 )"
 
