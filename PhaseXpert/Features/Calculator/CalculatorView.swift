@@ -628,23 +628,24 @@ struct CalculationResultSections: View {
         )
 
         if !record.response.model.references.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Scientific references")
-                    .font(.subheadline.weight(.semibold))
-                ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { index, reference in
-                    if
-                        let address = reference.doiOrURL,
-                        let url = URL(string: address)
-                    {
-                        Link(destination: url) {
-                            scientificReferenceLabel(reference, address: address)
-                        }
-                        .buttonStyle(.plain)
-                        .id("scientific-reference-\(index)-\(address)")
-                        .accessibilityHint("Opens this reference in the browser.")
-                    } else {
-                        scientificReferenceLabel(reference, address: nil)
+            Text("Scientific references")
+                .font(.subheadline.weight(.semibold))
+
+            ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { index, reference in
+                if
+                    let address = reference.doiOrURL,
+                    let url = URL(string: address)
+                {
+                    Link(destination: url) {
+                        scientificReferenceLabel(reference, address: address)
                     }
+                    .id("scientific-reference-\(index)-\(address)")
+                    .accessibilityLabel(
+                        "\(reference.authors), \(reference.title), open reference"
+                    )
+                    .accessibilityHint("Opens this reference in the browser.")
+                } else {
+                    scientificReferenceLabel(reference, address: nil)
                 }
             }
         }
