@@ -37,17 +37,19 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
-    func testNativeCoolPropCO2NitrogenTraceReturnsBothBranchesWhenIncomplete() async throws {
+    func testNativeCoolPropTenPercentNitrogenTraceUsesBoundedSampling() async throws {
         let result = try await NativeCoolPropEngine()
             .dryCarbonDioxideMixturePhaseEnvelope(
                 composition: [
-                    .init(component: .carbonDioxide, moleFraction: 0.99),
-                    .init(component: .nitrogen, moleFraction: 0.01)
+                    .init(component: .carbonDioxide, moleFraction: 0.90),
+                    .init(component: .nitrogen, moleFraction: 0.10)
                 ]
             )
 
-        XCTAssertFalse(result.isComplete)
+        XCTAssertTrue(result.isComplete)
         XCTAssertFalse(result.isClosed)
+        XCTAssertGreaterThanOrEqual(result.attemptedPointCount, result.points.count)
+        XCTAssertGreaterThanOrEqual(result.failedPointCount, 0)
         XCTAssertGreaterThanOrEqual(
             result.points.filter { $0.branch == .bubble }.count,
             2
