@@ -127,3 +127,8 @@
   pointwise HEOS PQ bubble/dew sampling over 0.8–300 bar(a), stopping branches
   at the first post-start provider failure and reporting attempted/failed
   provider flashes without interpolation or inferred closure.
+- Removed the unsuccessful standalone mixture-PQ sampling experiment after
+  manual validation showed no usable 3 mol% N₂ branches. Restored CoolProp's
+  working density continuation and added a deterministic 256-provider-step
+  downstream cap to its upstream-unbounded loop, with focused regression
+  coverage for both 3 and 10 mol% N₂.
