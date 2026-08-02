@@ -151,10 +151,13 @@ Mixture output remains limited to density, provider phase, and the transparent
 derived values M, v and Z. Mixture viscosity, caloric, acoustic, conductivity,
 derivative properties are deliberately unavailable. Phase envelopes use the
 provider routine described above and remain validation pending. Mixture
-continuation starts at 80000 Pa, matching the declared 0.8 bar(a) minimum of
-the PhaseXpert input domain, and requests CoolProp's unrefined continuation.
-Only finite provider-returned points at or above that pressure are retained;
-PhaseXpert does not interpolate, extrapolate or cosmetically close the trace.
+boundaries use independent CoolProp HEOS PQ flashes at 80 logarithmically
+spaced pressures per branch over the declared 0.8–300 bar(a) PhaseXpert input
+domain. Every retained temperature and pressure is returned by CoolProp for
+Q=0 or Q=1. After a branch starts, its first failed provider flash terminates
+that branch, so PhaseXpert never bridges a missing scientific value. It does
+not interpolate, extrapolate, infer a critical point or cosmetically close the
+trace.
 Every result records exact composition, library/provider version, method and
 validation-pending warnings. Contract coverage is not independent numeric
 validation.
