@@ -32,9 +32,9 @@ with the pinned CoolProp release. PhaseXpert does not call
 `apply_simple_mixing_rule`, does not overwrite binary interaction parameters
 and does not invent missing coefficients.
 
-The build applies
-`Native/CoolPropBridge/patches/CoolProp-v8.0.0-phase-envelope-iteration-cap.patch`
-to the clean pinned source. The patch changes no equation, coefficient,
+The build applies the tracked downstream source transformation
+`Native/CoolPropBridge/patches/apply_phase_envelope_iteration_cap.py`
+to the clean pinned source. The transformation changes no equation, coefficient,
 interaction parameter or converged point. It adds a deterministic exit to
 CoolProp's otherwise unbounded mixture continuation and leaves
 `PhaseEnvelope.built` false when reached.
@@ -50,6 +50,7 @@ Prerequisites on macOS:
 - Xcode 26 command-line tools
 - Git
 - CMake
+- Python 3
 
 From the repository root:
 
