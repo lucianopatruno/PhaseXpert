@@ -37,6 +37,9 @@
   inside CoolProp. The phase-diagram UI stops its indefinite loading state after
   30 seconds while the existing provider task continues in the background; a
   late successful provider response is displayed automatically.
+- Phase-diagram PNG rendering uses SwiftUI `ImageRenderer` on the main actor.
+  It is never started automatically when provider points arrive; the live chart
+  renders first and image generation begins only after an explicit user action.
 - Saved cases are local-only. Backup, sync and recovery UI are not implemented.
 - Persisted saved-case import remains deliberately deferred until schema
   validation, duplicate handling, provenance protection and migration

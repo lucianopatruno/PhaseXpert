@@ -234,6 +234,7 @@ struct CalculatorView: View {
                             PropertySweepView(record: record)
                         } label: {
                             Label("Explore property sweep", systemImage: "chart.xyaxis.line")
+                                .foregroundStyle(Color.accentColor)
                         }
                         .accessibilityIdentifier("open-property-sweep")
 

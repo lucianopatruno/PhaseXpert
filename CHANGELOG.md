@@ -116,3 +116,6 @@
 - Replaced the unbounded phase-diagram loading state with a 30-second
   presentation deadline while retaining the original provider calculation in
   the background and automatically displaying any late successful response.
+- Removed automatic main-actor PNG rendering from phase-diagram appearance;
+  the calculated chart now renders first and image export starts only after an
+  explicit user action.

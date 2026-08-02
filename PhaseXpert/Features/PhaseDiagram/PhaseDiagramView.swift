@@ -196,6 +196,7 @@ private struct PhaseBoundaryChart: View {
     @State private var selectedTemperatureCelsius: Double?
     @State private var exportedDiagramURL: URL?
     @State private var exportErrorMessage: String?
+    @State private var isPreparingExport = false
     @State private var xVisibleLength: Double = 1
     @State private var yVisibleLength: Double = 1
     @State private var xScrollPosition: Double = 0
@@ -282,14 +283,30 @@ private struct PhaseBoundaryChart: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .accessibilityIdentifier("share-phase-diagram-image")
-                    } else if let exportErrorMessage {
-                        Label(exportErrorMessage, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.secondary)
-                    } else {
+                    } else if isPreparingExport {
                         HStack {
                             ProgressView()
                             Text("Preparing diagram image…")
                                 .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: IFESpacing.small) {
+                            if let exportErrorMessage {
+                                Label(
+                                    exportErrorMessage,
+                                    systemImage: "exclamationmark.triangle"
+                                )
+                                .foregroundStyle(.secondary)
+                            }
+                            Button(
+                                exportErrorMessage == nil
+                                    ? "Prepare diagram image"
+                                    : "Retry diagram image",
+                                systemImage: "photo"
+                            ) {
+                                prepareDiagramImage()
+                            }
+                            .accessibilityIdentifier("prepare-phase-diagram-image")
                         }
                     }
                 }
@@ -468,20 +485,28 @@ private struct PhaseBoundaryChart: View {
             .padding(IFESpacing.medium)
         }
         .onAppear(perform: resetViewport)
-        .task(id: response.requestID) {
+        .onChange(of: response.requestID) { _, _ in resetViewport() }
+        .accessibilityIdentifier("phase-diagram-available")
+    }
+
+    private func prepareDiagramImage() {
+        guard !isPreparingExport else { return }
+        isPreparingExport = true
+        exportErrorMessage = nil
+
+        Task { @MainActor in
+            await Task.yield()
             do {
                 exportedDiagramURL = try PhaseDiagramImageExporter().writeTemporaryPNG(
                     for: record,
                     response: response
                 )
-                exportErrorMessage = nil
             } catch {
                 exportedDiagramURL = nil
                 exportErrorMessage = error.localizedDescription
             }
+            isPreparingExport = false
         }
-        .onChange(of: response.requestID) { _, _ in resetViewport() }
-        .accessibilityIdentifier("phase-diagram-available")
     }
 
     private var viewportControls: some View {
