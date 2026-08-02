@@ -1,6 +1,7 @@
 #include "PhaseXpertCoolPropBridge.h"
 
 #include "CoolProp/AbstractState.h"
+#include "CoolProp/Configuration.h"
 #include "CoolProp/CoolProp.h"
 
 #include <array>
@@ -9,12 +10,52 @@
 #include <cstring>
 #include <exception>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
 namespace {
 
 constexpr const char *kFluid = "HEOS::CarbonDioxide";
+constexpr double kPhaseEnvelopeStartingPressurePa = 80000.0;
+std::mutex kPhaseEnvelopeConfigurationMutex;
+
+class ScopedPhaseEnvelopeStartingPressure {
+public:
+    explicit ScopedPhaseEnvelopeStartingPressure(double pressure_pa)
+        : previous_pressure_pa_(
+            CoolProp::get_config_double(
+                CoolProp::PHASE_ENVELOPE_STARTING_PRESSURE_PA
+            )
+        ) {
+        CoolProp::set_config_double(
+            CoolProp::PHASE_ENVELOPE_STARTING_PRESSURE_PA,
+            pressure_pa
+        );
+    }
+
+    ~ScopedPhaseEnvelopeStartingPressure() {
+        try {
+            CoolProp::set_config_double(
+                CoolProp::PHASE_ENVELOPE_STARTING_PRESSURE_PA,
+                previous_pressure_pa_
+            );
+        } catch (...) {
+            // Destructors must not throw. The process-global setting is guarded
+            // and restoration failure cannot change already-returned points.
+        }
+    }
+
+    ScopedPhaseEnvelopeStartingPressure(
+        const ScopedPhaseEnvelopeStartingPressure &
+    ) = delete;
+    ScopedPhaseEnvelopeStartingPressure &operator=(
+        const ScopedPhaseEnvelopeStartingPressure &
+    ) = delete;
+
+private:
+    double previous_pressure_pa_;
+};
 
 void copy_text(const std::string &text, char *buffer, size_t buffer_size) {
     if (buffer == nullptr || buffer_size == 0) {
@@ -420,11 +461,22 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
             fluids += active_names[index];
         }
 
+        // CoolProp's process-global default starts mixture continuation at
+        // 100 Pa. PhaseXpert's declared provider domain begins at 0.8 bar(a),
+        // so the native request is bounded to 80000 Pa and serialized while
+        // that temporary configuration is active.
+        std::lock_guard<std::mutex> configuration_guard(
+            kPhaseEnvelopeConfigurationMutex
+        );
+        ScopedPhaseEnvelopeStartingPressure starting_pressure(
+            kPhaseEnvelopeStartingPressurePa
+        );
+
         std::shared_ptr<CoolProp::AbstractState> state(
             CoolProp::AbstractState::factory("HEOS", fluids)
         );
         state->set_mole_fractions(active_fractions);
-        state->build_phase_envelope("dummy");
+        state->build_phase_envelope("none");
         const CoolProp::PhaseEnvelopeData &envelope = state->get_phase_envelope_data();
         if (envelope.T.size() != envelope.p.size()
             || envelope.T.size() != envelope.Q.size() || envelope.T.size() < 4) {
@@ -435,11 +487,7 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
             );
             return 4;
         }
-        if (envelope.T.size() > point_capacity) {
-            copy_text("CoolProp phase envelope exceeds the bounded output capacity.", error_buffer, error_buffer_size);
-            return 5;
-        }
-
+        size_t output_index = 0;
         for (size_t index = 0; index < envelope.T.size(); ++index) {
             if (!std::isfinite(envelope.T[index]) || envelope.T[index] <= 0
                 || !std::isfinite(envelope.p[index]) || envelope.p[index] <= 0
@@ -447,17 +495,33 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
                 copy_text("CoolProp returned a non-finite phase-envelope point.", error_buffer, error_buffer_size);
                 return 6;
             }
-            points[index].temperature_k = envelope.T[index];
-            points[index].pressure_pa = envelope.p[index];
+            if (envelope.p[index] < kPhaseEnvelopeStartingPressurePa) {
+                continue;
+            }
+            if (output_index >= point_capacity) {
+                copy_text("CoolProp phase envelope exceeds the bounded output capacity.", error_buffer, error_buffer_size);
+                return 5;
+            }
+            points[output_index].temperature_k = envelope.T[index];
+            points[output_index].pressure_pa = envelope.p[index];
             if (index == envelope.icrit) {
-                points[index].branch = PXCoolPropEnvelopeCritical;
+                points[output_index].branch = PXCoolPropEnvelopeCritical;
             } else {
-                points[index].branch = envelope.Q[index] < 0.5
+                points[output_index].branch = envelope.Q[index] < 0.5
                     ? PXCoolPropEnvelopeBubble
                     : PXCoolPropEnvelopeDew;
             }
+            ++output_index;
         }
-        *point_count = envelope.T.size();
+        if (output_index < 4) {
+            copy_text(
+                "CoolProp did not return at least four provider points inside the PhaseXpert pressure domain.",
+                error_buffer,
+                error_buffer_size
+            );
+            return 4;
+        }
+        *point_count = output_index;
         *is_complete = envelope.built ? 1 : 0;
         *is_closed = envelope.closed ? 1 : 0;
         copy_text("", error_buffer, error_buffer_size);
