@@ -75,61 +75,86 @@ final class PhaseXpertTests: XCTestCase {
 
     #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
     @MainActor
-    func testNativeMixtureReachesAvailablePhaseDiagramViewModelResponse() async throws {
+    func testNativeThreeAndTenPercentNitrogenReachAvailablePhaseDiagramViewModelResponse() async throws {
         let provider = CoolPropProvider(engine: NativeCoolPropEngine())
-        let request = CalculationRequest(
-            modelID: provider.descriptor.id,
-            pressurePa: 15_000_000,
-            temperatureK: 293.15,
-            composition: [
-                .init(component: .carbonDioxide, moleFraction: 0.99),
-                .init(component: .nitrogen, moleFraction: 0.01)
-            ],
-            requestedProperties: [.density],
-            clientVersion: "native-ui-regression"
-        )
-        let response = try await provider.calculate(request)
-        let record = CalculationRecord(
-            request: request,
-            input: CalculationInputSnapshot(
-                pressureValue: 150,
-                pressureUnit: .bara,
-                pressurePa: request.pressurePa,
-                temperatureValue: 20,
-                temperatureUnit: .celsius,
-                temperatureK: request.temperatureK,
-                originalComposition: [
+
+        for nitrogenMoleFraction in [0.03, 0.10] {
+            let request = CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 15_000_000,
+                temperatureK: 293.15,
+                composition: [
+                    .init(
+                        component: .carbonDioxide,
+                        moleFraction: 1 - nitrogenMoleFraction
+                    ),
                     .init(
                         component: .nitrogen,
-                        value: 10_000,
-                        unit: .partsPerMillion
+                        moleFraction: nitrogenMoleFraction
                     )
-                ]
-            ),
-            response: response,
-            application: .init(version: "test", build: "test")
-        )
-        let viewModel = PhaseDiagramViewModel(
-            registry: ProviderRegistry(providers: [provider]),
-            timeoutNanoseconds: 5_000_000_000
-        )
+                ],
+                requestedProperties: [.density],
+                clientVersion: "native-ui-regression"
+            )
+            let response = try await provider.calculate(request)
+            let record = CalculationRecord(
+                request: request,
+                input: CalculationInputSnapshot(
+                    pressureValue: 150,
+                    pressureUnit: .bara,
+                    pressurePa: request.pressurePa,
+                    temperatureValue: 20,
+                    temperatureUnit: .celsius,
+                    temperatureK: request.temperatureK,
+                    originalComposition: [
+                        .init(
+                            component: .nitrogen,
+                            value: nitrogenMoleFraction * 1_000_000,
+                            unit: .partsPerMillion
+                        )
+                    ]
+                ),
+                response: response,
+                application: .init(version: "test", build: "test")
+            )
+            let viewModel = PhaseDiagramViewModel(
+                registry: ProviderRegistry(providers: [provider]),
+                timeoutNanoseconds: 5_000_000_000
+            )
 
-        viewModel.load(for: record)
-        for _ in 0..<100 where viewModel.response == nil && viewModel.errorMessage == nil {
-            try await Task.sleep(nanoseconds: 50_000_000)
+            viewModel.load(for: record)
+            for _ in 0..<100
+            where viewModel.response == nil && viewModel.errorMessage == nil {
+                try await Task.sleep(nanoseconds: 50_000_000)
+            }
+
+            XCTAssertNil(
+                viewModel.errorMessage,
+                "Phase-diagram pipeline failed at \(nitrogenMoleFraction * 100) mol% N₂"
+            )
+            let envelope = try XCTUnwrap(
+                viewModel.response,
+                "No phase-diagram response at \(nitrogenMoleFraction * 100) mol% N₂"
+            )
+            XCTAssertTrue(envelope.isAvailable)
+            let bubbleCount = envelope.points.filter { $0.branch == .bubble }.count
+            let dewCount = envelope.points.filter { $0.branch == .dew }.count
+            XCTAssertGreaterThanOrEqual(
+                bubbleCount,
+                2,
+                "Missing bubble branch at \(nitrogenMoleFraction * 100) mol% N₂"
+            )
+            XCTAssertGreaterThanOrEqual(
+                dewCount,
+                2,
+                "Missing dew branch at \(nitrogenMoleFraction * 100) mol% N₂"
+            )
+            print(
+                "Phase-diagram pipeline \(nitrogenMoleFraction * 100) mol% N₂: "
+                    + "\(envelope.points.count) points, \(bubbleCount) bubble, "
+                    + "\(dewCount) dew, converged=\(envelope.solver?.converged ?? false)"
+            )
         }
-
-        XCTAssertNil(viewModel.errorMessage)
-        let envelope = try XCTUnwrap(viewModel.response)
-        XCTAssertTrue(envelope.isAvailable)
-        XCTAssertGreaterThanOrEqual(
-            envelope.points.filter { $0.branch == .bubble }.count,
-            2
-        )
-        XCTAssertGreaterThanOrEqual(
-            envelope.points.filter { $0.branch == .dew }.count,
-            2
-        )
     }
     #endif
 
