@@ -84,13 +84,13 @@ coefficient uses the single-phase derivative (∂T/∂p)h. Cp/Cv is derived in
 Swift from the two returned heat capacities.
 
 The state calculation fluid string and phase-envelope `AbstractState` use the
-explicit supplied fractions and fixed supported component list. The envelope
-trace must be built, contain consistent finite bubble/dew data and fit the
-bounded output array. CoolProp's pressure-closure flag is preserved separately:
-an open trace is shown only when both branches remain usable, with convergence
-reported as false and an explicit warning. PhaseXpert never closes that trace
-itself. No fallback pair, estimated mixing rule or inserted scientific point is
-permitted.
+explicit supplied fractions and fixed supported component list. A displayed
+trace must contain consistent finite bubble/dew data and fit the bounded output
+array. CoolProp's construction-complete and pressure-closure flags are preserved
+separately: a provider trace is shown only when both branches remain usable,
+with incomplete or open status reported explicitly and convergence false.
+PhaseXpert never closes, extrapolates or completes that trace itself. No fallback
+pair, estimated mixing rule or inserted scientific point is permitted.
 
 ## Swift contract
 
@@ -107,7 +107,9 @@ permitted.
   unavailable rather than fabricating a value;
 - returns one pure-CO₂ saturation boundary and a critical point;
 - returns the real provider bubble/dew envelope for an accepted dry mixture;
-- rejects incomplete, non-finite or branch-deficient envelopes.
+- rejects non-finite or branch-deficient traces; a construction-incomplete
+  trace is retained only when it already contains usable provider-returned
+  bubble and dew branches, with explicit incomplete/non-converged status.
 
 Tests use a deterministic mock engine to verify orchestration, rejection,
 serialization and status handling. Mock values are never registered in the

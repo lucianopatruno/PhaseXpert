@@ -108,5 +108,8 @@
 - Allowed usable provider bubble/dew traces to remain visible when CoolProp
   does not set its pressure-closure flag, while marking convergence false and
   explicitly refusing to close the trace cosmetically.
-- Matched expandable-row labels and chevrons to the larger typography used by
+- Preserved finite, branch-complete provider points when CoolProp stops before
+  setting its construction-complete flag, while marking the trace incomplete,
+  open and non-converged without extrapolating or closing it.
+- Matched expandable-row labels and chevrons to the body typography used by
   neighboring Form actions.

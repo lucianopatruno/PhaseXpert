@@ -202,6 +202,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let nativeResult = try await Task.detached(priority: .userInitiated) {
             var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
             var pointCount = 0
+            var isComplete: Int32 = 0
             var isClosed: Int32 = 0
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_dry_co2_mixture_phase_envelope(
@@ -214,6 +215,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 &points,
                 points.count,
                 &pointCount,
+                &isComplete,
                 &isClosed,
                 &errorBuffer,
                 errorBuffer.count
@@ -236,12 +238,17 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                     branch: branch
                 )
             }
-            return (points: mappedPoints, isClosed: isClosed != 0)
+            return (
+                points: mappedPoints,
+                isComplete: isComplete != 0,
+                isClosed: isClosed != 0
+            )
         }.value
         try Task.checkCancellation()
         return CoolPropMixtureEnvelopeResult(
             points: nativeResult.points,
             solverMethod: "CoolProp AbstractState.build_phase_envelope, HEOS dry CO₂-rich mixture",
+            isComplete: nativeResult.isComplete,
             isClosed: nativeResult.isClosed
         )
     }

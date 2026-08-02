@@ -96,15 +96,18 @@ public struct CoolPropSaturationLimits: Equatable, Sendable {
 public struct CoolPropMixtureEnvelopeResult: Equatable, Sendable {
     public let points: [PhaseEnvelopePoint]
     public let solverMethod: String
+    public let isComplete: Bool
     public let isClosed: Bool
 
     public init(
         points: [PhaseEnvelopePoint],
         solverMethod: String,
+        isComplete: Bool = true,
         isClosed: Bool = true
     ) {
         self.points = points
         self.solverMethod = solverMethod
+        self.isComplete = isComplete
         self.isClosed = isClosed
     }
 }
@@ -576,12 +579,14 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             let warnings = [
                 "PRELIMINARY — VALIDATION PENDING: the calculated mixture envelope must not be used for engineering, safety, commercial, or regulatory decisions.",
                 "Bubble and dew points are returned directly by CoolProp HEOS. PhaseXpert does not interpolate or estimate scientific values."
-            ] + (native.isClosed ? [] : [
-                "CoolProp returned usable bubble/dew points but did not report pressure closure. PhaseXpert plots only the returned provider points and does not close the trace."
+            ] + (native.isComplete ? [] : [
+                "CoolProp stopped before completing phase-envelope construction. PhaseXpert plots only the finite provider-returned bubble/dew points, marks the trace incomplete and does not extrapolate it."
+            ]) + (native.isClosed ? [] : [
+                "CoolProp did not report pressure closure. PhaseXpert plots only the returned provider points and does not close the trace."
             ])
             let solver = SolverMetadata(
                 method: native.solverMethod,
-                converged: native.isClosed,
+                converged: native.isComplete && native.isClosed,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             )
             await envelopeCache.store(

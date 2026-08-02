@@ -575,6 +575,35 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertTrue(response.warnings.contains { $0.contains("does not close the trace") })
     }
 
+    func testIncompleteProviderTraceIsVisibleAndExplicitlyNonConverged() async throws {
+        let incompleteTrace = CoolPropMixtureEnvelopeResult(
+            points: MockEngine().mixtureEnvelope.points,
+            solverMethod: "Mock incomplete CoolProp phase trace",
+            isComplete: false,
+            isClosed: false
+        )
+        let provider = CoolPropProvider(
+            engine: MockEngine(mixtureEnvelope: incompleteTrace)
+        )
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.99),
+                .init(component: .nitrogen, moleFraction: 0.01)
+            ]
+        )
+
+        let response = try await provider.phaseEnvelope(request)
+
+        XCTAssertTrue(response.isAvailable)
+        XCTAssertEqual(response.solver?.converged, false)
+        XCTAssertTrue(response.warnings.contains {
+            $0.contains("stopped before completing phase-envelope construction")
+        })
+        XCTAssertTrue(response.warnings.contains { $0.contains("does not extrapolate") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("does not close the trace") })
+    }
+
     func testNonFiniteMixtureEnvelopePointIsRejected() async {
         let invalid = CoolPropMixtureEnvelopeResult(
             points: [

@@ -352,15 +352,19 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     PXCoolPropEnvelopePoint *points,
     size_t point_capacity,
     size_t *point_count,
+    int *is_complete,
     int *is_closed,
     char *error_buffer,
     size_t error_buffer_size
 ) {
-    if (points == nullptr || point_count == nullptr || is_closed == nullptr
-        || point_capacity == 0) {
+    if (points == nullptr || point_count == nullptr || is_complete == nullptr
+        || is_closed == nullptr || point_capacity == 0) {
         copy_text("Phase-envelope output buffer is invalid.", error_buffer, error_buffer_size);
         return 1;
     }
+    *point_count = 0;
+    *is_complete = 0;
+    *is_closed = 0;
 
     const std::array<double, 6> fractions = {
         carbon_dioxide_mole_fraction,
@@ -422,9 +426,13 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
         state->set_mole_fractions(active_fractions);
         state->build_phase_envelope("dummy");
         const CoolProp::PhaseEnvelopeData &envelope = state->get_phase_envelope_data();
-        if (!envelope.built || envelope.T.size() != envelope.p.size()
+        if (envelope.T.size() != envelope.p.size()
             || envelope.T.size() != envelope.Q.size() || envelope.T.size() < 4) {
-            copy_text("CoolProp did not return a usable phase-envelope trace.", error_buffer, error_buffer_size);
+            copy_text(
+                "CoolProp did not return a consistent phase-envelope trace with at least four provider points.",
+                error_buffer,
+                error_buffer_size
+            );
             return 4;
         }
         if (envelope.T.size() > point_capacity) {
@@ -450,6 +458,7 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
             }
         }
         *point_count = envelope.T.size();
+        *is_complete = envelope.built ? 1 : 0;
         *is_closed = envelope.closed ? 1 : 0;
         copy_text("", error_buffer, error_buffer_size);
         return 0;

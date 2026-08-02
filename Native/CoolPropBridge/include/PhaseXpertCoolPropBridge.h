@@ -115,6 +115,9 @@ int px_coolprop_pure_co2_saturation_pressure(
 /// Builds the real HEOS phase envelope for a supported dry CO2-rich mixture.
 /// Fractions use the same order and product guardrail as the state calculation.
 /// No estimated mixing rule or interpolated scientific point is introduced.
+/// A nonzero `is_complete` means CoolProp completed envelope construction;
+/// `is_closed` separately reports CoolProp's pressure-closure condition.
+/// Finite branch-complete provider points may be returned with both flags zero.
 int px_coolprop_dry_co2_mixture_phase_envelope(
     double carbon_dioxide_mole_fraction,
     double nitrogen_mole_fraction,
@@ -125,6 +128,7 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     PXCoolPropEnvelopePoint *points,
     size_t point_capacity,
     size_t *point_count,
+    int *is_complete,
     int *is_closed,
     char *error_buffer,
     size_t error_buffer_size
