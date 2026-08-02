@@ -25,11 +25,11 @@ public:
     explicit ScopedPhaseEnvelopeStartingPressure(double pressure_pa)
         : previous_pressure_pa_(
             CoolProp::get_config_double(
-                CoolProp::PHASE_ENVELOPE_STARTING_PRESSURE_PA
+                PHASE_ENVELOPE_STARTING_PRESSURE_PA
             )
         ) {
         CoolProp::set_config_double(
-            CoolProp::PHASE_ENVELOPE_STARTING_PRESSURE_PA,
+            PHASE_ENVELOPE_STARTING_PRESSURE_PA,
             pressure_pa
         );
     }
@@ -37,7 +37,7 @@ public:
     ~ScopedPhaseEnvelopeStartingPressure() {
         try {
             CoolProp::set_config_double(
-                CoolProp::PHASE_ENVELOPE_STARTING_PRESSURE_PA,
+                PHASE_ENVELOPE_STARTING_PRESSURE_PA,
                 previous_pressure_pa_
             );
         } catch (...) {
