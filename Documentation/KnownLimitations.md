@@ -34,7 +34,11 @@
   marks the trace incomplete/open and convergence false, and never joins,
   extrapolates or completes the trace cosmetically.
 - Native mixture-envelope continuation is synchronous and cannot be interrupted
-  inside CoolProp. The phase-diagram UI stops its indefinite loading state after
+  inside CoolProp. To keep continuation inside the declared PhaseXpert domain,
+  the request begins at 0.8 bar(a) instead of CoolProp's 100 Pa default and
+  disables the optional refinement pass. Only provider-returned points at or
+  above 0.8 bar(a) are displayed; this is a domain truncation, not a complete
+  low-pressure envelope. The phase-diagram UI stops its loading state after
   30 seconds while the existing provider task continues in the background; a
   late successful provider response is displayed automatically.
 - Phase-diagram PNG rendering uses SwiftUI `ImageRenderer` on the main actor.
