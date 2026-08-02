@@ -488,3 +488,217 @@ private struct CSVCalculationExportRenderer: CalculationExportRendering {
         return formatter.string(from: value)
     }
 }
+
+struct ComparisonExportSnapshot: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 1
+
+    let schemaVersion: Int
+    let exportedAt: Date
+    let reference: SavedCaseExportSnapshot
+    let compared: SavedCaseExportSnapshot
+
+    init(
+        schemaVersion: Int = Self.currentSchemaVersion,
+        exportedAt: Date = Date(),
+        reference: SavedCaseExportSnapshot,
+        compared: SavedCaseExportSnapshot
+    ) {
+        self.schemaVersion = schemaVersion
+        self.exportedAt = exportedAt
+        self.reference = reference
+        self.compared = compared
+    }
+}
+
+struct SweepReportSnapshot: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 1
+
+    let schemaVersion: Int
+    let exportedAt: Date
+    let sourceCalculation: CalculationRecord
+    let sweep: PropertySweepResult
+
+    init(
+        schemaVersion: Int = Self.currentSchemaVersion,
+        exportedAt: Date = Date(),
+        sourceCalculation: CalculationRecord,
+        sweep: PropertySweepResult
+    ) {
+        self.schemaVersion = schemaVersion
+        self.exportedAt = exportedAt
+        self.sourceCalculation = sourceCalculation
+        self.sweep = sweep
+    }
+}
+
+enum ReportingArtifactKind: String, Identifiable, Sendable {
+    case comparisonCSV
+    case comparisonPDF
+    case sweepPDF
+
+    var id: String { rawValue }
+}
+
+struct ReportingExportArtifact: Identifiable, Sendable {
+    let id: ReportingArtifactKind
+    let fileURL: URL
+}
+
+struct ComparisonReportExporter: Sendable {
+    func csvData(for snapshot: ComparisonExportSnapshot) throws -> Data {
+        try ReportingExportValidator.validate(snapshot.reference.calculation)
+        try ReportingExportValidator.validate(snapshot.compared.calculation)
+        let comparison = CalculationComparison(
+            reference: snapshot.reference.calculation,
+            compared: snapshot.compared.calculation
+        )
+        var rows: [[String]] = [
+            ["PhaseXpert saved-case comparison"],
+            ["schema_version", String(snapshot.schemaVersion)],
+            ["exported_at", ReportingExportValidator.date(snapshot.exportedAt)],
+            ["difference_semantics", "compared minus reference"],
+            ["accuracy_statement", "Numerical differences do not establish which model or result is more accurate."],
+            [],
+            ["field", "reference", "compared", "difference", "unit", "reference_status", "compared_status"]
+        ]
+        rows.append(["saved_case_id", snapshot.reference.savedCaseID.uuidString, snapshot.compared.savedCaseID.uuidString, "", "", "", ""])
+        rows.append(["saved_case_name", snapshot.reference.name, snapshot.compared.name, "", "", "", ""])
+        rows.append(["calculation_id", comparison.reference.response.calculationID.uuidString, comparison.compared.response.calculationID.uuidString, "", "", "", ""])
+        rows.append(["request_id", comparison.reference.request.requestID.uuidString, comparison.compared.request.requestID.uuidString, "", "", "", ""])
+        rows.append(["pressure", ReportingExportValidator.number(comparison.reference.input.pressurePa / 100_000), ReportingExportValidator.number(comparison.compared.input.pressurePa / 100_000), ReportingExportValidator.number(comparison.pressureDifferenceBar), "bar(a)", "calculated", "calculated"])
+        rows.append(["temperature", ReportingExportValidator.number(comparison.reference.input.temperatureK - 273.15), ReportingExportValidator.number(comparison.compared.input.temperatureK - 273.15), ReportingExportValidator.number(comparison.temperatureDifferenceCelsius), "°C", "calculated", "calculated"])
+        rows.append(["model_id", comparison.reference.response.model.id, comparison.compared.response.model.id, "", "", "", ""])
+        rows.append(["model_version", comparison.reference.response.model.modelVersion, comparison.compared.response.model.modelVersion, "", "", "", ""])
+        rows.append(["provider_version", comparison.reference.response.model.providerVersion, comparison.compared.response.model.providerVersion, "", "", "", ""])
+        rows.append(["phase", comparison.reference.response.phase.rawValue, comparison.compared.response.phase.rawValue, "", "", "", ""])
+        rows.append(["composition", ReportingExportValidator.composition(comparison.reference), ReportingExportValidator.composition(comparison.compared), "", "mol%", "", ""])
+        rows.append(["warnings", comparison.reference.response.warnings.joined(separator: " | "), comparison.compared.response.warnings.joined(separator: " | "), "", "", "", ""])
+        for property in comparison.properties {
+            let referenceValue = property.referenceDisplayValue.map(ReportingExportValidator.number) ?? ""
+            let comparedValue = property.comparedDisplayValue.map(ReportingExportValidator.number) ?? ""
+            rows.append([
+                "property:\(property.id.rawValue)", referenceValue, comparedValue,
+                property.difference.map(ReportingExportValidator.number) ?? "",
+                property.displayUnit ?? property.reference?.unit ?? property.compared?.unit ?? "",
+                property.reference?.status.rawValue ?? "missing",
+                property.compared?.status.rawValue ?? "missing"
+            ])
+        }
+        rows.append(["reference_notes", snapshot.reference.notes, "", "", "", "", ""])
+        rows.append(["compared_notes", "", snapshot.compared.notes, "", "", "", ""])
+        return try ReportingExportValidator.csvData(rows)
+    }
+
+    func pdfData(for snapshot: ComparisonExportSnapshot) throws -> Data {
+        try ReportingExportValidator.validate(snapshot.reference.calculation)
+        try ReportingExportValidator.validate(snapshot.compared.calculation)
+        return try PDFComparisonExportRenderer().render(snapshot)
+    }
+
+    func createArtifacts(
+        for snapshot: ComparisonExportSnapshot,
+        baseDirectory: URL = FileManager.default.temporaryDirectory
+    ) throws -> [ReportingExportArtifact] {
+        let directory = baseDirectory.appendingPathComponent("PhaseXpertComparison-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let stem = "PhaseXpert-Comparison-\(snapshot.reference.calculation.response.calculationID.uuidString.prefix(8))-\(snapshot.compared.calculation.response.calculationID.uuidString.prefix(8))"
+        let csvURL = directory.appendingPathComponent(stem + ".csv")
+        let pdfURL = directory.appendingPathComponent(stem + ".pdf")
+        do {
+            try csvData(for: snapshot).write(to: csvURL, options: .atomic)
+            try pdfData(for: snapshot).write(to: pdfURL, options: .atomic)
+            return [
+                ReportingExportArtifact(id: .comparisonCSV, fileURL: csvURL),
+                ReportingExportArtifact(id: .comparisonPDF, fileURL: pdfURL)
+            ]
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
+    }
+}
+
+struct SweepReportExporter: Sendable {
+    func pdfData(for snapshot: SweepReportSnapshot) throws -> Data {
+        try ReportingExportValidator.validate(snapshot.sourceCalculation)
+        try ReportingExportValidator.validate(snapshot.sweep)
+        return try PDFPropertySweepExportRenderer().render(snapshot)
+    }
+
+    func writeTemporaryPDF(for snapshot: SweepReportSnapshot) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "PhaseXpert-Sweep-\(snapshot.sweep.id.uuidString).pdf"
+        )
+        try pdfData(for: snapshot).write(to: url, options: .atomic)
+        return url
+    }
+}
+
+enum ReportingExportValidator {
+    static func validate(_ record: CalculationRecord) throws {
+        let values = [
+            record.input.pressureValue, record.input.pressurePa,
+            record.input.temperatureValue, record.input.temperatureK,
+            record.request.pressurePa, record.request.temperatureK,
+            record.response.solver.durationMilliseconds,
+            record.response.model.domain.minimumPressurePa,
+            record.response.model.domain.maximumPressurePa,
+            record.response.model.domain.minimumTemperatureK,
+            record.response.model.domain.maximumTemperatureK
+        ]
+        guard values.allSatisfy(\.isFinite) else {
+            throw CalculationExportError.nonFiniteValue("comparison or sweep source calculation")
+        }
+        for property in record.response.properties where property.value?.isFinite == false {
+            throw CalculationExportError.nonFiniteValue("property \(property.property.rawValue)")
+        }
+        guard record.request.composition.allSatisfy({ $0.moleFraction.isFinite }) else {
+            throw CalculationExportError.nonFiniteValue("calculation composition")
+        }
+    }
+
+    static func validate(_ result: PropertySweepResult) throws {
+        guard result.durationMilliseconds.isFinite,
+              result.request.startValueSI.isFinite,
+              result.request.endValueSI.isFinite
+        else { throw CalculationExportError.nonFiniteValue("sweep metadata") }
+        for sample in result.samples {
+            guard sample.pressurePa.isFinite, sample.temperatureK.isFinite else {
+                throw CalculationExportError.nonFiniteValue("sweep operating point \(sample.index)")
+            }
+            if let value = sample.value(for: result.request.property)?.value,
+               !value.isFinite {
+                throw CalculationExportError.nonFiniteValue("sweep property at point \(sample.index)")
+            }
+        }
+    }
+
+    static func csvData(_ rows: [[String]]) throws -> Data {
+        let quote = "\u{0022}"
+        let text = rows.map { row in
+            row.map { value in quote + value.replacingOccurrences(of: quote, with: quote + quote) + quote }
+                .joined(separator: ",")
+        }.joined(separator: "\r\n") + "\r\n"
+        guard let encoded = text.data(using: .utf8) else {
+            throw CalculationExportError.textEncodingFailed
+        }
+        var data = Data([0xEF, 0xBB, 0xBF])
+        data.append(encoded)
+        return data
+    }
+
+    static func number(_ value: Double) -> String { String(value) }
+
+    static func date(_ value: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter.string(from: value)
+    }
+
+    static func composition(_ record: CalculationRecord) -> String {
+        record.request.composition.map {
+            "\($0.component.symbol) \(number($0.moleFraction * 100))"
+        }.joined(separator: "; ")
+    }
+}

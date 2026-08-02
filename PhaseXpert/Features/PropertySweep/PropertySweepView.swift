@@ -124,6 +124,12 @@ struct PropertySweepView: View {
                         }
                         .accessibilityIdentifier("export-property-sweep-csv")
                     }
+                    if let pdfURL = viewModel.pdfURL {
+                        ShareLink(item: pdfURL) {
+                            Label("Export sweep PDF report", systemImage: "doc.richtext")
+                        }
+                        .accessibilityIdentifier("export-property-sweep-pdf")
+                    }
 
                     DisclosureGroup("Failures and unavailable points") {
                         let failures = viewModel.failureRows
@@ -274,6 +280,7 @@ final class PropertySweepViewModel {
     var isRunning = false
     var completedPoints = 0
     var exportURL: URL?
+    var pdfURL: URL?
 
     private let provider: (any ThermodynamicModelProvider)?
     private var task: Task<Void, Never>?
@@ -345,6 +352,7 @@ final class PropertySweepViewModel {
         }
         result = nil
         exportURL = nil
+        pdfURL = nil
         errorMessage = nil
     }
 
@@ -352,6 +360,7 @@ final class PropertySweepViewModel {
         cancel()
         result = nil
         exportURL = nil
+        pdfURL = nil
         errorMessage = nil
         completedPoints = 0
         isRunning = true
@@ -419,6 +428,12 @@ final class PropertySweepViewModel {
             exportURL = try PropertySweepCSVExporter().writeTemporaryCSV(
                 result: completed,
                 record: record
+            )
+            pdfURL = try SweepReportExporter().writeTemporaryPDF(
+                for: SweepReportSnapshot(
+                    sourceCalculation: record,
+                    sweep: completed
+                )
             )
             isRunning = false
             task = nil

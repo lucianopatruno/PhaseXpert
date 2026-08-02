@@ -86,3 +86,11 @@
   sweep action, and made each scientific reference open its own destination.
 - Declared that PhaseXpert uses no non-exempt encryption in generated app
   metadata for App Store Connect export-compliance processing.
+- Added searchable, paginated pairwise comparison reports in PDF and CSV with
+  explicit compared-minus-reference semantics, immutable calculation IDs,
+  units, statuses, warnings and complete model/provider provenance.
+- Added professional searchable property-sweep PDF reports with IFE styling,
+  vector axes, units and legend; only adjacent successful provider points are
+  connected, while failed and unavailable points remain gaps.
+- Added reporting snapshot serialization and focused pagination, unavailable-
+  value, non-finite-value, content and traceability tests.

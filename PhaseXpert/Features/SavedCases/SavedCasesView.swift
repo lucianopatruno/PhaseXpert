@@ -409,6 +409,8 @@ private struct SavedCaseComparisonView: View {
     let savedCases: [SavedCalculation]
     @State private var referenceID: UUID
     @State private var comparedID: UUID
+    @State private var exportArtifacts: [ReportingExportArtifact] = []
+    @State private var exportError: String?
 
     init(savedCases: [SavedCalculation]) {
         self.savedCases = savedCases
@@ -460,6 +462,22 @@ private struct SavedCaseComparisonView: View {
 
             if let comparison {
                 comparisonSections(comparison)
+                Section("Export comparison") {
+                    Button("Prepare searchable PDF and CSV", systemImage: "doc.badge.arrow.up") {
+                        prepareComparisonExport(comparison)
+                    }
+                    .accessibilityIdentifier("export-saved-case-comparison")
+                    ForEach(exportArtifacts) { artifact in
+                        ShareLink(item: artifact.fileURL) {
+                            Label(
+                                artifact.id == .comparisonPDF ? "Share PDF report" : "Share CSV data",
+                                systemImage: artifact.id == .comparisonPDF ? "doc.richtext" : "tablecells"
+                            )
+                        }
+                    }
+                } footer: {
+                    Text("Both files preserve compared-minus-reference semantics, immutable calculation identifiers, units, statuses, warnings and provider provenance. They do not assess model accuracy.")
+                }
             } else {
                 Section {
                     ContentUnavailableView(
@@ -473,16 +491,57 @@ private struct SavedCaseComparisonView: View {
         .navigationTitle("Compare Cases")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: referenceID) { _, newValue in
+            exportArtifacts = []
             if newValue == comparedID,
                let replacement = savedCases.first(where: { $0.id != newValue }) {
                 comparedID = replacement.id
             }
         }
         .onChange(of: comparedID) { _, newValue in
+            exportArtifacts = []
             if newValue == referenceID,
                let replacement = savedCases.first(where: { $0.id != newValue }) {
                 referenceID = replacement.id
             }
+        }
+        .alert(
+            "Unable to export comparison",
+            isPresented: Binding(
+                get: { exportError != nil },
+                set: { if !$0 { exportError = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportError ?? "")
+        }
+    }
+
+    private func prepareComparisonExport(_ comparison: CalculationComparison) {
+        guard let referenceCase, let comparedCase else { return }
+        let reference = SavedCaseExportSnapshot(
+            savedCaseID: referenceCase.id,
+            name: referenceCase.name,
+            notes: referenceCase.notes,
+            savedAt: referenceCase.createdAt,
+            lastUpdatedAt: referenceCase.updatedAt,
+            calculation: comparison.reference
+        )
+        let compared = SavedCaseExportSnapshot(
+            savedCaseID: comparedCase.id,
+            name: comparedCase.name,
+            notes: comparedCase.notes,
+            savedAt: comparedCase.createdAt,
+            lastUpdatedAt: comparedCase.updatedAt,
+            calculation: comparison.compared
+        )
+        do {
+            exportArtifacts = try ComparisonReportExporter().createArtifacts(
+                for: ComparisonExportSnapshot(reference: reference, compared: compared)
+            )
+        } catch {
+            exportArtifacts = []
+            exportError = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
         }
     }
 

@@ -761,3 +761,299 @@ private struct PDFReportContent {
         }
     }
 }
+
+struct PDFComparisonExportRenderer {
+    func render(_ snapshot: ComparisonExportSnapshot) throws -> Data {
+        let comparison = CalculationComparison(
+            reference: snapshot.reference.calculation,
+            compared: snapshot.compared.calculation
+        )
+        let text = ReportingPDFText()
+        text.title("Saved-case comparison report")
+        text.paragraph("Compared case minus reference case. Numerical differences do not establish which model or result is more accurate.", color: PDFReportPalette.warning)
+        text.section("Cases and immutable identifiers")
+        text.comparisonRow("Saved case", snapshot.reference.name, snapshot.compared.name)
+        text.comparisonRow("Saved case ID", snapshot.reference.savedCaseID.uuidString, snapshot.compared.savedCaseID.uuidString)
+        text.comparisonRow("Calculation ID", comparison.reference.response.calculationID.uuidString, comparison.compared.response.calculationID.uuidString)
+        text.comparisonRow("Request ID", comparison.reference.request.requestID.uuidString, comparison.compared.request.requestID.uuidString)
+        text.comparisonRow("Calculated at", ReportingExportValidator.date(comparison.reference.response.calculatedAt), ReportingExportValidator.date(comparison.compared.response.calculatedAt))
+        text.section("Operating point")
+        text.differenceRow("Pressure", reference: comparison.reference.input.pressurePa / 100_000, compared: comparison.compared.input.pressurePa / 100_000, difference: comparison.pressureDifferenceBar, unit: "bar(a)")
+        text.differenceRow("Temperature", reference: comparison.reference.input.temperatureK - 273.15, compared: comparison.compared.input.temperatureK - 273.15, difference: comparison.temperatureDifferenceCelsius, unit: "°C")
+        text.section("Composition")
+        text.comparisonRow("Mixture", ReportingExportValidator.composition(comparison.reference) + " mol%", ReportingExportValidator.composition(comparison.compared) + " mol%")
+        text.row("Composition match", comparison.usesSameComposition ? "Same" : "Different")
+        text.section("Model, provider and phase")
+        text.comparisonRow("Model", comparison.reference.response.model.name, comparison.compared.response.model.name)
+        text.comparisonRow("Model ID", comparison.reference.response.model.id, comparison.compared.response.model.id)
+        text.comparisonRow("Model version", comparison.reference.response.model.modelVersion, comparison.compared.response.model.modelVersion)
+        text.comparisonRow("Provider version", comparison.reference.response.model.providerVersion, comparison.compared.response.model.providerVersion)
+        text.comparisonRow("Availability", comparison.reference.response.model.availability.rawValue, comparison.compared.response.model.availability.rawValue)
+        text.comparisonRow("Phase", comparison.reference.response.phase.rawValue, comparison.compared.response.phase.rawValue)
+        text.section("Properties")
+        if comparison.properties.isEmpty {
+            text.paragraph("No property records are available in either saved calculation.")
+        }
+        for property in comparison.properties {
+            let unit = property.displayUnit ?? property.reference?.unit ?? property.compared?.unit ?? ""
+            let reference = property.referenceDisplayValue.map(ReportingExportValidator.number) ?? "— [\(property.reference?.status.rawValue ?? "missing")]"
+            let compared = property.comparedDisplayValue.map(ReportingExportValidator.number) ?? "— [\(property.compared?.status.rawValue ?? "missing")]"
+            let difference = property.difference.map { ReportingExportValidator.number($0) + (unit.isEmpty ? "" : " \(unit)") } ?? "Not comparable"
+            text.comparisonRow(property.id.displayName, reference + (property.referenceDisplayValue == nil || unit.isEmpty ? "" : " \(unit)"), compared + (property.comparedDisplayValue == nil || unit.isEmpty ? "" : " \(unit)"))
+            text.row("Compared − reference", difference)
+        }
+        text.section("Recorded warnings")
+        text.comparisonRow("Warnings", comparison.reference.response.warnings.isEmpty ? "None recorded" : comparison.reference.response.warnings.joined(separator: " | "), comparison.compared.response.warnings.isEmpty ? "None recorded" : comparison.compared.response.warnings.joined(separator: " | "))
+        text.section("Saved notes")
+        text.comparisonRow("Notes", snapshot.reference.notes.isEmpty ? "—" : snapshot.reference.notes, snapshot.compared.notes.isEmpty ? "—" : snapshot.compared.notes)
+        text.section("Report traceability")
+        text.row("Comparison schema version", String(snapshot.schemaVersion))
+        text.row("Exported at", ReportingExportValidator.date(snapshot.exportedAt))
+        text.paragraph("Both sides retain their recorded units, warnings, model/provider versions, solver metadata, provenance and identifiers. This report does not modify either saved case.")
+        return try SearchablePDFReport.render(
+            title: "PhaseXpert saved-case comparison",
+            subject: "Compared-minus-reference saved calculation report",
+            body: text.document
+        )
+    }
+}
+
+struct PDFPropertySweepExportRenderer {
+    func render(_ snapshot: SweepReportSnapshot) throws -> Data {
+        let result = snapshot.sweep
+        let record = snapshot.sourceCalculation
+        let text = ReportingPDFText()
+        text.title("Property-sweep report")
+        text.paragraph("Every plotted point is a successful provider calculation. Failed and unavailable points are retained as explicit gaps; no scientific value is interpolated.", color: PDFReportPalette.warning)
+        text.section("Sweep definition")
+        text.row("Sweep ID", result.id.uuidString)
+        text.row("Source calculation ID", record.response.calculationID.uuidString)
+        text.row("Source request ID", record.request.requestID.uuidString)
+        text.row("Axis", result.request.axis.rawValue)
+        text.row("Property", result.request.property.displayName)
+        text.row("Start — SI", ReportingExportValidator.number(result.request.startValueSI))
+        text.row("End — SI", ReportingExportValidator.number(result.request.endValueSI))
+        text.row("Requested points", String(result.request.pointCount))
+        text.row("Successful points", String(result.successfulSampleCount))
+        text.row("Failed or unavailable points", String(result.failedSampleCount))
+        text.row("Generated at", ReportingExportValidator.date(result.generatedAt))
+        text.row("Duration", "\(ReportingExportValidator.number(result.durationMilliseconds)) ms")
+        text.section("Fixed state and composition")
+        text.row("Source pressure", "\(ReportingExportValidator.number(record.input.pressurePa / 100_000)) bar(a)")
+        text.row("Source temperature", "\(ReportingExportValidator.number(record.input.temperatureK - 273.15)) °C")
+        text.row("Composition", ReportingExportValidator.composition(record) + " mol%")
+        text.section("Model and provider")
+        text.row("Model", record.response.model.name)
+        text.row("Model ID", record.response.model.id)
+        text.row("Model version", record.response.model.modelVersion)
+        text.row("Provider version", record.response.model.providerVersion)
+        text.row("Availability", record.response.model.availability.rawValue)
+        text.row("Scientific basis", record.response.model.scientificBasis)
+        text.section("Samples")
+        for sample in result.samples {
+            let property = sample.value(for: result.request.property)
+            let display = property.flatMap(EngineeringPropertyFormatter.measurement)
+            let status = property?.status.rawValue ?? (sample.errorMessage == nil ? "unavailable" : "failed")
+            let value = display.map { "\(ReportingExportValidator.number($0.value)) \($0.unit)" } ?? "—"
+            text.row(
+                "Point \(sample.index)",
+                "\(ReportingExportValidator.number(sample.pressurePa / 100_000)) bar(a); \(ReportingExportValidator.number(sample.temperatureK - 273.15)) °C; \(status); \(value)"
+            )
+            if let calculationID = sample.response?.calculationID {
+                text.row("Point \(sample.index) calculation ID", calculationID.uuidString)
+            }
+            let detail = sample.errorMessage ?? property?.message ?? sample.response?.warnings.joined(separator: " | ")
+            if let detail, !detail.isEmpty { text.paragraph("Point \(sample.index) detail: \(detail)", color: PDFReportPalette.secondaryText) }
+        }
+        text.section("Source warnings and report traceability")
+        if record.response.warnings.isEmpty {
+            text.paragraph("No warning was recorded with the source calculation.")
+        } else {
+            record.response.warnings.forEach { text.bullet($0, color: PDFReportPalette.warning) }
+        }
+        text.row("Sweep report schema version", String(snapshot.schemaVersion))
+        text.row("Exported at", ReportingExportValidator.date(snapshot.exportedAt))
+        return try SearchablePDFReport.render(
+            title: "PhaseXpert property-sweep report",
+            subject: "Provider-calculated property sweep and provenance",
+            body: text.document
+        ) { context, pageNumber in
+            try drawChart(snapshot, in: context, pageNumber: pageNumber)
+        }
+    }
+
+    private func drawChart(
+        _ snapshot: SweepReportSnapshot,
+        in context: CGContext,
+        pageNumber: Int
+    ) throws {
+        let result = snapshot.sweep
+        let samples: [(index: Int, x: Double, y: Double, phase: PhaseRegion)] = result.samples.compactMap { sample in
+            guard let property = sample.value(for: result.request.property),
+                  property.hasFiniteCalculatedValue,
+                  let measurement = EngineeringPropertyFormatter.measurement(for: property),
+                  measurement.value.isFinite
+            else { return nil }
+            return (
+                sample.index,
+                result.request.axis == .pressure ? sample.pressurePa / 100_000 : sample.temperatureK - 273.15,
+                measurement.value,
+                sample.response?.phase ?? .unknown
+            )
+        }
+        PDFReportingCanvas.beginPage(context, pageNumber: pageNumber, title: "Property-sweep chart")
+        guard let xMin = samples.map(\.x).min(), let xMax = samples.map(\.x).max(),
+              let yMin = samples.map(\.y).min(), let yMax = samples.map(\.y).max()
+        else {
+            PDFReportingCanvas.line("Property-sweep chart unavailable", font: PDFReportFonts.section, color: PDFReportPalette.primary, at: CGPoint(x: 82, y: 716), in: context)
+            PDFReportingCanvas.line("No finite calculated provider points were returned. Every requested point remains recorded as a failed or unavailable gap.", font: PDFReportFonts.body, color: PDFReportPalette.warning, at: CGPoint(x: 82, y: 688), in: context)
+            PDFReportingCanvas.line("Sweep ID: \(result.id.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 660), in: context)
+            PDFReportingCanvas.endPage(context, pageNumber: pageNumber)
+            return
+        }
+        let plot = CGRect(x: 82, y: 214, width: 450, height: 470)
+        context.setStrokeColor(PDFReportPalette.bodyText)
+        context.setLineWidth(1)
+        context.stroke(plot)
+        let xSpan = max(xMax - xMin, max(abs(xMin), 1) * 1e-9)
+        let ySpan = max(yMax - yMin, max(abs(yMin), 1) * 1e-9)
+        func point(_ sample: (index: Int, x: Double, y: Double, phase: PhaseRegion)) -> CGPoint {
+            CGPoint(x: plot.minX + CGFloat((sample.x - xMin) / xSpan) * plot.width,
+                    y: plot.minY + CGFloat((sample.y - yMin) / ySpan) * plot.height)
+        }
+        var previous: (index: Int, x: Double, y: Double, phase: PhaseRegion)?
+        context.setStrokeColor(PDFReportPalette.primary)
+        context.setLineWidth(1.6)
+        for sample in samples {
+            let p = point(sample)
+            if let previous, sample.index == previous.index + 1 {
+                context.move(to: point(previous))
+                context.addLine(to: p)
+                context.strokePath()
+            }
+            context.setFillColor(sample.phase == .twoPhase ? PDFReportPalette.warning : PDFReportPalette.primary)
+            context.fillEllipse(in: CGRect(x: p.x - 2.5, y: p.y - 2.5, width: 5, height: 5))
+            previous = sample
+        }
+        let xUnit = result.request.axis == .pressure ? "bar(a)" : "°C"
+        let yUnit = result.samples.compactMap { $0.value(for: result.request.property) }.compactMap(EngineeringPropertyFormatter.measurement).first?.unit ?? ""
+        PDFReportingCanvas.line("\(result.request.property.displayName) vs \(result.request.axis.rawValue)", font: PDFReportFonts.section, color: PDFReportPalette.primary, at: CGPoint(x: 82, y: 716), in: context)
+        PDFReportingCanvas.line("Y: \(result.request.property.displayName) (\(yUnit))", font: PDFReportFonts.body, color: PDFReportPalette.bodyText, at: CGPoint(x: 82, y: 192), in: context)
+        PDFReportingCanvas.line("X: \(result.request.axis.rawValue.capitalized) (\(xUnit))", font: PDFReportFonts.body, color: PDFReportPalette.bodyText, at: CGPoint(x: 325, y: 192), in: context)
+        PDFReportingCanvas.line("\(ReportingExportValidator.number(xMin))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.minX, y: 197), in: context)
+        PDFReportingCanvas.line("\(ReportingExportValidator.number(xMax))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.maxX - 40, y: 197), in: context)
+        PDFReportingCanvas.line("\(ReportingExportValidator.number(yMin))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 46, y: plot.minY), in: context)
+        PDFReportingCanvas.line("\(ReportingExportValidator.number(yMax))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 46, y: plot.maxY - 4), in: context)
+        PDFReportingCanvas.line("● successful provider point   ● two-phase provider point   gaps = failed/unavailable", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 168), in: context)
+        PDFReportingCanvas.line("Straight lines connect adjacent successful calculations for visualization only; no scientific value is interpolated.", font: PDFReportFonts.small, color: PDFReportPalette.warning, at: CGPoint(x: 82, y: 148), in: context)
+        PDFReportingCanvas.line("Sweep ID: \(result.id.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 124), in: context)
+        PDFReportingCanvas.line("Source calculation ID: \(snapshot.sourceCalculation.response.calculationID.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 108), in: context)
+        PDFReportingCanvas.endPage(context, pageNumber: pageNumber)
+    }
+}
+
+private enum SearchablePDFReport {
+    static func render(
+        title: String,
+        subject: String,
+        body: NSAttributedString,
+        extraPage: ((CGContext, Int) throws -> Void)? = nil
+    ) throws -> Data {
+        let output = NSMutableData()
+        guard let consumer = CGDataConsumer(data: output as CFMutableData) else {
+            throw CalculationExportError.pdfRenderingFailed("PhaseXpert could not create a PDF data consumer.")
+        }
+        var mediaBox = PDFReportLayout.pageRect
+        let metadata = [
+            kCGPDFContextTitle as String: title,
+            kCGPDFContextAuthor as String: "IFE Flow Technology Department",
+            kCGPDFContextCreator as String: "PhaseXpert",
+            kCGPDFContextSubject as String: subject
+        ] as CFDictionary
+        guard let context = CGContext(consumer: consumer, mediaBox: &mediaBox, metadata) else {
+            throw CalculationExportError.pdfRenderingFailed("PhaseXpert could not create the PDF graphics context.")
+        }
+        let framesetter = CTFramesetterCreateWithAttributedString(body)
+        var location = 0
+        var page = 0
+        repeat {
+            page += 1
+            PDFReportingCanvas.beginPage(context, pageNumber: page, title: title)
+            let frame = CTFramesetterCreateFrame(framesetter, CFRange(location: location, length: 0), CGPath(rect: PDFReportLayout.contentRect, transform: nil), nil)
+            CTFrameDraw(frame, context)
+            let visible = CTFrameGetVisibleStringRange(frame)
+            guard visible.length > 0 else {
+                context.endPDFPage(); context.closePDF()
+                throw CalculationExportError.pdfRenderingFailed("PhaseXpert could not paginate the report content.")
+            }
+            location += visible.length
+            PDFReportingCanvas.endPage(context, pageNumber: page)
+        } while location < body.length
+        if let extraPage {
+            page += 1
+            try extraPage(context, page)
+        }
+        context.closePDF()
+        return output as Data
+    }
+}
+
+private enum PDFReportingCanvas {
+    static func beginPage(_ context: CGContext, pageNumber: Int, title: String) {
+        context.beginPDFPage(nil)
+        context.setFillColor(CGColor(gray: 1, alpha: 1))
+        context.fill(PDFReportLayout.pageRect)
+        context.setFillColor(PDFReportPalette.primary)
+        context.fill(CGRect(x: 0, y: PDFReportLayout.pageRect.maxY - 18, width: PDFReportLayout.pageRect.width, height: 18))
+        line(pageNumber == 1 ? "PhaseXpert" : title, font: PDFReportFonts.header, color: PDFReportPalette.primary, at: CGPoint(x: PDFReportLayout.margin, y: 800), in: context)
+        line("Developed by the IFE Flow Technology Department", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: PDFReportLayout.margin, y: 784), in: context)
+        if let logo = UIImage(named: "IFELogoEnglish")?.cgImage {
+            let bounds = PDFReportLayout.logoBounds
+            let aspect = CGFloat(logo.width) / CGFloat(logo.height)
+            let width = min(bounds.width, bounds.height * aspect)
+            context.draw(logo, in: CGRect(x: bounds.maxX - width, y: bounds.midY - width / aspect / 2, width: width, height: width / aspect))
+        }
+        context.setStrokeColor(PDFReportPalette.rule)
+        context.move(to: CGPoint(x: PDFReportLayout.margin, y: 776))
+        context.addLine(to: CGPoint(x: PDFReportLayout.pageRect.maxX - PDFReportLayout.margin, y: 776))
+        context.strokePath()
+    }
+
+    static func endPage(_ context: CGContext, pageNumber: Int) {
+        context.setStrokeColor(PDFReportPalette.rule)
+        context.move(to: CGPoint(x: PDFReportLayout.margin, y: 48))
+        context.addLine(to: CGPoint(x: PDFReportLayout.pageRect.maxX - PDFReportLayout.margin, y: 48))
+        context.strokePath()
+        line("Generated locally by PhaseXpert • Page \(pageNumber)", font: PDFReportFonts.footer, color: PDFReportPalette.secondaryText, at: CGPoint(x: PDFReportLayout.margin, y: 31), in: context)
+        context.endPDFPage()
+    }
+
+    static func line(_ text: String, font: CTFont, color: CGColor, at point: CGPoint, in context: CGContext) {
+        let value = NSAttributedString(string: text, attributes: PDFReportText.attributes(font: font, color: color))
+        context.textPosition = point
+        CTLineDraw(CTLineCreateWithAttributedString(value), context)
+    }
+}
+
+private final class ReportingPDFText {
+    let document = NSMutableAttributedString(string: "")
+    func title(_ value: String) { append(value + "\n\n", font: PDFReportFonts.title, color: PDFReportPalette.primary) }
+    func section(_ value: String) { append("\n" + value + "\n", font: PDFReportFonts.section, color: PDFReportPalette.primary) }
+    func row(_ label: String, _ value: String) {
+        append(label + ": ", font: PDFReportFonts.label, color: PDFReportPalette.bodyText)
+        append(value + "\n", font: PDFReportFonts.body, color: PDFReportPalette.bodyText)
+    }
+    func comparisonRow(_ label: String, _ reference: String, _ compared: String) {
+        append(label + "\n", font: PDFReportFonts.label, color: PDFReportPalette.bodyText)
+        append("Reference: " + reference + "\nCompared: " + compared + "\n", font: PDFReportFonts.body, color: PDFReportPalette.bodyText)
+    }
+    func differenceRow(_ label: String, reference: Double, compared: Double, difference: Double, unit: String) {
+        comparisonRow(label, ReportingExportValidator.number(reference) + " " + unit, ReportingExportValidator.number(compared) + " " + unit)
+        row("Compared − reference", ReportingExportValidator.number(difference) + " " + unit)
+    }
+    func paragraph(_ value: String, color: CGColor = PDFReportPalette.bodyText) { append(value + "\n", font: PDFReportFonts.body, color: color) }
+    func bullet(_ value: String, color: CGColor = PDFReportPalette.bodyText) { append("• " + value + "\n", font: PDFReportFonts.body, color: color) }
+    private func append(_ value: String, font: CTFont, color: CGColor) {
+        document.append(NSAttributedString(string: value, attributes: PDFReportText.attributes(font: font, color: color)))
+    }
+}

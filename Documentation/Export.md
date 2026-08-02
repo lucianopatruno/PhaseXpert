@@ -2,7 +2,8 @@
 
 ## Implemented formats
 
-Saved cases can be exported from the case-actions menu as JSON or CSV. Files
+Saved cases can be exported from the case-actions menu as JSON, CSV or a
+searchable PDF report. Files
 are generated locally in the operating-system temporary directory and are
 passed to the standard iOS share sheet. PhaseXpert does not upload or transmit
 an export automatically.
@@ -57,11 +58,11 @@ path separators while retaining a traceable link to the result.
 CSV renderers are deterministic for a supplied export timestamp, and
 `CalculationExportFileStore` is responsible only for writing shareable files.
 
-A future professional PDF report should implement the same rendering
-boundary. It must include the concise result, full technical provenance,
-scientific warnings and model references. PDF is not implemented in this
-milestone; a decorative screenshot must not be substituted for a calculation
-report.
+The professional PDF renderer uses Core Graphics and Core Text rather than a
+screen capture, so report text remains searchable and long content paginates.
+It includes the approved IFE logo and report styling, immutable inputs,
+results, warnings, statuses, model/provider versions, identifiers, solver
+metadata, references and intended-use disclaimer.
 
 ## Tests
 
@@ -75,6 +76,40 @@ Tests verify:
 
 The Xcode UI and share sheet must also be tested on a simulator or physical
 iPhone before the milestone is accepted.
+
+## Pairwise comparison reports
+
+The saved-case comparison screen prepares a searchable PDF and long-form CSV
+from two complete immutable `SavedCaseExportSnapshot` values. Both formats
+state that every difference is **compared minus reference** and that numerical
+differences do not establish which model or result is more accurate. They
+retain both saved-case IDs, calculation and request IDs, units, property
+statuses, warnings, model/provider versions, composition and notes.
+
+A numerical property difference is emitted only when both records contain
+finite calculated values that can be represented in the same engineering
+display unit. Unavailable, failed, outside-range, extrapolated, missing or
+unit-incompatible values retain their statuses and have no invented numeric
+difference. Non-finite stored values stop the complete export.
+
+## Property-sweep PDF reports
+
+Completed provider-backed sweeps can be shared as the existing provenance-rich
+CSV and as a professional searchable PDF. The PDF contains the serialized
+sweep definition, source calculation, composition, model/provider versions,
+every sample status/error/warning and calculation ID, followed by a vector
+chart with named axes, engineering units and legend.
+
+Only finite values with recorded `calculated` status are plotted. Straight
+segments connect adjacent successful provider samples for visualization only.
+Failed and unavailable points break the path and remain explicit gaps; the
+renderer never fills a gap or interpolates a scientific value. If no point is
+successful, the report remains exportable and the chart page explicitly states
+that no finite provider points were available.
+
+Comparison and sweep report snapshots are versioned and Codable for stable
+serialization tests. They are export containers only; this milestone does not
+import or mutate persisted scientific records.
 
 ## Phase-diagram export
 
