@@ -83,17 +83,19 @@ private struct ModelDetailView: View {
             if !descriptor.references.isEmpty {
                 Section("References") {
                     ForEach(descriptor.references, id: \.title) { reference in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(reference.title)
-                                .font(.headline)
-                            Text("\(reference.authors) (\(reference.year))")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            if let value = reference.doiOrURL {
-                                Text(value)
-                                    .font(.caption)
-                                    .textSelection(.enabled)
+                        if
+                            let address = reference.doiOrURL,
+                            let url = URL(string: address)
+                        {
+                            Link(destination: url) {
+                                referenceLabel(reference, address: address)
                             }
+                            .accessibilityLabel(
+                                "\(reference.authors), \(reference.title), open reference"
+                            )
+                            .accessibilityHint("Opens this reference in the browser.")
+                        } else {
+                            referenceLabel(reference, address: nil)
                         }
                     }
                 }
@@ -101,5 +103,28 @@ private struct ModelDetailView: View {
         }
         .navigationTitle(descriptor.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    @ViewBuilder
+    private func referenceLabel(
+        _ reference: SourceReference,
+        address: String?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(reference.title)
+                .font(.headline)
+                .foregroundStyle(.primary)
+            Text("\(reference.authors) (\(reference.year))")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            if let address {
+                Label(address, systemImage: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(Color.ifePrimary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
 }
