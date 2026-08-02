@@ -51,6 +51,7 @@ final class PhaseXpertUITests: XCTestCase {
                 || app.staticTexts["No operating point"].exists
         )
     }
+
     func testThreePercentNitrogenDisplaysProviderPhaseDiagram() {
         let app = XCUIApplication()
         app.launch()
@@ -85,8 +86,16 @@ final class PhaseXpertUITests: XCTestCase {
 
         XCTAssertTrue(
             app.otherElements["phase-diagram-available"].waitForExistence(timeout: 10),
-            "The provider phase diagram did not become visible for 3 mol% N₂."
+            "The provider phase-diagram screen did not become available for 3 mol% N₂."
+        )
+
+        let phaseBoundaryChart = app.otherElements["phase-boundary-chart"]
+        for _ in 0..<8 where !phaseBoundaryChart.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(
+            phaseBoundaryChart.waitForExistence(timeout: 3),
+            "The actual provider phase-boundary chart was not rendered for 3 mol% N₂."
         )
     }
-
 }
