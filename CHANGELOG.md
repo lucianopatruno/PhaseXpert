@@ -137,3 +137,6 @@
   failed rebuilds so a temporary missing artifact cannot remain cached.
 - Added end-to-end provider/view-model coverage for 3 and 10 mol% N₂ plus a
   visible-app regression for the 3 mol% N₂ phase diagram.
+- Removed the physical-device-fragile Swift Charts scrollable-domain state
+  from phase-boundary rendering, display the complete finite provider domain
+  directly, and require the actual chart element in the visible-app regression.
