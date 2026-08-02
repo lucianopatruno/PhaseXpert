@@ -199,7 +199,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let fractions = composition.reduce(into: [ComponentID: Double]()) {
             $0[$1.component, default: 0] += $1.moleFraction
         }
-        let nativeResult = try await Task.detached(priority: .userInitiated) {
+        let nativeResult = try await Task.detached(priority: .utility) {
             var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
             var pointCount = 0
             var isComplete: Int32 = 0
@@ -247,7 +247,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         try Task.checkCancellation()
         return CoolPropMixtureEnvelopeResult(
             points: nativeResult.points,
-            solverMethod: "CoolProp AbstractState.build_phase_envelope, HEOS dry CO₂-rich mixture",
+            solverMethod: "CoolProp AbstractState.build_phase_envelope(level: none), HEOS dry CO₂-rich mixture, starting pressure 80000 Pa",
             isComplete: nativeResult.isComplete,
             isClosed: nativeResult.isClosed
         )
