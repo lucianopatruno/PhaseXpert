@@ -911,16 +911,56 @@ struct PDFPropertySweepExportRenderer {
             PDFReportingCanvas.endPage(context, pageNumber: pageNumber)
             return
         }
-        let plot = CGRect(x: 82, y: 214, width: 450, height: 470)
+        // Reserve a dedicated left gutter for y-axis values and separate bands
+        // below the plot for x-axis values and the axis title.
+        let plot = CGRect(x: 112, y: 250, width: 420, height: 420)
         context.setStrokeColor(PDFReportPalette.bodyText)
         context.setLineWidth(1)
-        context.stroke(plot)
         let xSpan = max(xMax - xMin, max(abs(xMin), 1) * 1e-9)
         let ySpan = max(yMax - yMin, max(abs(yMin), 1) * 1e-9)
         func point(_ sample: (index: Int, x: Double, y: Double, phase: PhaseRegion)) -> CGPoint {
             CGPoint(x: plot.minX + CGFloat((sample.x - xMin) / xSpan) * plot.width,
                     y: plot.minY + CGFloat((sample.y - yMin) / ySpan) * plot.height)
         }
+        let xUnit = result.request.axis == .pressure ? "bar(a)" : "°C"
+        let yUnit = result.samples.compactMap { $0.value(for: result.request.property) }.compactMap(EngineeringPropertyFormatter.measurement).first?.unit ?? ""
+        let tickCount = 5
+        for index in 0..<tickCount {
+            let fraction = Double(index) / Double(tickCount - 1)
+            let xValue = xMin + xSpan * fraction
+            let x = plot.minX + CGFloat(fraction) * plot.width
+            let yValue = yMin + ySpan * fraction
+            let y = plot.minY + CGFloat(fraction) * plot.height
+
+            context.setStrokeColor(PDFReportPalette.rule)
+            context.setLineWidth(0.45)
+            context.move(to: CGPoint(x: x, y: plot.minY))
+            context.addLine(to: CGPoint(x: x, y: plot.maxY))
+            context.move(to: CGPoint(x: plot.minX, y: y))
+            context.addLine(to: CGPoint(x: plot.maxX, y: y))
+            context.strokePath()
+
+            PDFReportingCanvas.centeredLine(
+                tickNumber(xValue),
+                font: PDFReportFonts.small,
+                color: PDFReportPalette.secondaryText,
+                centerX: x,
+                y: plot.minY - 18,
+                in: context
+            )
+            PDFReportingCanvas.rightAlignedLine(
+                tickNumber(yValue),
+                font: PDFReportFonts.small,
+                color: PDFReportPalette.secondaryText,
+                rightX: plot.minX - 8,
+                y: y - 3,
+                in: context
+            )
+        }
+        context.setStrokeColor(PDFReportPalette.bodyText)
+        context.setLineWidth(1)
+        context.stroke(plot)
+
         var previous: (index: Int, x: Double, y: Double, phase: PhaseRegion)?
         context.setStrokeColor(PDFReportPalette.primary)
         context.setLineWidth(1.6)
@@ -935,20 +975,25 @@ struct PDFPropertySweepExportRenderer {
             context.fillEllipse(in: CGRect(x: p.x - 2.5, y: p.y - 2.5, width: 5, height: 5))
             previous = sample
         }
-        let xUnit = result.request.axis == .pressure ? "bar(a)" : "°C"
-        let yUnit = result.samples.compactMap { $0.value(for: result.request.property) }.compactMap(EngineeringPropertyFormatter.measurement).first?.unit ?? ""
-        PDFReportingCanvas.line("\(result.request.property.displayName) vs \(result.request.axis.rawValue)", font: PDFReportFonts.section, color: PDFReportPalette.primary, at: CGPoint(x: 82, y: 716), in: context)
-        PDFReportingCanvas.line("Y: \(result.request.property.displayName) (\(yUnit))", font: PDFReportFonts.body, color: PDFReportPalette.bodyText, at: CGPoint(x: 82, y: 192), in: context)
-        PDFReportingCanvas.line("X: \(result.request.axis.rawValue.capitalized) (\(xUnit))", font: PDFReportFonts.body, color: PDFReportPalette.bodyText, at: CGPoint(x: 325, y: 192), in: context)
-        PDFReportingCanvas.line("\(ReportingExportValidator.number(xMin))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.minX, y: 197), in: context)
-        PDFReportingCanvas.line("\(ReportingExportValidator.number(xMax))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.maxX - 40, y: 197), in: context)
-        PDFReportingCanvas.line("\(ReportingExportValidator.number(yMin))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 46, y: plot.minY), in: context)
-        PDFReportingCanvas.line("\(ReportingExportValidator.number(yMax))", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 46, y: plot.maxY - 4), in: context)
-        PDFReportingCanvas.line("● successful provider point   ● two-phase provider point   gaps = failed/unavailable", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 168), in: context)
-        PDFReportingCanvas.line("Straight lines connect adjacent successful calculations for visualization only; no scientific value is interpolated.", font: PDFReportFonts.small, color: PDFReportPalette.warning, at: CGPoint(x: 82, y: 148), in: context)
-        PDFReportingCanvas.line("Sweep ID: \(result.id.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 124), in: context)
-        PDFReportingCanvas.line("Source calculation ID: \(snapshot.sourceCalculation.response.calculationID.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: 82, y: 108), in: context)
+
+        PDFReportingCanvas.line("\(result.request.property.displayName) vs \(result.request.axis.rawValue)", font: PDFReportFonts.section, color: PDFReportPalette.primary, at: CGPoint(x: plot.minX, y: 722), in: context)
+        PDFReportingCanvas.line("Y: \(result.request.property.displayName) (\(yUnit))", font: PDFReportFonts.body, color: PDFReportPalette.bodyText, at: CGPoint(x: plot.minX, y: 697), in: context)
+        PDFReportingCanvas.centeredLine("X: \(result.request.axis.rawValue.capitalized) (\(xUnit))", font: PDFReportFonts.body, color: PDFReportPalette.bodyText, centerX: plot.midX, y: 211, in: context)
+        PDFReportingCanvas.line("Legend: ● successful provider point", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.minX, y: 184), in: context)
+        PDFReportingCanvas.line("● two-phase provider point   gaps = failed/unavailable", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.minX, y: 168), in: context)
+        PDFReportingCanvas.line("Straight lines connect adjacent successful calculations for visualization only; no scientific value is interpolated.", font: PDFReportFonts.small, color: PDFReportPalette.warning, at: CGPoint(x: plot.minX, y: 146), in: context)
+        PDFReportingCanvas.line("Sweep ID: \(result.id.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.minX, y: 122), in: context)
+        PDFReportingCanvas.line("Source calculation ID: \(snapshot.sourceCalculation.response.calculationID.uuidString)", font: PDFReportFonts.small, color: PDFReportPalette.secondaryText, at: CGPoint(x: plot.minX, y: 106), in: context)
         PDFReportingCanvas.endPage(context, pageNumber: pageNumber)
+    }
+
+    private func tickNumber(_ value: Double) -> String {
+        value.formatted(
+            .number
+                .locale(Locale(identifier: "en_US_POSIX"))
+                .grouping(.never)
+                .precision(.significantDigits(1...6))
+        )
     }
 }
 
@@ -1032,6 +1077,36 @@ private enum PDFReportingCanvas {
         let value = NSAttributedString(string: text, attributes: PDFReportText.attributes(font: font, color: color))
         context.textPosition = point
         CTLineDraw(CTLineCreateWithAttributedString(value), context)
+    }
+
+    static func centeredLine(
+        _ text: String,
+        font: CTFont,
+        color: CGColor,
+        centerX: CGFloat,
+        y: CGFloat,
+        in context: CGContext
+    ) {
+        let value = NSAttributedString(string: text, attributes: PDFReportText.attributes(font: font, color: color))
+        let line = CTLineCreateWithAttributedString(value)
+        let width = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+        context.textPosition = CGPoint(x: centerX - width / 2, y: y)
+        CTLineDraw(line, context)
+    }
+
+    static func rightAlignedLine(
+        _ text: String,
+        font: CTFont,
+        color: CGColor,
+        rightX: CGFloat,
+        y: CGFloat,
+        in context: CGContext
+    ) {
+        let value = NSAttributedString(string: text, attributes: PDFReportText.attributes(font: font, color: color))
+        let line = CTLineCreateWithAttributedString(value)
+        let width = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+        context.textPosition = CGPoint(x: rightX - width, y: y)
+        CTLineDraw(line, context)
     }
 }
 

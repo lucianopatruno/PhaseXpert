@@ -247,6 +247,8 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(text.contains("gaps = failed/unavailable"))
         XCTAssertTrue(text.contains("Pressure (bar(a))"))
         XCTAssertTrue(text.contains("Density (kg/m³)"))
+        XCTAssertTrue(text.contains("125"))
+        XCTAssertTrue(text.contains("175"))
         XCTAssertTrue(text.contains("no scientific value is interpolated"))
         XCTAssertTrue(text.contains(snapshot.sweep.id.uuidString))
         XCTAssertTrue(text.contains(calculationID.uuidString))

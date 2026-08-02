@@ -131,7 +131,7 @@ struct PropertySweepView: View {
                         .accessibilityIdentifier("export-property-sweep-pdf")
                     }
 
-                    DisclosureGroup("Failures and unavailable points") {
+                    DisclosureGroup {
                         let failures = viewModel.failureRows
                         if failures.isEmpty {
                             Text("None")
@@ -147,9 +147,13 @@ struct PropertySweepView: View {
                                 }
                             }
                         }
+                    } label: {
+                        Text("Failures and unavailable points")
+                            .font(.body)
+                            .fontWeight(.regular)
                     }
 
-                    DisclosureGroup("Sweep traceability") {
+                    DisclosureGroup {
                         LabeledContent("Sweep ID", value: result.id.uuidString)
                         LabeledContent("Model", value: record.response.model.name)
                         LabeledContent("Model version", value: record.response.model.modelVersion)
@@ -159,6 +163,10 @@ struct PropertySweepView: View {
                         Text("Each successful sample retains its complete calculation response, solver metadata, warnings, model descriptor and calculation identifier.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    } label: {
+                        Text("Sweep traceability")
+                            .font(.body)
+                            .fontWeight(.regular)
                     }
                 }
             }
