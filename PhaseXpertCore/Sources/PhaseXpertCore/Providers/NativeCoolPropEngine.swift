@@ -202,8 +202,6 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let nativeResult = try await Task.detached(priority: .utility) {
             var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
             var pointCount = 0
-            var attemptedPointCount = 0
-            var failedPointCount = 0
             var isComplete: Int32 = 0
             var isClosed: Int32 = 0
             var errorBuffer = [CChar](repeating: 0, count: 512)
@@ -217,8 +215,6 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 &points,
                 points.count,
                 &pointCount,
-                &attemptedPointCount,
-                &failedPointCount,
                 &isComplete,
                 &isClosed,
                 &errorBuffer,
@@ -244,8 +240,6 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             }
             return (
                 points: mappedPoints,
-                attemptedPointCount: attemptedPointCount,
-                failedPointCount: failedPointCount,
                 isComplete: isComplete != 0,
                 isClosed: isClosed != 0
             )
@@ -253,9 +247,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         try Task.checkCancellation()
         return CoolPropMixtureEnvelopeResult(
             points: nativeResult.points,
-            solverMethod: "CoolProp HEOS bounded PQ_INPUTS sampling, Q=0/1, 80 logarithmic pressures per branch over 80000–30000000 Pa",
-            attemptedPointCount: nativeResult.attemptedPointCount,
-            failedPointCount: nativeResult.failedPointCount,
+            solverMethod: "CoolProp AbstractState.build_phase_envelope(level: none), HEOS dry CO₂-rich mixture, start 80000 Pa, maximum 256 provider continuation steps",
             isComplete: nativeResult.isComplete,
             isClosed: nativeResult.isClosed
         )
