@@ -48,8 +48,10 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertTrue(result.isComplete)
         XCTAssertFalse(result.isClosed)
-        XCTAssertGreaterThanOrEqual(result.attemptedPointCount, result.points.count)
-        XCTAssertGreaterThanOrEqual(result.failedPointCount, 0)
+        XCTAssertEqual(
+            result.attemptedPointCount,
+            result.points.count + result.failedPointCount
+        )
         XCTAssertGreaterThanOrEqual(
             result.points.filter { $0.branch == .bubble }.count,
             2
