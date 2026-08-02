@@ -598,7 +598,7 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertTrue(response.isAvailable)
         XCTAssertEqual(response.solver?.converged, false)
         XCTAssertTrue(response.warnings.contains {
-            $0.contains("stopped before completing the bounded pressure sampling")
+            $0.contains("stopped before completing phase-envelope construction")
         })
         XCTAssertTrue(response.warnings.contains { $0.contains("does not extrapolate") })
         XCTAssertTrue(response.warnings.contains { $0.contains("does not close the trace") })
