@@ -140,3 +140,9 @@
 - Removed the physical-device-fragile Swift Charts scrollable-domain state
   from phase-boundary rendering, display the complete finite provider domain
   directly, and require the actual chart element in the visible-app regression.
+- Rejected complete CoolProp mixture phase-envelope traces when any returned
+  point leaves the declared 0.8–300 bar(a), −55–150 °C PhaseXpert domain,
+  instead of plotting or clipping a finite but scientifically unusable
+  continuation.
+- Bumped CoolProp provider provenance to 0.8.2 and replaced chart-presence
+  regressions with focused pressure- and temperature-domain rejection coverage.
