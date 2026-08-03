@@ -56,17 +56,18 @@ struct ScientificTraceabilityView: View {
                             Text("No scientific reference is recorded for this provider.")
                                 .foregroundStyle(.secondary)
                         } else {
-                            ForEach(Array(descriptor.references.enumerated()), id: \.offset) { _, reference in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("\(reference.authors) (\(reference.year))")
-                                        .font(.subheadline.weight(.semibold))
-                                    Text(reference.title)
-                                    if let identifier = reference.doiOrURL {
-                                        Text(identifier)
-                                            .font(.caption)
-                                            .foregroundStyle(Color.ifePrimary)
-                                            .textSelection(.enabled)
+                            ForEach(Array(descriptor.references.enumerated()), id: \.offset) { index, reference in
+                                if let url = reference.destinationURL {
+                                    Link(destination: url) {
+                                        referenceLabel(reference, isInteractive: true)
                                     }
+                                    .id("traceability-reference-\(index)-\(url.absoluteString)")
+                                    .accessibilityLabel(
+                                        "\(reference.authors), \(reference.title), open reference"
+                                    )
+                                    .accessibilityHint("Opens this scientific reference in the browser.")
+                                } else {
+                                    referenceLabel(reference, isInteractive: false)
                                 }
                             }
                         }
@@ -125,6 +126,29 @@ struct ScientificTraceabilityView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func referenceLabel(
+        _ reference: SourceReference,
+        isInteractive: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("\(reference.authors) (\(reference.year))")
+                .font(.subheadline.weight(.semibold))
+            Text(reference.title)
+            if let identifier = reference.doiOrURL {
+                Label(
+                    identifier,
+                    systemImage: isInteractive ? "arrow.up.right.square" : "doc.text"
+                )
+                .font(.caption)
+                .foregroundStyle(isInteractive ? Color.ifePrimary : Color.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
 
     private func traceabilityText(_ value: String) -> some View {
