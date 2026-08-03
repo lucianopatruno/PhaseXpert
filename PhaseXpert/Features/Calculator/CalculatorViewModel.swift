@@ -30,10 +30,15 @@ final class CalculatorViewModel {
     private(set) var calculationError: String?
     private(set) var isCalculating = false
 
-    let registry = ProviderRegistry()
+    let registry: ProviderRegistry
     private let validator = CalculationValidator()
     private var compositionBeforeNormalization: [CompositionInputSnapshot]?
     private var lastNormalizedComposition: [MixtureComponent]?
+    private var calculationGeneration = 0
+
+    init(registry: ProviderRegistry = ProviderRegistry()) {
+        self.registry = registry
+    }
 
     var descriptors: [ModelDescriptor] { registry.descriptors }
 
@@ -277,8 +282,13 @@ final class CalculatorViewModel {
     }
 
     func calculate() async {
+        calculationGeneration &+= 1
+        let generation = calculationGeneration
         validate()
-        guard validationReport.canCalculate else { return }
+        guard validationReport.canCalculate else {
+            isCalculating = false
+            return
+        }
         guard
             let provider = registry.provider(id: selectedModelID),
             let pressure = parse(pressureText),
@@ -288,7 +298,11 @@ final class CalculatorViewModel {
         isCalculating = true
         calculationError = nil
         calculationRecord = nil
-        defer { isCalculating = false }
+        defer {
+            if calculationGeneration == generation {
+                isCalculating = false
+            }
+        }
 
         let pressurePa = PressureUnit.bar.toPascal(pressure)
         let temperatureK = TemperatureUnit.celsius.toKelvin(temperature)
@@ -303,6 +317,7 @@ final class CalculatorViewModel {
 
         do {
             let response = try await provider.calculate(request)
+            guard calculationGeneration == generation else { return }
             let normalizationWasUsed = lastNormalizedComposition == calculatedComposition
             calculationRecord = CalculationRecord(
                 request: request,
@@ -322,6 +337,7 @@ final class CalculatorViewModel {
                 application: Bundle.main.applicationIdentity
             )
         } catch {
+            guard calculationGeneration == generation else { return }
             calculationError = userMessage(for: error)
         }
     }
