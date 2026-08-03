@@ -431,34 +431,32 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
                     "ThermoPack reported a two-phase flash; this bridge does not construct a bulk two-phase value for this property."
             )
         }
-        let raw: Double?
-        let unit: String
-        let positive: Bool
+        let resolved: (value: Double?, unit: String, requiresPositive: Bool)
         switch id {
         case .density:
-            (raw, unit, positive) = (state.densityKilogramsPerCubicMetre, "kg/m³", true)
+            resolved = (state.densityKilogramsPerCubicMetre, "kg/m³", true)
         case .molarMass:
-            (raw, unit, positive) = (
+            resolved = (
                 state.molarMassKilogramsPerMole.map { $0 * 1_000 }, "g/mol", true
             )
         case .specificVolume:
-            (raw, unit, positive) = (
+            resolved = (
                 state.specificVolumeCubicMetresPerKilogram, "m³/kg", true
             )
         case .compressibilityFactor:
-            (raw, unit, positive) = (state.compressibilityFactor, "1", true)
+            resolved = (state.compressibilityFactor, "1", true)
         case .enthalpy:
-            (raw, unit, positive) = (state.enthalpyJoulesPerKilogram, "J/kg", false)
+            resolved = (state.enthalpyJoulesPerKilogram, "J/kg", false)
         case .entropy:
-            (raw, unit, positive) = (
+            resolved = (
                 state.entropyJoulesPerKilogramKelvin, "J/(kg·K)", false
             )
         case .isobaricHeatCapacity:
-            (raw, unit, positive) = (
+            resolved = (
                 state.isobaricHeatCapacityJoulesPerKilogramKelvin, "J/(kg·K)", true
             )
         case .vapourFraction:
-            (raw, unit, positive) = (state.vaporFraction, "mol/mol", false)
+            resolved = (state.vaporFraction, "mol/mol", false)
         default:
             return PropertyValue(
                 property: id,
@@ -469,20 +467,20 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
                     "The pinned ThermoPack PR bridge does not expose this property; no CoolProp value is substituted."
             )
         }
-        guard let raw else {
+        guard let raw = resolved.value else {
             return PropertyValue(
                 property: id,
                 value: nil,
-                unit: unit,
+                unit: resolved.unit,
                 status: .unavailable,
                 message: "ThermoPack did not return this property for the resolved state."
             )
         }
-        guard raw.isFinite, !positive || raw > 0 else {
+        guard raw.isFinite, !resolved.requiresPositive || raw > 0 else {
             return PropertyValue(
                 property: id,
                 value: nil,
-                unit: unit,
+                unit: resolved.unit,
                 status: .failed,
                 message: "ThermoPack returned a non-finite or non-physical value."
             )
@@ -490,7 +488,7 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
         return PropertyValue(
             property: id,
             value: raw,
-            unit: unit,
+            unit: resolved.unit,
             status: .calculated,
             message: "Returned by the pinned ThermoPack PR configuration."
         )
