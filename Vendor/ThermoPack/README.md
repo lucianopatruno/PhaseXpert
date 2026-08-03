@@ -14,7 +14,7 @@ Pinned source:
 - bridge capability version: `1.0.0`
 
 Build with `Scripts/build-thermopack-xcframework.sh`. The build requires an
-LLVM Flang toolchain capable of Apple iOS targets and explicitly supplied static
+LLVM Flang toolchain capable of Apple iOS targets and explicitly supplied platform-specific static
 Fortran runtime archives. It creates `ios-arm64` and
 `ios-arm64_x86_64-simulator` slices and rejects identified dynamic
 Fortran/OpenMP runtime dependencies.
