@@ -17,7 +17,7 @@ final class ThermoPackProviderTests: XCTestCase {
             libraryVersion: String = "2.2.4+ca75d8e",
             bridgeVersion: String = "1.0.0",
             configurationIdentifier: String =
-                "PR / Classic / Classic-vdW / PR_kij.json vdW-18 ref=Default",
+                "PR (Peng-Robinson), Classic alpha, Classic/van der Waals one-fluid mixing, ThermoPack PR_kij.json vdW-18 ref=Default",
             state: ThermoPackStateResult = .init(
                 phase: .liquid,
                 densityKilogramsPerCubicMetre: 800,
@@ -147,7 +147,7 @@ final class ThermoPackProviderTests: XCTestCase {
                 .init(component: .carbonDioxide, moleFraction: 0.97),
                 .init(component: .nitrogen, moleFraction: 0.03)
             ],
-            properties: [.density, .enthalpy, .dynamicViscosity]
+            properties: [.density, .enthalpy, .internalEnergy, .dynamicViscosity]
         ))
         XCTAssertEqual(
             response.properties.first(where: { $0.property == .density })?.value,
@@ -155,6 +155,10 @@ final class ThermoPackProviderTests: XCTestCase {
         )
         let unavailable = try XCTUnwrap(
             response.properties.first(where: { $0.property == .dynamicViscosity })
+        )
+        XCTAssertEqual(
+            response.properties.first(where: { $0.property == .internalEnergy })?.value,
+            101_250
         )
         XCTAssertEqual(unavailable.status, .unavailable)
         XCTAssertTrue(unavailable.message?.contains("no CoolProp value") == true)
