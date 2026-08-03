@@ -71,6 +71,19 @@ final class CalculatorViewModel {
         return input.id
     }
 
+    func updateImpurity(id: UUID, component: ComponentID) {
+        guard
+            component != .carbonDioxide,
+            supportedImpurityComponents.contains(component),
+            let index = composition.firstIndex(where: { $0.id == id }),
+            composition[index].component != .carbonDioxide
+        else {
+            return
+        }
+        composition[index].component = component
+        validate()
+    }
+
     func removeImpurity(id: UUID) {
         guard
             let index = composition.firstIndex(where: { $0.id == id }),
