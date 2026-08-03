@@ -68,3 +68,10 @@ accuracy range. Only density, provider phase, molar mass, specific volume and
 compressibility factor are enabled. Mixture transport, caloric, acoustic,
 derivative results remain unavailable. Phase envelopes are preliminary,
 validation-pending provider outputs.
+
+CoolProp's bounded density continuation can return finite bubble/dew points far
+outside PhaseXpert's declared 0.8–300 bar(a), −55–150 °C app domain. Such a
+trace is scientifically unusable in this app and is rejected in full with an
+explicit unavailable message. PhaseXpert does not clip, reconnect, interpolate
+or extrapolate it. Consequently, a supported mixture state calculation does not
+guarantee that a mixture phase diagram is available.
