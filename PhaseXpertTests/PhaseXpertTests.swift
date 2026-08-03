@@ -147,6 +147,50 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testMolePercentInputCompletesCarbonDioxideRemainderWithoutNormalization() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.changeCompositionBasis(to: .molePercent)
+        _ = viewModel.addImpurity()
+        let impurityIndex = try XCTUnwrap(
+            viewModel.composition.firstIndex { $0.component != .carbonDioxide }
+        )
+        viewModel.composition[impurityIndex].value = "12.5"
+        viewModel.validate()
+
+        XCTAssertEqual(viewModel.carbonDioxideMolePercent, 87.5, accuracy: 1e-12)
+        XCTAssertEqual(
+            viewModel.displayedCompositionValue(for: viewModel.composition[0]),
+            "87.5"
+        )
+        XCTAssertFalse(viewModel.canNormalize)
+        XCTAssertFalse(
+            viewModel.validationReport.issues.contains { $0.code == .compositionTotal }
+        )
+    }
+
+    @MainActor
+    func testImpurityCanBeRemovedByIdentityAndRemainderUpdates() throws {
+        let viewModel = CalculatorViewModel()
+        let firstID = try XCTUnwrap(viewModel.addImpurity())
+        let secondID = try XCTUnwrap(viewModel.addImpurity())
+        _ = try XCTUnwrap(viewModel.addImpurity())
+
+        for index in viewModel.composition.indices
+        where viewModel.composition[index].component != .carbonDioxide {
+            viewModel.composition[index].value = "10000"
+        }
+        XCTAssertEqual(viewModel.carbonDioxidePartsPerMillion, 970_000, accuracy: 1e-12)
+
+        viewModel.removeImpurity(id: secondID)
+
+        XCTAssertEqual(viewModel.composition.count, 3)
+        XCTAssertEqual(viewModel.composition.first?.component, .carbonDioxide)
+        XCTAssertTrue(viewModel.composition.contains { $0.id == firstID })
+        XCTAssertFalse(viewModel.composition.contains { $0.id == secondID })
+        XCTAssertEqual(viewModel.carbonDioxidePartsPerMillion, 980_000, accuracy: 1e-12)
+    }
+
+    @MainActor
     func testCompositionBasisRoundTripPreservesMoleFractions() throws {
         let viewModel = CalculatorViewModel()
         _ = viewModel.addImpurity()
@@ -156,7 +200,11 @@ final class PhaseXpertTests: XCTestCase {
         viewModel.composition[impurityIndex].value = "10000"
 
         viewModel.changeCompositionBasis(to: .molePercent)
-        XCTAssertEqual(viewModel.composition[0].value, "99")
+        XCTAssertEqual(viewModel.carbonDioxideMolePercent, 99, accuracy: 1e-12)
+        XCTAssertEqual(
+            viewModel.displayedCompositionValue(for: viewModel.composition[0]),
+            "99"
+        )
         XCTAssertEqual(viewModel.composition[impurityIndex].value, "1")
 
         viewModel.changeCompositionBasis(to: .partsPerMillion)
