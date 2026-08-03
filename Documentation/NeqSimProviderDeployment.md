@@ -34,9 +34,38 @@ available.
 
 ## iOS Configuration
 
-Set `PHASEXPERT_NEQSIM_ENDPOINT` for development or validation builds. If the
-variable is missing, the NeqSim provider is visible as unavailable and explains
-that no endpoint is configured. Production endpoints must use HTTPS.
+Set `PHASEXPERT_NEQSIM_ENDPOINT` for development or validation builds when a
+non-default endpoint is needed. Debug iPhone Simulator builds default to
+`http://127.0.0.1:8080`, which reaches a service running on the Mac. Release and
+non-simulator builds do not inherit this HTTP endpoint and require explicit
+HTTPS configuration.
+
+Start the service:
+
+```sh
+cd Services/NeqSimProvider
+. .venv/bin/activate
+uvicorn neqsim_provider.main:app --host 127.0.0.1 --port 8080
+```
+
+Verify health:
+
+```sh
+curl http://127.0.0.1:8080/v1/health
+```
+
+Run PhaseXpert on an iPhone Simulator Debug destination. If the service is
+running, the model picker shows `NeqSim Remote SRK — Preliminary`; if the
+service is stopped, NeqSim calculations fail with a remote/offline provider
+error and the app must not fall back to CoolProp. Stop the service with
+`Control-C` in the terminal running `uvicorn`.
+
+If the app still reports that no endpoint is configured, confirm that the build
+is a Debug iPhone Simulator build, or set:
+
+```sh
+PHASEXPERT_NEQSIM_ENDPOINT=http://127.0.0.1:8080
+```
 
 ## Operational Limits
 
@@ -45,4 +74,3 @@ The current service applies request validation and point-count bounds; deploymen
 must still enforce process-level CPU, memory and request-time limits at the
 container or orchestration layer. Cancellation support is client-side and
 transport-level where the server/runtime can observe it.
-

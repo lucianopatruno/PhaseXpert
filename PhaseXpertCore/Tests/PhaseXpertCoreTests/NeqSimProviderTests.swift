@@ -59,6 +59,29 @@ final class NeqSimProviderTests: XCTestCase {
         }
     }
 
+    func testOfflineEndpointReportsModelUnavailableWithoutFallback() async {
+        let provider = NeqSimProvider<NeqSimHTTPClient>(
+            endpoint: URL(string: "http://127.0.0.1:9")!
+        )
+        let request = CalculationRequest(
+            modelID: NeqSimMetadata.providerID,
+            pressurePa: 1_000_000,
+            temperatureK: 293.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+
+        do {
+            _ = try await provider.calculate(request)
+            XCTFail("Expected offline endpoint failure.")
+        } catch let ProviderError.modelUnavailable(message) {
+            XCTAssertTrue(message.contains("offline") || message.contains("unreachable"))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
     func testStateRequestPreservesCompositionBasisAndProviderIdentity() async throws {
         let provider = NeqSimProvider(client: mockClient())
         let request = CalculationRequest(

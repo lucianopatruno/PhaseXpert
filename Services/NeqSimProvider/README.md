@@ -32,6 +32,19 @@ pytest
 uvicorn neqsim_provider.main:app --host 127.0.0.1 --port 8080
 ```
 
+Run the real NeqSim engine integration tests only when a Java 21-compatible
+runtime is available:
+
+```bash
+PHASEXPERT_RUN_NEQSIM_ENGINE_TESTS=1 pytest
+```
+
+Verify health from the Mac:
+
+```bash
+curl http://127.0.0.1:8080/v1/health
+```
+
 ## Docker
 
 ```bash

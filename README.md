@@ -142,10 +142,13 @@ built and tested on a Mac before the milestone is accepted.
 ## Configuration and secrets
 
 The NeqSim remote endpoint is read from `PHASEXPERT_NEQSIM_ENDPOINT` for
-development and validation. Production endpoints must use HTTPS. Localhost HTTP
-is accepted only for development. Credentials, tokens and internal IFE addresses
-must come from secure runtime configuration and must not be committed.
-Certificate validation must never be bypassed.
+development and validation when a custom endpoint is needed. Debug iPhone
+Simulator builds default to `http://127.0.0.1:8080`; Release and non-simulator
+builds do not inherit that HTTP endpoint. Production endpoints must use HTTPS.
+Credentials, tokens and internal IFE addresses must come from secure runtime
+configuration and must not be committed. Certificate validation must never be
+bypassed. See [NeqSim provider deployment](Documentation/NeqSimProviderDeployment.md)
+for local start, health-check, simulator and troubleshooting commands.
 
 ## Known limitations
 

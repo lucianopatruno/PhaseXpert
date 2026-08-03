@@ -2,13 +2,17 @@ import Foundation
 
 public enum NeqSimConfiguration: Sendable {
     public static var environmentEndpoint: URL? {
-        guard
+        if
             let rawValue = ProcessInfo.processInfo.environment["PHASEXPERT_NEQSIM_ENDPOINT"],
             !rawValue.isEmpty
-        else {
-            return nil
+        {
+            return URL(string: rawValue)
         }
-        return URL(string: rawValue)
+        #if DEBUG && targetEnvironment(simulator)
+        return URL(string: "http://127.0.0.1:8080")
+        #else
+        return nil
+        #endif
     }
 }
 
@@ -86,6 +90,17 @@ public struct NeqSimHTTPClient: NeqSimRemoteClient {
             throw ProviderError.cancelled
         } catch let error as ProviderError {
             throw error
+        } catch let error as URLError {
+            switch error.code {
+            case .timedOut:
+                throw ProviderError.timeout
+            case .cancelled:
+                throw ProviderError.cancelled
+            default:
+                throw ProviderError.modelUnavailable(
+                    "NeqSim remote endpoint is offline or unreachable: \(error.localizedDescription)"
+                )
+            }
         } catch {
             throw ProviderError.malformedResponse("NeqSim response could not be decoded: \(error.localizedDescription)")
         }
