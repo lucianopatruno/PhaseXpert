@@ -124,17 +124,18 @@ saturation-pressure reference cases have not yet been accepted, so the curve
 must not be used for engineering, safety, commercial or regulatory decisions.
 For an accepted dry CO₂-rich composition, the native bridge creates one HEOS
 `AbstractState`, applies the exact mole fractions and calls CoolProp's low-level
-`build_phase_envelope` routine. PhaseXpert retains each finite positive point
-with CoolProp's bubble/dew branch classification and the returned critical
-index. It does not insert scientific samples, close branches cosmetically or
-replace a failed envelope. The unavailable IFE provider returns no boundary.
+`build_phase_envelope` routine. PhaseXpert accepts the trace only when every finite positive point lies inside
+the declared 0.8–300 bar(a), −55–150 °C app domain and the returned bubble/dew
+branches remain usable. A single out-of-domain point rejects the full trace.
+PhaseXpert does not clip, insert scientific samples, reconnect gaps, close
+branches cosmetically or replace a failed envelope. The unavailable IFE provider returns no boundary.
 
 No independent mixture bubble/dew reference cases or tolerances have been
 approved. These envelopes are provider outputs, not validated PhaseXpert data.
 
 ### Implemented restricted dry CO₂-rich calculation
 
-Provider version 0.8.1 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
+Provider version 0.8.2 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
 one or more of N₂, O₂, Ar, CH₄ and H₂. CO₂ must be uniquely largest, the
 fractions must sum explicitly to one, and total impurity must be in (0, 0.10].
 The upper bound is a temporary PhaseXpert product guardrail and is not presented
@@ -157,8 +158,10 @@ The pinned CoolProp 8.0.0 source contains an unbounded `for (;;)` continuation
 whose only normal exits require pressure closure or an almost-pure incipient
 phase. The tracked PhaseXpert downstream patch caps that loop at 256
 successfully calculated provider steps. Reaching the cap leaves the provider
-trace incomplete and open while preserving every real returned point.
-PhaseXpert does not interpolate, extrapolate or cosmetically close the trace.
+trace incomplete and open. The provider exposes it only if every returned point
+also remains inside the declared app domain; otherwise the diagram is explicitly
+unavailable. PhaseXpert does not clip, interpolate, extrapolate or cosmetically
+close the trace.
 Every result records exact composition, library/provider version, method and
 validation-pending warnings. Contract coverage is not independent numeric
 validation.
