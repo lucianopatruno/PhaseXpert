@@ -70,6 +70,12 @@ int32_t px_thermopack_envelope(
     size_t error_capacity
 );
 
+int32_t px_thermopack_envelope_point(
+    const PXThermoPackEnvelope *envelope,
+    int32_t index,
+    PXThermoPackEnvelopePoint *point
+);
+
 #ifdef __cplusplus
 }
 #endif
