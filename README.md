@@ -60,8 +60,8 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
 - SI-first pressure and temperature conversions, including explicit gauge
   pressure reference
 - composition and model-domain validation with explicit normalization
-- default molar-ppm impurity entry with CO₂ completed as the exact remainder,
-  while retaining explicit mol% entry as an alternative
+- default molar-ppm impurity entry with mol% as an alternative; in both bases,
+  impurities are entered explicitly and CO₂ is displayed as the exact remainder
 - provider-independent request, response, metadata and phase-envelope contracts
 - a CoolProp 8.0.0 provider with expanded pure-CO₂ thermodynamic, acoustic and
   transport outputs plus restricted dry CO₂-rich mixture density/phase calculations; molar mass,
