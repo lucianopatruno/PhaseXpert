@@ -36,6 +36,62 @@ final class PhaseXpertTests: XCTestCase {
         )
     }
 
+    #if os(iOS) && canImport(PhaseXpertThermoPackBridge)
+    func testNativeThermoPackRequiredCO2N2SmokeMatrix() async throws {
+        let engine = NativeThermoPackEngine()
+        let compositions: [(co2: Double, n2: Double)] = [
+            (1.00, 0.00),
+            (0.97, 0.03),
+            (0.90, 0.10)
+        ]
+        let states: [(pressurePa: Double, temperatureK: Double)] = [
+            (1_000_000, 293.15),
+            (15_000_000, 293.15)
+        ]
+
+        for composition in compositions {
+            for state in states {
+                let result = try await engine.calculate(
+                    pressurePa: state.pressurePa,
+                    temperatureK: state.temperatureK,
+                    carbonDioxideMoleFraction: composition.co2,
+                    nitrogenMoleFraction: composition.n2
+                )
+                XCTAssertNotEqual(result.phase, .twoPhase)
+                XCTAssertTrue(
+                    result.densityKilogramsPerCubicMetre?.isFinite == true
+                )
+                XCTAssertTrue(
+                    result.compressibilityFactor?.isFinite == true
+                )
+            }
+
+            let envelope = try await engine.phaseEnvelope(
+                carbonDioxideMoleFraction: composition.co2,
+                nitrogenMoleFraction: composition.n2,
+                bounds: .initialCO2Transport,
+                maximumPointsPerBranch:
+                    ThermoPackProvider<NativeThermoPackEngine>
+                        .maximumEnvelopePointsPerBranch,
+                maximumElapsedMilliseconds:
+                    ThermoPackProvider<NativeThermoPackEngine>
+                        .maximumEnvelopeElapsedMilliseconds
+            )
+            XCTAssertGreaterThanOrEqual(
+                envelope.points.filter { $0.branch == .bubble }.count,
+                2
+            )
+            XCTAssertGreaterThanOrEqual(
+                envelope.points.filter { $0.branch == .dew }.count,
+                2
+            )
+            XCTAssertTrue(envelope.points.allSatisfy {
+                $0.temperatureK.isFinite && $0.pressurePa.isFinite
+            })
+        }
+    }
+    #endif
+
     #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
     func testNativeCoolPropThreeAndTenPercentNitrogenContinuationStopsAtPointCap() async throws {
         for nitrogenMoleFraction in [0.03, 0.10] {
