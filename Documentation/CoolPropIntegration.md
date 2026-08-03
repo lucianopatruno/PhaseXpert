@@ -96,8 +96,10 @@ Swift from the two returned heat capacities.
 
 The state calculation fluid string and phase-envelope `AbstractState` use the
 explicit supplied fractions and fixed supported component list. A displayed
-trace must contain consistent finite bubble/dew data and fit the bounded output
-array. CoolProp's construction-complete and pressure-closure flags are preserved
+trace must contain consistent finite bubble/dew data, fit the bounded output
+array and keep every temperature and pressure inside PhaseXpert's declared app
+domain. One out-of-domain point rejects the complete trace; PhaseXpert does not
+clip or reconnect it. CoolProp's construction-complete and pressure-closure flags are preserved
 separately: a provider trace is shown only when both branches remain usable,
 with incomplete or open status reported explicitly and convergence false.
 PhaseXpert never closes, extrapolates or completes that trace itself. No fallback
@@ -118,9 +120,10 @@ pair, estimated mixing rule or inserted scientific point is permitted.
   unavailable rather than fabricating a value;
 - returns one pure-CO₂ saturation boundary and a critical point;
 - returns the real provider bubble/dew envelope for an accepted dry mixture;
-- rejects non-finite or branch-deficient traces; a construction-incomplete
-  trace is retained only when it already contains usable provider-returned
-  bubble and dew branches, with explicit incomplete/non-converged status.
+- rejects non-finite, out-of-domain or branch-deficient traces in full; a
+  construction-incomplete trace is retained only when it already contains
+  usable provider-returned bubble and dew branches entirely inside the declared
+  domain, with explicit incomplete/non-converged status.
 
 Tests use a deterministic mock engine to verify orchestration, rejection,
 serialization and status handling. Mock values are never registered in the
