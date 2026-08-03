@@ -35,23 +35,6 @@ if [[ -z "${fortran_compiler}" || ! -x "${fortran_compiler}" ]]; then
     exit 1
 fi
 
-runtime_archives_raw="${THERMOPACK_FORTRAN_RUNTIME_ARCHIVES:-}"
-if [[ -z "${runtime_archives_raw}" ]]; then
-    echo "Set THERMOPACK_FORTRAN_RUNTIME_ARCHIVES to colon-separated static Flang runtime archives." >&2
-    exit 1
-fi
-IFS=':' read -r -a runtime_archives <<< "${runtime_archives_raw}"
-for archive in "${runtime_archives[@]}"; do
-    [[ -f "${archive}" ]] || {
-        echo "Missing static Fortran runtime archive: ${archive}" >&2
-        exit 1
-    }
-    file "${archive}" | grep -q "archive" || {
-        echo "Fortran runtime dependency is not a static archive: ${archive}" >&2
-        exit 1
-    }
-done
-
 mkdir -p "${output_root}"
 if [[ ! -d "${source_root}/.git" ]]; then
     git clone --filter=blob:none --branch "${version}" \
@@ -75,6 +58,29 @@ build_slice() {
     local build_dir="${work_root}/${sdk}-${arch}"
     local sdk_path
     sdk_path="$(xcrun --sdk "${sdk}" --show-sdk-path)"
+
+    local runtime_archives_raw
+    if [[ "${sdk}" == "iphoneos" ]]; then
+        runtime_archives_raw="${THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONEOS:-}"
+    else
+        runtime_archives_raw="${THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONESIMULATOR:-}"
+    fi
+    if [[ -z "${runtime_archives_raw}" ]]; then
+        echo "Set platform-specific static Flang runtime archives for ${sdk}." >&2
+        exit 1
+    fi
+    local runtime_archives=()
+    IFS=':' read -r -a runtime_archives <<< "${runtime_archives_raw}"
+    for archive in "${runtime_archives[@]}"; do
+        [[ -f "${archive}" ]] || {
+            echo "Missing static Fortran runtime archive: ${archive}" >&2
+            exit 1
+        }
+        file "${archive}" | grep -q "archive" || {
+            echo "Fortran runtime dependency is not a static archive: ${archive}" >&2
+            exit 1
+        }
+    done
     rm -rf "${build_dir}"
     mkdir -p "${build_dir}"
 
