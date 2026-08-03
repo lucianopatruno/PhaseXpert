@@ -101,6 +101,11 @@ int32_t px_thermopack_state(
     if (property_phase != liquid_phase && property_phase != vapor_phase) {
         thermopack_guess_phase_c(&temperature_k, &pressure_pa, z, &property_phase);
     }
+    if (property_phase != liquid_phase && property_phase != vapor_phase) {
+        set_error(error, error_capacity, "ThermoPack could not resolve a single-phase state.");
+        return 7;
+    }
+    output->phase = property_phase == liquid_phase ? 1 : 2;
 
     double molar_mass = 0.0;
     double molar_volume = 0.0;
