@@ -19,6 +19,7 @@ public struct ProviderRegistry: Sendable {
         [
             ArchitectureDemoProvider(),
             defaultCoolPropProvider,
+            defaultThermoPackProvider,
             UnavailableModelProvider.ife
         ]
     }
@@ -28,6 +29,14 @@ public struct ProviderRegistry: Sendable {
         CoolPropProvider(engine: NativeCoolPropEngine())
         #else
         CoolPropProvider(engine: UnavailableCoolPropEngine())
+        #endif
+    }
+
+    private static var defaultThermoPackProvider: any ThermodynamicModelProvider {
+        #if os(iOS) && canImport(PhaseXpertThermoPackBridge)
+        ThermoPackProvider(engine: NativeThermoPackEngine())
+        #else
+        ThermoPackProvider(engine: UnavailableThermoPackEngine())
         #endif
     }
 }
