@@ -71,7 +71,7 @@ The ThermoPack provider calls the pinned bubble-pressure and dew-pressure APIs
 independently at bounded temperatures. It:
 
 - caps each branch at 64 provider calls;
-- applies a 5000 ms native elapsed-time bound;
+- checks a 5000 ms elapsed-time budget between synchronous provider calls;
 - keeps bubble and dew branches separate;
 - retains only finite, positive provider points inside the declared app domain;
 - reports call counts, failed calls, elapsed time, timeout and completeness;
@@ -82,6 +82,10 @@ independently at bounded temperatures. It:
 Straight segments in Swift Charts are display-only connections between adjacent
 provider points. An incomplete provider trace remains marked incomplete and
 non-converged.
+
+The elapsed budget prevents starting further calls after the budget is reached.
+The pinned Fortran API is synchronous, so a single in-progress bubble/dew call
+cannot be preempted by the bridge; cancellation is observed when control returns.
 
 ## XCFramework build and runtime gate
 
