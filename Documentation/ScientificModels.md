@@ -205,3 +205,25 @@ equation of state; Huber et al. (2016), DOI 10.1063/1.4940892, for thermal
 conductivity; and Laesecke and Muzny (2017), DOI 10.1063/1.4977429, for
 viscosity. Formulation traceability is not an accuracy-validation claim.
 Expanded properties remain unavailable for every mixture.
+
+## ThermoPack PR / Classic-vdW CO₂/N₂ provider
+
+The standalone ThermoPack model pins v2.2.4 at
+`ca75d8e095e8b951616897efe1bca9b8c3badda7`. Its exact configuration is
+Peng–Robinson, Classic alpha, Classic van der Waals one-fluid mixing, using the
+upstream `binaries/PR_kij.json` record `vdW-18` for CO₂/N₂ with provenance
+identifier `Default`. PhaseXpert neither invents nor overwrites the interaction
+parameter.
+
+Only pure CO₂ and 90–100 mol% CO₂ / 0–10 mol% N₂ are enabled. The bridge exposes
+provider phase, single-phase density, molar mass, specific volume,
+compressibility factor, enthalpy, entropy and Cp, plus two-phase vapor fraction.
+All other requested properties are explicitly unavailable. Single-phase bulk
+properties are not fabricated for a two-phase flash.
+
+Bubble and dew branches come from independent bounded ThermoPack `bubP` and
+`dewP` calls. Provider points remain separate by branch; incomplete and timed
+out traces are marked non-converged. Chart segments are visualization only.
+No CoolProp envelope routine, CoolProp workaround, fallback curve, interpolation
+or accuracy ranking is used. Native iOS compilation and numerical smoke
+validation remain pending; see `ThermoPackIntegration.md`.
