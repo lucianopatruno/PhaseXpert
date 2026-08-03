@@ -85,8 +85,9 @@ int32_t px_thermopack_state(
         &two_phase, &liquid_phase, &vapor_phase, &minimum_gibbs,
         &single_phase, &solid_phase, &fake_phase
     );
-    output->phase = phase;
+    output->phase = phase == liquid_phase ? 1 : (phase == vapor_phase ? 2 : 0);
     output->is_two_phase = phase == two_phase ? 1 : 0;
+    if (output->is_two_phase) output->phase = 3;
     if (output->is_two_phase) {
         if (!std::isfinite(beta) || beta < 0.0 || beta > 1.0) {
             set_error(error, error_capacity, "ThermoPack returned a non-finite or invalid vapor fraction.");
@@ -168,6 +169,7 @@ int32_t px_thermopack_envelope(
         return 1;
     }
     *output = {};
+    output->complete = 1;
     if (!valid_composition(carbon_dioxide_mole_fraction, nitrogen_mole_fraction)) {
         set_error(error, error_capacity, "Unsupported ThermoPack envelope composition.");
         return 2;
