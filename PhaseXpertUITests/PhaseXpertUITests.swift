@@ -52,7 +52,7 @@ final class PhaseXpertUITests: XCTestCase {
         )
     }
 
-    func testThreePercentNitrogenDisplaysProviderPhaseDiagram() {
+    func testThreePercentNitrogenRejectsOutOfDomainProviderTrace() {
         let app = XCUIApplication()
         app.launch()
 
@@ -85,17 +85,15 @@ final class PhaseXpertUITests: XCTestCase {
         viewPhaseDiagramButton.tap()
 
         XCTAssertTrue(
-            app.otherElements["phase-diagram-available"].waitForExistence(timeout: 10),
-            "The provider phase-diagram screen did not become available for 3 mol% N₂."
+            app.otherElements["phase-diagram-error"].waitForExistence(timeout: 10),
+            "The out-of-domain provider trace was not rejected for 3 mol% N₂."
         )
-
-        let phaseBoundaryChart = app.otherElements["phase-boundary-chart"]
-        for _ in 0..<8 where !phaseBoundaryChart.waitForExistence(timeout: 0.5) {
-            app.swipeUp()
-        }
         XCTAssertTrue(
-            phaseBoundaryChart.waitForExistence(timeout: 3),
-            "The actual provider phase-boundary chart was not rendered for 3 mol% N₂."
+            app.staticTexts[
+                "CoolProp mixture phase-envelope continuation left the supported "
+                    + "PhaseXpert pressure or temperature domain; no diagram is displayed."
+            ].exists
         )
+        XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
     }
 }
