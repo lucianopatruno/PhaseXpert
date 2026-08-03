@@ -146,3 +146,9 @@
   continuation.
 - Bumped CoolProp provider provenance to 0.8.2 and replaced chart-presence
   regressions with focused pressure- and temperature-domain rejection coverage.
+- Removed the low-visibility custom keyboard “OK” control; numeric keyboards
+  now dismiss interactively while scrolling and retain previous/next navigation.
+- Made CO₂ a read-only exact remainder in both ppm and mol% composition entry,
+  with live validation and no normalization of impurity values.
+- Added an explicit destructive “Remove impurity” action to each impurity menu
+  while retaining swipe-to-delete behavior.
