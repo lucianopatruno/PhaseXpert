@@ -802,8 +802,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 && $0.pressurePa <= descriptor.domain.maximumPressurePa
         }) else {
             throw ProviderError.malformedResponse(
-                "CoolProp mixture phase-envelope continuation left the supported "
-                    + "PhaseXpert pressure or temperature domain; no diagram is displayed."
+                "CoolProp mixture phase-envelope continuation left PhaseXpert's supported "
+                    + "0.8–300 bar(a), −55–150 °C domain; no diagram is displayed."
             )
         }
 
