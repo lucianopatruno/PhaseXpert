@@ -94,7 +94,7 @@ public struct UnavailableThermoPackEngine: ThermoPackEngine {
     public let libraryVersion = "Not linked"
     public let bridgeVersion = "1.0.0"
     public let configurationIdentifier =
-        "PR / Classic alpha / Classic-vdW mixing / PR_kij.json vdW-18 ref=Default"
+        "PR (Peng-Robinson), Classic alpha, Classic/van der Waals one-fluid mixing, ThermoPack PR_kij.json vdW-18 ref=Default"
 
     public init() {}
 
@@ -146,7 +146,8 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
             supportedComponents: engine.isAvailable ? [.carbonDioxide, .nitrogen] : [],
             supportedProperties: engine.isAvailable ? [
                 .density, .molarMass, .specificVolume, .compressibilityFactor,
-                .enthalpy, .entropy, .isobaricHeatCapacity, .vapourFraction
+                .enthalpy, .internalEnergy, .entropy, .isobaricHeatCapacity,
+                .vapourFraction
             ] : [],
             domain: .initialCO2Transport,
             scientificBasis:
@@ -236,7 +237,7 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
 
         let properties = request.requestedProperties
             .sorted { $0.rawValue < $1.rawValue }
-            .map { property($0, from: raw) }
+            .map { property($0, from: raw, pressurePa: request.pressurePa) }
         return CalculationResponse(
             requestID: request.requestID,
             model: descriptor,
@@ -419,7 +420,8 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
 
     private func property(
         _ id: PropertyID,
-        from state: ThermoPackStateResult
+        from state: ThermoPackStateResult,
+        pressurePa: Double
     ) -> PropertyValue {
         if state.phase == .twoPhase && id != .vapourFraction {
             return PropertyValue(
@@ -447,6 +449,16 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
             resolved = (state.compressibilityFactor, "1", true)
         case .enthalpy:
             resolved = (state.enthalpyJoulesPerKilogram, "J/kg", false)
+        case .internalEnergy:
+            resolved = (
+                state.enthalpyJoulesPerKilogram.flatMap { enthalpy in
+                    state.specificVolumeCubicMetresPerKilogram.map { volume in
+                        enthalpy - pressurePa * volume
+                    }
+                },
+                "J/kg",
+                false
+            )
         case .entropy:
             resolved = (
                 state.entropyJoulesPerKilogramKelvin, "J/(kg·K)", false
