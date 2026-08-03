@@ -92,21 +92,52 @@ struct CalculatorView: View {
                                     .font(.body.weight(.medium))
                                     .accessibilityLabel("Carbon dioxide")
                             } else {
-                                Picker("Impurity", selection: $entry.component) {
-                                    ForEach(viewModel.impurityOptions(including: entry.component)) { component in
-                                        Text(component.symbol).tag(component)
+                                Menu {
+                                    ForEach(
+                                        viewModel.impurityOptions(including: entry.component)
+                                    ) { component in
+                                        Button {
+                                            viewModel.updateImpurity(
+                                                id: entry.id,
+                                                component: component
+                                            )
+                                        } label: {
+                                            if component == entry.component {
+                                                Label(component.symbol, systemImage: "checkmark")
+                                            } else {
+                                                Text(component.symbol)
+                                            }
+                                        }
                                     }
+
+                                    Divider()
+
+                                    Button(role: .destructive) {
+                                        removeImpurity(id: entry.id)
+                                    } label: {
+                                        Label("Remove impurity", systemImage: "trash")
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text(entry.component.symbol)
+                                        Image(systemName: "chevron.down")
+                                            .font(.caption.weight(.semibold))
+                                    }
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(.primary)
                                 }
-                                .pickerStyle(.menu)
-                                .labelsHidden()
                                 .fixedSize(horizontal: true, vertical: false)
-                                .accessibilityLabel("Impurity component")
+                                .accessibilityLabel(
+                                    "\(entry.component.symbol) impurity menu"
+                                )
+                                .accessibilityHint(
+                                    "Changes or removes this impurity."
+                                )
                             }
 
                             Spacer(minLength: 8)
 
-                            if viewModel.compositionBasis == .partsPerMillion,
-                               entry.component == .carbonDioxide {
+                            if entry.component == .carbonDioxide {
                                 Text(viewModel.displayedCompositionValue(for: entry))
                                     .multilineTextAlignment(.trailing)
                                     .frame(width: 104)
@@ -166,16 +197,12 @@ struct CalculatorView: View {
                     }
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
                 } header: {
-                    HStack {
-                        Text("Composition")
-                        Spacer()
-                        EditButton()
-                    }
+                    Text("Composition")
                 } footer: {
                     Text(
                         viewModel.compositionBasis == .partsPerMillion
                             ? "Enter impurities in molar ppm. CO₂ is calculated exactly as 1,000,000 ppm minus the impurity total."
-                            : "Values are entered as mol%. The app never normalizes composition silently."
+                            : "Enter impurities in mol%. CO₂ is calculated exactly as 100 mol% minus the impurity total."
                     )
                 }
 
@@ -262,6 +289,7 @@ struct CalculatorView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(Color.ifeBackground)
             .navigationTitle("PhaseXpert")
             .onAppear {
@@ -272,6 +300,9 @@ struct CalculatorView: View {
                 loadPendingSavedCase()
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.pressureText) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.temperatureText) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.composition) { _, _ in viewModel.validate() }
             .onChange(of: focusedField) { _, newField in
                 guard let newField else { return }
                 Task { @MainActor in
@@ -310,13 +341,6 @@ struct CalculatorView: View {
                     .disabled(!canMoveFocus(by: 1))
                     .accessibilityLabel("Next input field")
 
-                    Spacer()
-
-                    Button("OK") {
-                        focusedField = nil
-                        viewModel.validate()
-                    }
-                    .fontWeight(.semibold)
                 }
             }
             .sheet(isPresented: $showsScientificTraceability) {
@@ -353,6 +377,14 @@ struct CalculatorView: View {
                 Text(saveError ?? "")
             }
         }
+    }
+
+    private func removeImpurity(id: UUID) {
+        if focusedField == .composition(id) {
+            focusedField = nil
+        }
+        compositionSelections.removeValue(forKey: id)
+        viewModel.removeImpurity(id: id)
     }
 
     private func compositionSelectionBinding(
