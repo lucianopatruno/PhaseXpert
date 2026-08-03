@@ -69,6 +69,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   derived transparently from recorded inputs and calculated density; an
   unavailable IFE provider, and a
   non-scientific demo provider
+- a separate, optional ThermoPack v2.2.4 Peng–Robinson / Classic provider for
+  pure CO₂ and CO₂/N₂ state properties and independent bubble/dew points; its
+  native iOS build and numerical smoke gate remain pending
 - immutable results grouped into state, thermodynamic, transport/acoustic and
   derived sections, with presentation-only engineering units, copy/share actions
   and concise or expert scientific traceability
