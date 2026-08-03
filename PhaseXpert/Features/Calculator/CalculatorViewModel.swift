@@ -226,9 +226,9 @@ final class CalculatorViewModel {
         let oldCarbonDioxideValue = carbonDioxideEnteredValue
         compositionBasis = newBasis
         composition = composition.map { entry in
-            let oldValue = oldCarbonDioxideValue.flatMap {
-                entry.component == .carbonDioxide ? $0 : nil
-            } ?? parse(entry.value)
+            let oldValue: Double? = entry.component == .carbonDioxide
+                ? oldCarbonDioxideValue
+                : parse(entry.value)
             guard let oldValue else {
                 return CompositionInput(component: entry.component, value: "")
             }
