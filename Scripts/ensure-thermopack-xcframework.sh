@@ -10,6 +10,7 @@ expected="$({
     shasum -a 256 \
         "${project_root}/Native/ThermoPackBridge/include/PhaseXpertThermoPackBridge.h" \
         "${project_root}/Native/ThermoPackBridge/src/PhaseXpertThermoPackBridge.cpp" \
+        "${project_root}/Native/ThermoPackBridge/smoke/thermopack_smoke.cpp" \
         "${project_root}/Native/ThermoPackBridge/patches/prepare_ios_static_build.py" \
         "${project_root}/Scripts/build-thermopack-xcframework.sh"
 } | shasum -a 256 | awk '{print $1}')"
