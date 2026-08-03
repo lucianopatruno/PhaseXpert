@@ -1,0 +1,25 @@
+ThermoPack
+Copyright (c) 2022-present thermotools and Contributors.
+https://github.com/thermotools/thermopack
+
+PhaseXpert pins ThermoPack release v2.2.4 at commit
+ca75d8e095e8b951616897efe1bca9b8c3badda7.
+
+ThermoPack is distributed under the Apache License, Version 2.0. The complete
+licence text in this directory was retrieved from the authoritative upstream
+ThermoPack repository. PhaseXpert's downstream build-only patch removes
+desktop-only compiler/link choices for iOS static packaging; it does not alter
+equations, fluid records, interaction parameters or solver algorithms.
+
+Selected scientific configuration:
+- Peng–Robinson cubic equation of state
+- Classic alpha
+- Classic van der Waals one-fluid mixing
+- upstream binaries/PR_kij.json record vdW-18
+- components CO2/N2
+- upstream parameter reference identifier Default
+- PhaseXpertThermoPackBridge capability version 1.0.0
+
+No ThermoPack binary is committed. Distribution review must include this
+licence and notice and must verify the generated binary has no unsupported
+dynamic Fortran or OpenMP runtime dependency.
