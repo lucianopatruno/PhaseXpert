@@ -83,12 +83,12 @@ private struct ModelDetailView: View {
             if !descriptor.references.isEmpty {
                 Section("References") {
                     ForEach(descriptor.references, id: \.title) { reference in
-                        if
-                            let address = reference.doiOrURL,
-                            let url = URL(string: address)
-                        {
+                        if let url = reference.destinationURL {
                             Link(destination: url) {
-                                referenceLabel(reference, address: address)
+                                referenceLabel(
+                                    reference,
+                                    address: reference.doiOrURL
+                                )
                             }
                             .accessibilityLabel(
                                 "\(reference.authors), \(reference.title), open reference"
