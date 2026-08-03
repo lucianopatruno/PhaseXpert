@@ -39,6 +39,12 @@ if [[ "${mode}" == fast ]]; then
 fi
 
 bash Scripts/ensure-coolprop-xcframework.sh
+if [[ "${PHASEXPERT_REQUIRE_THERMOPACK:-0}" == 1 \
+    || -d Vendor/ThermoPack/PhaseXpertThermoPackBridge.xcframework ]]; then
+    bash Scripts/ensure-thermopack-xcframework.sh
+else
+    echo "ThermoPack native validation skipped; set PHASEXPERT_REQUIRE_THERMOPACK=1 to require it."
+fi
 run_core_tests
 
 xcodebuild     -project PhaseXpert.xcodeproj     -scheme PhaseXpert     -destination "generic/platform=iOS Simulator"     -derivedDataPath "${derived_data}"     CODE_SIGNING_ALLOWED=NO     build
