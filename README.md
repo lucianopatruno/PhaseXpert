@@ -78,8 +78,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   snapshots, phase and compatible property values, with searchable PDF and
   long-form CSV compared-minus-reference reports
 - preliminary provider-calculated pressure–temperature diagrams: one
-  saturation boundary for pure CO₂ and separate bubble/dew branches for the
-  supported dry CO₂-rich mixtures, including the current operating point
+  saturation boundary for pure CO₂ and, only when every returned provider point
+  stays inside the declared app domain, separate bubble/dew branches for a
+  supported dry CO₂-rich mixture, including the current operating point
 - local JSON, CSV and paginated PDF calculation-report export preserving the
   saved record, units, warnings and provider provenance
 - bounded, cancellable pressure or temperature property sweeps using a real
@@ -141,7 +142,8 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - dry-mixture phase envelopes are preliminary CoolProp outputs and have not
   completed independent PhaseXpert validation; the pinned continuation starts
   at 0.8 bar(a), requests no refinement and is capped at 256 calculated provider
-  steps, preserving an explicitly incomplete/open trace when the cap is reached;
+  steps; PhaseXpert rejects the complete trace if any point leaves the declared
+  0.8–300 bar(a) or −55–150 °C app domain and never clips such a trace;
 - property-sweep charts connect adjacent successful calculations for
   visualization only; failures and unavailable values remain explicit gaps in
   both interactive and PDF charts;
