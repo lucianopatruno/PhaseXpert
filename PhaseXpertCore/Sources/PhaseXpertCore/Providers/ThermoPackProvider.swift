@@ -152,12 +152,12 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
             scientificBasis:
                 "ThermoPack v2.2.4 cubic Peng–Robinson equation of state for CO₂/N₂.",
             equationOrMethod:
-                "Peng–Robinson cubic EOS; Classic alpha; Classic van der Waals one-fluid mixing; "
-                + "TP flash and independent bubble/dew pressure calls from ThermoPack's ISO C API.",
+                engine.configurationIdentifier
+                + "; TP flash and independent bubble/dew pressure calls from ThermoPack's ISO C API.",
             coefficientSetVersion:
-                "ThermoPack PR_kij.json vdW-18, CO2/N2, ref=Default; source "
-                + "ca75d8e095e8b951616897efe1bca9b8c3badda7; bridge "
-                + engine.bridgeVersion,
+                engine.configurationIdentifier
+                + "; ThermoPack source ca75d8e095e8b951616897efe1bca9b8c3badda7"
+                + "; bridge " + engine.bridgeVersion,
             requiredResources: ["PhaseXpertThermoPackBridge.xcframework"],
             limitations: [
                 "Only pure CO₂ and 90–100 mol% CO₂ / 0–10 mol% N₂ are enabled.",
@@ -320,7 +320,7 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
         }
         if result.timedOut {
             warnings.append(
-                "The explicit \(Int(Self.maximumEnvelopeElapsedMilliseconds)) ms native elapsed-time bound was reached."
+                "The \(Int(Self.maximumEnvelopeElapsedMilliseconds)) ms budget, checked between synchronous native calls, was reached."
             )
         }
         if result.failedCalls > 0 {
@@ -347,7 +347,7 @@ public struct ThermoPackProvider<Engine: ThermoPackEngine>: ThermodynamicModelPr
 
     private func envelopeMethod(_ result: ThermoPackEnvelopeResult) -> String {
         "ThermoPack bubP/dewP; maximum \(Self.maximumEnvelopePointsPerBranch) calls per branch; "
-            + "\(Int(Self.maximumEnvelopeElapsedMilliseconds)) ms elapsed bound; "
+            + "\(Int(Self.maximumEnvelopeElapsedMilliseconds)) ms budget checked between calls; "
             + "attempted \(result.attemptedCalls), failed \(result.failedCalls)"
     }
 
