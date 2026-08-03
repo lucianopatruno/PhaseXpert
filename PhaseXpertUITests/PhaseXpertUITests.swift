@@ -29,14 +29,33 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
     }
 
-    func testNumericKeyboardCanBeDismissed() {
+    func testNumericKeyboardDoesNotShowCustomOKControl() {
         let app = XCUIApplication()
         app.launch()
 
         app.textFields["Pressure value"].tap()
-        XCTAssertTrue(app.buttons["OK"].waitForExistence(timeout: 2))
-        app.buttons["OK"].tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["OK"].exists)
+    }
+
+    func testImpurityMenuProvidesExplicitRemoval() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let addImpurityButton = app.buttons["Add impurity"]
+        XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
+        addImpurityButton.tap()
+
+        let impurityMenu = app.buttons["N₂ impurity menu"]
+        XCTAssertTrue(impurityMenu.waitForExistence(timeout: 3))
+        impurityMenu.tap()
+
+        let removeButton = app.buttons["Remove impurity"]
+        XCTAssertTrue(removeButton.waitForExistence(timeout: 2))
+        removeButton.tap()
+
+        XCTAssertFalse(app.textFields["N₂ ppm"].exists)
+        XCTAssertFalse(app.buttons["N₂ impurity menu"].exists)
     }
 
     func testPhaseDiagramRequiresARealCalculation() {
@@ -63,8 +82,8 @@ final class PhaseXpertUITests: XCTestCase {
         let nitrogenField = app.textFields["N₂ ppm"]
         XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
         nitrogenField.typeText("30000")
-        XCTAssertTrue(app.buttons["OK"].waitForExistence(timeout: 2))
-        app.buttons["OK"].tap()
+        XCTAssertFalse(app.buttons["OK"].exists)
+        app.swipeDown()
 
         let runCalculationButton = app.buttons["run-calculation"]
         for _ in 0..<6 where !runCalculationButton.waitForExistence(timeout: 0.5) {
