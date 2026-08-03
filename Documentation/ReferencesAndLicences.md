@@ -9,8 +9,9 @@ review before distribution.
 
 ## Software
 
-The current runtime uses only Apple SDK frameworks. The CoolProp bridge and
-MIT notice are present, but no CoolProp binary is linked. REFPROP and other
+The repository optionally links locally generated CoolProp and ThermoPack
+XCFrameworks; neither generated binary is committed. CoolProp's MIT notice and
+ThermoPack's Apache-2.0 licence/notice are tracked. REFPROP and other
 thermodynamic software are not included.
 
 Potential CoolProp reference:
