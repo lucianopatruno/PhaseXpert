@@ -4,6 +4,64 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+
+
+    private struct OutOfOrderCalculationProvider: ThermodynamicModelProvider {
+        let descriptor = ModelDescriptor(
+            id: "out-of-order-test",
+            name: "Out-of-order test",
+            modelVersion: "1",
+            providerVersion: "1",
+            availability: .available,
+            calculationMode: .local,
+            supportedComponents: [.carbonDioxide],
+            supportedProperties: [.density],
+            domain: .initialCO2Transport,
+            scientificBasis: "Orchestration test only.",
+            equationOrMethod: "Delayed mock response.",
+            limitations: ["Not scientific."],
+            references: []
+        )
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            let delay: UInt64 = request.pressurePa < 15_000_000
+                ? 200_000_000
+                : 10_000_000
+            try await Task.sleep(nanoseconds: delay)
+            return CalculationResponse(
+                requestID: request.requestID,
+                model: descriptor,
+                phase: .unknown,
+                properties: [
+                    .init(
+                        property: .density,
+                        value: request.pressurePa,
+                        unit: "kg/m³",
+                        status: .calculated
+                    )
+                ],
+                solver: .init(
+                    method: "Delayed mock response.",
+                    converged: true,
+                    durationMilliseconds: Double(delay) / 1_000_000
+                ),
+                warnings: [],
+                isScientificResult: false
+            )
+        }
+
+        func phaseEnvelope(
+            _ request: PhaseEnvelopeRequest
+        ) async throws -> PhaseEnvelopeResponse {
+            PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [],
+                warnings: [],
+                isAvailable: false
+            )
+        }
+    }
+
     private struct DelayedPhaseEnvelopeProvider: ThermodynamicModelProvider {
         let descriptor = ArchitectureDemoProvider().descriptor
         let delayNanoseconds: UInt64
@@ -154,6 +212,31 @@ final class PhaseXpertTests: XCTestCase {
         try await Task.sleep(nanoseconds: 100_000_000)
         XCTAssertNil(viewModel.errorMessage)
         XCTAssertNotNil(viewModel.response)
+    }
+
+
+
+    @MainActor
+    func testOlderCalculationCannotReplaceNewerProviderResult() async throws {
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [OutOfOrderCalculationProvider()])
+        )
+        viewModel.selectedModelID = "out-of-order-test"
+        viewModel.pressureText = "100"
+        viewModel.validate()
+
+        let older = Task { await viewModel.calculate() }
+        try await Task.sleep(nanoseconds: 20_000_000)
+        viewModel.pressureText = "200"
+        let newer = Task { await viewModel.calculate() }
+
+        await newer.value
+        await older.value
+
+        XCTAssertEqual(viewModel.calculationRecord?.request.pressurePa, 20_000_000)
+        XCTAssertEqual(viewModel.calculationRecord?.response.properties.first?.value, 20_000_000)
+        XCTAssertNil(viewModel.calculationError)
+        XCTAssertFalse(viewModel.isCalculating)
     }
 
     @MainActor
