@@ -25,14 +25,19 @@ final class PhaseXpertTests: XCTestCase {
         }
     }
 
-    func testDefaultRegistryContainsBothFutureProductionProviders() {
+    func testDefaultRegistryContainsStandaloneProviders() {
         let registry = ProviderRegistry()
         let identifiers = Set(registry.descriptors.map(\.id))
         XCTAssertTrue(identifiers.contains("coolprop-heos"))
+        XCTAssertTrue(identifiers.contains("thermopack-pr-classic-co2-n2"))
         XCTAssertTrue(identifiers.contains("ife-model"))
         XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
             expectedDefaultCoolPropAvailability
+        )
+        XCTAssertEqual(
+            registry.provider(id: "thermopack-pr-classic-co2-n2")?.descriptor.availability,
+            expectedDefaultThermoPackAvailability
         )
     }
 
@@ -295,6 +300,14 @@ final class PhaseXpertTests: XCTestCase {
 
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
         #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
+        .preliminary
+        #else
+        .unavailable
+        #endif
+    }
+
+    private var expectedDefaultThermoPackAvailability: ModelAvailability {
+        #if os(iOS) && canImport(PhaseXpertThermoPackBridge)
         .preliminary
         #else
         .unavailable
