@@ -247,3 +247,17 @@ int32_t px_thermopack_envelope(
     }
     return 0;
 }
+
+
+int32_t px_thermopack_envelope_point(
+    const PXThermoPackEnvelope *envelope,
+    int32_t index,
+    PXThermoPackEnvelopePoint *point
+) {
+    if (envelope == nullptr || point == nullptr || index < 0
+        || index >= envelope->point_count || index >= PX_THERMOPACK_MAX_POINTS) {
+        return 1;
+    }
+    *point = envelope->points[index];
+    return 0;
+}
