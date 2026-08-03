@@ -521,7 +521,11 @@ struct CalculatorView: View {
                 ? "Workflow demonstration only. No thermophysical values are calculated."
                 : "Review the model domain and limitations before calculating."
         case .preliminary:
-            "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
+            if descriptor.id == "thermopack-pr-classic-co2-n2" {
+                "ThermoPack v2.2.4 Peng–Robinson with Classic alpha/mixing supports pure CO₂ and CO₂/N₂ up to 10 mol% N₂. Properties remain configuration-specific and validation incomplete; no CoolProp fallback is used."
+            } else {
+                "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
+            }
         case .unavailable:
             "This provider cannot perform calculations in the current build."
         }
