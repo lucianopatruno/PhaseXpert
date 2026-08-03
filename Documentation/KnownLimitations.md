@@ -93,7 +93,8 @@ guarantee that a mixture phase diagram is available.
   to fill them.
 - Two-phase flashes retain phase and vapor fraction only. No bulk two-phase
   density or caloric value is constructed.
-- ThermoPack bubble/dew sampling is bounded to 64 calls per branch and 5000 ms.
-  Failed or out-of-domain calls leave an incomplete trace; no points are
-  inferred.
+- ThermoPack bubble/dew sampling is bounded to 64 calls per branch. A 5000 ms
+  budget is checked between synchronous native calls; one in-progress Fortran
+  call cannot be preempted. Failed or out-of-domain calls leave an incomplete
+  trace, and no points are inferred.
 - Saved-case comparison reports model-output differences, not accuracy.
