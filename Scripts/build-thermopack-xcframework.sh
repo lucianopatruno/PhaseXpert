@@ -155,6 +155,8 @@ find "${framework}" -type f -perm -111 -print0 | while IFS= read -r -d '' binary
     fi
 done
 
+cp "${project_root}/ThirdParty/ThermoPack/LICENSE" "${output_root}/THERMOPACK-LICENSE.txt"
+cp "${project_root}/ThirdParty/ThermoPack/NOTICE" "${output_root}/THERMOPACK-NOTICE.txt"
 printf '%s\n' "${revision}" > "${output_root}/THERMOPACK-REVISION.txt"
 printf '%s\n' "${version}" > "${output_root}/THERMOPACK-VERSION.txt"
 {
