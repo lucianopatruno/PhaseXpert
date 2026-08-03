@@ -133,3 +133,18 @@ Asset colors were sampled from the supplied IFE template. The supplied English
 IFE logo is used as an unmodified vector. Apple system typography is used
 because the template font cannot be assumed redistributable; Dynamic Type and
 VoiceOver are therefore supported without bundling a font licence.
+
+## Standalone ThermoPack boundary
+
+`ThermoPackProvider` is a peer of `CoolPropProvider`, with stable ID
+`thermopack-pr-classic-co2-n2`. SwiftUI selects providers only through the
+registry. A response and every persisted/exported snapshot embed the exact
+ThermoPack release, EOS, alpha, mixing rule, parameter record, bridge version
+and provider capability version.
+
+The native adapter is an actor and the C++ bridge serializes access to
+ThermoPack's global active model. Provider cancellation is checked before and
+after native calls. Existing phase-diagram orchestration also keys visible state
+by calculation-record ID, so a late result from an older provider request
+cannot replace a newer calculation. ThermoPack and CoolProp never call each
+other, and neither supplies missing values to the other.
