@@ -285,7 +285,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.8.1",
+            providerVersion: "0.8.2",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
@@ -320,7 +320,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.",
                 "Preliminary integration; no production accuracy claim.",
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
-                "Dry-mixture phase envelopes use CoolProp's low-level HEOS phase-envelope routine and remain preliminary and validation pending."
+                "Dry-mixture phase envelopes use CoolProp's low-level HEOS phase-envelope routine and remain preliminary and validation pending.",
+                "A mixture phase envelope is rejected in full if any provider point leaves the declared PhaseXpert pressure or temperature domain; points are never clipped or interpolated."
             ],
             references: [
                 SourceReference(
@@ -786,19 +787,31 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     }
 
     private func validateMixtureEnvelope(_ points: [PhaseEnvelopePoint]) throws {
-        let bubbleCount = points.filter { $0.branch == .bubble }.count
-        let dewCount = points.filter { $0.branch == .dew }.count
-        guard points.count >= 4, bubbleCount >= 2, dewCount >= 2 else {
-            throw ProviderError.malformedResponse(
-                "CoolProp did not return traceable bubble and dew branches."
-            )
-        }
         guard points.allSatisfy({
             $0.temperatureK.isFinite && $0.temperatureK > 0
                 && $0.pressurePa.isFinite && $0.pressurePa > 0
         }) else {
             throw ProviderError.malformedResponse(
                 "CoolProp returned a non-finite or non-positive mixture phase-envelope point."
+            )
+        }
+        guard points.allSatisfy({
+            $0.temperatureK >= descriptor.domain.minimumTemperatureK
+                && $0.temperatureK <= descriptor.domain.maximumTemperatureK
+                && $0.pressurePa >= descriptor.domain.minimumPressurePa
+                && $0.pressurePa <= descriptor.domain.maximumPressurePa
+        }) else {
+            throw ProviderError.malformedResponse(
+                "CoolProp mixture phase-envelope continuation left the supported "
+                    + "PhaseXpert pressure or temperature domain; no diagram is displayed."
+            )
+        }
+
+        let bubbleCount = points.filter { $0.branch == .bubble }.count
+        let dewCount = points.filter { $0.branch == .dew }.count
+        guard points.count >= 4, bubbleCount >= 2, dewCount >= 2 else {
+            throw ProviderError.malformedResponse(
+                "CoolProp did not return traceable bubble and dew branches."
             )
         }
     }
