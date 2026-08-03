@@ -70,6 +70,7 @@ public enum TemperatureUnit: String, CaseIterable, Codable, Hashable, Sendable, 
 public enum CompositionUnit: String, CaseIterable, Codable, Hashable, Sendable, Identifiable {
     case moleFraction = "Mole fraction"
     case molePercent = "mol%"
+    case partsPerMillion = "ppm"
     case massFraction = "Mass fraction"
 
     public var id: String { rawValue }

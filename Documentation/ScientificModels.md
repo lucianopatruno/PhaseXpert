@@ -18,7 +18,7 @@ The approved spike is therefore restricted:
 - licence texts, notices, binary architecture and App Store packaging are
   reviewed before distribution.
 
-The pure-CO₂ provider, restricted CO₂-N₂ path, native C bridge and reproducible
+The pure-CO₂ provider, restricted dry CO₂-rich mixture path, native C bridge and reproducible
 build script are included. The generated CoolProp binary is intentionally not
 committed; when built at the documented local path it is linked conditionally
 for iOS.
@@ -64,7 +64,8 @@ provider proves support.
 ## Planned property stages
 
 1. Phase/region, density and dynamic viscosity.
-2. Molar mass, compressibility factor and specific volume. **Implemented as\n   explicit derived properties for the executable CO₂ and CO₂-N₂ paths.**
+2. Molar mass, compressibility factor and specific volume. **Implemented as
+   explicit derived properties for the executable pure and dry-mixture paths.**
 3. Enthalpy, entropy, internal energy, heat capacities, speed of sound,
    thermal conductivity and Joule–Thomson coefficient. **Implemented for pure
    CO₂ as preliminary CoolProp outputs; independent validation remains open.**
@@ -102,7 +103,7 @@ The UI will use Swift Charts for the resulting provider points and an overlay
 gesture for pan/zoom and point inspection. If the provider returns no envelope,
 the chart stays unavailable. No decorative curve is permitted.
 
-### Implemented preliminary pure-CO₂ boundary
+### Implemented preliminary phase boundaries
 
 The CoolProp provider now exposes a narrower pure-fluid operation. For exactly
 100 mol% CO₂, it obtains triple-point temperature, critical temperature and
@@ -121,11 +122,20 @@ line segments between calculated points are a display operation only.
 The result remains preliminary and validation-pending. Independent
 saturation-pressure reference cases have not yet been accepted, so the curve
 must not be used for engineering, safety, commercial or regulatory decisions.
-Mixtures and the unavailable IFE provider return no boundary.
+For an accepted dry CO₂-rich composition, the native bridge creates one HEOS
+`AbstractState`, applies the exact mole fractions and calls CoolProp's low-level
+`build_phase_envelope` routine. PhaseXpert accepts the trace only when every finite positive point lies inside
+the declared 0.8–300 bar(a), −55–150 °C app domain and the returned bubble/dew
+branches remain usable. A single out-of-domain point rejects the full trace.
+PhaseXpert does not clip, insert scientific samples, reconnect gaps, close
+branches cosmetically or replace a failed envelope. The unavailable IFE provider returns no boundary.
+
+No independent mixture bubble/dew reference cases or tolerances have been
+approved. These envelopes are provider outputs, not validated PhaseXpert data.
 
 ### Implemented restricted dry CO₂-rich calculation
 
-Provider version 0.7.0 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
+Provider version 0.8.2 admits 100 mol% CO₂ or dry mixtures containing CO₂ plus
 one or more of N₂, O₂, Ar, CH₄ and H₂. CO₂ must be uniquely largest, the
 fractions must sum explicitly to one, and total impurity must be in (0, 0.10].
 The upper bound is a temporary PhaseXpert product guardrail and is not presented
@@ -140,8 +150,19 @@ calculation failure.
 
 Mixture output remains limited to density, provider phase, and the transparent
 derived values M, v and Z. Mixture viscosity, caloric, acoustic, conductivity,
-derivative properties and phase envelopes are deliberately unavailable. Every
-result records exact composition, library/provider version, method and
+derivative properties are deliberately unavailable. Phase envelopes use the
+provider routine described above and remain validation pending. Mixture
+boundaries use CoolProp's native HEOS density continuation, starting at the
+declared 0.8 bar(a) PhaseXpert minimum and with optional refinement disabled.
+The pinned CoolProp 8.0.0 source contains an unbounded `for (;;)` continuation
+whose only normal exits require pressure closure or an almost-pure incipient
+phase. The tracked PhaseXpert downstream patch caps that loop at 256
+successfully calculated provider steps. Reaching the cap leaves the provider
+trace incomplete and open. The provider exposes it only if every returned point
+also remains inside the declared app domain; otherwise the diagram is explicitly
+unavailable. PhaseXpert does not clip, interpolate, extrapolate or cosmetically
+close the trace.
+Every result records exact composition, library/provider version, method and
 validation-pending warnings. Contract coverage is not independent numeric
 validation.
 

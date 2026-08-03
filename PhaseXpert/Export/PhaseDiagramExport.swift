@@ -63,22 +63,22 @@ struct PhaseDiagramImageExporter {
         record: CalculationRecord,
         response: PhaseEnvelopeResponse
     ) throws {
-        let composition = record.request.composition.filter { $0.moleFraction > 1e-12 }
-        guard composition.count == 1,
-              composition[0].component == .carbonDioxide,
-              abs(composition[0].moleFraction - 1) <= 1e-9
-        else {
-            throw PhaseDiagramExportError.unavailable(
-                "Phase-diagram export is available only for a real pure CO₂ boundary."
-            )
-        }
         guard response.isAvailable,
-              response.boundaryKind == .pureFluidSaturation,
+              response.boundaryKind != nil,
               !response.points.isEmpty
         else {
             throw PhaseDiagramExportError.unavailable(
-                "The selected provider did not return an exportable pure CO₂ boundary."
+                "The selected provider did not return an exportable phase boundary."
             )
+        }
+        if response.boundaryKind == .mixtureEnvelope {
+            guard response.points.filter({ $0.branch == .bubble }).count >= 2,
+                  response.points.filter({ $0.branch == .dew }).count >= 2
+            else {
+                throw PhaseDiagramExportError.unavailable(
+                    "The selected provider did not return both mixture-envelope branches."
+                )
+            }
         }
         guard response.points.allSatisfy({
             $0.temperatureK.isFinite && $0.pressurePa.isFinite && $0.pressurePa > 0
@@ -119,6 +119,10 @@ private struct PhaseDiagramExportCanvas: View {
         samples.filter { $0.branch == .bubble }
     }
 
+    private var dew: [Sample] {
+        samples.filter { $0.branch == .dew }
+    }
+
     private var critical: Sample? {
         samples.first { $0.branch == .critical }
     }
@@ -130,7 +134,11 @@ private struct PhaseDiagramExportCanvas: View {
                     Text("PhaseXpert")
                         .font(.system(size: 42, weight: .bold))
                         .foregroundStyle(Color.ifePrimary)
-                    Text("Pure CO₂ pressure–temperature diagram")
+                    Text(response.boundaryKind == .mixtureEnvelope
+                        ? (response.solver?.converged == false
+                            ? "CO₂ mixture pressure–temperature trace"
+                            : "CO₂ mixture pressure–temperature envelope")
+                        : "Pure CO₂ pressure–temperature diagram")
                         .font(.system(size: 28, weight: .semibold))
                     Text("PRELIMINARY — VALIDATION PENDING")
                         .font(.system(size: 19, weight: .bold))
@@ -149,7 +157,20 @@ private struct PhaseDiagramExportCanvas: View {
                         x: .value("Temperature (°C)", sample.temperatureCelsius),
                         y: .value("Pressure (bar(a))", sample.pressureBar)
                     )
-                    .foregroundStyle(by: .value("Series", "CO₂ saturation boundary"))
+                    .foregroundStyle(by: .value(
+                        "Series",
+                        response.boundaryKind == .mixtureEnvelope
+                            ? "Bubble branch"
+                            : "CO₂ saturation boundary"
+                    ))
+                    .interpolationMethod(.linear)
+                }
+                ForEach(dew) { sample in
+                    LineMark(
+                        x: .value("Temperature (°C)", sample.temperatureCelsius),
+                        y: .value("Pressure (bar(a))", sample.pressureBar)
+                    )
+                    .foregroundStyle(by: .value("Series", "Dew branch"))
                     .interpolationMethod(.linear)
                 }
                 if let critical {
@@ -169,6 +190,8 @@ private struct PhaseDiagramExportCanvas: View {
             }
             .chartForegroundStyleScale([
                 "CO₂ saturation boundary": Color.ifePrimary,
+                "Bubble branch": Color.ifePrimary,
+                "Dew branch": Color.ifeSignal,
                 "Critical point": Color.ifeSignal,
                 "Operating point": Color.ifeText
             ])
@@ -187,7 +210,13 @@ private struct PhaseDiagramExportCanvas: View {
             Text("Model: \(response.model?.name ?? record.response.model.name) • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Provider \(response.model?.providerVersion ?? record.response.model.providerVersion)")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
-            Text("Straight line segments connect provider-calculated points. No estimated or decorative boundary is generated.")
+            Text("Calculation ID: \(record.response.calculationID.uuidString) • Envelope request ID: \(response.requestID.uuidString)")
+                .font(.system(size: 15).monospaced())
+                .foregroundStyle(.secondary)
+            Text("Composition: \(record.request.composition.map { "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%" }.joined(separator: ", "))")
+                .font(.system(size: 16))
+                .foregroundStyle(.secondary)
+            Text("Straight line segments connect adjacent provider-calculated points within each branch for display only. No scientific values are interpolated or estimated.")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
         }

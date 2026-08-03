@@ -36,6 +36,42 @@ struct IFECard<Content: View>: View {
     }
 }
 
+/// App-owned disclosure row whose label matches the body typography used by
+/// neighboring Form buttons and navigation links.
+struct IFEExpandableRow<Content: View>: View {
+    let title: String
+    private let content: Content
+    @State private var isExpanded = false
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+
+            if isExpanded {
+                content
+            }
+        }
+    }
+}
+
 struct ScientificStatusBanner: View {
     let title: String
     let message: String

@@ -17,9 +17,8 @@ flowchart TD
     State --> Export["CSV / JSON / PDF export"]
 ```
 
-The calculator, provider registry, local saved-case store and preliminary
-pure-CO₂ phase diagram are implemented. Export remains an explicit extension
-point.
+The calculator, provider registry, local saved-case store, reporting exports
+and preliminary pure/dry-mixture phase diagrams are implemented.
 
 ## Concurrency
 
@@ -57,7 +56,7 @@ critical point returned by CoolProp rather than estimating it from the plotted
 curve.
 
 The provider owns a per-instance actor cache keyed by CoolProp version and
-sampling configuration. A cached response receives the new request identifier,
+exact composition (or pure-fluid sampling configuration). A cached response receives the new request identifier,
 so traceability is not confused between UI requests. The view plots the
 provider response with Swift Charts, uses straight segments between calculated
 points and shows no curve when the provider reports unavailable or malformed
@@ -72,7 +71,7 @@ limitations and references. This prevents historical results from silently
 adopting metadata from a later provider release.
 
 Original pressure and temperature are retained as bar absolute and degrees
-Celsius alongside Pa and K. Original mol% entries are retained separately from
+Celsius alongside Pa and K. Original ppm or mol% entries are retained separately from
 the normalized mole-fraction array whenever the user explicitly applies
 normalization. Presentation may convert dynamic viscosity from Pa·s to mPa·s,
 but the provider value and unit remain unchanged in the record.

@@ -11,21 +11,32 @@ final class PhaseDiagramViewModel {
     private(set) var errorMessage: String?
 
     private let registry: ProviderRegistry
+    private let timeoutNanoseconds: UInt64
     private var loadingRecordID: UUID?
+    private var calculationTask: Task<PhaseEnvelopeResponse, Error>?
+    private var monitorTask: Task<Void, Never>?
+    private var timeoutTask: Task<Void, Never>?
 
-    init(registry: ProviderRegistry = ProviderRegistry()) {
+    init(
+        registry: ProviderRegistry = ProviderRegistry(),
+        timeoutNanoseconds: UInt64 = 30_000_000_000
+    ) {
         self.registry = registry
+        self.timeoutNanoseconds = timeoutNanoseconds
     }
 
-    func load(for record: CalculationRecord?) async {
+    func load(for record: CalculationRecord?) {
         guard let record else {
+            cancelLoading()
             loadingRecordID = nil
             response = nil
             errorMessage = nil
             isLoading = false
             return
         }
-        guard loadingRecordID != record.id || response == nil else { return }
+        guard loadingRecordID != record.id else { return }
+
+        cancelLoading()
         loadingRecordID = record.id
         response = nil
         errorMessage = nil
@@ -37,25 +48,58 @@ final class PhaseDiagramViewModel {
             return
         }
 
-        do {
-            let envelope = try await provider.phaseEnvelope(
-                PhaseEnvelopeRequest(
-                    modelID: record.request.modelID,
-                    composition: record.request.composition
-                )
-            )
-            try Task.checkCancellation()
-            guard loadingRecordID == record.id else { return }
-            response = envelope
-            isLoading = false
-        } catch is CancellationError {
-            guard loadingRecordID == record.id else { return }
-            isLoading = false
-        } catch {
-            guard loadingRecordID == record.id else { return }
-            errorMessage = userMessage(for: error)
-            isLoading = false
+        let recordID = record.id
+        let request = PhaseEnvelopeRequest(
+            modelID: record.request.modelID,
+            composition: record.request.composition
+        )
+        let calculation = Task.detached(priority: .userInitiated) {
+            try await provider.phaseEnvelope(request)
         }
+        calculationTask = calculation
+
+        monitorTask = Task { [weak self] in
+            do {
+                let envelope = try await calculation.value
+                guard !Task.isCancelled, let self,
+                      self.loadingRecordID == recordID else { return }
+                self.timeoutTask?.cancel()
+                self.response = envelope
+                self.errorMessage = nil
+                self.isLoading = false
+            } catch is CancellationError {
+                // A replacement record owns the visible state.
+            } catch {
+                guard !Task.isCancelled, let self,
+                      self.loadingRecordID == recordID else { return }
+                self.timeoutTask?.cancel()
+                self.errorMessage = self.userMessage(for: error)
+                self.isLoading = false
+            }
+        }
+
+        let timeoutNanoseconds = self.timeoutNanoseconds
+        timeoutTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: timeoutNanoseconds)
+            } catch {
+                return
+            }
+            guard !Task.isCancelled, let self,
+                  self.loadingRecordID == recordID,
+                  self.response == nil else { return }
+            self.isLoading = false
+            self.errorMessage = "CoolProp did not finish the phase-boundary calculation within 30 seconds. The provider calculation continues in the background; the diagram will appear automatically if it completes."
+        }
+    }
+
+    private func cancelLoading() {
+        monitorTask?.cancel()
+        timeoutTask?.cancel()
+        calculationTask?.cancel()
+        monitorTask = nil
+        timeoutTask = nil
+        calculationTask = nil
     }
 
     private func userMessage(for error: Error) -> String {
@@ -100,7 +144,7 @@ struct PhaseDiagramView: View {
             .background(Color.ifeBackground.ignoresSafeArea())
             .navigationTitle("Phase Diagram")
             .task(id: navigationState.latestCalculationRecord?.id) {
-                await viewModel.load(for: navigationState.latestCalculationRecord)
+                viewModel.load(for: navigationState.latestCalculationRecord)
             }
         }
     }
@@ -110,7 +154,7 @@ struct PhaseDiagramView: View {
         if viewModel.isLoading {
             VStack(spacing: IFESpacing.medium) {
                 ProgressView()
-                Text("Calculating pure CO₂ saturation boundary…")
+                Text("Calculating provider phase boundary…")
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -143,6 +187,7 @@ private struct PhaseBoundaryChart: View {
         let id: Int
         let temperatureCelsius: Double
         let pressureBar: Double
+        let branch: PhaseEnvelopePoint.Branch
     }
 
     let record: CalculationRecord
@@ -151,21 +196,21 @@ private struct PhaseBoundaryChart: View {
     @State private var selectedTemperatureCelsius: Double?
     @State private var exportedDiagramURL: URL?
     @State private var exportErrorMessage: String?
-    @State private var xVisibleLength: Double = 1
-    @State private var yVisibleLength: Double = 1
-    @State private var xScrollPosition: Double = 0
-    @State private var yScrollPosition: Double = 0
+    @State private var isPreparingExport = false
 
-    private var saturation: [Sample] {
-        response.points.enumerated().compactMap { index, point in
-            guard point.branch == .bubble else { return nil }
-            return Sample(
+    private var samples: [Sample] {
+        response.points.enumerated().map { index, point in
+            Sample(
                 id: index,
                 temperatureCelsius: point.temperatureK - 273.15,
-                pressureBar: point.pressurePa / 100_000
+                pressureBar: point.pressurePa / 100_000,
+                branch: point.branch
             )
         }
     }
+
+    private var bubble: [Sample] { samples.filter { $0.branch == .bubble } }
+    private var dew: [Sample] { samples.filter { $0.branch == .dew } }
 
     private var critical: Sample? {
         guard let point = response.points.first(where: { $0.branch == .critical }) else {
@@ -174,7 +219,8 @@ private struct PhaseBoundaryChart: View {
         return Sample(
             id: response.points.count,
             temperatureCelsius: point.temperatureK - 273.15,
-            pressureBar: point.pressurePa / 100_000
+            pressureBar: point.pressurePa / 100_000,
+            branch: .critical
         )
     }
 
@@ -187,14 +233,14 @@ private struct PhaseBoundaryChart: View {
     }
 
     private var xDomain: ClosedRange<Double> {
-        paddedDomain(values: saturation.map(\.temperatureCelsius) + [
+        paddedDomain(values: samples.map(\.temperatureCelsius) + [
             critical?.temperatureCelsius,
             operatingTemperatureCelsius
         ].compactMap { $0 })
     }
 
     private var yDomain: ClosedRange<Double> {
-        paddedDomain(values: saturation.map(\.pressureBar) + [
+        paddedDomain(values: samples.map(\.pressureBar) + [
             critical?.pressureBar,
             operatingPressureBar
         ].compactMap { $0 })
@@ -202,7 +248,7 @@ private struct PhaseBoundaryChart: View {
 
     private var selectedSample: Sample? {
         guard let selectedTemperatureCelsius else { return nil }
-        return saturation.min {
+        return samples.filter { $0.branch != .critical }.min {
             abs($0.temperatureCelsius - selectedTemperatureCelsius)
                 < abs($1.temperatureCelsius - selectedTemperatureCelsius)
         }
@@ -212,7 +258,11 @@ private struct PhaseBoundaryChart: View {
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
                 ScientificStatusBanner(
-                    title: "Preliminary pure CO₂ boundary",
+                    title: response.boundaryKind == .mixtureEnvelope
+                        ? (response.solver?.converged == false
+                            ? "Preliminary mixture phase-boundary trace"
+                            : "Preliminary mixture phase envelope")
+                        : "Preliminary pure CO₂ boundary",
                     message: response.warnings.joined(separator: " ")
                 )
 
@@ -229,14 +279,30 @@ private struct PhaseBoundaryChart: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .accessibilityIdentifier("share-phase-diagram-image")
-                    } else if let exportErrorMessage {
-                        Label(exportErrorMessage, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(.secondary)
-                    } else {
+                    } else if isPreparingExport {
                         HStack {
                             ProgressView()
                             Text("Preparing diagram image…")
                                 .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: IFESpacing.small) {
+                            if let exportErrorMessage {
+                                Label(
+                                    exportErrorMessage,
+                                    systemImage: "exclamationmark.triangle"
+                                )
+                                .foregroundStyle(.secondary)
+                            }
+                            Button(
+                                exportErrorMessage == nil
+                                    ? "Prepare diagram image"
+                                    : "Retry diagram image",
+                                systemImage: "photo"
+                            ) {
+                                prepareDiagramImage()
+                            }
+                            .accessibilityIdentifier("prepare-phase-diagram-image")
                         }
                     }
                 }
@@ -255,7 +321,9 @@ private struct PhaseBoundaryChart: View {
                         )
                         LabeledContent("Provider phase", value: record.response.phase.displayName)
                         Text(
-                            "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the provider calculation."
+                            response.boundaryKind == .mixtureEnvelope
+                                ? "Bubble and dew branches are provider-calculated for the recorded composition. The operating phase shown above comes from the source calculation."
+                                : "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the provider calculation."
                         )
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -264,20 +332,30 @@ private struct PhaseBoundaryChart: View {
 
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
-                        HStack {
-                            Text("Pressure–temperature diagram")
-                                .font(.headline)
-                            Spacer()
-                            viewportControls
-                        }
+                        Text("Pressure–temperature diagram")
+                            .font(.headline)
 
                         Chart {
-                            ForEach(saturation) { sample in
+                            ForEach(bubble) { sample in
                                 LineMark(
                                     x: .value("Temperature (°C)", sample.temperatureCelsius),
                                     y: .value("Pressure (bar(a))", sample.pressureBar)
                                 )
-                                .foregroundStyle(by: .value("Series", "CO₂ saturation boundary"))
+                                .foregroundStyle(by: .value(
+                                    "Series",
+                                    response.boundaryKind == .mixtureEnvelope
+                                        ? "Bubble branch"
+                                        : "CO₂ saturation boundary"
+                                ))
+                                .interpolationMethod(.linear)
+                            }
+
+                            ForEach(dew) { sample in
+                                LineMark(
+                                    x: .value("Temperature (°C)", sample.temperatureCelsius),
+                                    y: .value("Pressure (bar(a))", sample.pressureBar)
+                                )
+                                .foregroundStyle(by: .value("Series", "Dew branch"))
                                 .interpolationMethod(.linear)
                             }
 
@@ -308,22 +386,22 @@ private struct PhaseBoundaryChart: View {
                         }
                         .chartForegroundStyleScale([
                             "CO₂ saturation boundary": Color.ifePrimary,
+                            "Bubble branch": Color.ifePrimary,
+                            "Dew branch": Color.ifeSignal,
                             "Critical point": Color.ifeSignal,
                             "Operating point": Color.ifeText
                         ])
                         .chartXScale(domain: xDomain)
                         .chartYScale(domain: yDomain)
-                        .chartScrollableAxes([.horizontal, .vertical])
-                        .chartXVisibleDomain(length: xVisibleLength)
-                        .chartYVisibleDomain(length: yVisibleLength)
-                        .chartScrollPosition(x: $xScrollPosition)
-                        .chartScrollPosition(y: $yScrollPosition)
                         .chartXSelection(value: $selectedTemperatureCelsius)
                         .chartXAxisLabel("Temperature (°C)")
                         .chartYAxisLabel("Pressure (bar(a))")
                         .frame(minHeight: 360)
+                        .accessibilityIdentifier("phase-boundary-chart")
                         .accessibilityLabel(
-                            "Pure carbon dioxide saturation boundary with critical point and operating point"
+                            response.boundaryKind == .mixtureEnvelope
+                                ? "Carbon dioxide mixture bubble and dew phase envelope with operating point"
+                                : "Pure carbon dioxide saturation boundary with critical point and operating point"
                         )
 
                         if let selectedSample {
@@ -333,7 +411,9 @@ private struct PhaseBoundaryChart: View {
                                 value: "\(number(selectedSample.temperatureCelsius)) °C"
                             )
                             LabeledContent(
-                                "Selected saturation pressure",
+                                selectedSample.branch == .dew
+                                    ? "Selected dew pressure"
+                                    : "Selected bubble pressure",
                                 value: "\(number(selectedSample.pressureBar)) bar(a)"
                             )
                         }
@@ -341,21 +421,29 @@ private struct PhaseBoundaryChart: View {
                 }
 
                 Text(
-                    "Straight line segments connect calculated CoolProp points for display. No mixture phase envelope or decorative curve is generated."
+                    "Straight line segments connect adjacent provider-calculated points within each branch for display only. No scientific values are interpolated or estimated."
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, IFESpacing.small)
 
                 IFECard {
-                    DisclosureGroup("Phase-boundary traceability") {
+                    IFEExpandableRow("Phase-boundary traceability") {
                         LabeledContent(
                             "Boundary type",
                             value: response.boundaryKind == .pureFluidSaturation
                                 ? "Pure-fluid saturation"
-                                : "Not specified"
+                                : (response.solver?.converged == false
+                                    ? "Open provider bubble/dew trace"
+                                    : "Mixture bubble/dew envelope")
                         )
-                        LabeledContent("Calculated points", value: "\(saturation.count)")
+                        LabeledContent("Calculated points", value: "\(response.points.count)")
+                        LabeledContent("Composition") {
+                            Text(record.request.composition.map {
+                                "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%"
+                            }.joined(separator: ", "))
+                            .multilineTextAlignment(.trailing)
+                        }
                         if let model = response.model {
                             LabeledContent("Model", value: model.name)
                             LabeledContent("Model version", value: model.modelVersion)
@@ -384,51 +472,27 @@ private struct PhaseBoundaryChart: View {
             }
             .padding(IFESpacing.medium)
         }
-        .onAppear(perform: resetViewport)
-        .task(id: response.requestID) {
+        .accessibilityIdentifier("phase-diagram-available")
+    }
+
+    private func prepareDiagramImage() {
+        guard !isPreparingExport else { return }
+        isPreparingExport = true
+        exportErrorMessage = nil
+
+        Task { @MainActor in
+            await Task.yield()
             do {
                 exportedDiagramURL = try PhaseDiagramImageExporter().writeTemporaryPNG(
                     for: record,
                     response: response
                 )
-                exportErrorMessage = nil
             } catch {
                 exportedDiagramURL = nil
                 exportErrorMessage = error.localizedDescription
             }
+            isPreparingExport = false
         }
-        .onChange(of: response.requestID) { _, _ in resetViewport() }
-        .accessibilityIdentifier("phase-diagram-available")
-    }
-
-    private var viewportControls: some View {
-        HStack(spacing: 4) {
-            Button("Zoom in", systemImage: "plus.magnifyingglass") {
-                xVisibleLength = max(xVisibleLength * 0.75, (xDomain.upperBound - xDomain.lowerBound) * 0.1)
-                yVisibleLength = max(yVisibleLength * 0.75, (yDomain.upperBound - yDomain.lowerBound) * 0.1)
-            }
-            .labelStyle(.iconOnly)
-
-            Button("Zoom out", systemImage: "minus.magnifyingglass") {
-                xVisibleLength = min(xVisibleLength / 0.75, xDomain.upperBound - xDomain.lowerBound)
-                yVisibleLength = min(yVisibleLength / 0.75, yDomain.upperBound - yDomain.lowerBound)
-            }
-            .labelStyle(.iconOnly)
-
-            Button("Reset chart", systemImage: "arrow.counterclockwise") {
-                resetViewport()
-            }
-            .labelStyle(.iconOnly)
-        }
-        .buttonStyle(.bordered)
-    }
-
-    private func resetViewport() {
-        xVisibleLength = xDomain.upperBound - xDomain.lowerBound
-        yVisibleLength = yDomain.upperBound - yDomain.lowerBound
-        xScrollPosition = xDomain.lowerBound
-        yScrollPosition = yDomain.lowerBound
-        selectedTemperatureCelsius = nil
     }
 
     private func paddedDomain(values: [Double]) -> ClosedRange<Double> {

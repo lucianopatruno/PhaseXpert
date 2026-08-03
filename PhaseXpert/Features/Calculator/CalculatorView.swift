@@ -72,6 +72,19 @@ struct CalculatorView: View {
                 }
 
                 Section {
+                    Picker(
+                        "Composition basis",
+                        selection: Binding(
+                            get: { viewModel.compositionBasis },
+                            set: { viewModel.changeCompositionBasis(to: $0) }
+                        )
+                    ) {
+                        ForEach(CompositionInputBasis.allCases) { basis in
+                            Text(basis.rawValue).tag(basis)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
                     ForEach($viewModel.composition) { $entry in
                         HStack(spacing: 10) {
                             if entry.component == .carbonDioxide {
@@ -79,24 +92,69 @@ struct CalculatorView: View {
                                     .font(.body.weight(.medium))
                                     .accessibilityLabel("Carbon dioxide")
                             } else {
-                                Picker("Impurity", selection: $entry.component) {
-                                    ForEach(viewModel.impurityOptions(including: entry.component)) { component in
-                                        Text(component.symbol).tag(component)
+                                Menu {
+                                    ForEach(
+                                        viewModel.impurityOptions(including: entry.component)
+                                    ) { component in
+                                        Button {
+                                            viewModel.updateImpurity(
+                                                id: entry.id,
+                                                component: component
+                                            )
+                                        } label: {
+                                            if component == entry.component {
+                                                Label(component.symbol, systemImage: "checkmark")
+                                            } else {
+                                                Text(component.symbol)
+                                            }
+                                        }
                                     }
+
+                                    Divider()
+
+                                    Button(role: .destructive) {
+                                        removeImpurity(id: entry.id)
+                                    } label: {
+                                        Label("Remove impurity", systemImage: "trash")
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Text(entry.component.symbol)
+                                        Image(systemName: "chevron.down")
+                                            .font(.caption.weight(.semibold))
+                                    }
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(.primary)
                                 }
-                                .pickerStyle(.menu)
-                                .labelsHidden()
                                 .fixedSize(horizontal: true, vertical: false)
-                                .accessibilityLabel("Impurity component")
+                                .accessibilityLabel(
+                                    "\(entry.component.symbol) impurity menu"
+                                )
+                                .accessibilityHint(
+                                    "Changes or removes this impurity."
+                                )
                             }
 
                             Spacer(minLength: 8)
 
-                            TextField(
-                                "Value",
-                                text: $entry.molPercent,
-                                selection: compositionSelectionBinding(for: entry.id)
-                            )
+                            if entry.component == .carbonDioxide {
+                                Text(viewModel.displayedCompositionValue(for: entry))
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 104)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 7)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.secondary.opacity(0.08))
+                                    )
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityLabel("Calculated carbon dioxide remainder")
+                            } else {
+                                TextField(
+                                    "Value",
+                                    text: $entry.value,
+                                    selection: compositionSelectionBinding(for: entry.id)
+                                )
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .composition(entry.id))
                                 .multilineTextAlignment(.trailing)
@@ -117,11 +175,14 @@ struct CalculatorView: View {
                                         )
                                 }
                                 .contentShape(Rectangle())
-                                .accessibilityLabel("\(entry.component.symbol) mole percent")
+                                .accessibilityLabel(
+                                    "\(entry.component.symbol) \(viewModel.compositionBasis.rawValue)"
+                                )
+                            }
 
-                            Text("mol%")
+                            Text(viewModel.compositionBasis.rawValue)
                                 .foregroundStyle(.secondary)
-                                .frame(width: 42, alignment: .leading)
+                                .frame(width: 48, alignment: .leading)
                                 .accessibilityHidden(true)
                         }
                         .accessibilityElement(children: .contain)
@@ -136,13 +197,13 @@ struct CalculatorView: View {
                     }
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
                 } header: {
-                    HStack {
-                        Text("Composition")
-                        Spacer()
-                        EditButton()
-                    }
+                    Text("Composition")
                 } footer: {
-                    Text("Values are entered as mol%. The app never normalizes composition silently.")
+                    Text(
+                        viewModel.compositionBasis == .partsPerMillion
+                            ? "Enter impurities in molar ppm. CO₂ is calculated exactly as 1,000,000 ppm minus the impurity total."
+                            : "Enter impurities in mol%. CO₂ is calculated exactly as 100 mol% minus the impurity total."
+                    )
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {
@@ -200,6 +261,7 @@ struct CalculatorView: View {
                             PropertySweepView(record: record)
                         } label: {
                             Label("Explore property sweep", systemImage: "chart.xyaxis.line")
+                                .foregroundStyle(Color.accentColor)
                         }
                         .accessibilityIdentifier("open-property-sweep")
 
@@ -227,6 +289,7 @@ struct CalculatorView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .background(Color.ifeBackground)
             .navigationTitle("PhaseXpert")
             .onAppear {
@@ -237,6 +300,9 @@ struct CalculatorView: View {
                 loadPendingSavedCase()
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.pressureText) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.temperatureText) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.composition) { _, _ in viewModel.validate() }
             .onChange(of: focusedField) { _, newField in
                 guard let newField else { return }
                 Task { @MainActor in
@@ -275,13 +341,6 @@ struct CalculatorView: View {
                     .disabled(!canMoveFocus(by: 1))
                     .accessibilityLabel("Next input field")
 
-                    Spacer()
-
-                    Button("OK") {
-                        focusedField = nil
-                        viewModel.validate()
-                    }
-                    .fontWeight(.semibold)
                 }
             }
             .sheet(isPresented: $showsScientificTraceability) {
@@ -320,6 +379,14 @@ struct CalculatorView: View {
         }
     }
 
+    private func removeImpurity(id: UUID) {
+        if focusedField == .composition(id) {
+            focusedField = nil
+        }
+        compositionSelections.removeValue(forKey: id)
+        viewModel.removeImpurity(id: id)
+    }
+
     private func compositionSelectionBinding(
         for id: UUID
     ) -> Binding<TextSelection?> {
@@ -342,7 +409,7 @@ struct CalculatorView: View {
         case .temperature:
             temperatureSelection = fullSelection(for: viewModel.temperatureText)
         case let .composition(id):
-            let value = viewModel.composition.first(where: { $0.id == id })?.molPercent ?? ""
+            let value = viewModel.composition.first(where: { $0.id == id })?.value ?? ""
             compositionSelections[id] = fullSelection(for: value)
         }
     }
@@ -542,25 +609,17 @@ struct CalculationResultSections: View {
 
             if !unavailableProperties.isEmpty {
                 Section {
-                    DisclosureGroup {
+                    IFEExpandableRow("Unavailable properties (\(unavailableProperties.count))") {
                         ForEach(unavailableProperties, id: \.property) { property in
                             PropertyResultRow(property: property)
                         }
-                    } label: {
-                        Text("Unavailable properties (\(unavailableProperties.count))")
-                            .font(.body)
-                            .fontWeight(.regular)
                     }
                 }
             }
 
             Section("Scientific traceability") {
-                DisclosureGroup {
+                IFEExpandableRow("Calculation details") {
                     traceabilityContent
-                } label: {
-                    Text("Calculation details")
-                        .font(.body)
-                        .fontWeight(.regular)
                 }
             }
         }

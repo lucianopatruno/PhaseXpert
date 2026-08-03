@@ -42,6 +42,18 @@ typedef struct PXCoolPropSaturationLimits {
     double critical_pressure_pa;
 } PXCoolPropSaturationLimits;
 
+typedef enum PXCoolPropEnvelopeBranch {
+    PXCoolPropEnvelopeBubble = 0,
+    PXCoolPropEnvelopeDew = 1,
+    PXCoolPropEnvelopeCritical = 2
+} PXCoolPropEnvelopeBranch;
+
+typedef struct PXCoolPropEnvelopePoint {
+    double temperature_k;
+    double pressure_pa;
+    PXCoolPropEnvelopeBranch branch;
+} PXCoolPropEnvelopePoint;
+
 /// Calculates the pure-CO2 state using one HEOS state update. Returned caloric,
 /// acoustic, transport and derivative values use SI units. Enthalpy, entropy,
 /// internal energy and the Joule-Thomson coefficient may be negative; all
@@ -96,6 +108,31 @@ int px_coolprop_pure_co2_saturation_limits(
 int px_coolprop_pure_co2_saturation_pressure(
     double temperature_k,
     double *pressure_pa,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Builds the real HEOS phase envelope for a supported dry CO2-rich mixture.
+/// Fractions use the same order and product guardrail as the state calculation.
+/// No estimated mixing rule or interpolated scientific point is introduced.
+/// Continuation starts at the PhaseXpert domain minimum of 80000 Pa, requests
+/// no optional refinement, and is capped by the tracked PhaseXpert CoolProp
+/// source patch at 256 successfully calculated provider steps. Reaching the cap
+/// leaves `is_complete` and `is_closed` zero while preserving returned points.
+/// A nonzero `is_complete` means CoolProp reached its native exit condition;
+/// `is_closed` separately reports CoolProp's pressure-closure condition.
+int px_coolprop_dry_co2_mixture_phase_envelope(
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    PXCoolPropEnvelopePoint *points,
+    size_t point_capacity,
+    size_t *point_count,
+    int *is_complete,
+    int *is_closed,
     char *error_buffer,
     size_t error_buffer_size
 );

@@ -111,6 +111,21 @@ final class ProviderAndAPITests: XCTestCase {
         XCTAssertFalse(property.hasFiniteCalculatedValue)
     }
 
+    func testPPMCompositionSnapshotRoundTripsWithoutChangingBasis() throws {
+        let snapshot = CompositionInputSnapshot(
+            component: .nitrogen,
+            value: 2_500,
+            unit: .partsPerMillion
+        )
+
+        let data = try JSONEncoder().encode(snapshot)
+        let decoded = try JSONDecoder().decode(CompositionInputSnapshot.self, from: data)
+
+        XCTAssertEqual(decoded, snapshot)
+        XCTAssertEqual(decoded.unit, .partsPerMillion)
+        XCTAssertEqual(decoded.value, 2_500)
+    }
+
     func testPhaseEnvelopeTraceabilityRoundTrips() throws {
         let generatedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let response = PhaseEnvelopeResponse(

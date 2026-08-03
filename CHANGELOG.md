@@ -94,3 +94,61 @@
   connected, while failed and unavailable points remain gaps.
 - Added reporting snapshot serialization and focused pagination, unavailable-
   value, non-finite-value, content and traceability tests.
+- Made molar ppm the default impurity input basis, with CO₂ calculated as the
+  exact remainder to 1,000,000 ppm; retained explicit mol% entry and preserved
+  the original basis in immutable calculation snapshots.
+- Added real CoolProp HEOS dry-mixture bubble/dew phase envelopes for the
+  existing supported component set and 10 mol% product guardrail, with no
+  estimated mixing rule, fallback curve or interpolated scientific values.
+- Extended phase-diagram PNG and searchable PDF reporting with mixture
+  composition, bubble/dew legends, solver/model provenance and calculation
+  traceability.
+- Replaced system disclosure labels with a reusable app-owned expandable row
+  so expandable options use the same typography as neighboring actions.
+- Allowed usable provider bubble/dew traces to remain visible when CoolProp
+  does not set its pressure-closure flag, while marking convergence false and
+  explicitly refusing to close the trace cosmetically.
+- Preserved finite, branch-complete provider points when CoolProp stops before
+  setting its construction-complete flag, while marking the trace incomplete,
+  open and non-converged without extrapolating or closing it.
+- Matched expandable-row labels and chevrons to the body typography and IFE
+  blue action color used by neighboring Form actions.
+- Replaced the unbounded phase-diagram loading state with a 30-second
+  presentation deadline while retaining the original provider calculation in
+  the background and automatically displaying any late successful response.
+- Removed automatic main-actor PNG rendering from phase-diagram appearance;
+  the calculated chart now renders first and image export starts only after an
+  explicit user action.
+- Bounded native dry-mixture phase-envelope continuation to the declared
+  0.8 bar(a) PhaseXpert pressure-domain minimum, disabled CoolProp's optional
+  refinement pass, retained only real provider points in-domain and recorded
+  the truncation and solver settings in reportable provenance.
+- Replaced non-terminating CoolProp mixture-envelope continuation with bounded
+  pointwise HEOS PQ bubble/dew sampling over 0.8–300 bar(a), stopping branches
+  at the first post-start provider failure and reporting attempted/failed
+  provider flashes without interpolation or inferred closure.
+- Removed the unsuccessful standalone mixture-PQ sampling experiment after
+  manual validation showed no usable 3 mol% N₂ branches. Restored CoolProp's
+  working density continuation and added a deterministic 256-provider-step
+  downstream cap to its upstream-unbounded loop, with focused regression
+  coverage for both 3 and 10 mol% N₂.
+- Refreshed Xcode's local-package graph whenever the ignored CoolProp
+  XCFramework is confirmed or rebuilt, and restored the prior framework after
+  failed rebuilds so a temporary missing artifact cannot remain cached.
+- Added end-to-end provider/view-model coverage for 3 and 10 mol% N₂ plus a
+  visible-app regression for the 3 mol% N₂ phase diagram.
+- Removed the physical-device-fragile Swift Charts scrollable-domain state
+  from phase-boundary rendering, display the complete finite provider domain
+  directly, and require the actual chart element in the visible-app regression.
+- Rejected complete CoolProp mixture phase-envelope traces when any returned
+  point leaves the declared 0.8–300 bar(a), −55–150 °C PhaseXpert domain,
+  instead of plotting or clipping a finite but scientifically unusable
+  continuation.
+- Bumped CoolProp provider provenance to 0.8.2 and replaced chart-presence
+  regressions with focused pressure- and temperature-domain rejection coverage.
+- Removed the low-visibility custom keyboard “OK” control; numeric keyboards
+  now dismiss interactively while scrolling and retain previous/next navigation.
+- Made CO₂ a read-only exact remainder in both ppm and mol% composition entry,
+  with live validation and no normalization of impurity values.
+- Added an explicit destructive “Remove impurity” action to each impurity menu
+  while retaining swipe-to-delete behavior.

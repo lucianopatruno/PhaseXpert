@@ -1,6 +1,7 @@
 #include "PhaseXpertCoolPropBridge.h"
 
 #include "CoolProp/AbstractState.h"
+#include "CoolProp/Configuration.h"
 #include "CoolProp/CoolProp.h"
 
 #include <array>
@@ -9,11 +10,52 @@
 #include <cstring>
 #include <exception>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <vector>
 
 namespace {
 
 constexpr const char *kFluid = "HEOS::CarbonDioxide";
+constexpr double kPhaseEnvelopeStartingPressurePa = 80000.0;
+std::mutex kPhaseEnvelopeConfigurationMutex;
+
+class ScopedPhaseEnvelopeStartingPressure {
+public:
+    explicit ScopedPhaseEnvelopeStartingPressure(double pressure_pa)
+        : previous_pressure_pa_(
+            CoolProp::get_config_double(
+                PHASE_ENVELOPE_STARTING_PRESSURE_PA
+            )
+        ) {
+        CoolProp::set_config_double(
+            PHASE_ENVELOPE_STARTING_PRESSURE_PA,
+            pressure_pa
+        );
+    }
+
+    ~ScopedPhaseEnvelopeStartingPressure() {
+        try {
+            CoolProp::set_config_double(
+                PHASE_ENVELOPE_STARTING_PRESSURE_PA,
+                previous_pressure_pa_
+            );
+        } catch (...) {
+            // Destructors must not throw. The process-global setting is guarded
+            // and restoration failure cannot change already-returned points.
+        }
+    }
+
+    ScopedPhaseEnvelopeStartingPressure(
+        const ScopedPhaseEnvelopeStartingPressure &
+    ) = delete;
+    ScopedPhaseEnvelopeStartingPressure &operator=(
+        const ScopedPhaseEnvelopeStartingPressure &
+    ) = delete;
+
+private:
+    double previous_pressure_pa_;
+};
 
 void copy_text(const std::string &text, char *buffer, size_t buffer_size) {
     if (buffer == nullptr || buffer_size == 0) {
@@ -338,6 +380,158 @@ int px_coolprop_pure_co2_saturation_pressure(
     } catch (...) {
         copy_text("CoolProp saturation calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 5;
+    }
+}
+
+int px_coolprop_dry_co2_mixture_phase_envelope(
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    PXCoolPropEnvelopePoint *points,
+    size_t point_capacity,
+    size_t *point_count,
+    int *is_complete,
+    int *is_closed,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (points == nullptr || point_count == nullptr || is_complete == nullptr
+        || is_closed == nullptr || point_capacity == 0) {
+        copy_text("Phase-envelope output buffer is invalid.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    *point_count = 0;
+    *is_complete = 0;
+    *is_closed = 0;
+
+    const std::array<double, 6> fractions = {
+        carbon_dioxide_mole_fraction,
+        nitrogen_mole_fraction,
+        oxygen_mole_fraction,
+        argon_mole_fraction,
+        methane_mole_fraction,
+        hydrogen_mole_fraction
+    };
+    double total = 0;
+    for (const double fraction : fractions) {
+        if (!std::isfinite(fraction) || fraction < 0) {
+            copy_text("Mole fractions must be finite and non-negative.", error_buffer, error_buffer_size);
+            return 2;
+        }
+        total += fraction;
+    }
+    const double total_impurity = 1.0 - carbon_dioxide_mole_fraction;
+    bool carbon_dioxide_is_unique_largest = carbon_dioxide_mole_fraction > 0;
+    for (size_t index = 1; index < fractions.size(); ++index) {
+        carbon_dioxide_is_unique_largest = carbon_dioxide_is_unique_largest
+            && carbon_dioxide_mole_fraction > fractions[index];
+    }
+    if (std::abs(total - 1.0) > 1e-10
+        || total_impurity <= 0
+        || total_impurity > 0.10 + 1e-12
+        || !carbon_dioxide_is_unique_largest) {
+        copy_text(
+            "Dry-mixture phase envelopes require total impurity in (0, 0.10] and fractions summing to one.",
+            error_buffer,
+            error_buffer_size
+        );
+        return 3;
+    }
+
+    try {
+        constexpr std::array<const char *, 6> names = {
+            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen"
+        };
+        std::vector<std::string> active_names;
+        std::vector<double> active_fractions;
+        for (size_t index = 0; index < fractions.size(); ++index) {
+            if (fractions[index] > 1e-14) {
+                active_names.emplace_back(names[index]);
+                active_fractions.push_back(fractions[index]);
+            }
+        }
+        std::string fluids;
+        for (size_t index = 0; index < active_names.size(); ++index) {
+            if (index > 0) {
+                fluids += "&";
+            }
+            fluids += active_names[index];
+        }
+
+        // CoolProp's process-global default starts mixture continuation at
+        // 100 Pa. PhaseXpert's declared provider domain begins at 0.8 bar(a),
+        // so the native request is bounded to 80000 Pa and serialized while
+        // that temporary configuration is active.
+        std::lock_guard<std::mutex> configuration_guard(
+            kPhaseEnvelopeConfigurationMutex
+        );
+        ScopedPhaseEnvelopeStartingPressure starting_pressure(
+            kPhaseEnvelopeStartingPressurePa
+        );
+
+        std::shared_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory("HEOS", fluids)
+        );
+        state->set_mole_fractions(active_fractions);
+        state->build_phase_envelope("none");
+        const CoolProp::PhaseEnvelopeData &envelope = state->get_phase_envelope_data();
+        if (envelope.T.size() != envelope.p.size()
+            || envelope.T.size() != envelope.Q.size() || envelope.T.size() < 4) {
+            copy_text(
+                "CoolProp did not return a consistent phase-envelope trace with at least four provider points.",
+                error_buffer,
+                error_buffer_size
+            );
+            return 4;
+        }
+        size_t output_index = 0;
+        for (size_t index = 0; index < envelope.T.size(); ++index) {
+            if (!std::isfinite(envelope.T[index]) || envelope.T[index] <= 0
+                || !std::isfinite(envelope.p[index]) || envelope.p[index] <= 0
+                || !std::isfinite(envelope.Q[index])) {
+                copy_text("CoolProp returned a non-finite phase-envelope point.", error_buffer, error_buffer_size);
+                return 6;
+            }
+            if (envelope.p[index] < kPhaseEnvelopeStartingPressurePa) {
+                continue;
+            }
+            if (output_index >= point_capacity) {
+                copy_text("CoolProp phase envelope exceeds the bounded output capacity.", error_buffer, error_buffer_size);
+                return 5;
+            }
+            points[output_index].temperature_k = envelope.T[index];
+            points[output_index].pressure_pa = envelope.p[index];
+            if (index == envelope.icrit) {
+                points[output_index].branch = PXCoolPropEnvelopeCritical;
+            } else {
+                points[output_index].branch = envelope.Q[index] < 0.5
+                    ? PXCoolPropEnvelopeBubble
+                    : PXCoolPropEnvelopeDew;
+            }
+            ++output_index;
+        }
+        if (output_index < 4) {
+            copy_text(
+                "CoolProp did not return at least four provider points inside the PhaseXpert pressure domain.",
+                error_buffer,
+                error_buffer_size
+            );
+            return 4;
+        }
+        *point_count = output_index;
+        *is_complete = envelope.built ? 1 : 0;
+        *is_closed = envelope.closed ? 1 : 0;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp mixture phase-envelope calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
     }
 }
 

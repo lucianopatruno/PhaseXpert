@@ -191,6 +191,67 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         try Task.checkCancellation()
         return pressure
     }
+
+    public func dryCarbonDioxideMixturePhaseEnvelope(
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropMixtureEnvelopeResult {
+        try Task.checkCancellation()
+        let fractions = composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
+        let nativeResult = try await Task.detached(priority: .utility) {
+            var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
+            var pointCount = 0
+            var isComplete: Int32 = 0
+            var isClosed: Int32 = 0
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_dry_co2_mixture_phase_envelope(
+                fractions[.carbonDioxide] ?? 0,
+                fractions[.nitrogen] ?? 0,
+                fractions[.oxygen] ?? 0,
+                fractions[.argon] ?? 0,
+                fractions[.methane] ?? 0,
+                fractions[.hydrogen] ?? 0,
+                &points,
+                points.count,
+                &pointCount,
+                &isComplete,
+                &isClosed,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp mixture phase-envelope calculation failed." : message
+                )
+            }
+            let mappedPoints = points.prefix(pointCount).map { point in
+                let branch: PhaseEnvelopePoint.Branch = switch point.branch {
+                case PXCoolPropEnvelopeDew: .dew
+                case PXCoolPropEnvelopeCritical: .critical
+                default: .bubble
+                }
+                return PhaseEnvelopePoint(
+                    temperatureK: point.temperature_k,
+                    pressurePa: point.pressure_pa,
+                    branch: branch
+                )
+            }
+            return (
+                points: mappedPoints,
+                isComplete: isComplete != 0,
+                isClosed: isClosed != 0
+            )
+        }.value
+        try Task.checkCancellation()
+        return CoolPropMixtureEnvelopeResult(
+            points: nativeResult.points,
+            solverMethod: "CoolProp AbstractState.build_phase_envelope(level: none), HEOS dry CO₂-rich mixture, start 80000 Pa, maximum 256 provider continuation steps",
+            isComplete: nativeResult.isComplete,
+            isClosed: nativeResult.isClosed
+        )
+    }
 }
 
 private func phaseIdentifier(for phase: PXCoolPropPhase) -> String {

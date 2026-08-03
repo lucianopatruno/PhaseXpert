@@ -92,6 +92,26 @@ public struct CoolPropSaturationLimits: Equatable, Sendable {
     }
 }
 
+/// Provider-ready points returned verbatim by CoolProp's low-level phase-envelope routine.
+public struct CoolPropMixtureEnvelopeResult: Equatable, Sendable {
+    public let points: [PhaseEnvelopePoint]
+    public let solverMethod: String
+    public let isComplete: Bool
+    public let isClosed: Bool
+
+    public init(
+        points: [PhaseEnvelopePoint],
+        solverMethod: String,
+        isComplete: Bool = true,
+        isClosed: Bool = true
+    ) {
+        self.points = points
+        self.solverMethod = solverMethod
+        self.isComplete = isComplete
+        self.isClosed = isClosed
+    }
+}
+
 /// Narrow seam between the provider and a local CoolProp binary.
 ///
 /// The protocol keeps C/C++ symbols out of the domain and presentation layers
@@ -123,6 +143,10 @@ public protocol CoolPropEngine: Sendable {
     func pureCarbonDioxideSaturationPressure(
         temperatureK: Double
     ) async throws -> Double
+
+    func dryCarbonDioxideMixturePhaseEnvelope(
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropMixtureEnvelopeResult
 }
 
 public extension CoolPropEngine {
@@ -159,6 +183,14 @@ public extension CoolPropEngine {
     ) async throws -> CoolPropBinaryEngineResult {
         throw ProviderError.modelUnavailable(
             "The CoolProp engine does not expose the restricted CO₂-N₂ bridge."
+        )
+    }
+
+    func dryCarbonDioxideMixturePhaseEnvelope(
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropMixtureEnvelopeResult {
+        throw ProviderError.modelUnavailable(
+            "The CoolProp engine does not expose the dry-mixture phase-envelope bridge."
         )
     }
 }
@@ -253,7 +285,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "CoolProp HEOS — Preliminary",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.7.0",
+            providerVersion: "0.8.2",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
@@ -279,7 +311,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "CoolProp HEOS pure-fluid CO₂ and restricted dry CO₂-rich mixture backend.",
-            equationOrMethod: "CoolProp HEOS; pure-CO₂ thermodynamic, acoustic and transport values come from one AbstractState(P,T) update. Cp/Cv, molar mass, specific volume and Z are derived transparently. Dry mixtures use only interaction entries shipped by the pinned release; no estimated mixing rule is applied.",
+            equationOrMethod: "CoolProp HEOS; pure-CO₂ thermodynamic, acoustic and transport values come from one AbstractState(P,T) update. Cp/Cv, molar mass, specific volume and Z are derived transparently. Dry-mixture states and phase envelopes use only interaction entries shipped by the pinned release; no estimated mixing rule is applied.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
@@ -288,7 +320,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.",
                 "Preliminary integration; no production accuracy claim.",
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
-                "The phase diagram remains a pure-CO₂ saturation boundary; mixture phase envelopes are not enabled."
+                "Dry-mixture phase envelopes use CoolProp's low-level HEOS phase-envelope routine and remain preliminary and validation pending.",
+                "A mixture phase envelope is rejected in full if any provider point leaves the declared PhaseXpert pressure or temperature domain; points are never clipped or interpolated."
             ],
             references: [
                 SourceReference(
@@ -445,7 +478,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 warnings: [
                     "DRY MIXTURE — VALIDATION PENDING: density and phase have not completed independent validation.",
                     "The 10 mol% total-impurity cap is a PhaseXpert product guardrail, not a validated accuracy range.",
-                    "Mixture dynamic viscosity, expanded properties and mixture phase envelopes are not enabled."
+                    "Mixture dynamic viscosity and expanded properties are not enabled; phase envelopes are a separate preliminary provider calculation."
                 ]
             )
         }
@@ -510,7 +543,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         guard engine.isAvailable else {
             return unavailableEnvelope(
                 requestID: request.requestID,
-                warning: "Pure CO₂ saturation boundary unavailable because CoolProp is not linked."
+                warning: "Phase boundary unavailable because CoolProp is not linked."
             )
         }
         guard request.modelID == descriptor.id else {
@@ -518,10 +551,59 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "The phase-envelope request model ID does not match CoolProp."
             )
         }
-        guard isPureCarbonDioxide(request.composition) else {
-            return unavailableEnvelope(
+        let supported = try supportedComposition(request.composition)
+        if case let .dryMixture(composition) = supported {
+            let compositionKey = composition
+                .sorted { $0.component.rawValue < $1.component.rawValue }
+                .map { "\($0.component.rawValue)=\(String(format: "%.17g", $0.moleFraction))" }
+                .joined(separator: ";")
+            let cacheKey = "\(engine.libraryVersion)-mixture-continuation-256-v1-\(compositionKey)"
+            if let cached = await envelopeCache.entry(for: cacheKey) {
+                return PhaseEnvelopeResponse(
+                    requestID: request.requestID,
+                    points: cached.points,
+                    warnings: cached.warnings,
+                    isAvailable: true,
+                    boundaryKind: .mixtureEnvelope,
+                    model: descriptor,
+                    generatedAt: cached.generatedAt,
+                    solver: cached.solver
+                )
+            }
+
+            let native = try await engine.dryCarbonDioxideMixturePhaseEnvelope(
+                composition: composition
+            )
+            try validateMixtureEnvelope(native.points)
+            try Task.checkCancellation()
+            let generatedAt = Date()
+            let warnings = [
+                "PRELIMINARY — VALIDATION PENDING: the calculated mixture envelope must not be used for engineering, safety, commercial, or regulatory decisions.",
+                "Bubble and dew points are returned directly by CoolProp HEOS continuation. PhaseXpert does not interpolate or estimate scientific values.",
+                "Continuation starts at 0.8 bar(a), requests no optional refinement and is capped at 256 successfully calculated provider steps so the native routine cannot run indefinitely."
+            ] + (native.isComplete ? [] : [
+                "CoolProp stopped before completing phase-envelope construction, including when the deterministic continuation cap was reached. PhaseXpert plots only finite provider-returned bubble/dew points, marks the trace incomplete and does not extrapolate it."
+            ]) + (native.isClosed ? [] : [
+                "CoolProp did not report pressure closure. PhaseXpert plots only the returned provider points and does not close the trace."
+            ])
+            let solver = SolverMetadata(
+                method: native.solverMethod,
+                converged: native.isComplete && native.isClosed,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            )
+            await envelopeCache.store(
+                .init(points: native.points, warnings: warnings, generatedAt: generatedAt, solver: solver),
+                for: cacheKey
+            )
+            return PhaseEnvelopeResponse(
                 requestID: request.requestID,
-                warning: "Mixture phase envelopes are not enabled; the phase diagram supports exactly 100 mol% CO₂ only."
+                points: native.points,
+                warnings: warnings,
+                isAvailable: true,
+                boundaryKind: .mixtureEnvelope,
+                model: descriptor,
+                generatedAt: generatedAt,
+                solver: solver
             )
         }
 
@@ -700,6 +782,36 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         else {
             throw ProviderError.malformedResponse(
                 "CoolProp returned invalid pure-CO₂ saturation limits."
+            )
+        }
+    }
+
+    private func validateMixtureEnvelope(_ points: [PhaseEnvelopePoint]) throws {
+        guard points.allSatisfy({
+            $0.temperatureK.isFinite && $0.temperatureK > 0
+                && $0.pressurePa.isFinite && $0.pressurePa > 0
+        }) else {
+            throw ProviderError.malformedResponse(
+                "CoolProp returned a non-finite or non-positive mixture phase-envelope point."
+            )
+        }
+        guard points.allSatisfy({
+            $0.temperatureK >= descriptor.domain.minimumTemperatureK
+                && $0.temperatureK <= descriptor.domain.maximumTemperatureK
+                && $0.pressurePa >= descriptor.domain.minimumPressurePa
+                && $0.pressurePa <= descriptor.domain.maximumPressurePa
+        }) else {
+            throw ProviderError.malformedResponse(
+                "CoolProp mixture phase-envelope continuation left PhaseXpert's supported "
+                    + "0.8–300 bar(a), −55–150 °C domain; no diagram is displayed."
+            )
+        }
+
+        let bubbleCount = points.filter { $0.branch == .bubble }.count
+        let dewCount = points.filter { $0.branch == .dew }.count
+        guard points.count >= 4, bubbleCount >= 2, dewCount >= 2 else {
+            throw ProviderError.malformedResponse(
+                "CoolProp did not return traceable bubble and dew branches."
             )
         }
     }
