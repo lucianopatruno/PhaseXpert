@@ -20,6 +20,8 @@ Vendor/CoolProp/BRIDGE-SOURCE-SHA256.txt
 Vendor/ThermoPack/*.xcframework/
 Vendor/ThermoPack/source/
 Vendor/ThermoPack/build/
+Vendor/ThermoPack/THERMOPACK-LICENSE.txt
+Vendor/ThermoPack/THERMOPACK-NOTICE.txt
 Vendor/ThermoPack/THERMOPACK-REVISION.txt
 Vendor/ThermoPack/THERMOPACK-VERSION.txt
 Vendor/ThermoPack/BRIDGE-SOURCE-SHA256.txt
