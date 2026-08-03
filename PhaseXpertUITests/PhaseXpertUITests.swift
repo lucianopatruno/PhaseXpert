@@ -90,8 +90,8 @@ final class PhaseXpertUITests: XCTestCase {
         )
         XCTAssertTrue(
             app.staticTexts[
-                "CoolProp mixture phase-envelope continuation left the supported "
-                    + "PhaseXpert pressure or temperature domain; no diagram is displayed."
+                "CoolProp mixture phase-envelope continuation left PhaseXpert's supported "
+                    + "0.8–300 bar(a), −55–150 °C domain; no diagram is displayed."
             ].exists
         )
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
