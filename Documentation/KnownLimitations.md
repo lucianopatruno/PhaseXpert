@@ -20,6 +20,17 @@
   provider-calculated but have not completed independent PhaseXpert validation.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
+- The NeqSim provider is remote-only and unavailable until an endpoint is
+  configured. Production use requires HTTPS service deployment, authentication
+  decisions and operational monitoring. Localhost development does not prove
+  production networking.
+- NeqSim results are preliminary integration outputs. Successful NeqSim,
+  CoolProp or cross-model agreement is not experimental validation and must not
+  be used as an accuracy claim.
+- NeqSim currently supports only the selected CO₂/N₂ `SystemSrkEos` +
+  `classic` configuration backed by the pinned NeqSim interaction table. Other
+  components and properties remain unavailable unless the service explicitly
+  returns finite values and provenance.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.
@@ -53,6 +64,7 @@
   confirmation.
 - Xcode is unavailable in the implementation environment; a clean Xcode 26
   build and test run is required on the user's Mac.
+- Docker is required for reproducible NeqSim service build validation.
 
 - Phase-diagram PNG and PDF embedding support real pure-CO₂ saturation and
   supported dry-mixture envelopes. A failed or unavailable provider envelope

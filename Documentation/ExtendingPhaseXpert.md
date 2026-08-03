@@ -13,6 +13,9 @@
 7. Add capability, reference-value, boundary, non-convergence and cancellation
    tests.
 8. Add licence notices and Model Information content.
+9. For a remote provider, add a versioned service contract, endpoint
+   configuration, HTTPS requirements, structured error mapping, cancellation
+   and stale-result tests, plus API documentation.
 
 Never change the meaning of an existing provider ID or version after results
 have been saved.
@@ -28,4 +31,3 @@ have been saved.
 5. Add serialization, validation and numerical reference tests.
 6. Add the component to UI selection only when at least one selectable
    scientific provider supports it, or label it as unavailable.
-

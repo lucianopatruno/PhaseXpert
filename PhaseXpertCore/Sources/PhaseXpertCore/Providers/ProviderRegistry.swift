@@ -19,6 +19,7 @@ public struct ProviderRegistry: Sendable {
         [
             ArchitectureDemoProvider(),
             defaultCoolPropProvider,
+            NeqSimProvider<NeqSimHTTPClient>(),
             UnavailableModelProvider.ife
         ]
     }

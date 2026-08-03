@@ -12,6 +12,7 @@ flowchart TD
     State --> Core["Domain + validation + SI units"]
     State --> Registry["Provider registry"]
     Registry --> Local["Established local provider"]
+    Registry --> NeqSim["Remote NeqSim provider"]
     Registry --> IFE["IFE local / remote / hybrid provider"]
     State --> Store["Versioned persistence"]
     State --> Export["CSV / JSON / PDF export"]
@@ -24,8 +25,10 @@ and preliminary pure/dry-mixture phase diagrams are implemented.
 
 Providers are `Sendable` and expose asynchronous, throwing functions.
 Implementations must check cancellation before and during iterative work.
-Remote clients conform to `IFEAPIClient`, allowing deterministic test doubles.
-UI state is main-actor isolated.
+Remote clients use provider-specific client protocols, allowing deterministic
+test doubles without changing scientific providers. `NeqSimRemoteClient` is
+used only by `NeqSimProvider` and never calls CoolProp. UI state is main-actor
+isolated.
 
 ## Data flow
 
@@ -49,8 +52,12 @@ UI state is main-actor isolated.
 ## Phase diagram
 
 `PhaseDiagramViewModel` is main-actor isolated and resolves the provider using
-the immutable latest calculation record. `CoolPropProvider` accepts only pure
-CO₂ for this operation. It samples the HEOS saturation boundary away from the
+the immutable latest calculation record. A calculation has one provider ID, and
+the diagram request reuses that same provider ID. NeqSim calculations therefore
+request NeqSim diagrams, and CoolProp calculations request CoolProp diagrams;
+there is no cross-provider fill or fallback.
+
+`CoolPropProvider` samples the HEOS saturation boundary away from the
 triple and critical singular endpoints, validates every point and appends the
 critical point returned by CoolProp rather than estimating it from the plotted
 curve.
@@ -126,6 +133,20 @@ calculated values with a common display unit. Unsupported, failed, extrapolated
 or unit-incompatible values remain visibly non-comparable. The interface calls
 these values differences—not errors or deviations—and explicitly states that
 the comparison does not establish model accuracy.
+
+## Remote NeqSim service
+
+The NeqSim provider is deliberately remote rather than embedded in iOS. NeqSim
+is a Java/Python thermodynamic engine, so the reproducible execution boundary
+is a containerized service in `Services/NeqSimProvider`. The iOS app stores only
+the endpoint configuration and the versioned API contract. Production traffic
+must use HTTPS. Localhost HTTP is limited to development and tests.
+
+The initial service contract is versioned as `neqsim-provider.v1`. Requests and
+responses carry provider ID, capability version, service version, NeqSim
+version/source commit, Java runtime, EOS, alpha/configuration text, mixing rule,
+interaction-data identifier, SI pressure/temperature, composition basis,
+calculation/request IDs, warnings and convergence metadata.
 
 ## Design system
 

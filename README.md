@@ -11,6 +11,10 @@ phase-property calculations for CO₂-rich mixtures.
 > derived molar mass, specific volume and compressibility factor. Validation is incomplete, so
 > these results must not be used for engineering, safety, commercial or
 > regulatory decisions. The IFE Model remains unavailable.
+>
+> PR23 adds a standalone remote NeqSim provider behind explicit endpoint
+> configuration. It is independent from CoolProp, has no fallback path, and is
+> preliminary until service deployment and independent validation are complete.
 
 Developed by the **IFE Flow Technology Department**.
 
@@ -19,6 +23,8 @@ Developed by the **IFE Flow Technology Department**.
 - macOS with Xcode 26 and its current iOS SDK
 - iOS 18.0 or later
 - An Apple Developer team for installation on a physical device
+- Optional for NeqSim provider development: Python 3.12, Java 21-compatible
+  runtime in the service container, and Docker for reproducible service builds
 
 iOS 18 is the minimum because this is a new internal application with no
 legacy installed base. It provides current SwiftUI, SwiftData and accessibility
@@ -69,6 +75,10 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   derived transparently from recorded inputs and calculated density; an
   unavailable IFE provider, and a
   non-scientific demo provider
+- a standalone remote NeqSim provider scaffold using pinned NeqSim `v3.16.0`
+  source commit `3af7b560525b57f2d3da2c803a08e2b41a8d7f5a`, `SystemSrkEos`,
+  `classic` mixing rule, and shipped CO₂/N₂ interaction data; it remains
+  unavailable unless `PHASEXPERT_NEQSIM_ENDPOINT` is configured
 - immutable results grouped into state, thermodynamic, transport/acoustic and
   derived sections, with presentation-only engineering units, copy/share actions
   and concise or expert scientific traceability
@@ -101,6 +111,8 @@ views.
 See [Architecture](Documentation/Architecture.md),
 [Scientific Models](Documentation/ScientificModels.md), and
 [IFE API Contract](Documentation/IFEModelAPI.md).
+The separated NeqSim service lives in
+[Services/NeqSimProvider](Services/NeqSimProvider/README.md).
 
 ## Dependencies and licences
 
@@ -109,6 +121,10 @@ built locally with `Scripts/build-coolprop-xcframework.sh`. CoolProp is
 MIT-licensed; its pinned source revision and licence notice are recorded beside
 the generated artifact and must be included in distribution review. See
 [References and Licences](Documentation/ReferencesAndLicences.md).
+
+NeqSim is used remotely through the service in `Services/NeqSimProvider`.
+NeqSim is Apache-2.0 licensed. No NeqSim binary, service endpoint, credential or
+internal IFE address is committed to the iOS app.
 
 ## Testing
 
@@ -125,9 +141,10 @@ built and tested on a Mac before the milestone is accepted.
 
 ## Configuration and secrets
 
-The current app has no network endpoint or authentication configuration.
-Future service endpoints must use build configuration, and credentials must
-come from a secure runtime authentication flow and Keychain—not source files.
+The NeqSim remote endpoint is read from `PHASEXPERT_NEQSIM_ENDPOINT` for
+development and validation. Production endpoints must use HTTPS. Localhost HTTP
+is accepted only for development. Credentials, tokens and internal IFE addresses
+must come from secure runtime configuration and must not be committed.
 Certificate validation must never be bypassed.
 
 ## Known limitations
@@ -159,6 +176,9 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - [Scientific models and phase-envelope strategy](Documentation/ScientificModels.md)
 - [CoolProp integration spike](Documentation/CoolPropIntegration.md)
 - [IFE Model API contract](Documentation/IFEModelAPI.md)
+- [NeqSim provider API](Documentation/NeqSimProviderAPI.md)
+- [NeqSim provider deployment](Documentation/NeqSimProviderDeployment.md)
+- [Privacy and security](Documentation/PrivacyAndSecurity.md)
 - [Validation strategy](Documentation/ValidationStrategy.md)
 - [Adding providers and components](Documentation/ExtendingPhaseXpert.md)
 - [References and licences](Documentation/ReferencesAndLicences.md)

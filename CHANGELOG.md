@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Added a standalone remote NeqSim provider milestone with pinned NeqSim
+  `v3.16.0` provenance, a separated FastAPI service contract, Swift remote
+  provider/client, endpoint-unavailable behavior and deterministic mock tests.
+- Documented that PR22 remains a ThermoPack native-iOS feasibility spike and
+  that PR23 does not use ThermoPack or CoolProp as fallback for NeqSim.
+
 ## 0.1.0 — Foundation
 
 - Created the native SwiftUI iOS project and local `PhaseXpertCore` package.
