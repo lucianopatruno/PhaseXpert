@@ -51,8 +51,9 @@ Physical-iPhone installation, accessibility inspection, visual review, PNG/PDF i
 ## Optional ThermoPack dependency
 
 Run `Scripts/ensure-thermopack-xcframework.sh` after configuring
-`THERMOPACK_FORTRAN_COMPILER` and colon-separated static
-`THERMOPACK_FORTRAN_RUNTIME_ARCHIVES`. Generated source/build directories,
+`THERMOPACK_FORTRAN_COMPILER` and separate colon-separated static
+`THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONEOS` and
+`THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONESIMULATOR`. Generated source/build directories,
 fingerprints and XCFramework contents under `Vendor/ThermoPack` are ignored.
 Do not commit them. The ensure script refreshes the Swift package manifest after
 a confirmed or rebuilt artifact, following the existing optional native
