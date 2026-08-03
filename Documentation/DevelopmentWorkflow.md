@@ -58,3 +58,14 @@ fingerprints and XCFramework contents under `Vendor/ThermoPack` are ignored.
 Do not commit them. The ensure script refreshes the Swift package manifest after
 a confirmed or rebuilt artifact, following the existing optional native
 dependency pattern.
+
+For PR22 acceptance, make the native dependency mandatory during the normal
+simulator validation rather than allowing the optional skip:
+
+```sh
+PHASEXPERT_REQUIRE_THERMOPACK=1 bash Scripts/validate-phase-xpert.sh release
+```
+
+With that flag, a missing compiler, runtime archive, slice or native build is a
+validation failure. Without it, standard/release validation refreshes ThermoPack
+when its XCFramework is already present and otherwise reports an explicit skip.
