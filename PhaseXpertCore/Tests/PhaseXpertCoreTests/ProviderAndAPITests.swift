@@ -9,11 +9,27 @@ final class ProviderAndAPITests: XCTestCase {
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
             expectedDefaultCoolPropAvailability
         )
+        XCTAssertEqual(
+            registry.provider(id: "thermopack-pr-classic-co2-n2")?.descriptor.id,
+            "thermopack-pr-classic-co2-n2"
+        )
+        XCTAssertEqual(
+            registry.provider(id: "thermopack-pr-classic-co2-n2")?.descriptor.availability,
+            expectedDefaultThermoPackAvailability
+        )
         XCTAssertNil(registry.provider(id: "missing"))
     }
 
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
         #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
+        .preliminary
+        #else
+        .unavailable
+        #endif
+    }
+
+    private var expectedDefaultThermoPackAvailability: ModelAvailability {
+        #if os(iOS) && canImport(PhaseXpertThermoPackBridge)
         .preliminary
         #else
         .unavailable
