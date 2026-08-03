@@ -90,7 +90,8 @@ Generated sources, build directories, stamps and
 
 ```sh
 export THERMOPACK_FORTRAN_COMPILER=/path/to/flang-new
-export THERMOPACK_FORTRAN_RUNTIME_ARCHIVES=/path/a.a:/path/b.a
+export THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONEOS=/path/device-runtime-a.a:/path/device-runtime-b.a
+export THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONESIMULATOR=/path/simulator-runtime-a.a:/path/simulator-runtime-b.a
 bash Scripts/build-thermopack-xcframework.sh
 ```
 
