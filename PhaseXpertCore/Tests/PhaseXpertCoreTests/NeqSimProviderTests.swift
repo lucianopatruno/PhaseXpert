@@ -2,6 +2,33 @@ import XCTest
 @testable import PhaseXpertCore
 
 final class NeqSimProviderTests: XCTestCase {
+    private final class HTTP422URLProtocol: URLProtocol {
+        override class func canInit(with request: URLRequest) -> Bool {
+            true
+        }
+
+        override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+            request
+        }
+
+        override func startLoading() {
+            let body = """
+            {"detail":{"schema_version":"neqsim-provider.v1","request_id":"manual-pure-co2-150bar-20c","calculation_id":"422-regression","error":"neqsim_state_failed","message":"NeqSim Python bridge is not importable"}}
+            """
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 422,
+                httpVersion: "HTTP/1.1",
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: Data(body.utf8))
+            client?.urlProtocolDidFinishLoading(self)
+        }
+
+        override func stopLoading() {}
+    }
+
     private struct MockNeqSimClient: NeqSimRemoteClient {
         var state: @Sendable (NeqSimStateRequest) async throws -> NeqSimStateResponse
         var envelope: @Sendable (NeqSimEnvelopeRequest) async throws -> NeqSimEnvelopeResponse
@@ -77,6 +104,43 @@ final class NeqSimProviderTests: XCTestCase {
             XCTFail("Expected offline endpoint failure.")
         } catch let ProviderError.modelUnavailable(message) {
             XCTAssertTrue(message.contains("offline") || message.contains("unreachable"))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testHTTPValidationDetailIsPreservedForNonSuccessResponse() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [HTTP422URLProtocol.self]
+        let session = URLSession(configuration: configuration)
+        let client = NeqSimHTTPClient(
+            endpoint: URL(string: "http://127.0.0.1:8080")!,
+            session: session
+        )
+        let request = CalculationRequest(
+            requestID: UUID(uuidString: "00000000-0000-0000-0000-000000000422")!,
+            modelID: NeqSimMetadata.providerID,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            clientVersion: "1.0 (3)"
+        )
+        let remoteRequest = NeqSimStateRequest(from: request)
+        let encoded = try JSONEncoder().encode(remoteRequest)
+        let json = try XCTUnwrap(String(data: encoded, encoding: .utf8))
+        XCTAssertTrue(json.contains("\"pressure_pa\":15000000"))
+        XCTAssertTrue(json.contains("\"temperature_k\":293.15"))
+        XCTAssertTrue(json.contains("\"component\":\"co2\""))
+        XCTAssertTrue(json.contains("\"mole_fraction\":1"))
+        XCTAssertTrue(json.contains("\"requested_properties\""))
+
+        do {
+            _ = try await client.calculate(remoteRequest)
+            XCTFail("Expected HTTP validation detail to be surfaced.")
+        } catch let ProviderError.malformedResponse(message) {
+            XCTAssertTrue(message.contains("HTTP 422"))
+            XCTAssertTrue(message.contains("neqsim_state_failed"))
+            XCTAssertTrue(message.contains("NeqSim Python bridge is not importable"))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }

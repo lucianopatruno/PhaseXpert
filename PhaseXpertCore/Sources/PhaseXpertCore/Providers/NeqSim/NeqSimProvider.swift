@@ -9,7 +9,7 @@ public enum NeqSimConfiguration: Sendable {
             return URL(string: rawValue)
         }
         #if DEBUG && targetEnvironment(simulator)
-        return URL(string: "http://127.0.0.1:8080")
+        return URL(string: "http://localhost:8080")
         #else
         return nil
         #endif
@@ -74,6 +74,7 @@ public struct NeqSimHTTPClient: NeqSimRemoteClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(body)
+        logDevelopmentRequest(request.httpBody, path: path)
         do {
             let (data, urlResponse) = try await session.data(for: request)
             guard let httpResponse = urlResponse as? HTTPURLResponse else {
@@ -81,7 +82,7 @@ public struct NeqSimHTTPClient: NeqSimRemoteClient {
             }
             guard (200..<300).contains(httpResponse.statusCode) else {
                 throw ProviderError.malformedResponse(
-                    "NeqSim returned HTTP \(httpResponse.statusCode)."
+                    nonSuccessMessage(statusCode: httpResponse.statusCode, data: data)
                 )
             }
             let decoder = JSONDecoder()
@@ -104,6 +105,64 @@ public struct NeqSimHTTPClient: NeqSimRemoteClient {
         } catch {
             throw ProviderError.malformedResponse("NeqSim response could not be decoded: \(error.localizedDescription)")
         }
+    }
+
+    private func logDevelopmentRequest(_ data: Data?, path: String) {
+        #if DEBUG
+        guard
+            let data,
+            let payload = String(data: data, encoding: .utf8)
+        else { return }
+        let host = endpoint.host ?? "unconfigured-host"
+        print("NeqSim development request \(host)/\(path): \(payload)")
+        #endif
+    }
+
+    private func nonSuccessMessage(statusCode: Int, data: Data) -> String {
+        let prefix = "NeqSim returned HTTP \(statusCode)"
+        guard !data.isEmpty else { return "\(prefix)." }
+        if
+            let object = try? JSONSerialization.jsonObject(with: data),
+            let json = object as? [String: Any]
+        {
+            return "\(prefix): \(validationDetail(from: json["detail"] ?? json))"
+        }
+        if let text = String(data: data, encoding: .utf8), !text.isEmpty {
+            return "\(prefix): \(String(text.prefix(1_000)))"
+        }
+        return "\(prefix)."
+    }
+
+    private func validationDetail(from detail: Any) -> String {
+        if let string = detail as? String {
+            return string
+        }
+        if let dictionary = detail as? [String: Any] {
+            let preferredKeys = ["error", "message", "loc", "msg", "type", "input"]
+            let parts = preferredKeys.compactMap { key -> String? in
+                guard let value = dictionary[key] else { return nil }
+                return "\(key)=\(formatValidationValue(value))"
+            }
+            if !parts.isEmpty {
+                return parts.joined(separator: "; ")
+            }
+            return formatValidationValue(dictionary)
+        }
+        if let list = detail as? [Any] {
+            return list
+                .map(formatValidationValue)
+                .joined(separator: "; ")
+        }
+        return formatValidationValue(detail)
+    }
+
+    private func formatValidationValue(_ value: Any) -> String {
+        if JSONSerialization.isValidJSONObject(value),
+           let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]),
+           let string = String(data: data, encoding: .utf8) {
+            return string
+        }
+        return String(describing: value)
     }
 }
 

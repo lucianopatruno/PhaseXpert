@@ -143,7 +143,7 @@ built and tested on a Mac before the milestone is accepted.
 
 The NeqSim remote endpoint is read from `PHASEXPERT_NEQSIM_ENDPOINT` for
 development and validation when a custom endpoint is needed. Debug iPhone
-Simulator builds default to `http://127.0.0.1:8080`; Release and non-simulator
+Simulator builds default to `http://localhost:8080`; Release and non-simulator
 builds do not inherit that HTTP endpoint. Production endpoints must use HTTPS.
 Credentials, tokens and internal IFE addresses must come from secure runtime
 configuration and must not be committed. Certificate validation must never be

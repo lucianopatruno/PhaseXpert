@@ -96,8 +96,46 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     #if DEBUG && targetEnvironment(simulator)
+    @MainActor
+    func testDebugSimulatorNeqSimPureCO2PPMInputCalculatesAgainstLocalhostService() async throws {
+        guard NeqSimConfiguration.environmentEndpoint?.absoluteString == "http://localhost:8080" else {
+            throw XCTSkip("Debug simulator localhost NeqSim endpoint is not configured.")
+        }
+
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = NeqSimMetadata.providerID
+        viewModel.pressureText = "150"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "1000000")
+        ]
+
+        await viewModel.calculate()
+
+        if let error = viewModel.calculationError,
+           error.contains("offline") || error.contains("unreachable") {
+            throw XCTSkip("Local NeqSim service is unavailable: \(error)")
+        }
+        XCTAssertNil(viewModel.calculationError)
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertEqual(record.request.modelID, NeqSimMetadata.providerID)
+        XCTAssertEqual(record.input.originalComposition, [
+            CompositionInputSnapshot(
+                component: .carbonDioxide,
+                value: 1_000_000,
+                unit: .partsPerMillion
+            )
+        ])
+        XCTAssertEqual(record.response.model.id, NeqSimMetadata.providerID)
+        XCTAssertEqual(record.response.model.modelVersion, NeqSimMetadata.releaseVersion)
+        XCTAssertTrue(record.response.properties.contains {
+            $0.property == .density && $0.hasFiniteCalculatedValue
+        })
+    }
+
     func testDebugSimulatorNeqSimLocalhostServiceCalculatesStatesAndEnvelopes() async throws {
-        guard NeqSimConfiguration.environmentEndpoint?.absoluteString == "http://127.0.0.1:8080" else {
+        guard NeqSimConfiguration.environmentEndpoint?.absoluteString == "http://localhost:8080" else {
             throw XCTSkip("Debug simulator localhost NeqSim endpoint is not configured.")
         }
 
