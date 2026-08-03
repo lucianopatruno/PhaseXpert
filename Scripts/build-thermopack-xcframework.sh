@@ -11,6 +11,7 @@ output_root="${project_root}/Vendor/ThermoPack"
 framework="${output_root}/PhaseXpertThermoPackBridge.xcframework"
 bridge_header="${project_root}/Native/ThermoPackBridge/include/PhaseXpertThermoPackBridge.h"
 bridge_source="${project_root}/Native/ThermoPackBridge/src/PhaseXpertThermoPackBridge.cpp"
+smoke_source="${project_root}/Native/ThermoPackBridge/smoke/thermopack_smoke.cpp"
 patcher="${project_root}/Native/ThermoPackBridge/patches/prepare_ios_static_build.py"
 
 for command_name in git cmake python3 xcodebuild xcrun libtool lipo nm otool shasum file; do
@@ -103,9 +104,16 @@ build_slice() {
 
     libtool -static -o "${build_dir}/libPhaseXpertThermoPackBridge.a" \
         "${bridge_object}" "${thermopack_archive}" "${runtime_archives[@]}"
-    if nm -u "${build_dir}/libPhaseXpertThermoPackBridge.a" \
-        | grep -E '(_gfortran_|_GOMP_|___kmpc_)'; then
-        echo "Unresolved dynamic Fortran/OpenMP runtime symbol for ${sdk}/${arch}." >&2
+
+    local smoke_executable="${build_dir}/thermopack-smoke"
+    xcrun --sdk "${sdk}" clang++ -std=c++17 -O2 \
+        -target "${target}" -isysroot "${sdk_path}" \
+        -I"${project_root}/Native/ThermoPackBridge/include" \
+        "${smoke_source}" "${build_dir}/libPhaseXpertThermoPackBridge.a" \
+        -framework Accelerate -o "${smoke_executable}"
+    if otool -L "${smoke_executable}" \
+        | grep -Ei 'gfortran|quadmath|libomp|libgomp'; then
+        echo "Unsupported dynamic Fortran/OpenMP dependency for ${sdk}/${arch}." >&2
         exit 1
     fi
 }
@@ -145,7 +153,7 @@ printf '%s\n' "${revision}" > "${output_root}/THERMOPACK-REVISION.txt"
 printf '%s\n' "${version}" > "${output_root}/THERMOPACK-VERSION.txt"
 {
     printf 'ThermoPack=%s@%s\n' "${version}" "${revision}"
-    shasum -a 256 "${bridge_header}" "${bridge_source}" "${patcher}" "$0"
+    shasum -a 256 "${bridge_header}" "${bridge_source}" "${smoke_source}" "${patcher}" "$0"
 } | shasum -a 256 | awk '{print $1}' > "${output_root}/BRIDGE-SOURCE-SHA256.txt"
 touch "${project_root}/PhaseXpertCore/Package.swift"
 
