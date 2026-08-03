@@ -57,7 +57,10 @@ The pinned `include/thermopack.h` exposes ISO C entry points used by the bridge:
 
 All input and bridge output quantities are SI. Molar API values are converted
 to mass-specific values only from the provider-returned molar mass and volume.
-Two-phase flashes do not receive an invented bulk density or caloric value.
+Single-phase internal energy is the traceable provider-independent identity
+`u = h - p·v`, using only ThermoPack enthalpy and specific volume plus the
+recorded SI pressure. Two-phase flashes do not receive an invented bulk density
+or caloric value.
 
 The v2.2.4 TP-flash C entry point does not carry an explicit error-code output.
 The bridge therefore serializes access to ThermoPack's active global model,
