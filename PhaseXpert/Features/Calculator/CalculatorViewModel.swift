@@ -42,7 +42,7 @@ final class CalculatorViewModel {
     }
 
     var canNormalize: Bool {
-        compositionBasis == .molePercent && validationReport.normalizedComposition != nil
+        false
     }
 
     var supportedImpurityComponents: [ComponentID] {
@@ -71,9 +71,25 @@ final class CalculatorViewModel {
         return input.id
     }
 
+    func removeImpurity(id: UUID) {
+        guard
+            let index = composition.firstIndex(where: { $0.id == id }),
+            composition[index].component != .carbonDioxide
+        else {
+            return
+        }
+        composition.remove(at: index)
+        validate()
+    }
+
     func removeImpurities(at offsets: IndexSet) {
-        for index in offsets.sorted(by: >) where composition[index].component != .carbonDioxide {
-            composition.remove(at: index)
+        let removableIDs = offsets.compactMap { index -> UUID? in
+            guard composition.indices.contains(index) else { return nil }
+            let entry = composition[index]
+            return entry.component == .carbonDioxide ? nil : entry.id
+        }
+        for id in removableIDs {
+            removeImpurity(id: id)
         }
     }
 
@@ -114,12 +130,15 @@ final class CalculatorViewModel {
             domain: descriptor.domain
         )
         var issues = coreReport.issues
-        if compositionBasis == .partsPerMillion, impurityPartsPerMillion > 1_000_000 {
+        if impurityEnteredTotal > compositionScale {
+            let limitMessage = compositionBasis == .partsPerMillion
+                ? "Total impurity cannot exceed 1,000,000 ppm; CO₂ is the remainder."
+                : "Total impurity cannot exceed 100 mol%; CO₂ is the remainder."
             issues.insert(
                 .init(
                     code: .compositionTotal,
                     severity: .error,
-                    message: "Total impurity cannot exceed 1,000,000 ppm; CO₂ is the remainder."
+                    message: limitMessage
                 ),
                 at: 0
             )
@@ -191,9 +210,7 @@ final class CalculatorViewModel {
     func changeCompositionBasis(to newBasis: CompositionInputBasis) {
         guard newBasis != compositionBasis else { return }
         let oldBasis = compositionBasis
-        let oldCarbonDioxideValue = oldBasis == .partsPerMillion
-            ? carbonDioxidePartsPerMillion
-            : nil
+        let oldCarbonDioxideValue = carbonDioxideEnteredValue
         compositionBasis = newBasis
         composition = composition.map { entry in
             let oldValue = oldCarbonDioxideValue.flatMap {
@@ -216,21 +233,34 @@ final class CalculatorViewModel {
         validate()
     }
 
-    var impurityPartsPerMillion: Double {
+    var impurityEnteredTotal: Double {
         composition
             .filter { $0.component != .carbonDioxide }
             .reduce(0) { $0 + (parse($1.value) ?? 0) }
     }
 
+    var carbonDioxideEnteredValue: Double {
+        compositionScale - impurityEnteredTotal
+    }
+
     var carbonDioxidePartsPerMillion: Double {
-        1_000_000 - impurityPartsPerMillion
+        compositionBasis == .partsPerMillion
+            ? carbonDioxideEnteredValue
+            : carbonDioxideEnteredValue * 10_000
+    }
+
+    var carbonDioxideMolePercent: Double {
+        compositionBasis == .molePercent
+            ? carbonDioxideEnteredValue
+            : carbonDioxideEnteredValue / 10_000
     }
 
     func displayedCompositionValue(for entry: CompositionInput) -> String {
-        if compositionBasis == .partsPerMillion, entry.component == .carbonDioxide {
-            return String(format: "%.12g", carbonDioxidePartsPerMillion)
-        }
-        return entry.value
+        guard entry.component == .carbonDioxide else { return entry.value }
+        return String(
+            format: compositionBasis == .partsPerMillion ? "%.12g" : "%.8g",
+            carbonDioxideEnteredValue
+        )
     }
 
     func calculate() async {
@@ -285,9 +315,8 @@ final class CalculatorViewModel {
 
     private func domainComposition() -> [MixtureComponent] {
         composition.map { entry in
-            let enteredValue = compositionBasis == .partsPerMillion
-                && entry.component == .carbonDioxide
-                ? carbonDioxidePartsPerMillion
+            let enteredValue = entry.component == .carbonDioxide
+                ? carbonDioxideEnteredValue
                 : parse(entry.value) ?? .nan
             return MixtureComponent(
                 component: entry.component,
@@ -298,9 +327,8 @@ final class CalculatorViewModel {
 
     private func compositionSnapshot() -> [CompositionInputSnapshot] {
         composition.map { entry in
-            let enteredValue = compositionBasis == .partsPerMillion
-                && entry.component == .carbonDioxide
-                ? carbonDioxidePartsPerMillion
+            let enteredValue = entry.component == .carbonDioxide
+                ? carbonDioxideEnteredValue
                 : parse(entry.value) ?? .nan
             return CompositionInputSnapshot(
                 component: entry.component,
@@ -329,6 +357,10 @@ final class CalculatorViewModel {
         case .cancelled:
             return "The calculation was cancelled."
         }
+    }
+
+    private var compositionScale: Double {
+        compositionBasis == .partsPerMillion ? 1_000_000 : 100
     }
 
     private func parse(_ value: String) -> Double? {
