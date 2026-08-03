@@ -14,7 +14,7 @@ bridge_source="${project_root}/Native/ThermoPackBridge/src/PhaseXpertThermoPackB
 smoke_source="${project_root}/Native/ThermoPackBridge/smoke/thermopack_smoke.cpp"
 patcher="${project_root}/Native/ThermoPackBridge/patches/prepare_ios_static_build.py"
 
-for command_name in git cmake python3 xcodebuild xcrun libtool lipo nm otool shasum file; do
+for command_name in git cmake ninja python3 xcodebuild xcrun libtool lipo nm otool shasum file; do
     command -v "${command_name}" >/dev/null 2>&1 || {
         echo "Missing required command: ${command_name}" >&2
         exit 1
@@ -78,7 +78,7 @@ build_slice() {
     rm -rf "${build_dir}"
     mkdir -p "${build_dir}"
 
-    cmake -S "${source_root}" -B "${build_dir}" -G Xcode \
+    cmake -S "${source_root}" -B "${build_dir}" -G Ninja \
         -DCMAKE_SYSTEM_NAME=iOS \
         -DCMAKE_OSX_SYSROOT="${sdk_path}" \
         -DCMAKE_OSX_ARCHITECTURES="${arch}" \
