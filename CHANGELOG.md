@@ -162,6 +162,8 @@
 - Kept unavailable ThermoPack properties explicit and prohibited CoolProp
   substitution, while preserving complete provider identity in calculations,
   saved cases, comparisons and exports.
+- Added single-phase internal energy only as the traceable identity `u = h - p·v`
+  from ThermoPack state values and recorded SI pressure.
 - Added bounded independent ThermoPack bubble/dew calls with branch separation,
   elapsed/iteration status and honest incomplete-envelope reporting.
 - Fixed top-right shield scientific references so valid HTTPS and DOI
