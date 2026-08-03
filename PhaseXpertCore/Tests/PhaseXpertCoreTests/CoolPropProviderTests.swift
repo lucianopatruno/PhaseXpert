@@ -638,6 +638,81 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
+    func testMixtureEnvelopeAboveDeclaredPressureDomainIsRejectedWithoutClipping() async {
+        let baselineProvider = CoolPropProvider(engine: MockEngine())
+        var points = MockEngine().mixtureEnvelope.points
+        points[1] = PhaseEnvelopePoint(
+            temperatureK: points[1].temperatureK,
+            pressurePa: baselineProvider.descriptor.domain.maximumPressurePa.nextUp,
+            branch: points[1].branch
+        )
+        let provider = CoolPropProvider(
+            engine: MockEngine(
+                mixtureEnvelope: CoolPropMixtureEnvelopeResult(
+                    points: points,
+                    solverMethod: "Mock out-of-domain pressure trace"
+                )
+            )
+        )
+
+        await assertOutOfDomainMixtureEnvelopeIsRejected(provider)
+    }
+
+    func testMixtureEnvelopeOutsideDeclaredTemperatureDomainIsRejectedWithoutClipping() async {
+        let baselineProvider = CoolPropProvider(engine: MockEngine())
+        var points = MockEngine().mixtureEnvelope.points
+        points[1] = PhaseEnvelopePoint(
+            temperatureK: baselineProvider.descriptor.domain.minimumTemperatureK.nextDown,
+            pressurePa: points[1].pressurePa,
+            branch: points[1].branch
+        )
+        let provider = CoolPropProvider(
+            engine: MockEngine(
+                mixtureEnvelope: CoolPropMixtureEnvelopeResult(
+                    points: points,
+                    solverMethod: "Mock out-of-domain temperature trace"
+                )
+            )
+        )
+
+        await assertOutOfDomainMixtureEnvelopeIsRejected(provider)
+    }
+
+    private func assertOutOfDomainMixtureEnvelopeIsRejected(
+        _ provider: CoolPropProvider<MockEngine>,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async {
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.99),
+                .init(component: .nitrogen, moleFraction: 0.01)
+            ]
+        )
+
+        do {
+            _ = try await provider.phaseEnvelope(request)
+            XCTFail(
+                "An out-of-domain mixture envelope must be rejected in full.",
+                file: file,
+                line: line
+            )
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .malformedResponse(
+                    "CoolProp mixture phase-envelope continuation left the supported "
+                        + "PhaseXpert pressure or temperature domain; no diagram is displayed."
+                ),
+                file: file,
+                line: line
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)", file: file, line: line)
+        }
+    }
+
     func testNonFiniteSaturationPressureIsRejected() async {
         let provider = CoolPropProvider(engine: MockEngine(
             saturationPressure: { _ in .nan }
