@@ -1,0 +1,76 @@
+{
+  "schema_version": "phasexpert-local-phase-diagram-reference-attempt.v1",
+  "generated_on": "2026-08-04",
+  "status": "blocked",
+  "blocker": "The reachable local NeqSim development service reported that the NeqSim Python bridge is not importable for every state and phase-envelope calculation.",
+  "service_health": {
+    "schema_version": "neqsim-provider.v1",
+    "provider_id": "neqsim-remote-srk-classic",
+    "provider_capability_version": "2026.08-pr23",
+    "service_version": "0.1.0",
+    "neqsim_version": "3.16.0",
+    "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+    "eos": "SystemSrkEos",
+    "mixing_rule": "classic",
+    "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+    "production_transport_requires_https": true
+  },
+  "requested_cases": {
+    "state_conditions": [
+      {
+        "id": "10bar-20c",
+        "pressure_pa": 1000000.0,
+        "temperature_k": 293.15
+      },
+      {
+        "id": "150bar-20c",
+        "pressure_pa": 15000000.0,
+        "temperature_k": 293.15
+      }
+    ],
+    "compositions": [
+      {
+        "id": "pure-co2",
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 1.0
+          }
+        ]
+      },
+      {
+        "id": "co2-97-n2-3",
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.97
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.03
+          }
+        ]
+      },
+      {
+        "id": "co2-90-n2-10",
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.9
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.1
+          }
+        ]
+      }
+    ]
+  },
+  "observed_error": {
+    "http_status": 422,
+    "state_error": "neqsim_state_failed",
+    "phase_envelope_error": "neqsim_phase_envelope_failed",
+    "message": "NeqSim Python bridge is not importable"
+  },
+  "accepted_as_reference_data": false
+}
