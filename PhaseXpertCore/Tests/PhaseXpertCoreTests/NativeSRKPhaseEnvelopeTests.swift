@@ -57,6 +57,69 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertTrue(assessment.vaporLikeTangentPlaneDistance.isFinite)
     }
 
+    func testStabilityAssessmentCarriesMinimizedTPDDiagnostics() throws {
+        let assessment = try tracer.stabilityAssessment(
+            temperatureK: 220.0,
+            pressurePa: 2_500_000,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ]
+        )
+
+        XCTAssertEqual(assessment.liquidLikeMinimum.trialType, .liquidLike)
+        XCTAssertEqual(assessment.vaporLikeMinimum.trialType, .vaporLike)
+        XCTAssertTrue(assessment.liquidLikeMinimum.minimumTangentPlaneDistance.isFinite)
+        XCTAssertTrue(assessment.vaporLikeMinimum.minimumTangentPlaneDistance.isFinite)
+        XCTAssertGreaterThan(assessment.liquidLikeMinimum.iterations, 0)
+        XCTAssertGreaterThan(assessment.vaporLikeMinimum.iterations, 0)
+        XCTAssertEqual(assessment.liquidLikeMinimum.finalTrialComposition.count, 2)
+        XCTAssertEqual(assessment.vaporLikeMinimum.finalTrialComposition.count, 2)
+        XCTAssertTrue(assessment.liquidLikeMinimum.residualNorm.isFinite)
+        XCTAssertTrue(assessment.vaporLikeMinimum.residualNorm.isFinite)
+        XCTAssertFalse(assessment.liquidLikeMinimum.terminationReason.isEmpty)
+        XCTAssertFalse(assessment.vaporLikeMinimum.terminationReason.isEmpty)
+    }
+
+    func testConvergedCoupledBubbleCarriesDiagnostics() throws {
+        let point = try tracer.solveBubblePressure(
+            temperatureK: 220,
+            liquidComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.97),
+                .init(component: .nitrogen, moleFraction: 0.03)
+            ],
+            options: testOptions()
+        )
+
+        XCTAssertLessThan(point.finalResidualNorm, 1e-6)
+        XCTAssertTrue(point.finalStepNorm.isFinite)
+        XCTAssertGreaterThan(point.liquidRootCount, 0)
+        XCTAssertGreaterThan(point.vaporRootCount, 0)
+        XCTAssertTrue(point.selectedLiquidRoot.isFinite)
+        XCTAssertTrue(point.selectedVaporRoot.isFinite)
+        XCTAssertNotNil(point.stabilityAssessment)
+        XCTAssertEqual(point.terminationReason, "coupled fugacity system converged")
+    }
+
+    func testPureCO2CriticalRegionDoesNotReturnCollapsedRootPoint() {
+        XCTAssertThrowsError(try tracer.solveBubblePressure(
+            temperatureK: 296,
+            liquidComposition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            options: testOptions()
+        ))
+    }
+
+    func testBoundaryIncipientCompositionIsRejected() {
+        XCTAssertThrowsError(try tracer.solveBubblePressure(
+            temperatureK: 61.875,
+            liquidComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            options: testOptions(minimumTemperatureK: 54)
+        ))
+    }
+
     func testIterationLimitBoundsTraceWork() throws {
         let result = try tracer.phaseEnvelope(
             composition: [
@@ -155,7 +218,7 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
                     composition: referenceCase.composition.map {
                         NativeSRKMixtureFraction(component: $0.component, moleFraction: $0.moleFraction)
                     },
-                    options: testOptions(minimumTemperatureK: 186.0)
+                    options: testOptions(minimumTemperatureK: 54.0)
                 ),
                 tolerances: tolerances
             )
@@ -224,17 +287,17 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         local: NativeSRKEnvelopeResult
     ) -> BranchComparison {
         let referencePoints = referenceCase.points.filter { $0.branch == branch }
-        let localPoints = local.points.filter { $0.branch.rawValue == branch }
+        let localPoints = local.points.filter { $0.branch.rawValue == branch }.sorted { $0.temperatureK < $1.temperatureK }
+        let localGaps = local.gaps.filter { $0.branch.rawValue == branch }
         let errors = referencePoints.compactMap { referencePoint -> Double? in
-            guard let localPoint = localPoints.min(by: {
-                abs($0.temperatureK - referencePoint.temperatureK)
-                    < abs($1.temperatureK - referencePoint.temperatureK)
-            }),
-            abs(localPoint.temperatureK - referencePoint.temperatureK) <= 1.0
-            else {
+            guard let localPressure = interpolatedPressure(
+                at: referencePoint.temperatureK,
+                points: localPoints,
+                gaps: localGaps
+            ) else {
                 return nil
             }
-            return abs(localPoint.pressurePa - referencePoint.pressurePa) / referencePoint.pressurePa
+            return abs(localPressure - referencePoint.pressurePa) / referencePoint.pressurePa
         }.sorted()
 
         return BranchComparison(
@@ -250,6 +313,36 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         guard !sortedValues.isEmpty else { return .infinity }
         let index = min(sortedValues.count - 1, max(0, Int((Double(sortedValues.count - 1) * fraction).rounded())))
         return sortedValues[index]
+    }
+
+    private func interpolatedPressure(
+        at temperatureK: Double,
+        points: [NativeSRKEnvelopePoint],
+        gaps: [NativeSRKEnvelopeGap]
+    ) -> Double? {
+        guard let first = points.first, let last = points.last,
+              temperatureK >= first.temperatureK,
+              temperatureK <= last.temperatureK
+        else {
+            return nil
+        }
+        if let exact = points.first(where: { abs($0.temperatureK - temperatureK) <= 1e-9 }) {
+            return exact.pressurePa
+        }
+        guard let lower = points.last(where: { $0.temperatureK < temperatureK }),
+              let upper = points.first(where: { $0.temperatureK > temperatureK }),
+              upper.temperatureK > lower.temperatureK
+        else {
+            return nil
+        }
+        let crossesGap = gaps.contains {
+            $0.temperatureK > lower.temperatureK && $0.temperatureK < upper.temperatureK
+        }
+        guard !crossesGap else {
+            return nil
+        }
+        let fraction = (temperatureK - lower.temperatureK) / (upper.temperatureK - lower.temperatureK)
+        return lower.pressurePa + fraction * (upper.pressurePa - lower.pressurePa)
     }
 }
 

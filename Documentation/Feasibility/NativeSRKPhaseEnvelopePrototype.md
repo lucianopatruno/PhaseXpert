@@ -52,10 +52,13 @@ The implementation includes:
 - physical root selection for liquid and vapour fugacity calculations;
 - component fugacity coefficients;
 - pure-CO2 saturation by fugacity-equality bisection;
-- mixture bubble-pressure solving at fixed temperature;
-- mixture dew-pressure solving at fixed temperature;
-- Wilson-seeded tangent-plane-distance screening for preliminary stability classification;
-- safeguarded finite-difference Newton updates on `ln(P)` with bounded successive-substitution fallback;
+- mixture bubble-pressure solving at fixed temperature as a coupled `ln(P)` and incipient-vapour-composition system;
+- mixture dew-pressure solving at fixed temperature as a coupled `ln(P)` and incipient-liquid-composition system;
+- bounded multi-start Michelsen tangent-plane-distance minimization for liquid-like and vapour-like stability diagnostics;
+- safeguarded finite-difference Newton updates with line search, pressure bounds, composition bounds and deterministic singular-Jacobian failure reporting;
+- bounded bubble-solve reseeding from minimized TPD, Wilson estimates and pressure-grid seeds;
+- continuity-oriented dew tracing from Wilson or previous-pressure continuation to avoid jumping to unrelated dew roots;
+- bounded reseeding after branch loss during temperature-oriented continuation;
 - independent bubble and dew tracing over a bounded temperature grid;
 - explicit iteration limits, tolerances, pressure bounds and consecutive-failure limits;
 - finite-value checks and explicit gap reporting;
@@ -93,11 +96,13 @@ These are software-parity tolerances only. They are not experimental validation 
 ## Current Limitations
 
 - The prototype is not integrated into the UI or provider registry.
-- Critical-region handling is conservative and reports failures rather than forcing branch closure.
-- The current pressure solve is a scalar safeguarded Newton formulation around fugacity-ratio residuals; a full simultaneous flash/stability formulation may still be required for higher coverage.
+- Critical-region handling is conservative and rejects coalesced pure-component roots rather than forcing branch closure.
+- The current TPD minimization is bounded and multi-start, but it is still a binary-composition minimizer used for stability diagnostics and seeding rather than a full arc-length continuation corrector.
+- The 90/10 CO2/N2 bubble branch does not yet initialize below about 140 K without collapsing to a boundary incipient composition.
+- The continuation variable is temperature only; arc-length or pressure-oriented continuation may be required for higher coverage.
 - Simulator and physical-iPhone execution, app-size delta, peak memory and UI responsiveness measurements remain pending.
 - Independent published-data comparisons remain pending.
 
 ## Recommended Next Step
 
-Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be a full flash/stability formulation with stronger critical-region handling, not parameter tuning to force visual agreement.
+Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be pseudo-arc-length continuation with a bounded pressure/composition corrector seeded from the minimized TPD results, not parameter tuning to force visual agreement.

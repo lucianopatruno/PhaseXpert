@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(PhaseXpertCore)
+import PhaseXpertCore
+#endif
 
 struct ReferenceDataset: Decodable {
     let phaseEnvelopeCases: [ReferenceCase]
@@ -78,7 +81,6 @@ struct AcceptanceTolerances: Encodable {
 
 struct CaseMetric: Encodable {
     let caseID: String
-    let elapsedSeconds: Double
     let totalAttempted: Int
     let totalConverged: Int
     let gapCount: Int
@@ -87,7 +89,6 @@ struct CaseMetric: Encodable {
 
     enum CodingKeys: String, CodingKey {
         case caseID = "case_id"
-        case elapsedSeconds = "elapsed_seconds"
         case totalAttempted = "total_attempted"
         case totalConverged = "total_converged"
         case gapCount = "gap_count"
@@ -134,9 +135,13 @@ enum NativeSRKComparisonReport {
         let data = try Data(contentsOf: root.appendingPathComponent(datasetPath))
         let reference = try JSONDecoder().decode(ReferenceDataset.self, from: data)
         let tracer = NativeSRKPhaseEnvelopeTracer()
+        let temperatureRange = reference.phaseEnvelopeCases
+            .flatMap { $0.points.map(\.temperatureK) }
+        let minimumTemperature = max(1, (temperatureRange.min() ?? 186.0).rounded(.down))
+        let maximumTemperature = (temperatureRange.max() ?? 305.0).rounded(.up)
         let options = NativeSRKEnvelopeOptions(
-            minimumTemperatureK: 186.0,
-            maximumTemperatureK: 305.0,
+            minimumTemperatureK: minimumTemperature,
+            maximumTemperatureK: maximumTemperature,
             initialTemperatureStepK: 5.0,
             minimumTemperatureStepK: 0.5,
             maximumTemperatureStepK: 8.0,
@@ -158,7 +163,6 @@ enum NativeSRKComparisonReport {
             )
             return CaseMetric(
                 caseID: referenceCase.id,
-                elapsedSeconds: local.elapsedSeconds,
                 totalAttempted: local.attemptedPointCount,
                 totalConverged: local.convergedPointCount,
                 gapCount: local.gaps.count,
@@ -175,7 +179,7 @@ enum NativeSRKComparisonReport {
             referenceDataset: datasetPath,
             referenceModel: "NeqSim 3.16.0 SystemSrkEos classic",
             localModel: "phasexpert-native-srk-prototype",
-            comparisonMethod: "Nearest local point on same branch within 1.0 K; no interpolation across gaps and no extrapolation.",
+            comparisonMethod: "Linear interpolation in pressure by temperature inside continuous same-branch local intervals; no interpolation across recorded gaps and no extrapolation.",
             acceptanceTolerances: tolerances,
             acceptanceGatePassed: gatePassed,
             cases: cases
@@ -188,15 +192,16 @@ enum NativeSRKComparisonReport {
     private static func metric(branch: String, referenceCase: ReferenceCase, local: NativeSRKEnvelopeResult) -> Metric {
         let referencePoints = referenceCase.points.filter { $0.branch == branch }.sorted { $0.temperatureK < $1.temperatureK }
         let localPoints = local.points.filter { $0.branch.rawValue == branch }.sorted { $0.temperatureK < $1.temperatureK }
+        let localGaps = local.gaps.filter { $0.branch.rawValue == branch }
         let errors = referencePoints.compactMap { point -> (absolute: Double, relative: Double)? in
-            guard let best = localPoints.min(by: {
-                abs($0.temperatureK - point.temperatureK) < abs($1.temperatureK - point.temperatureK)
-            }),
-            abs(best.temperatureK - point.temperatureK) <= 1.0
-            else {
+            guard let localPressure = interpolatedPressure(
+                at: point.temperatureK,
+                points: localPoints,
+                gaps: localGaps
+            ) else {
                 return nil
             }
-            let absolute = abs(best.pressurePa - point.pressurePa)
+            let absolute = abs(localPressure - point.pressurePa)
             return (absolute, absolute / point.pressurePa)
         }
         let absoluteErrors = errors.map(\.absolute)
@@ -205,7 +210,7 @@ enum NativeSRKComparisonReport {
             referenceTemperatureRangeK: range(referencePoints.map(\.temperatureK)),
             localTemperatureRangeK: range(localPoints.map(\.temperatureK)),
             referencePointCount: referencePoints.count,
-            attemptedLocalPointCount: local.attemptedPointCount,
+            attemptedLocalPointCount: localPoints.count + localGaps.count,
             convergedLocalPointCount: localPoints.count,
             convergenceCoverage: referencePoints.isEmpty ? 0 : Double(errors.count) / Double(referencePoints.count),
             meanAbsolutePressureErrorPa: mean(absoluteErrors),
@@ -226,6 +231,36 @@ enum NativeSRKComparisonReport {
         return metric.convergenceCoverage >= tolerances.minimumBranchCoverage
             && meanRelative <= tolerances.meanRelativePressureError
             && maximumRelative <= tolerances.maximumRelativePressureError
+    }
+
+    private static func interpolatedPressure(
+        at temperatureK: Double,
+        points: [NativeSRKEnvelopePoint],
+        gaps: [NativeSRKEnvelopeGap]
+    ) -> Double? {
+        guard let first = points.first, let last = points.last,
+              temperatureK >= first.temperatureK,
+              temperatureK <= last.temperatureK
+        else {
+            return nil
+        }
+        if let exact = points.first(where: { abs($0.temperatureK - temperatureK) <= 1e-9 }) {
+            return exact.pressurePa
+        }
+        guard let lower = points.last(where: { $0.temperatureK < temperatureK }),
+              let upper = points.first(where: { $0.temperatureK > temperatureK }),
+              upper.temperatureK > lower.temperatureK
+        else {
+            return nil
+        }
+        let crossesGap = gaps.contains {
+            $0.temperatureK > lower.temperatureK && $0.temperatureK < upper.temperatureK
+        }
+        guard !crossesGap else {
+            return nil
+        }
+        let fraction = (temperatureK - lower.temperatureK) / (upper.temperatureK - lower.temperatureK)
+        return lower.pressurePa + fraction * (upper.pressurePa - lower.pressurePa)
     }
 
     private static func mean(_ values: [Double]) -> Double? {

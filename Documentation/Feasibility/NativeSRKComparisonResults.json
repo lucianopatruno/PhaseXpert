@@ -9,19 +9,19 @@
   "cases" : [
     {
       "bubble" : {
-        "attempted_local_point_count" : 32,
-        "converged_local_point_count" : 16,
-        "convergence_coverage" : 0.45161290322580644,
+        "attempted_local_point_count" : 263,
+        "converged_local_point_count" : 25,
+        "convergence_coverage" : 0.6451612903225806,
         "local_temperature_range_k" : [
-          186,
-          303.2
+          174.875,
+          290.096064723759
         ],
-        "maximum_absolute_pressure_error_pa" : 7330182.339078206,
-        "maximum_relative_pressure_error" : 0.9930118170086939,
-        "mean_absolute_pressure_error_pa" : 4516315.988543978,
-        "mean_relative_pressure_error" : 0.649471585589992,
-        "median_absolute_pressure_error_pa" : 7208832.444141588,
-        "percentile95_absolute_pressure_error_pa" : 7329513.537960986,
+        "maximum_absolute_pressure_error_pa" : 16480.88740106672,
+        "maximum_relative_pressure_error" : 0.010016085708384992,
+        "mean_absolute_pressure_error_pa" : 4423.144751024278,
+        "mean_relative_pressure_error" : 0.004788897727346064,
+        "median_absolute_pressure_error_pa" : 2553.7813631673343,
+        "percentile95_absolute_pressure_error_pa" : 13481.709724473767,
         "reference_point_count" : 31,
         "reference_temperature_range_k" : [
           186.7738418728282,
@@ -30,45 +30,44 @@
       },
       "case_id" : "pure-co2",
       "dew" : {
-        "attempted_local_point_count" : 32,
-        "converged_local_point_count" : 16,
-        "convergence_coverage" : 0.2857142857142857,
+        "attempted_local_point_count" : 263,
+        "converged_local_point_count" : 25,
+        "convergence_coverage" : 0.9523809523809523,
         "local_temperature_range_k" : [
-          186,
-          303.2
+          174.875,
+          290.096064723759
         ],
-        "maximum_absolute_pressure_error_pa" : 4909280.122351371,
-        "maximum_relative_pressure_error" : 0.9896015837543737,
-        "mean_absolute_pressure_error_pa" : 825581.8621654384,
-        "mean_relative_pressure_error" : 0.191477178864189,
-        "median_absolute_pressure_error_pa" : 14275.153584466781,
-        "percentile95_absolute_pressure_error_pa" : 4909280.122351371,
+        "maximum_absolute_pressure_error_pa" : 16480.88740106672,
+        "maximum_relative_pressure_error" : 0.010016085708384992,
+        "mean_absolute_pressure_error_pa" : 4423.144751024423,
+        "mean_relative_pressure_error" : 0.004788897727345609,
+        "median_absolute_pressure_error_pa" : 2553.7813631687313,
+        "percentile95_absolute_pressure_error_pa" : 13481.70972447563,
         "reference_point_count" : 21,
         "reference_temperature_range_k" : [
           186.7738418728282,
           296.98795272019294
         ]
       },
-      "elapsed_seconds" : 0.011042952537536621,
-      "gap_count" : 0,
-      "total_attempted" : 32,
-      "total_converged" : 32
+      "gap_count" : 476,
+      "total_attempted" : 526,
+      "total_converged" : 50
     },
     {
       "bubble" : {
-        "attempted_local_point_count" : 32,
-        "converged_local_point_count" : 16,
-        "convergence_coverage" : 0.10256410256410256,
+        "attempted_local_point_count" : 87,
+        "converged_local_point_count" : 41,
+        "convergence_coverage" : 0.8461538461538461,
         "local_temperature_range_k" : [
-          186,
-          301.966875
+          79.875,
+          298.59679130982033
         ],
-        "maximum_absolute_pressure_error_pa" : 941879.6901976736,
-        "maximum_relative_pressure_error" : 0.13267764147198377,
-        "mean_absolute_pressure_error_pa" : 319771.14544531517,
-        "mean_relative_pressure_error" : 0.06589300856753605,
-        "median_absolute_pressure_error_pa" : 235772.08928715577,
-        "percentile95_absolute_pressure_error_pa" : 941879.6901976736,
+        "maximum_absolute_pressure_error_pa" : 270584.5670291735,
+        "maximum_relative_pressure_error" : 0.03811582577453618,
+        "mean_absolute_pressure_error_pa" : 10528.718912921122,
+        "mean_relative_pressure_error" : 0.0019673359538282297,
+        "median_absolute_pressure_error_pa" : 1298.4715447300114,
+        "percentile95_absolute_pressure_error_pa" : 9416.088557662442,
         "reference_point_count" : 39,
         "reference_temperature_range_k" : [
           59.063477205875465,
@@ -77,45 +76,44 @@
       },
       "case_id" : "co2-97-n2-3",
       "dew" : {
-        "attempted_local_point_count" : 32,
-        "converged_local_point_count" : 16,
-        "convergence_coverage" : 0.36,
+        "attempted_local_point_count" : 265,
+        "converged_local_point_count" : 29,
+        "convergence_coverage" : 0.84,
         "local_temperature_range_k" : [
-          186,
-          301.966875
+          174.375,
+          301.09679130982033
         ],
-        "maximum_absolute_pressure_error_pa" : 3606660.0614286163,
-        "maximum_relative_pressure_error" : 0.4638954765391718,
-        "mean_absolute_pressure_error_pa" : 411873.66848223016,
-        "mean_relative_pressure_error" : 0.06970364523871696,
-        "median_absolute_pressure_error_pa" : 7486.549773276609,
-        "percentile95_absolute_pressure_error_pa" : 3606660.0614286163,
+        "maximum_absolute_pressure_error_pa" : 17744.51735945791,
+        "maximum_relative_pressure_error" : 0.007341518582253168,
+        "mean_absolute_pressure_error_pa" : 3774.3506823268926,
+        "mean_relative_pressure_error" : 0.003470626018669481,
+        "median_absolute_pressure_error_pa" : 1327.8356329464586,
+        "percentile95_absolute_pressure_error_pa" : 10231.963127878495,
         "reference_point_count" : 25,
         "reference_temperature_range_k" : [
           186.26461687006258,
           302.2271261189044
         ]
       },
-      "elapsed_seconds" : 0.04519200325012207,
-      "gap_count" : 0,
-      "total_attempted" : 32,
-      "total_converged" : 32
+      "gap_count" : 282,
+      "total_attempted" : 352,
+      "total_converged" : 70
     },
     {
       "bubble" : {
-        "attempted_local_point_count" : 32,
-        "converged_local_point_count" : 16,
-        "convergence_coverage" : 0.07228915662650602,
+        "attempted_local_point_count" : 200,
+        "converged_local_point_count" : 33,
+        "convergence_coverage" : 0.6024096385542169,
         "local_temperature_range_k" : [
-          186,
-          301.966875
+          139.875,
+          294.59679130982033
         ],
-        "maximum_absolute_pressure_error_pa" : 5423928.450862246,
-        "maximum_relative_pressure_error" : 0.7157408149492924,
-        "mean_absolute_pressure_error_pa" : 3207308.0920721926,
-        "mean_relative_pressure_error" : 0.41977238138504896,
-        "median_absolute_pressure_error_pa" : 5124091.204242965,
-        "percentile95_absolute_pressure_error_pa" : 5423928.450862246,
+        "maximum_absolute_pressure_error_pa" : 209086.58693724312,
+        "maximum_relative_pressure_error" : 0.02326642246657702,
+        "mean_absolute_pressure_error_pa" : 21095.291943033262,
+        "mean_relative_pressure_error" : 0.0021608026283489452,
+        "median_absolute_pressure_error_pa" : 15776.298225356266,
+        "percentile95_absolute_pressure_error_pa" : 42824.825579069555,
         "reference_point_count" : 83,
         "reference_temperature_range_k" : [
           54.67022174565088,
@@ -124,32 +122,31 @@
       },
       "case_id" : "co2-90-n2-10",
       "dew" : {
-        "attempted_local_point_count" : 32,
-        "converged_local_point_count" : 16,
-        "convergence_coverage" : 0.2692307692307692,
+        "attempted_local_point_count" : 263,
+        "converged_local_point_count" : 29,
+        "convergence_coverage" : 0.9230769230769231,
         "local_temperature_range_k" : [
-          186,
-          301.966875
+          173.375,
+          296.09679130982033
         ],
-        "maximum_absolute_pressure_error_pa" : 33478.378741808585,
-        "maximum_relative_pressure_error" : 0.06238387491669009,
-        "mean_absolute_pressure_error_pa" : 14388.250190430075,
-        "mean_relative_pressure_error" : 0.029186121368200323,
-        "median_absolute_pressure_error_pa" : 6894.4844314794755,
-        "percentile95_absolute_pressure_error_pa" : 33478.378741808585,
+        "maximum_absolute_pressure_error_pa" : 106604.90613770764,
+        "maximum_relative_pressure_error" : 0.015362865320318251,
+        "mean_absolute_pressure_error_pa" : 10481.940933254118,
+        "mean_relative_pressure_error" : 0.004386713644737355,
+        "median_absolute_pressure_error_pa" : 3321.51418069168,
+        "percentile95_absolute_pressure_error_pa" : 35971.82391974237,
         "reference_point_count" : 26,
         "reference_temperature_range_k" : [
           149.7986503784304,
           297.45412580192055
         ]
       },
-      "elapsed_seconds" : 0.02711009979248047,
-      "gap_count" : 0,
-      "total_attempted" : 32,
-      "total_converged" : 32
+      "gap_count" : 401,
+      "total_attempted" : 463,
+      "total_converged" : 62
     }
   ],
-  "comparison_method" : "Nearest local point on same branch within 1.0 K; no interpolation across gaps and no extrapolation.",
+  "comparison_method" : "Linear interpolation in pressure by temperature inside continuous same-branch local intervals; no interpolation across recorded gaps and no extrapolation.",
   "local_model" : "phasexpert-native-srk-prototype",
   "reference_dataset" : "Documentation\/Feasibility\/LocalPhaseDiagramNeqSimReferenceDataset.json",
   "reference_model" : "NeqSim 3.16.0 SystemSrkEos classic",

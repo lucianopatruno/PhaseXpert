@@ -27,6 +27,14 @@ public struct NativeSRKEnvelopePoint: Sendable, Equatable {
     public let pressurePa: Double
     public let iterations: Int
     public let status: NativeSRKSolveStatus
+    public let finalResidualNorm: Double
+    public let finalStepNorm: Double
+    public let liquidRootCount: Int
+    public let vaporRootCount: Int
+    public let selectedLiquidRoot: Double
+    public let selectedVaporRoot: Double
+    public let stabilityAssessment: NativeSRKStabilityAssessment?
+    public let terminationReason: String
     public let liquidMoleFractions: [ComponentID: Double]
     public let vaporMoleFractions: [ComponentID: Double]
 }
@@ -51,6 +59,22 @@ public struct NativeSRKStabilityAssessment: Sendable, Equatable {
     public let isStable: Bool
     public let liquidLikeTangentPlaneDistance: Double
     public let vaporLikeTangentPlaneDistance: Double
+    public let liquidLikeMinimum: NativeSRKTPDMinimum
+    public let vaporLikeMinimum: NativeSRKTPDMinimum
+}
+
+public enum NativeSRKTPDTrialType: String, Sendable, Codable, Equatable {
+    case liquidLike
+    case vaporLike
+}
+
+public struct NativeSRKTPDMinimum: Sendable, Equatable {
+    public let trialType: NativeSRKTPDTrialType
+    public let minimumTangentPlaneDistance: Double
+    public let iterations: Int
+    public let finalTrialComposition: [Double]
+    public let residualNorm: Double
+    public let terminationReason: String
 }
 
 public struct NativeSRKProvenance: Sendable, Equatable {
@@ -59,7 +83,7 @@ public struct NativeSRKProvenance: Sendable, Equatable {
     public let alphaFunction = "Standard Soave alpha"
     public let mixingRule = "Classical van der Waals one-fluid quadratic mixing"
     public let stabilityTest =
-        "Wilson-seeded tangent-plane-distance screen using SRK fugacity coefficients"
+        "Bounded multi-start Michelsen tangent-plane-distance minimization using SRK fugacity coefficients"
     public let pressureUpdate =
         "Safeguarded finite-difference Newton on ln pressure with bounded successive-substitution fallback"
     public let componentData =
@@ -142,6 +166,25 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let iterations: Int
         let liquidFractions: [Double]
         let vaporFractions: [Double]
+        let finalResidualNorm: Double
+        let finalStepNorm: Double
+        let liquidRootCount: Int
+        let vaporRootCount: Int
+        let selectedLiquidRoot: Double
+        let selectedVaporRoot: Double
+        let stabilityAssessment: NativeSRKStabilityAssessment?
+        let terminationReason: String
+    }
+
+    private struct FugacityResult {
+        let coefficients: [Double]
+        let rootCount: Int
+        let selectedRoot: Double
+    }
+
+    private struct TPDTrial {
+        let type: NativeSRKTPDTrialType
+        let composition: [Double]
     }
 
     public static let gasConstant = 8.314_462_618_153_24
@@ -266,38 +309,29 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let composition = try validatedComposition(inputComposition)
         let components = composition.map(\.component)
         let fractions = composition.map(\.moleFraction)
-        let feedPhi = try fugacityCoefficients(
+        let liquidMinimum = try minimizedTangentPlaneDistance(
+            type: .liquidLike,
             temperatureK: temperatureK,
             pressurePa: pressurePa,
-            fractions: fractions,
-            components: components,
-            useLiquidRoot: false
-        )
-        let wilson = wilsonKValues(temperatureK: temperatureK, pressurePa: pressurePa, components: components)
-        let vaporLike = normalized(zip(fractions, wilson).map { $0 * $1 })
-        let liquidLike = normalized(zip(fractions, wilson).map { $0 / $1 })
-        let vaporTPD = try tangentPlaneDistance(
-            trialFractions: vaporLike,
             feedFractions: fractions,
-            feedPhi: feedPhi,
-            temperatureK: temperatureK,
-            pressurePa: pressurePa,
-            components: components,
-            useLiquidRoot: false
+            components: components
         )
-        let liquidTPD = try tangentPlaneDistance(
-            trialFractions: liquidLike,
-            feedFractions: fractions,
-            feedPhi: feedPhi,
+        let vaporMinimum = try minimizedTangentPlaneDistance(
+            type: .vaporLike,
             temperatureK: temperatureK,
             pressurePa: pressurePa,
-            components: components,
-            useLiquidRoot: true
+            feedFractions: fractions,
+            components: components
         )
         return NativeSRKStabilityAssessment(
-            isStable: min(vaporTPD, liquidTPD) >= -1e-8,
-            liquidLikeTangentPlaneDistance: liquidTPD,
-            vaporLikeTangentPlaneDistance: vaporTPD
+            isStable: min(
+                vaporMinimum.minimumTangentPlaneDistance,
+                liquidMinimum.minimumTangentPlaneDistance
+            ) >= -1e-8,
+            liquidLikeTangentPlaneDistance: liquidMinimum.minimumTangentPlaneDistance,
+            vaporLikeTangentPlaneDistance: vaporMinimum.minimumTangentPlaneDistance,
+            liquidLikeMinimum: liquidMinimum,
+            vaporLikeMinimum: vaporMinimum
         )
     }
 
@@ -375,7 +409,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 gaps.append(.init(branch: .bubble, temperatureK: temperature, reason: "\(error)"))
                 gaps.append(.init(branch: .dew, temperatureK: temperature, reason: "\(error)"))
                 failures += 1
-                if failures >= options.maximumConsecutiveFailures {
+                if !points.isEmpty, failures >= options.maximumConsecutiveFailures {
                     return
                 }
                 step = max(options.minimumTemperatureStepK, step / 2)
@@ -442,8 +476,9 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             } catch {
                 gaps.append(.init(branch: branch, temperatureK: temperature, reason: "\(error)"))
                 failures += 1
-                if failures >= options.maximumConsecutiveFailures {
-                    return
+                if pressureGuess != nil, failures >= options.maximumConsecutiveFailures {
+                    pressureGuess = nil
+                    failures = 0
                 }
                 step = max(options.minimumTemperatureStepK, step / 2)
                 temperature += step
@@ -459,72 +494,23 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         initialPressurePa: Double?,
         shouldCancel: @Sendable () -> Bool
     ) throws -> SolveOutcome {
-        var pressure = clamp(
-            initialPressurePa ?? wilsonBubblePressure(temperatureK: temperatureK, fractions: liquidFractions, components: components),
-            options.minimumPressurePa,
-            options.maximumPressurePa
-        )
-        var vaporFractions = liquidFractions
-        var iterations = 0
-
-        for iteration in 1...options.maximumIterationsPerSolve {
-            if shouldCancel() { throw CancellationError() }
-            iterations = iteration
-            let liquidPhi = try fugacityCoefficients(
+        if components.count == 1 {
+            return try solvePureSaturation(
                 temperatureK: temperatureK,
-                pressurePa: pressure,
-                fractions: liquidFractions,
-                components: components,
-                useLiquidRoot: true
+                options: options,
+                shouldCancel: shouldCancel
             )
-            let vaporPhi = try fugacityCoefficients(
-                temperatureK: temperatureK,
-                pressurePa: pressure,
-                fractions: vaporFractions,
-                components: components,
-                useLiquidRoot: false
-            )
-            let kValues = zip(liquidPhi, vaporPhi).map { max(1e-12, min(1e12, $0 / $1)) }
-            let sum = zip(liquidFractions, kValues).map(*).reduce(0, +)
-            guard sum.isFinite, sum > 0 else { throw NativeSRKError.invalidComposition("Bubble residual is non-finite.") }
-            let updatedVapor = normalized(zip(liquidFractions, kValues).map { $0 * $1 })
-            let residual = log(sum)
-            let nextPressure = try safeguardedPressureUpdate(
-                pressurePa: pressure,
-                residual: residual,
-                fallbackScale: sum,
-                options: options
-            ) { trialPressure in
-                let trialLiquidPhi = try fugacityCoefficients(
-                    temperatureK: temperatureK,
-                    pressurePa: trialPressure,
-                    fractions: liquidFractions,
-                    components: components,
-                    useLiquidRoot: true
-                )
-                let trialVaporPhi = try fugacityCoefficients(
-                    temperatureK: temperatureK,
-                    pressurePa: trialPressure,
-                    fractions: vaporFractions,
-                    components: components,
-                    useLiquidRoot: false
-                )
-                let trialK = zip(trialLiquidPhi, trialVaporPhi).map { max(1e-12, min(1e12, $0 / $1)) }
-                return log(zip(liquidFractions, trialK).map { $0 * $1 }.reduce(0, +))
-            }
-            if abs(sum - 1) <= options.relativeTolerance, maxRelativeDelta(updatedVapor, vaporFractions) < 1e-7 {
-                return SolveOutcome(
-                    pressurePa: pressure,
-                    iterations: iterations,
-                    liquidFractions: liquidFractions,
-                    vaporFractions: updatedVapor
-                )
-            }
-            vaporFractions = damped(new: updatedVapor, old: vaporFractions, factor: 0.5)
-            pressure = 0.65 * nextPressure + 0.35 * pressure
         }
-
-        throw NativeSRKError.invalidComposition("Bubble solve did not converge within \(iterations) iterations.")
+        return try solveBinaryEquilibrium(
+            branch: .bubble,
+            temperatureK: temperatureK,
+            feedFractions: liquidFractions,
+            components: components,
+            options: options,
+            initialPressurePa: initialPressurePa
+                ?? wilsonBubblePressure(temperatureK: temperatureK, fractions: liquidFractions, components: components),
+            shouldCancel: shouldCancel
+        )
     }
 
     private func solveDew(
@@ -535,72 +521,474 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         initialPressurePa: Double?,
         shouldCancel: @Sendable () -> Bool
     ) throws -> SolveOutcome {
-        var pressure = clamp(
-            initialPressurePa ?? wilsonDewPressure(temperatureK: temperatureK, fractions: vaporFractions, components: components),
-            options.minimumPressurePa,
-            options.maximumPressurePa
+        if components.count == 1 {
+            return try solvePureSaturation(
+                temperatureK: temperatureK,
+                options: options,
+                shouldCancel: shouldCancel
+            )
+        }
+        return try solveBinaryEquilibrium(
+            branch: .dew,
+            temperatureK: temperatureK,
+            feedFractions: vaporFractions,
+            components: components,
+            options: options,
+            initialPressurePa: initialPressurePa
+                ?? wilsonDewPressure(temperatureK: temperatureK, fractions: vaporFractions, components: components),
+            shouldCancel: shouldCancel
         )
-        var liquidFractions = vaporFractions
-        var iterations = 0
+    }
+
+    private func solveBinaryEquilibrium(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        initialPressurePa: Double,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> SolveOutcome {
+        guard components.count == 2, feedFractions.count == 2 else {
+            throw NativeSRKError.invalidComposition("Coupled SRK prototype currently supports binary mixtures only.")
+        }
+
+        if branch == .dew {
+            let pressure = clamp(initialPressurePa, options.minimumPressurePa, options.maximumPressurePa)
+            let wilson = wilsonKValues(temperatureK: temperatureK, pressurePa: pressure, components: components)
+            let incipientGuess = boundedBinaryFractions(normalized(zip(feedFractions, wilson).map { $0 / $1 }))
+            return try solveBinaryEquilibriumFromState(
+                branch: branch,
+                temperatureK: temperatureK,
+                feedFractions: feedFractions,
+                components: components,
+                options: options,
+                initialState: [log(pressure), logit(incipientGuess[0])],
+                shouldCancel: shouldCancel
+            )
+        }
+
+        var candidates: [[Double]] = []
+        var failureReasons: [String] = []
+        let pressureSeeds = pressureSeeds(
+            temperatureK: temperatureK,
+            feedFractions: feedFractions,
+            components: components,
+            initialPressurePa: initialPressurePa,
+            options: options
+        )
+        for pressure in pressureSeeds {
+            if shouldCancel() { throw CancellationError() }
+            for composition in incipientCompositionSeeds(
+                branch: branch,
+                temperatureK: temperatureK,
+                pressurePa: pressure,
+                feedFractions: feedFractions,
+                components: components
+            ) {
+                let state = [log(pressure), logit(composition[0])]
+                if !candidates.contains(where: { maxRelativeDelta($0, state) < 1e-8 }) {
+                    candidates.append(state)
+                }
+            }
+        }
+
+        var bestOutcome: SolveOutcome?
+        var bestScore = Double.infinity
+        let referencePressure = clamp(initialPressurePa, options.minimumPressurePa, options.maximumPressurePa)
+        for state in candidates.prefix(18) {
+            if shouldCancel() { throw CancellationError() }
+            do {
+                let outcome = try solveBinaryEquilibriumFromState(
+                    branch: branch,
+                    temperatureK: temperatureK,
+                    feedFractions: feedFractions,
+                    components: components,
+                    options: options,
+                    initialState: state,
+                    shouldCancel: shouldCancel
+                )
+                let pressureScore = abs(log(outcome.pressurePa / referencePressure))
+                let residualScore = log10(max(outcome.finalResidualNorm, 1e-15)) * 1e-3
+                let score = pressureScore + residualScore
+                if score.isFinite, score < bestScore {
+                    bestScore = score
+                    bestOutcome = outcome
+                }
+            } catch {
+                failureReasons.append("\(error)")
+            }
+        }
+
+        if let bestOutcome {
+            return bestOutcome
+        }
+
+        throw NativeSRKError.invalidComposition(
+            "\(branch.rawValue) coupled solve failed for \(min(candidates.count, 18)) bounded seeds; "
+                + failureReasons.prefix(3).joined(separator: " | ")
+        )
+    }
+
+    private func solveBinaryEquilibriumFromState(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        initialState: [Double],
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> SolveOutcome {
+        var state = boundedState(initialState, options: options)
+        var previousNorm = Double.infinity
+        var finalStepNorm = Double.infinity
+        var bestResidual = [Double.infinity, Double.infinity]
+        var bestNorm = Double.infinity
 
         for iteration in 1...options.maximumIterationsPerSolve {
             if shouldCancel() { throw CancellationError() }
-            iterations = iteration
-            let liquidPhi = try fugacityCoefficients(
+            let residual = try coupledResidual(
+                branch: branch,
                 temperatureK: temperatureK,
-                pressurePa: pressure,
-                fractions: liquidFractions,
+                feedFractions: feedFractions,
+                state: state,
                 components: components,
-                useLiquidRoot: true
-            )
-            let vaporPhi = try fugacityCoefficients(
-                temperatureK: temperatureK,
-                pressurePa: pressure,
-                fractions: vaporFractions,
-                components: components,
-                useLiquidRoot: false
-            )
-            let kValues = zip(liquidPhi, vaporPhi).map { max(1e-12, min(1e12, $0 / $1)) }
-            let sum = zip(vaporFractions, kValues).map { $0 / $1 }.reduce(0, +)
-            guard sum.isFinite, sum > 0 else { throw NativeSRKError.invalidComposition("Dew residual is non-finite.") }
-            let updatedLiquid = normalized(zip(vaporFractions, kValues).map { $0 / $1 })
-            let residual = log(sum)
-            let nextPressure = try safeguardedPressureUpdate(
-                pressurePa: pressure,
-                residual: residual,
-                fallbackScale: 1 / sum,
                 options: options
-            ) { trialPressure in
-                let trialLiquidPhi = try fugacityCoefficients(
-                    temperatureK: temperatureK,
-                    pressurePa: trialPressure,
-                    fractions: liquidFractions,
-                    components: components,
-                    useLiquidRoot: true
-                )
-                let trialVaporPhi = try fugacityCoefficients(
-                    temperatureK: temperatureK,
-                    pressurePa: trialPressure,
-                    fractions: vaporFractions,
-                    components: components,
-                    useLiquidRoot: false
-                )
-                let trialK = zip(trialLiquidPhi, trialVaporPhi).map { max(1e-12, min(1e12, $0 / $1)) }
-                return log(zip(vaporFractions, trialK).map { $0 / $1 }.reduce(0, +))
+            )
+            let residualNorm = vectorNorm(residual)
+            if residualNorm < bestNorm {
+                bestNorm = residualNorm
+                bestResidual = residual
             }
-            if abs(sum - 1) <= options.relativeTolerance, maxRelativeDelta(updatedLiquid, liquidFractions) < 1e-7 {
-                return SolveOutcome(
-                    pressurePa: pressure,
-                    iterations: iterations,
-                    liquidFractions: updatedLiquid,
-                    vaporFractions: vaporFractions
+            if residualNorm <= options.relativeTolerance {
+                return try coupledOutcome(
+                    branch: branch,
+                    temperatureK: temperatureK,
+                    feedFractions: feedFractions,
+                    state: state,
+                    components: components,
+                    iterations: iteration,
+                    residualNorm: residualNorm,
+                    stepNorm: finalStepNorm.isFinite ? finalStepNorm : 0,
+                    terminationReason: "coupled fugacity system converged"
                 )
             }
-            liquidFractions = damped(new: updatedLiquid, old: liquidFractions, factor: 0.5)
-            pressure = 0.65 * nextPressure + 0.35 * pressure
+
+            let jacobian = try finiteDifferenceJacobian(
+                branch: branch,
+                temperatureK: temperatureK,
+                feedFractions: feedFractions,
+                state: state,
+                components: components,
+                options: options
+            )
+            let determinant = jacobian[0][0] * jacobian[1][1] - jacobian[0][1] * jacobian[1][0]
+            guard determinant.isFinite, abs(determinant) > 1e-10 else {
+                throw NativeSRKError.invalidComposition(
+                    "\(branch.rawValue) coupled solve has singular Jacobian; residual norm \(residualNorm)."
+                )
+            }
+            let rawStep = [
+                (-residual[0] * jacobian[1][1] + jacobian[0][1] * residual[1]) / determinant,
+                (jacobian[1][0] * residual[0] - jacobian[0][0] * residual[1]) / determinant
+            ]
+            guard rawStep.allSatisfy(\.isFinite) else {
+                throw NativeSRKError.invalidComposition("\(branch.rawValue) Newton step is non-finite.")
+            }
+            let boundedStep = [
+                clamp(rawStep[0], -log(2), log(2)),
+                clamp(rawStep[1], -2.0, 2.0)
+            ]
+            var acceptedState: [Double]?
+            var acceptedNorm = residualNorm
+            var damping = 1.0
+            while damping >= 1.0 / 64.0 {
+                if shouldCancel() { throw CancellationError() }
+                let candidate = boundedState(
+                    [
+                        state[0] + damping * boundedStep[0],
+                        state[1] + damping * boundedStep[1]
+                    ],
+                    options: options
+                )
+                do {
+                    let candidateResidual = try coupledResidual(
+                        branch: branch,
+                        temperatureK: temperatureK,
+                        feedFractions: feedFractions,
+                        state: candidate,
+                        components: components,
+                        options: options
+                    )
+                    let candidateNorm = vectorNorm(candidateResidual)
+                    if candidateNorm.isFinite, candidateNorm < residualNorm {
+                        acceptedState = candidate
+                        acceptedNorm = candidateNorm
+                        break
+                    }
+                } catch {
+                    damping /= 2
+                    continue
+                }
+                damping /= 2
+            }
+            guard let nextState = acceptedState else {
+                if residualNorm < previousNorm {
+                    previousNorm = residualNorm
+                    continue
+                }
+                throw NativeSRKError.invalidComposition(
+                    "\(branch.rawValue) line search failed; best residual norm \(bestNorm), residuals \(bestResidual)."
+                )
+            }
+            finalStepNorm = vectorNorm([
+                nextState[0] - state[0],
+                nextState[1] - state[1]
+            ])
+            state = nextState
+            previousNorm = acceptedNorm
+
+            if finalStepNorm <= 1e-9, acceptedNorm <= sqrt(options.relativeTolerance) {
+                return try coupledOutcome(
+                    branch: branch,
+                    temperatureK: temperatureK,
+                    feedFractions: feedFractions,
+                    state: state,
+                    components: components,
+                    iterations: iteration,
+                    residualNorm: acceptedNorm,
+                    stepNorm: finalStepNorm,
+                    terminationReason: "coupled fugacity system converged by bounded step"
+                )
+            }
         }
 
-        throw NativeSRKError.invalidComposition("Dew solve did not converge within \(iterations) iterations.")
+        throw NativeSRKError.invalidComposition(
+            "\(branch.rawValue) coupled solve did not converge; best residual norm \(bestNorm), residuals \(bestResidual)."
+        )
+    }
+
+    private func pressureSeeds(
+        temperatureK: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        initialPressurePa: Double,
+        options: NativeSRKEnvelopeOptions
+    ) -> [Double] {
+        let wilsonBubble = wilsonBubblePressure(
+            temperatureK: temperatureK,
+            fractions: feedFractions,
+            components: components
+        )
+        let wilsonDew = wilsonDewPressure(
+            temperatureK: temperatureK,
+            fractions: feedFractions,
+            components: components
+        )
+        let geometric: [Double] = [
+            options.minimumPressurePa,
+            100_000,
+            1_000_000,
+            10_000_000,
+            options.maximumPressurePa
+        ]
+        return uniqueBounded([
+            initialPressurePa,
+            wilsonBubble,
+            wilsonDew
+        ] + geometric, lower: options.minimumPressurePa, upper: options.maximumPressurePa)
+    }
+
+    private func incipientCompositionSeeds(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID]
+    ) -> [[Double]] {
+        let wilson = wilsonKValues(temperatureK: temperatureK, pressurePa: pressurePa, components: components)
+        let wilsonSeed: [Double]
+        switch branch {
+        case .bubble:
+            wilsonSeed = normalized(zip(feedFractions, wilson).map { $0 * $1 })
+        case .dew:
+            wilsonSeed = normalized(zip(feedFractions, wilson).map { $0 / $1 })
+        }
+        let tpdType: NativeSRKTPDTrialType = branch == .bubble ? .vaporLike : .liquidLike
+        let tpdSeed = try? minimizedTangentPlaneDistance(
+            type: tpdType,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            feedFractions: feedFractions,
+            components: components
+        ).finalTrialComposition
+        return uniqueCompositions([
+            tpdSeed,
+            wilsonSeed,
+            [0.999, 0.001],
+            [0.90, 0.10],
+            [0.50, 0.50],
+            [0.10, 0.90],
+            [0.001, 0.999]
+        ].compactMap { $0 }.map(boundedBinaryFractions))
+    }
+
+    private func coupledResidual(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        feedFractions: [Double],
+        state: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [Double] {
+        let pressurePa = clamp(exp(state[0]), options.minimumPressurePa, options.maximumPressurePa)
+        let incipient = binaryFractions(fromLogit: state[1])
+        let liquidFractions: [Double]
+        let vaporFractions: [Double]
+        switch branch {
+        case .bubble:
+            liquidFractions = feedFractions
+            vaporFractions = incipient
+        case .dew:
+            liquidFractions = incipient
+            vaporFractions = feedFractions
+        }
+        let liquid = try fugacityResult(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: liquidFractions,
+            components: components,
+            useLiquidRoot: true
+        )
+        let vapor = try fugacityResult(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: vaporFractions,
+            components: components,
+            useLiquidRoot: false
+        )
+        return liquidFractions.indices.map { index in
+            let liquidFugacity = max(liquidFractions[index], 1e-15) * max(liquid.coefficients[index], 1e-15)
+            let vaporFugacity = max(vaporFractions[index], 1e-15) * max(vapor.coefficients[index], 1e-15)
+            return log(liquidFugacity) - log(vaporFugacity)
+        }
+    }
+
+    private func finiteDifferenceJacobian(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        feedFractions: [Double],
+        state: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [[Double]] {
+        let steps = [1e-4, 1e-4]
+        var columns: [[Double]] = []
+        for index in 0..<2 {
+            var lower = state
+            var upper = state
+            lower[index] -= steps[index]
+            upper[index] += steps[index]
+            lower = boundedState(lower, options: options)
+            upper = boundedState(upper, options: options)
+            let lowerResidual = try coupledResidual(
+                branch: branch,
+                temperatureK: temperatureK,
+                feedFractions: feedFractions,
+                state: lower,
+                components: components,
+                options: options
+            )
+            let upperResidual = try coupledResidual(
+                branch: branch,
+                temperatureK: temperatureK,
+                feedFractions: feedFractions,
+                state: upper,
+                components: components,
+                options: options
+            )
+            let denominator = upper[index] - lower[index]
+            guard abs(denominator) > .ulpOfOne else {
+                throw NativeSRKError.invalidComposition("Finite-difference Jacobian step collapsed.")
+            }
+            columns.append([
+                (upperResidual[0] - lowerResidual[0]) / denominator,
+                (upperResidual[1] - lowerResidual[1]) / denominator
+            ])
+        }
+        return [
+            [columns[0][0], columns[1][0]],
+            [columns[0][1], columns[1][1]]
+        ]
+    }
+
+    private func coupledOutcome(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        feedFractions: [Double],
+        state: [Double],
+        components: [ComponentID],
+        iterations: Int,
+        residualNorm: Double,
+        stepNorm: Double,
+        terminationReason: String
+    ) throws -> SolveOutcome {
+        let pressurePa = exp(state[0])
+        let incipient = binaryFractions(fromLogit: state[1])
+        let liquidFractions: [Double]
+        let vaporFractions: [Double]
+        switch branch {
+        case .bubble:
+            liquidFractions = feedFractions
+            vaporFractions = incipient
+        case .dew:
+            liquidFractions = incipient
+            vaporFractions = feedFractions
+        }
+        guard incipient.allSatisfy({ $0 > 1e-8 && $0 < 1 - 1e-8 }) else {
+            throw NativeSRKError.invalidComposition(
+                "\(branch.rawValue) solve reached the incipient composition boundary."
+            )
+        }
+        let phaseDifference = maxRelativeDelta(liquidFractions, vaporFractions)
+        guard phaseDifference > 1e-5 else {
+            throw NativeSRKError.invalidComposition("\(branch.rawValue) solve collapsed to a trivial incipient phase.")
+        }
+        let liquid = try fugacityResult(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: liquidFractions,
+            components: components,
+            useLiquidRoot: true
+        )
+        let vapor = try fugacityResult(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: vaporFractions,
+            components: components,
+            useLiquidRoot: false
+        )
+        let stability = try? stabilityAssessment(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            composition: zip(components, feedFractions).map {
+                NativeSRKMixtureFraction(component: $0.0, moleFraction: $0.1)
+            }
+        )
+        return SolveOutcome(
+            pressurePa: pressurePa,
+            iterations: iterations,
+            liquidFractions: liquidFractions,
+            vaporFractions: vaporFractions,
+            finalResidualNorm: residualNorm,
+            finalStepNorm: stepNorm,
+            liquidRootCount: liquid.rootCount,
+            vaporRootCount: vapor.rootCount,
+            selectedLiquidRoot: liquid.selectedRoot,
+            selectedVaporRoot: vapor.selectedRoot,
+            stabilityAssessment: stability,
+            terminationReason: terminationReason
+        )
     }
 
     private func solvePureSaturation(
@@ -617,23 +1005,25 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let lower = log(options.minimumPressurePa)
         let upper = log(min(parameter.criticalPressurePa * 0.999, options.maximumPressurePa))
         let samples = 80
-        var previousLogP = lower
-        var previousValue = try pureSaturationResidual(
-            temperatureK: temperatureK,
-            pressurePa: exp(previousLogP),
-            component: component
-        )
+        var previousLogP: Double?
+        var previousValue: Double?
         var bracket: (Double, Double)?
 
-        for sample in 1...samples {
+        for sample in 0...samples {
             if shouldCancel() { throw CancellationError() }
             let currentLogP = lower + (upper - lower) * Double(sample) / Double(samples)
-            let currentValue = try pureSaturationResidual(
-                temperatureK: temperatureK,
-                pressurePa: exp(currentLogP),
-                component: component
-            )
-            if previousValue == 0 || previousValue.sign != currentValue.sign {
+            let currentValue: Double
+            do {
+                currentValue = try pureSaturationResidual(
+                    temperatureK: temperatureK,
+                    pressurePa: exp(currentLogP),
+                    component: component
+                )
+            } catch {
+                continue
+            }
+            if let previousLogP, let previousValue,
+               (previousValue == 0 || previousValue.sign != currentValue.sign) {
                 bracket = (previousLogP, currentLogP)
                 break
             }
@@ -650,22 +1040,37 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             if shouldCancel() { throw CancellationError() }
             iterations = iteration
             let middle = 0.5 * (low + high)
-            let lowValue = try pureSaturationResidual(
-                temperatureK: temperatureK,
-                pressurePa: exp(low),
-                component: component
-            )
-            let middleValue = try pureSaturationResidual(
-                temperatureK: temperatureK,
-                pressurePa: exp(middle),
-                component: component
-            )
+            let lowValue = try pureSaturationResidual(temperatureK: temperatureK, pressurePa: exp(low), component: component)
+            let middleValue = try pureSaturationResidual(temperatureK: temperatureK, pressurePa: exp(middle), component: component)
             if abs(middleValue) < options.relativeTolerance || abs(high - low) < options.relativeTolerance {
+                let pressure = exp(middle)
+                let liquid = try fugacityResult(
+                    temperatureK: temperatureK,
+                    pressurePa: pressure,
+                    fractions: [1],
+                    components: [component],
+                    useLiquidRoot: true
+                )
+                let vapor = try fugacityResult(
+                    temperatureK: temperatureK,
+                    pressurePa: pressure,
+                    fractions: [1],
+                    components: [component],
+                    useLiquidRoot: false
+                )
                 return SolveOutcome(
-                    pressurePa: exp(middle),
+                    pressurePa: pressure,
                     iterations: iterations,
                     liquidFractions: [1],
-                    vaporFractions: [1]
+                    vaporFractions: [1],
+                    finalResidualNorm: abs(middleValue),
+                    finalStepNorm: abs(high - low),
+                    liquidRootCount: liquid.rootCount,
+                    vaporRootCount: vapor.rootCount,
+                    selectedLiquidRoot: liquid.selectedRoot,
+                    selectedVaporRoot: vapor.selectedRoot,
+                    stabilityAssessment: nil,
+                    terminationReason: "pure fugacity equality converged"
                 )
             }
             if lowValue.sign == middleValue.sign {
@@ -683,21 +1088,25 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         pressurePa: Double,
         component: ComponentID
     ) throws -> Double {
-        let liquid = try fugacityCoefficients(
+        let liquid = try fugacityResult(
             temperatureK: temperatureK,
             pressurePa: pressurePa,
             fractions: [1],
             components: [component],
             useLiquidRoot: true
-        )[0]
-        let vapor = try fugacityCoefficients(
+        )
+        let vapor = try fugacityResult(
             temperatureK: temperatureK,
             pressurePa: pressurePa,
             fractions: [1],
             components: [component],
             useLiquidRoot: false
-        )[0]
-        return log(liquid) - log(vapor)
+        )
+        guard liquid.rootCount >= 2, vapor.rootCount >= 2,
+              abs(vapor.selectedRoot - liquid.selectedRoot) > 1e-7 else {
+            throw NativeSRKError.invalidComposition("Pure saturation roots have coalesced into a single phase.")
+        }
+        return log(liquid.coefficients[0]) - log(vapor.coefficients[0])
     }
 
     private func fugacityCoefficients(
@@ -707,6 +1116,22 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         components: [ComponentID],
         useLiquidRoot: Bool
     ) throws -> [Double] {
+        try fugacityResult(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: fractions,
+            components: components,
+            useLiquidRoot: useLiquidRoot
+        ).coefficients
+    }
+
+    private func fugacityResult(
+        temperatureK: Double,
+        pressurePa: Double,
+        fractions: [Double],
+        components: [ComponentID],
+        useLiquidRoot: Bool
+    ) throws -> FugacityResult {
         let mixture = try mixtureTerm(temperatureK: temperatureK, fractions: fractions, components: components)
         let a = mixture.a
         let b = mixture.b
@@ -733,7 +1158,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             throw NativeSRKError.invalidComposition("SRK logarithm domain failure.")
         }
 
-        return mixture.components.enumerated().map { index, component in
+        let coefficients = mixture.components.enumerated().map { index, component in
             let attractionSum = mixture.components.enumerated().reduce(0) { partial, pair in
                 partial + pair.element.fraction * mixture.aij[index][pair.offset]
             }
@@ -744,6 +1169,261 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 - (reducedA / reducedB) * (attractionRatio - coVolumeRatio) * logTerm
             return exp(lnPhi)
         }
+        return FugacityResult(
+            coefficients: coefficients,
+            rootCount: roots.count,
+            selectedRoot: z
+        )
+    }
+
+    private func minimizedTangentPlaneDistance(
+        type: NativeSRKTPDTrialType,
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID]
+    ) throws -> NativeSRKTPDMinimum {
+        let feedPhi = try fugacityCoefficients(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: feedFractions,
+            components: components,
+            useLiquidRoot: type == .liquidLike
+        )
+        let trials = tpdInitialTrials(
+            type: type,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            feedFractions: feedFractions,
+            components: components
+        )
+        var best: NativeSRKTPDMinimum?
+        var failureReason = "no bounded TPD trial converged"
+
+        for trial in trials {
+            do {
+                let minimum = try minimizeTangentPlaneDistance(
+                    trial: trial,
+                    feedFractions: feedFractions,
+                    feedPhi: feedPhi,
+                    temperatureK: temperatureK,
+                    pressurePa: pressurePa,
+                    components: components
+                )
+                if best == nil
+                    || minimum.minimumTangentPlaneDistance < best!.minimumTangentPlaneDistance {
+                    best = minimum
+                }
+            } catch {
+                failureReason = "\(error)"
+            }
+        }
+
+        guard let best else {
+            throw NativeSRKError.invalidComposition(failureReason)
+        }
+        return best
+    }
+
+    private func tpdInitialTrials(
+        type: NativeSRKTPDTrialType,
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID]
+    ) -> [TPDTrial] {
+        let wilson = wilsonKValues(temperatureK: temperatureK, pressurePa: pressurePa, components: components)
+        let wilsonSeed: [Double]
+        switch type {
+        case .liquidLike:
+            wilsonSeed = normalized(zip(feedFractions, wilson).map { $0 / $1 })
+        case .vaporLike:
+            wilsonSeed = normalized(zip(feedFractions, wilson).map { $0 * $1 })
+        }
+        return uniqueCompositions([
+            wilsonSeed,
+            feedFractions,
+            [0.999, 0.001],
+            [0.99, 0.01],
+            [0.90, 0.10],
+            [0.75, 0.25],
+            [0.50, 0.50],
+            [0.25, 0.75],
+            [0.10, 0.90],
+            [0.01, 0.99],
+            [0.001, 0.999]
+        ].map(boundedBinaryFractions)).map {
+            TPDTrial(type: type, composition: $0)
+        }
+    }
+
+    private func minimizeTangentPlaneDistance(
+        trial: TPDTrial,
+        feedFractions: [Double],
+        feedPhi: [Double],
+        temperatureK: Double,
+        pressurePa: Double,
+        components: [ComponentID]
+    ) throws -> NativeSRKTPDMinimum {
+        var state = logit(trial.composition[0])
+        var composition = binaryFractions(fromLogit: state)
+        var bestComposition = composition
+        var bestValue = try tangentPlaneDistance(
+            trialFractions: composition,
+            feedFractions: feedFractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: trial.type == .liquidLike
+        )
+        var finalResidual = Double.infinity
+        var finalIteration = 0
+        var termination = "TPD minimization reached iteration limit"
+
+        for iteration in 1...40 {
+            finalIteration = iteration
+            let gradient = try finiteDifferenceTPDGradient(
+                state: state,
+                feedFractions: feedFractions,
+                feedPhi: feedPhi,
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                components: components,
+                useLiquidRoot: trial.type == .liquidLike
+            )
+            finalResidual = abs(gradient)
+            if finalResidual <= 1e-9 {
+                termination = collapsedComposition(composition, feedFractions)
+                    ? "TPD minimization reached trivial stationary composition"
+                    : "TPD minimization converged"
+                break
+            }
+
+            let curvature = try finiteDifferenceTPDCurvature(
+                state: state,
+                feedFractions: feedFractions,
+                feedPhi: feedPhi,
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                components: components,
+                useLiquidRoot: trial.type == .liquidLike
+            )
+            guard curvature.isFinite, abs(curvature) > 1e-12 else {
+                termination = "TPD minimization stopped at singular curvature"
+                break
+            }
+            let step = clamp(-gradient / curvature, -2.0, 2.0)
+            var damping = 1.0
+            var accepted = false
+            while damping >= 1.0 / 64.0 {
+                let candidateState = clamp(state + damping * step, -30, 30)
+                let candidateComposition = binaryFractions(fromLogit: candidateState)
+                let candidateValue = try tangentPlaneDistance(
+                    trialFractions: candidateComposition,
+                    feedFractions: feedFractions,
+                    feedPhi: feedPhi,
+                    temperatureK: temperatureK,
+                    pressurePa: pressurePa,
+                    components: components,
+                    useLiquidRoot: trial.type == .liquidLike
+                )
+                guard candidateValue.isFinite else {
+                    damping /= 2
+                    continue
+                }
+                if candidateValue <= bestValue || abs(candidateValue - bestValue) <= 1e-12 {
+                    state = candidateState
+                    composition = candidateComposition
+                    bestValue = candidateValue
+                    bestComposition = candidateComposition
+                    accepted = true
+                    break
+                }
+                damping /= 2
+            }
+            guard accepted else {
+                termination = "TPD minimization line search failed"
+                break
+            }
+        }
+
+        return NativeSRKTPDMinimum(
+            trialType: trial.type,
+            minimumTangentPlaneDistance: bestValue,
+            iterations: finalIteration,
+            finalTrialComposition: bestComposition,
+            residualNorm: finalResidual,
+            terminationReason: termination
+        )
+    }
+
+    private func finiteDifferenceTPDGradient(
+        state: Double,
+        feedFractions: [Double],
+        feedPhi: [Double],
+        temperatureK: Double,
+        pressurePa: Double,
+        components: [ComponentID],
+        useLiquidRoot: Bool
+    ) throws -> Double {
+        let step = 1e-4
+        let lower = clamp(state - step, -30, 30)
+        let upper = clamp(state + step, -30, 30)
+        let lowerValue = try tangentPlaneDistance(
+            trialFractions: binaryFractions(fromLogit: lower),
+            feedFractions: feedFractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: useLiquidRoot
+        )
+        let upperValue = try tangentPlaneDistance(
+            trialFractions: binaryFractions(fromLogit: upper),
+            feedFractions: feedFractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: useLiquidRoot
+        )
+        let denominator = upper - lower
+        guard abs(denominator) > .ulpOfOne else {
+            throw NativeSRKError.invalidComposition("TPD finite-difference step collapsed.")
+        }
+        return (upperValue - lowerValue) / denominator
+    }
+
+    private func finiteDifferenceTPDCurvature(
+        state: Double,
+        feedFractions: [Double],
+        feedPhi: [Double],
+        temperatureK: Double,
+        pressurePa: Double,
+        components: [ComponentID],
+        useLiquidRoot: Bool
+    ) throws -> Double {
+        let step = 1e-4
+        let lower = try finiteDifferenceTPDGradient(
+            state: clamp(state - step, -30, 30),
+            feedFractions: feedFractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: useLiquidRoot
+        )
+        let upper = try finiteDifferenceTPDGradient(
+            state: clamp(state + step, -30, 30),
+            feedFractions: feedFractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: useLiquidRoot
+        )
+        return (upper - lower) / (2 * step)
     }
 
     private func tangentPlaneDistance(
@@ -854,6 +1534,14 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             pressurePa: outcome.pressurePa,
             iterations: outcome.iterations,
             status: .converged,
+            finalResidualNorm: outcome.finalResidualNorm,
+            finalStepNorm: outcome.finalStepNorm,
+            liquidRootCount: outcome.liquidRootCount,
+            vaporRootCount: outcome.vaporRootCount,
+            selectedLiquidRoot: outcome.selectedLiquidRoot,
+            selectedVaporRoot: outcome.selectedVaporRoot,
+            stabilityAssessment: outcome.stabilityAssessment,
+            terminationReason: outcome.terminationReason,
             liquidMoleFractions: dictionary(components: components, values: outcome.liquidFractions),
             vaporMoleFractions: dictionary(components: components, values: outcome.vaporFractions)
         )
@@ -986,6 +1674,60 @@ private func damped(new: [Double], old: [Double], factor: Double) -> [Double] {
 
 private func maxRelativeDelta(_ lhs: [Double], _ rhs: [Double]) -> Double {
     zip(lhs, rhs).map { abs($0 - $1) / max(abs($1), 1e-12) }.max() ?? 0
+}
+
+private func vectorNorm(_ values: [Double]) -> Double {
+    sqrt(values.map { $0 * $0 }.reduce(0, +))
+}
+
+private func boundedState(_ state: [Double], options: NativeSRKEnvelopeOptions) -> [Double] {
+    [
+        clamp(state[0], log(options.minimumPressurePa), log(options.maximumPressurePa)),
+        clamp(state[1], -30, 30)
+    ]
+}
+
+private func binaryFractions(fromLogit value: Double) -> [Double] {
+    let first = 1 / (1 + exp(-clamp(value, -30, 30)))
+    return boundedBinaryFractions([first, 1 - first])
+}
+
+private func boundedBinaryFractions(_ values: [Double]) -> [Double] {
+    guard values.count == 2 else { return values }
+    let first = clamp(values[0], 1e-12, 1 - 1e-12)
+    return normalized([first, 1 - first])
+}
+
+private func uniqueBounded(_ values: [Double], lower: Double, upper: Double) -> [Double] {
+    var result: [Double] = []
+    for value in values {
+        guard value.isFinite else { continue }
+        let bounded = clamp(value, lower, upper)
+        if !result.contains(where: { abs(log($0) - log(bounded)) < 1e-8 }) {
+            result.append(bounded)
+        }
+    }
+    return result
+}
+
+private func uniqueCompositions(_ values: [[Double]]) -> [[Double]] {
+    var result: [[Double]] = []
+    for value in values {
+        let bounded = boundedBinaryFractions(value)
+        if !result.contains(where: { maxRelativeDelta($0, bounded) < 1e-8 }) {
+            result.append(bounded)
+        }
+    }
+    return result
+}
+
+private func collapsedComposition(_ lhs: [Double], _ rhs: [Double]) -> Bool {
+    maxRelativeDelta(lhs, rhs) <= 1e-5
+}
+
+private func logit(_ value: Double) -> Double {
+    let bounded = clamp(value, 1e-12, 1 - 1e-12)
+    return log(bounded / (1 - bounded))
 }
 
 private func dictionary(components: [ComponentID], values: [Double]) -> [ComponentID: Double] {
