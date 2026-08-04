@@ -47,11 +47,21 @@ public struct NativeSRKEnvelopeResult: Sendable, Equatable {
     public let wasCancelled: Bool
 }
 
+public struct NativeSRKStabilityAssessment: Sendable, Equatable {
+    public let isStable: Bool
+    public let liquidLikeTangentPlaneDistance: Double
+    public let vaporLikeTangentPlaneDistance: Double
+}
+
 public struct NativeSRKProvenance: Sendable, Equatable {
     public let modelIdentifier = "phasexpert-native-srk-prototype"
     public let eos = "Soave-Redlich-Kwong"
     public let alphaFunction = "Standard Soave alpha"
     public let mixingRule = "Classical van der Waals one-fluid quadratic mixing"
+    public let stabilityTest =
+        "Wilson-seeded tangent-plane-distance screen using SRK fugacity coefficients"
+    public let pressureUpdate =
+        "Safeguarded finite-difference Newton on ln pressure with bounded successive-substitution fallback"
     public let componentData =
         "NeqSim 3.16.0 COMP.csv rows CO2 and nitrogen; source commit 3af7b560525b57f2d3da2c803a08e2b41a8d7f5a"
     public let interactionData =
@@ -248,6 +258,49 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         )
     }
 
+    public func stabilityAssessment(
+        temperatureK: Double,
+        pressurePa: Double,
+        composition inputComposition: [NativeSRKMixtureFraction]
+    ) throws -> NativeSRKStabilityAssessment {
+        let composition = try validatedComposition(inputComposition)
+        let components = composition.map(\.component)
+        let fractions = composition.map(\.moleFraction)
+        let feedPhi = try fugacityCoefficients(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: fractions,
+            components: components,
+            useLiquidRoot: false
+        )
+        let wilson = wilsonKValues(temperatureK: temperatureK, pressurePa: pressurePa, components: components)
+        let vaporLike = normalized(zip(fractions, wilson).map { $0 * $1 })
+        let liquidLike = normalized(zip(fractions, wilson).map { $0 / $1 })
+        let vaporTPD = try tangentPlaneDistance(
+            trialFractions: vaporLike,
+            feedFractions: fractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: false
+        )
+        let liquidTPD = try tangentPlaneDistance(
+            trialFractions: liquidLike,
+            feedFractions: fractions,
+            feedPhi: feedPhi,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            components: components,
+            useLiquidRoot: true
+        )
+        return NativeSRKStabilityAssessment(
+            isStable: min(vaporTPD, liquidTPD) >= -1e-8,
+            liquidLikeTangentPlaneDistance: liquidTPD,
+            vaporLikeTangentPlaneDistance: vaporTPD
+        )
+    }
+
     public func solveDewPressure(
         temperatureK: Double,
         vaporComposition: [NativeSRKMixtureFraction],
@@ -435,8 +488,30 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             let sum = zip(liquidFractions, kValues).map(*).reduce(0, +)
             guard sum.isFinite, sum > 0 else { throw NativeSRKError.invalidComposition("Bubble residual is non-finite.") }
             let updatedVapor = normalized(zip(liquidFractions, kValues).map { $0 * $1 })
-            let pressureScale = clamp(sum, 0.5, 2.0)
-            let nextPressure = clamp(pressure * pressureScale, options.minimumPressurePa, options.maximumPressurePa)
+            let residual = log(sum)
+            let nextPressure = try safeguardedPressureUpdate(
+                pressurePa: pressure,
+                residual: residual,
+                fallbackScale: sum,
+                options: options
+            ) { trialPressure in
+                let trialLiquidPhi = try fugacityCoefficients(
+                    temperatureK: temperatureK,
+                    pressurePa: trialPressure,
+                    fractions: liquidFractions,
+                    components: components,
+                    useLiquidRoot: true
+                )
+                let trialVaporPhi = try fugacityCoefficients(
+                    temperatureK: temperatureK,
+                    pressurePa: trialPressure,
+                    fractions: vaporFractions,
+                    components: components,
+                    useLiquidRoot: false
+                )
+                let trialK = zip(trialLiquidPhi, trialVaporPhi).map { max(1e-12, min(1e12, $0 / $1)) }
+                return log(zip(liquidFractions, trialK).map { $0 * $1 }.reduce(0, +))
+            }
             if abs(sum - 1) <= options.relativeTolerance, maxRelativeDelta(updatedVapor, vaporFractions) < 1e-7 {
                 return SolveOutcome(
                     pressurePa: pressure,
@@ -489,8 +564,30 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             let sum = zip(vaporFractions, kValues).map { $0 / $1 }.reduce(0, +)
             guard sum.isFinite, sum > 0 else { throw NativeSRKError.invalidComposition("Dew residual is non-finite.") }
             let updatedLiquid = normalized(zip(vaporFractions, kValues).map { $0 / $1 })
-            let pressureScale = clamp(sum, 0.5, 2.0)
-            let nextPressure = clamp(pressure / pressureScale, options.minimumPressurePa, options.maximumPressurePa)
+            let residual = log(sum)
+            let nextPressure = try safeguardedPressureUpdate(
+                pressurePa: pressure,
+                residual: residual,
+                fallbackScale: 1 / sum,
+                options: options
+            ) { trialPressure in
+                let trialLiquidPhi = try fugacityCoefficients(
+                    temperatureK: temperatureK,
+                    pressurePa: trialPressure,
+                    fractions: liquidFractions,
+                    components: components,
+                    useLiquidRoot: true
+                )
+                let trialVaporPhi = try fugacityCoefficients(
+                    temperatureK: temperatureK,
+                    pressurePa: trialPressure,
+                    fractions: vaporFractions,
+                    components: components,
+                    useLiquidRoot: false
+                )
+                let trialK = zip(trialLiquidPhi, trialVaporPhi).map { max(1e-12, min(1e12, $0 / $1)) }
+                return log(zip(vaporFractions, trialK).map { $0 / $1 }.reduce(0, +))
+            }
             if abs(sum - 1) <= options.relativeTolerance, maxRelativeDelta(updatedLiquid, liquidFractions) < 1e-7 {
                 return SolveOutcome(
                     pressurePa: pressure,
@@ -649,6 +746,31 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         }
     }
 
+    private func tangentPlaneDistance(
+        trialFractions: [Double],
+        feedFractions: [Double],
+        feedPhi: [Double],
+        temperatureK: Double,
+        pressurePa: Double,
+        components: [ComponentID],
+        useLiquidRoot: Bool
+    ) throws -> Double {
+        let trialPhi = try fugacityCoefficients(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: trialFractions,
+            components: components,
+            useLiquidRoot: useLiquidRoot
+        )
+        return zip(trialFractions.indices, trialFractions).reduce(0.0) { partial, pair in
+            let index = pair.0
+            let trial = max(pair.1, 1e-15)
+            let feed = max(feedFractions[index], 1e-15)
+            let value = log(trial) + log(trialPhi[index]) - log(feed) - log(feedPhi[index])
+            return partial + trial * value
+        }
+    }
+
     private func mixtureTerm(
         temperatureK: Double,
         fractions: [Double],
@@ -750,6 +872,18 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         }
     }
 
+    private func wilsonKValues(
+        temperatureK: Double,
+        pressurePa: Double,
+        components: [ComponentID]
+    ) -> [Double] {
+        components.map { component in
+            let parameter = parameters[component]!
+            return parameter.criticalPressurePa / pressurePa
+                * exp(5.373 * (1 + parameter.acentricFactor) * (1 - parameter.criticalTemperatureK / temperatureK))
+        }
+    }
+
     private func wilsonDewPressure(
         temperatureK: Double,
         fractions: [Double],
@@ -763,6 +897,50 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         }
         return 1 / max(denominator, 1e-12)
     }
+}
+
+private func safeguardedPressureUpdate(
+    pressurePa: Double,
+    residual: Double,
+    fallbackScale: Double,
+    options: NativeSRKEnvelopeOptions,
+    residualAtPressure: (Double) throws -> Double
+) throws -> Double {
+    let delta = 1e-4
+    let lowerPressure = clamp(
+        pressurePa * exp(-delta),
+        options.minimumPressurePa,
+        options.maximumPressurePa
+    )
+    let upperPressure = clamp(
+        pressurePa * exp(delta),
+        options.minimumPressurePa,
+        options.maximumPressurePa
+    )
+    var fallback = clamp(
+        pressurePa * clamp(fallbackScale, 0.5, 2.0),
+        options.minimumPressurePa,
+        options.maximumPressurePa
+    )
+    if abs(upperPressure - lowerPressure) <= .ulpOfOne {
+        return fallback
+    }
+    let lowerResidual = try residualAtPressure(lowerPressure)
+    let upperResidual = try residualAtPressure(upperPressure)
+    let derivative = (upperResidual - lowerResidual) / (log(upperPressure) - log(lowerPressure))
+    guard derivative.isFinite, abs(derivative) > 1e-10 else {
+        return fallback
+    }
+    let boundedStep = clamp(-residual / derivative, -log(2), log(2))
+    let candidate = clamp(
+        pressurePa * exp(boundedStep),
+        options.minimumPressurePa,
+        options.maximumPressurePa
+    )
+    if candidate.isFinite {
+        fallback = candidate
+    }
+    return fallback
 }
 
 private func cubicRealRoots(a: Double, b: Double, c: Double) -> [Double] {
