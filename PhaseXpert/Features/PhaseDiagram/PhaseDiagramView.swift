@@ -89,7 +89,7 @@ final class PhaseDiagramViewModel {
                   self.loadingRecordID == recordID,
                   self.response == nil else { return }
             self.isLoading = false
-            self.errorMessage = "CoolProp did not finish the phase-boundary calculation within 30 seconds. The provider calculation continues in the background; the diagram will appear automatically if it completes."
+            self.errorMessage = "The selected provider did not finish the phase-boundary calculation within 30 seconds. The provider calculation continues in the background; the diagram will appear automatically if it completes."
         }
     }
 

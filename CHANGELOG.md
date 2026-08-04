@@ -152,3 +152,22 @@
   with live validation and no normalization of impurity values.
 - Added an explicit destructive “Remove impurity” action to each impurity menu
   while retaining swipe-to-delete behavior.
+
+- Added ThermoPack v2.2.4 as an independent selectable provider using a pinned
+  Peng–Robinson / Classic alpha / Classic van der Waals one-fluid CO₂/N₂
+  configuration and the shipped `PR_kij.json:vdW-18:ref=Default` record.
+- Added a versioned native C++ bridge, optional Swift actor adapter and
+  reproducible static XCFramework workflow for iPhone arm64 and simulator
+  arm64/x86_64, with generated artifacts excluded from Git.
+- Kept unavailable ThermoPack properties explicit and prohibited CoolProp
+  substitution, while preserving complete provider identity in calculations,
+  saved cases, comparisons and exports.
+- Added single-phase internal energy only as the traceable identity `u = h - p·v`
+  from ThermoPack state values and recorded SI pressure.
+- Added bounded independent ThermoPack bubble/dew calls with branch separation,
+  elapsed/iteration status and honest incomplete-envelope reporting.
+- Fixed top-right shield scientific references so valid HTTPS and DOI
+  destinations are accessible interactive links while invalid text remains
+  non-interactive.
+- Added focused ThermoPack, reference-link and cross-model provenance tests.
+  Native iOS compilation and smoke validation remain pending Xcode validation.

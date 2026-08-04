@@ -107,3 +107,19 @@ Thermal-conductivity cases should be traced to Huber et al. (2016), DOI
 testing must include positive, zero-crossing-near and negative cases and avoid
 undefined two-phase derivatives. Tolerances remain unset until reference
 uncertainty and the intended claim are approved.
+
+## ThermoPack native acceptance gate
+
+PR22 source-level contract tests cover identity serialization, exact EOS/mixing
+provenance, composition handling, unsupported components, non-finite output,
+unavailable properties, native error propagation, bubble/dew separation,
+incomplete/time-bounded envelopes, cancellation, snapshot round trips,
+cross-model exports and reference URL presentation.
+
+Xcode Codex must still build both `ios-arm64` and
+`ios-arm64_x86_64-simulator` slices, reject unsupported dynamic
+Fortran/OpenMP dependencies and execute native smoke calculations for pure CO₂,
+97/3 CO₂/N₂ and 90/10 CO₂/N₂ single-phase states and bubble/dew boundaries.
+Automated app validation uses an iPhone 17 simulator only. Physical-device
+acceptance is performed later by the user. Compilation success is not
+scientific validation.

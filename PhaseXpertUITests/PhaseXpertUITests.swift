@@ -29,6 +29,29 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
     }
 
+    func testShieldScientificReferenceIsAnInteractiveLink() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let shield = app.buttons["Scientific traceability"]
+        XCTAssertTrue(shield.waitForExistence(timeout: 3))
+        shield.tap()
+        XCTAssertTrue(
+            app.navigationBars["Scientific Traceability"].waitForExistence(timeout: 3)
+        )
+
+        var link = app.links.firstMatch
+        for _ in 0..<12 where !link.waitForExistence(timeout: 0.25) {
+            app.swipeUp()
+            link = app.links.firstMatch
+        }
+        XCTAssertTrue(
+            link.waitForExistence(timeout: 2),
+            "A valid HTTPS/DOI scientific reference must be exposed as a Link."
+        )
+        XCTAssertFalse(link.label.isEmpty)
+    }
+
     func testNumericKeyboardDoesNotShowCustomOKControl() {
         let app = XCUIApplication()
         app.launch()

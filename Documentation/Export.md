@@ -126,3 +126,13 @@ match the saved calculation. The dedicated page retains searchable boundary,
 model, solver, convergence and warning text. If the provider is absent, its
 version differs, or calculation fails, the report still exports and explains
 why no diagram was embedded.
+
+## Cross-model provider provenance
+
+Calculation, phase-diagram, sweep and pairwise comparison exports consume the
+immutable recorded model descriptor. ThermoPack records therefore include the
+v2.2.4 source commit, Peng–Robinson EOS, Classic alpha/mixing configuration,
+`PR_kij.json:vdW-18:ref=Default`, bridge 1.0.0 and provider capability 1.0.0.
+CoolProp and ThermoPack records remain schema-compatible without sharing
+calculated values. Comparison semantics remain `compared case − reference
+case`, and differences are never described as accuracy or error.

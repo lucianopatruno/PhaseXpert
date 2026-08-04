@@ -250,6 +250,79 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(text.contains("Not comparable"))
     }
 
+    func testCoolPropThermoPackComparisonPreservesModelDifferenceSemantics() throws {
+        let reference = makeSnapshot(
+            name: "CoolProp reference",
+            modelID: "coolprop-heos",
+            modelName: "CoolProp HEOS — Preliminary",
+            modelVersion: "8.0.0",
+            providerVersion: "0.8.2",
+            coefficientSetVersion: "CoolProp 8.0.0"
+        )
+        let compared = makeSnapshot(
+            name: "ThermoPack compared",
+            propertyValue: 905,
+            modelID: "thermopack-pr-classic-co2-n2",
+            modelName: "ThermoPack PR / Classic vdW — Preliminary",
+            modelVersion: "ThermoPack 2.2.4; Peng–Robinson",
+            providerVersion: "1.0.0",
+            coefficientSetVersion:
+                "PR_kij.json vdW-18 ref=Default; ca75d8e095e8b951616897efe1bca9b8c3badda7"
+        )
+        let snapshot = ComparisonExportSnapshot(
+            exportedAt: fixedDate,
+            reference: reference,
+            compared: compared
+        )
+        let csv = String(
+            decoding: try ComparisonReportExporter().csvData(for: snapshot).dropFirst(3),
+            as: UTF8.self
+        )
+        XCTAssertTrue(csv.contains("compared minus reference"))
+        XCTAssertTrue(csv.contains("coolprop-heos"))
+        XCTAssertTrue(csv.contains("thermopack-pr-classic-co2-n2"))
+        XCTAssertTrue(csv.contains("vdW-18"))
+        XCTAssertTrue(csv.contains("Numerical differences do not establish"))
+
+        let data = try ComparisonReportExporter().pdfData(for: snapshot)
+        let document = try XCTUnwrap(PDFDocument(data: data))
+        let text = (0..<document.pageCount)
+            .compactMap { document.page(at: $0)?.string }
+            .joined(separator: "\n")
+        XCTAssertTrue(text.contains("Compared case minus reference case"))
+        XCTAssertTrue(text.contains("CoolProp HEOS"))
+        XCTAssertTrue(text.contains("ThermoPack PR"))
+        XCTAssertTrue(text.contains("vdW-18"))
+    }
+
+    func testThermoPackCSVAndPDFContainExactProviderProvenance() throws {
+        let snapshot = makeSnapshot(
+            modelID: "thermopack-pr-classic-co2-n2",
+            modelName: "ThermoPack PR / Classic vdW — Preliminary",
+            modelVersion: "ThermoPack 2.2.4; Peng–Robinson",
+            providerVersion: "1.0.0",
+            coefficientSetVersion:
+                "PR_kij.json vdW-18 ref=Default; ca75d8e095e8b951616897efe1bca9b8c3badda7"
+        )
+        let csv = String(
+            decoding: try CalculationExporter().data(for: snapshot, format: .csv).dropFirst(3),
+            as: UTF8.self
+        )
+        XCTAssertTrue(csv.contains("thermopack-pr-classic-co2-n2"))
+        XCTAssertTrue(csv.contains("ThermoPack 2.2.4"))
+        XCTAssertTrue(csv.contains("vdW-18"))
+        XCTAssertTrue(csv.contains("1.0.0"))
+
+        let data = try CalculationExporter().data(for: snapshot, format: .pdf)
+        let document = try XCTUnwrap(PDFDocument(data: data))
+        let text = (0..<document.pageCount)
+            .compactMap { document.page(at: $0)?.string }
+            .joined(separator: "\n")
+        XCTAssertTrue(text.contains("ThermoPack PR"))
+        XCTAssertTrue(text.contains("2.2.4"))
+        XCTAssertTrue(text.contains("vdW-18"))
+    }
+
     func testComparisonSnapshotSerializationAndLongPDFPagination() throws {
         let longNotes = Array(repeating: "Retained comparison provenance note.", count: 500).joined(separator: " ")
         let snapshot = ComparisonExportSnapshot(
@@ -328,14 +401,19 @@ final class CalculationExportTests: XCTestCase {
     private func makeSnapshot(
         name: String = "Pipeline inlet",
         notes: String = "He said \"check\"\nsecond line",
-        propertyValue: Double = 903.5
+        propertyValue: Double = 903.5,
+        modelID: String = "export-test",
+        modelName: String = "Export Test — Preliminary",
+        modelVersion: String = "1.2.3",
+        providerVersion: String = "export-test-provider",
+        coefficientSetVersion: String = "test-coefficients"
     ) -> SavedCaseExportSnapshot {
         let requestID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
         let model = ModelDescriptor(
-            id: "export-test",
-            name: "Export Test — Preliminary",
-            modelVersion: "1.2.3",
-            providerVersion: "export-test-provider",
+            id: modelID,
+            name: modelName,
+            modelVersion: modelVersion,
+            providerVersion: providerVersion,
             availability: .preliminary,
             calculationMode: .local,
             supportedComponents: [.carbonDioxide],
@@ -343,7 +421,7 @@ final class CalculationExportTests: XCTestCase {
             domain: .initialCO2Transport,
             scientificBasis: "Deterministic test model only.",
             equationOrMethod: "No scientific calculation.",
-            coefficientSetVersion: "test-coefficients",
+            coefficientSetVersion: coefficientSetVersion,
             requiredResources: ["test-resource"],
             limitations: ["Not a scientific result."],
             references: [

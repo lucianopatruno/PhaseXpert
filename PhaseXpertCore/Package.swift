@@ -3,10 +3,17 @@ import Foundation
 import PackageDescription
 
 let coolPropXCFrameworkPath = "../Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework"
+let thermoPackXCFrameworkPath = "../Vendor/ThermoPack/PhaseXpertThermoPackBridge.xcframework"
 let packageDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
 let coolPropXCFrameworkURL = packageDirectory.appendingPathComponent(coolPropXCFrameworkPath)
 let hasLocalCoolPropXCFramework = FileManager.default.fileExists(
     atPath: coolPropXCFrameworkURL.path
+)
+let thermoPackXCFrameworkURL = packageDirectory.appendingPathComponent(
+    thermoPackXCFrameworkPath
+)
+let hasLocalThermoPackXCFramework = FileManager.default.fileExists(
+    atPath: thermoPackXCFrameworkURL.path
 )
 
 var phaseXpertCoreDependencies: [Target.Dependency] = []
@@ -27,6 +34,27 @@ if hasLocalCoolPropXCFramework {
         .binaryTarget(
             name: "PhaseXpertCoolPropBridge",
             path: coolPropXCFrameworkPath
+        )
+    )
+}
+
+if hasLocalThermoPackXCFramework {
+    phaseXpertCoreDependencies.append(
+        .target(
+            name: "PhaseXpertThermoPackBridge",
+            condition: .when(platforms: [.iOS])
+        )
+    )
+    phaseXpertCoreLinkerSettings.append(
+        .linkedLibrary("c++", .when(platforms: [.iOS]))
+    )
+    phaseXpertCoreLinkerSettings.append(
+        .linkedFramework("Accelerate", .when(platforms: [.iOS]))
+    )
+    packageTargets.append(
+        .binaryTarget(
+            name: "PhaseXpertThermoPackBridge",
+            path: thermoPackXCFrameworkPath
         )
     )
 }

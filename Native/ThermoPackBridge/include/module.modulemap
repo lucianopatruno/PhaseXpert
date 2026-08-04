@@ -1,0 +1,4 @@
+module PhaseXpertThermoPackBridge {
+    header "PhaseXpertThermoPackBridge.h"
+    export *
+}

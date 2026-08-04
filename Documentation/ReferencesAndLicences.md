@@ -9,8 +9,9 @@ review before distribution.
 
 ## Software
 
-The current runtime uses only Apple SDK frameworks. The CoolProp bridge and
-MIT notice are present, but no CoolProp binary is linked. REFPROP and other
+The repository optionally links locally generated CoolProp and ThermoPack
+XCFrameworks; neither generated binary is committed. CoolProp's MIT notice and
+ThermoPack's Apache-2.0 licence/notice are tracked. REFPROP and other
 thermodynamic software are not included.
 
 Potential CoolProp reference:
@@ -31,3 +32,24 @@ code or data in an iPhone application.
 Scientific references for the production formulation, binary interaction
 parameters and validation datasets are not selected yet and must not be
 invented.
+
+## ThermoPack
+
+PhaseXpert pins ThermoPack v2.2.4 at commit
+`ca75d8e095e8b951616897efe1bca9b8c3badda7`. ThermoPack is Apache-2.0
+licensed. The complete upstream licence and PhaseXpert attribution/build notice
+are stored in `ThirdParty/ThermoPack/LICENSE` and
+`ThirdParty/ThermoPack/NOTICE`.
+
+Authoritative references:
+
+- https://github.com/thermotools/thermopack/tree/v2.2.4
+- https://github.com/thermotools/thermopack/releases/tag/v2.2.4
+- https://thermotools.github.io/thermopack/v2.2.0/home.html
+- https://doi.org/10.1021/acs.iecr.7b00317
+- https://doi.org/10.1021/i160057a011
+
+The selected data provenance is the upstream `binaries/PR_kij.json` record
+`vdW-18` for CO₂/N₂, `ref=Default`. This records shipped provenance and
+does not claim experimental validation. Generated binaries are excluded from
+Git and require distribution review for static Fortran runtime compliance.

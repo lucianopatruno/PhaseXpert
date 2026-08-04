@@ -15,6 +15,10 @@
 
 - Complete scientific validation and have IFE approve all accuracy language.
 - Complete licence review for every linked library and dataset.
+- Confirm the archived app includes the ThermoPack Apache-2.0 licence and
+  PhaseXpert third-party notice when the ThermoPack XCFramework is linked.
+- Inspect every ThermoPack archive slice and final linked product for unsupported
+  dynamic Fortran/OpenMP runtime dependencies.
 - Finalize scientific disclaimer, support URL, copyright and privacy policy.
 - Update the privacy manifest and App Store privacy answers if remote IFE
   calculation, telemetry or any data collection is added.

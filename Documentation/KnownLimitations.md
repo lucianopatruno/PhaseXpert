@@ -75,3 +75,26 @@ trace is scientifically unusable in this app and is rejected in full with an
 explicit unavailable message. PhaseXpert does not clip, reconnect, interpolate
 or extrapolate it. Consequently, a supported mixture state calculation does not
 guarantee that a mixture phase diagram is available.
+
+## ThermoPack PR22 limitations
+
+- ThermoPack v2.2.4 iOS compilation, simulator linkage, static Fortran-runtime
+  inspection and native smoke calculations are pending Xcode validation.
+- The only enabled configuration is Peng–Robinson / Classic alpha /
+  Classic van der Waals one-fluid mixing with upstream CO₂/N₂ parameter record
+  `PR_kij.json:vdW-18:ref=Default`.
+- Only pure CO₂ and mixtures containing at most 10 mol% N₂ are accepted. This
+  guardrail is not a validated accuracy range.
+- The pinned TP-flash ISO C function has no explicit error-code output.
+  PhaseXpert rejects non-finite/malformed results but cannot guarantee recovery
+  from every internal Fortran failure.
+- Transport, Cv, speed of sound, conductivity, Joule–Thomson coefficient and
+  other unbridged properties stay unavailable; CoolProp values are never used
+  to fill them.
+- Two-phase flashes retain phase and vapor fraction only. No bulk two-phase
+  density or caloric value is constructed.
+- ThermoPack bubble/dew sampling is bounded to 64 calls per branch. A 5000 ms
+  budget is checked between synchronous native calls; one in-progress Fortran
+  call cannot be preempted. Failed or out-of-domain calls leave an incomplete
+  trace, and no points are inferred.
+- Saved-case comparison reports model-output differences, not accuracy.

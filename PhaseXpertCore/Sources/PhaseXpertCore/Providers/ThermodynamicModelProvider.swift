@@ -26,6 +26,50 @@ public struct SourceReference: Codable, Equatable, Sendable {
     }
 }
 
+public extension SourceReference {
+    /// A safe interactive destination for an HTTPS URL or DOI.
+    ///
+    /// Plain text, malformed identifiers and non-HTTPS schemes intentionally
+    /// remain non-interactive in scientific traceability views.
+    var destinationURL: URL? {
+        guard let value = doiOrURL?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty
+        else {
+            return nil
+        }
+
+        if value.lowercased().hasPrefix("https://") {
+            guard let components = URLComponents(string: value),
+                  components.scheme?.lowercased() == "https",
+                  components.host?.isEmpty == false,
+                  components.user == nil,
+                  components.password == nil
+            else {
+                return nil
+            }
+            return components.url
+        }
+
+        let doi: String
+        if value.lowercased().hasPrefix("doi:") {
+            doi = String(value.dropFirst(4)).trimmingCharacters(in: .whitespaces)
+        } else {
+            doi = value
+        }
+        guard doi.hasPrefix("10."),
+              doi.contains("/"),
+              !doi.contains(where: { $0.isWhitespace })
+        else {
+            return nil
+        }
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "doi.org"
+        components.path = "/\(doi)"
+        return components.url
+    }
+}
+
 public struct ModelDescriptor: Codable, Equatable, Sendable, Identifiable {
     public let id: String
     public let name: String

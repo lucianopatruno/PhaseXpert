@@ -47,3 +47,25 @@ The generated XCFramework, licence, revision and fingerprint remain ignored by G
 ## Manual checks
 
 Physical-iPhone installation, accessibility inspection, visual review, PNG/PDF inspection and scientific acceptance remain manual release gates. Automated success must never be reported as scientific validation.
+
+## Optional ThermoPack dependency
+
+Run `Scripts/ensure-thermopack-xcframework.sh` after configuring
+`THERMOPACK_FORTRAN_COMPILER` and separate colon-separated static
+`THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONEOS` and
+`THERMOPACK_FORTRAN_RUNTIME_ARCHIVES_IPHONESIMULATOR`. Generated source/build directories,
+fingerprints and XCFramework contents under `Vendor/ThermoPack` are ignored.
+Do not commit them. The ensure script refreshes the Swift package manifest after
+a confirmed or rebuilt artifact, following the existing optional native
+dependency pattern.
+
+For PR22 acceptance, make the native dependency mandatory during the normal
+simulator validation rather than allowing the optional skip:
+
+```sh
+PHASEXPERT_REQUIRE_THERMOPACK=1 bash Scripts/validate-phase-xpert.sh release
+```
+
+With that flag, a missing compiler, runtime archive, slice or native build is a
+validation failure. Without it, standard/release validation refreshes ThermoPack
+when its XCFramework is already present and otherwise reports an explicit skip.

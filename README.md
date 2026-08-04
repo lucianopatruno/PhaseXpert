@@ -69,6 +69,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   derived transparently from recorded inputs and calculated density; an
   unavailable IFE provider, and a
   non-scientific demo provider
+- a separate, optional ThermoPack v2.2.4 Peng–Robinson / Classic provider for
+  pure CO₂ and CO₂/N₂ state properties and independent bubble/dew points; its
+  native iOS build and numerical smoke gate remain pending
 - immutable results grouped into state, thermodynamic, transport/acoustic and
   derived sections, with presentation-only engineering units, copy/share actions
   and concise or expert scientific traceability
@@ -165,3 +168,24 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - [App Store preparation](Documentation/AppStoreChecklist.md)
 - [Known limitations](Documentation/KnownLimitations.md)
 - [Changelog](CHANGELOG.md)
+
+## PR22 — standalone ThermoPack provider
+
+PR22 adds ThermoPack as a separate model identity, never as a CoolProp fallback.
+The pinned configuration is ThermoPack v2.2.4
+(`ca75d8e095e8b951616897efe1bca9b8c3badda7`), Peng–Robinson,
+Classic alpha, Classic van der Waals one-fluid mixing, with the shipped
+`PR_kij.json` CO₂/N₂ `vdW-18` `ref=Default` record. The provider ID is
+`thermopack-pr-classic-co2-n2`; bridge and provider capability versions are
+both 1.0.0. It supports only pure CO₂ and CO₂/N₂ up to 10 mol% N₂.
+
+The optional generated ThermoPack XCFramework is ignored by Git and built with
+`Scripts/build-thermopack-xcframework.sh`. Native iOS compilation, static
+Fortran-runtime inspection and smoke calculations are pending Xcode validation.
+Until those checks succeed, the model appears unavailable. No ThermoPack result
+is replaced by CoolProp or estimated data. Cross-model saved-case differences
+remain model-output differences using compared case minus reference case.
+
+See [ThermoPack integration](Documentation/ThermoPackIntegration.md), the
+[licence and notice](ThirdParty/ThermoPack/NOTICE), and
+[Known Limitations](Documentation/KnownLimitations.md).
