@@ -32,6 +32,7 @@ for iOS.
 | GERG-2008 implementation | Strong basis for natural-gas-like mixtures and phase behaviour | Component set and CO₂-rich impurity coverage are limited; implementation/data licensing and edge-domain validation required |
 | Cubic EOS such as Peng–Robinson | Compact, offline and phase-equilibrium capable | Needs sourced pure-component data and binary interaction parameters; density and transport accuracy may be inadequate without validated corrections |
 | IFE-controlled API | Central model governance and rapid updates | Network, security, availability, privacy and server validation obligations |
+| Remote NeqSim | Independent open-source thermodynamic engine with Java/Python service deployment and documented phase-envelope APIs | Requires service deployment, HTTPS, endpoint management, remote-error handling and independent validation before production use |
 
 Recommended sequence: use CoolProp only as an integration and comparison spike;
 retain the provider abstraction; make the production model decision after
@@ -165,6 +166,45 @@ close the trace.
 Every result records exact composition, library/provider version, method and
 validation-pending warnings. Contract coverage is not independent numeric
 validation.
+
+## Standalone remote NeqSim provider
+
+PR23 selects NeqSim release `v3.16.0` at source commit
+`3af7b560525b57f2d3da2c803a08e2b41a8d7f5a` for the first remote-provider
+integration. The selected configuration is:
+
+- EOS: `SystemSrkEos`;
+- alpha/configuration: NeqSim defaults for `SystemSrkEos` component data;
+- mixing rule: `classic`;
+- interaction-data provenance:
+  `src/main/resources/data/INTER.csv`, row `7452`,
+  `CO2,nitrogen,Classic`.
+
+The pinned documentation shows the required execution pattern: create fluid,
+add components, call `setMixingRule("classic")`, execute `TPflash()`, call
+`initProperties()` before reading density or transport properties, and use
+`calcPTphaseEnvelope()` plus documented `bubT`/`bubP` and `dewT`/`dewP` arrays
+for phase-envelope branches. The pinned source ships CO₂ and nitrogen
+components plus the CO₂/N₂ Classic interaction row. PhaseXpert does not
+override, estimate or extrapolate binary interaction parameters.
+
+NeqSim is a separate provider from CoolProp. A NeqSim calculation records the
+NeqSim provider ID, and its diagram/export path requests NeqSim again. Missing
+or unavailable NeqSim values remain unavailable; CoolProp is never used to fill
+them. Cross-provider saved-case comparisons remain differences between model
+outputs, not accuracy rankings.
+
+The initial NeqSim state response exposes only density, dynamic viscosity,
+molar mass, compressibility factor and specific volume when the service returns
+finite values. Other requested properties remain unavailable with explicit
+status. NeqSim phase diagrams retain only finite provider-returned bubble, dew
+and critical points. Straight chart segments are display-only connections
+between adjacent provider points.
+
+ThermoPack source integration remains documented in draft PR22. Native iOS
+acceptance was blocked because no verified Apple-iOS-targeting Flang plus
+platform-specific static Fortran runtime archives could be established. PR23
+does not use ThermoPack as a phase-diagram fallback.
 
 ### Implemented derived engineering properties
 

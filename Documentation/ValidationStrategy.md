@@ -44,6 +44,25 @@ decision.
 - cancellation, timeout, offline, rate limiting and model mismatch;
 - malformed, non-finite, wrong-unit and mismatched-request remote responses.
 
+## NeqSim remote-provider validation
+
+The PR23 service tier must run before claiming remote NeqSim availability:
+
+- service unit tests for schema, health/capability metadata and malformed
+  requests;
+- direct pinned-NeqSim smoke calculations for pure CO₂, 97/3 CO₂/N₂ and
+  90/10 CO₂/N₂ at 10 bar(a), 20 °C and 150 bar(a), 20 °C;
+- phase-envelope smoke calculations for the same three compositions;
+- API contract tests against a local container;
+- Swift provider tests with deterministic non-scientific mocks for transport,
+  finite-value safeguards, request-ID mismatches, unavailable endpoint,
+  unsupported properties, branch separation, cancellation and stale-result
+  behavior;
+- standard iPhone 17 simulator validation for the app.
+
+The smoke matrix demonstrates integration only. It is not scientific or
+experimental validation.
+
 Tolerances must be established before observing the implementation result and
 must not be widened merely to obtain a passing test.
 

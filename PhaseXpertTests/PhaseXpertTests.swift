@@ -95,6 +95,124 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertNotNil(viewModel.response)
     }
 
+    #if DEBUG && targetEnvironment(simulator)
+    @MainActor
+    func testDebugSimulatorNeqSimPureCO2PPMInputCalculatesAgainstLocalhostService() async throws {
+        guard NeqSimConfiguration.environmentEndpoint?.absoluteString == "http://localhost:8080" else {
+            throw XCTSkip("Debug simulator localhost NeqSim endpoint is not configured.")
+        }
+
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = NeqSimMetadata.providerID
+        viewModel.pressureText = "150"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "1000000")
+        ]
+
+        await viewModel.calculate()
+
+        if let error = viewModel.calculationError,
+           error.contains("offline") || error.contains("unreachable") {
+            throw XCTSkip("Local NeqSim service is unavailable: \(error)")
+        }
+        XCTAssertNil(viewModel.calculationError)
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertEqual(record.request.modelID, NeqSimMetadata.providerID)
+        XCTAssertEqual(record.input.originalComposition, [
+            CompositionInputSnapshot(
+                component: .carbonDioxide,
+                value: 1_000_000,
+                unit: .partsPerMillion
+            )
+        ])
+        XCTAssertEqual(record.response.model.id, NeqSimMetadata.providerID)
+        XCTAssertEqual(record.response.model.modelVersion, NeqSimMetadata.releaseVersion)
+        XCTAssertTrue(record.response.properties.contains {
+            $0.property == .density && $0.hasFiniteCalculatedValue
+        })
+    }
+
+    func testDebugSimulatorNeqSimLocalhostServiceCalculatesStatesAndEnvelopes() async throws {
+        guard NeqSimConfiguration.environmentEndpoint?.absoluteString == "http://localhost:8080" else {
+            throw XCTSkip("Debug simulator localhost NeqSim endpoint is not configured.")
+        }
+
+        let provider = NeqSimProvider<NeqSimHTTPClient>()
+        XCTAssertEqual(provider.descriptor.availability, .preliminary)
+        XCTAssertEqual(provider.descriptor.calculationMode, .remote)
+
+        let cases: [(String, [MixtureComponent])] = [
+            ("pure CO₂", [.init(component: .carbonDioxide, moleFraction: 1)]),
+            (
+                "97/3 CO₂/N₂",
+                [
+                    .init(component: .carbonDioxide, moleFraction: 0.97),
+                    .init(component: .nitrogen, moleFraction: 0.03)
+                ]
+            ),
+            (
+                "90/10 CO₂/N₂",
+                [
+                    .init(component: .carbonDioxide, moleFraction: 0.90),
+                    .init(component: .nitrogen, moleFraction: 0.10)
+                ]
+            )
+        ]
+
+        do {
+            for (label, composition) in cases {
+                for pressurePa in [1_000_000.0, 15_000_000.0] {
+                    let response = try await provider.calculate(CalculationRequest(
+                        modelID: NeqSimMetadata.providerID,
+                        pressurePa: pressurePa,
+                        temperatureK: 293.15,
+                        composition: composition,
+                        requestedProperties: [
+                            .density,
+                            .dynamicViscosity,
+                            .molarMass,
+                            .compressibilityFactor,
+                            .specificVolume
+                        ],
+                        clientVersion: "xctest"
+                    ))
+                    XCTAssertEqual(response.model.id, NeqSimMetadata.providerID, label)
+                    XCTAssertEqual(response.model.modelVersion, NeqSimMetadata.releaseVersion, label)
+                    XCTAssertEqual(response.model.providerVersion, NeqSimMetadata.serviceVersion, label)
+                    XCTAssertTrue(response.solver.converged, label)
+                    XCTAssertEqual(
+                        response.properties.filter { $0.status == .calculated && ($0.value?.isFinite == true) }.count,
+                        5,
+                        label
+                    )
+                }
+
+                let envelope = try await provider.phaseEnvelope(PhaseEnvelopeRequest(
+                    modelID: NeqSimMetadata.providerID,
+                    composition: composition
+                ))
+                XCTAssertTrue(envelope.isAvailable, label)
+                XCTAssertEqual(envelope.model?.id, NeqSimMetadata.providerID, label)
+                XCTAssertGreaterThanOrEqual(
+                    envelope.points.filter { $0.branch == .bubble }.count,
+                    2,
+                    label
+                )
+                XCTAssertGreaterThanOrEqual(
+                    envelope.points.filter { $0.branch == .dew }.count,
+                    2,
+                    label
+                )
+            }
+        } catch let ProviderError.modelUnavailable(message)
+                    where message.contains("offline") || message.contains("unreachable") {
+            throw XCTSkip("Local NeqSim service is unavailable: \(message)")
+        }
+    }
+    #endif
+
     @MainActor
     func testCalculatorStartsWithCoolPropSelected() {
         let viewModel = CalculatorViewModel()

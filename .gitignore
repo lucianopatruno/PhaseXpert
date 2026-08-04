@@ -16,3 +16,9 @@ Vendor/CoolProp/*.xcframework/
 Vendor/CoolProp/COOLPROP-LICENSE.txt
 Vendor/CoolProp/COOLPROP-REVISION.txt
 Vendor/CoolProp/BRIDGE-SOURCE-SHA256.txt
+Vendor/ThermoPack/source/
+Vendor/ThermoPack/build/
+Vendor/ThermoPack/*.xcframework/
+Services/NeqSimProvider/.venv/
+Services/NeqSimProvider/.pytest_cache/
+Services/NeqSimProvider/**/__pycache__/

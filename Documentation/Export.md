@@ -126,3 +126,12 @@ match the saved calculation. The dedicated page retains searchable boundary,
 model, solver, convergence and warning text. If the provider is absent, its
 version differs, or calculation fails, the report still exports and explains
 why no diagram was embedded.
+
+## Remote-provider provenance
+
+NeqSim JSON, CSV and PDF exports use the same immutable `CalculationRecord`
+path as CoolProp. A NeqSim result records provider ID, NeqSim release/source
+commit, service/API capability, Java runtime, EOS, alpha/configuration text,
+mixing rule, interaction-data identifier, request/calculation IDs, warnings and
+convergence metadata. Comparison exports preserve compared-minus-reference
+semantics and never rank NeqSim or CoolProp.
