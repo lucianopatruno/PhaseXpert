@@ -54,6 +54,8 @@ The implementation includes:
 - pure-CO2 saturation by fugacity-equality bisection;
 - mixture bubble-pressure solving at fixed temperature;
 - mixture dew-pressure solving at fixed temperature;
+- Wilson-seeded tangent-plane-distance screening for preliminary stability classification;
+- safeguarded finite-difference Newton updates on `ln(P)` with bounded successive-substitution fallback;
 - independent bubble and dew tracing over a bounded temperature grid;
 - explicit iteration limits, tolerances, pressure bounds and consecutive-failure limits;
 - finite-value checks and explicit gap reporting;
@@ -92,10 +94,10 @@ These are software-parity tolerances only. They are not experimental validation 
 
 - The prototype is not integrated into the UI or provider registry.
 - Critical-region handling is conservative and reports failures rather than forcing branch closure.
-- The first implementation uses simple successive-substitution bubble/dew iteration with damping; a stronger Newton or stability-analysis formulation may be required.
+- The current pressure solve is a scalar safeguarded Newton formulation around fugacity-ratio residuals; a full simultaneous flash/stability formulation may still be required for higher coverage.
 - Simulator and physical-iPhone execution, app-size delta, peak memory and UI responsiveness measurements remain pending.
 - Independent published-data comparisons remain pending.
 
 ## Recommended Next Step
 
-Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be a flash/stability formulation or bounded Newton solve, not parameter tuning to force visual agreement.
+Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be a full flash/stability formulation with stronger critical-region handling, not parameter tuning to force visual agreement.
