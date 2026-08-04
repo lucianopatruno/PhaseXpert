@@ -43,6 +43,48 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertLessThanOrEqual(result.convergedPointCount, result.attemptedPointCount)
     }
 
+    func testStabilityAssessmentReturnsFiniteTangentPlaneDistances() throws {
+        let assessment = try tracer.stabilityAssessment(
+            temperatureK: 293.15,
+            pressurePa: 10_000_000,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.97),
+                .init(component: .nitrogen, moleFraction: 0.03)
+            ]
+        )
+
+        XCTAssertTrue(assessment.liquidLikeTangentPlaneDistance.isFinite)
+        XCTAssertTrue(assessment.vaporLikeTangentPlaneDistance.isFinite)
+    }
+
+    func testIterationLimitBoundsTraceWork() throws {
+        let result = try tracer.phaseEnvelope(
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            options: NativeSRKEnvelopeOptions(maximumIterationsPerSolve: 1)
+        )
+
+        XCTAssertEqual(result.attemptedPointCount, result.convergedPointCount + result.gaps.count)
+        XCTAssertTrue(result.points.allSatisfy { $0.iterations <= 1 })
+    }
+
+    func testSingularPressureBoundsAreRejectedAsNonConvergence() {
+        XCTAssertThrowsError(try tracer.solveDewPressure(
+            temperatureK: 260,
+            vaporComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            options: NativeSRKEnvelopeOptions(
+                minimumPressurePa: 1_000_000,
+                maximumPressurePa: 1_000_000,
+                maximumIterationsPerSolve: 3
+            )
+        ))
+    }
+
     func testRejectsUnsupportedDuplicateAndNonNormalizedCompositions() {
         XCTAssertThrowsError(try tracer.phaseEnvelope(
             composition: [.init(component: .water, moleFraction: 1)],
