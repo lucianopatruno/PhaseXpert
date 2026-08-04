@@ -29,7 +29,7 @@ Successful numerical execution is software evidence only. It is not experimental
 | PhaseXpert merged main | `cc0fa511bfea97e37d9f0f2e30593e61edfc65c7` | Project licence unchanged | Existing CoolProp bridge is already packaged for `ios-arm64` and `ios-arm64_x86_64-simulator`. |
 | CoolProp | generated revision `ae81610e7d23efc57f9d051c8e70a4d66e87537f`; upstream `v6.8.0` tag `442e8bd29867b11b9a5d8b6bbba7b7dcf35d2a03`; upstream `master` `e8fff5694e8fba11d7cbd9a80789a3b194ebbe59` | MIT-style flexible licensing documented upstream | Official API exposes `AbstractState::build_phase_envelope()` for mixtures, but PhaseXpert has observed and patched unbounded continuation risk. |
 | ThermoPack | upstream `main` `d68c794c7342bfc6938eb424a1fbb88b7780b738`; `v2.2.1` tag `c018592e64cdb16aa21119f4a7e2625cfed9fb99` | Apache-2.0 in inspected source | ThermoPack has cubic EOS, CO2/N2 examples, phase-envelope APIs and critical solvers, but the Fortran/iOS toolchain is not currently established. |
-| NeqSim reference service | `neqsim_version=3.16.0`, source commit `3af7b560525b57f2d3da2c803a08e2b41a8d7f5a`, `SystemSrkEos`, `classic`, `INTER.csv:7452:CO2-nitrogen:Classic` | Remote-service PR provenance | Health endpoint was reachable locally, but state/envelope calls failed because the running development service could not import the NeqSim Python bridge. |
+| NeqSim reference service | `neqsim_version=3.16.0`, source commit `3af7b560525b57f2d3da2c803a08e2b41a8d7f5a`, `SystemSrkEos`, `classic`, `INTER.csv:7452:CO2-nitrogen:Classic` | Remote-service PR provenance | Health, state and phase-envelope calls completed through the local development service when run with Java 21. |
 | GraalVM / neqsim-native | See `NeqSimNativeIOSFeasibility.md` | NeqSim Apache-2.0, neqsim-native MIT in inspected source | No verified iOS Native Image target or iOS XCFramework build path. |
 
 ## Candidate Ranking
@@ -100,9 +100,11 @@ Porting a minimum phase-equilibrium algorithm is viable only after choosing an a
 
 Local cached tables or surrogates can reduce latency after a trusted solver exists, but they are not acceptable as the sole arbitrary-composition phase-diagram solution. Any table must store domain bounds, generator version, source provider, interpolation method, error estimates and out-of-domain rejection behavior. Silent extrapolation is not allowed.
 
-## Reference Dataset Attempt
+## Reference Dataset
 
-The intended primary parity reference is the NeqSim 3.16.0 service. On this branch, a local development service was reachable at `http://127.0.0.1:8080/v1/health` and reported:
+The intended primary parity reference is the NeqSim 3.16.0 service. The local development service initially failed under Java 11 because NeqSim 3.16.0 requires Java 17 or newer. Running the same service with Temurin 21 from `/private/tmp/phasexpert-java/jdk-21.0.12+8-jre/Contents/Home` made the NeqSim Python bridge operational.
+
+The completed dataset is stored in `LocalPhaseDiagramNeqSimReferenceDataset.json`. It is software parity data only, not experimental validation. The service reported:
 
 - provider ID: `neqsim-remote-srk-classic`;
 - NeqSim version: `3.16.0`;
@@ -111,7 +113,15 @@ The intended primary parity reference is the NeqSim 3.16.0 service. On this bran
 - mixing rule: `classic`;
 - interaction data: `neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic`.
 
-State and phase-envelope calls for pure CO2, 97/3 CO2/N2 and 90/10 CO2/N2 all returned structured HTTP 422 responses with `message: "NeqSim Python bridge is not importable"`. Therefore a numeric reference dataset was not generated in this pass. The machine-readable attempt is stored in `LocalPhaseDiagramReferenceDatasetAttempt.json` so future work can distinguish missing reference data from accepted parity data.
+The dataset includes six state cases and three phase-envelope cases:
+
+| Case | State Results | Envelope Points | Bubble | Dew | Critical | Envelope Elapsed |
+| --- | --- | --- | --- | --- | --- | --- |
+| Pure CO2 | 10 bar(a), 20 C and 150 bar(a), 20 C | 53 | 31 | 21 | 1 | 89.696 ms |
+| 97/3 mol% CO2/N2 | 10 bar(a), 20 C and 150 bar(a), 20 C | 65 | 39 | 25 | 1 | 64.040 ms |
+| 90/10 mol% CO2/N2 | 10 bar(a), 20 C and 150 bar(a), 20 C | 110 | 83 | 26 | 1 | 66.681 ms |
+
+Validation found HTTP 200 for every requested state and envelope case, finite calculated values, explicit units, no duplicate phase-envelope points, at least two bubble and dew points for each composition, and one critical point per envelope. Phase-envelope points are sorted by branch and ascending temperature for deterministic comparison, and each point retains `provider_order` from the raw NeqSim response.
 
 ## Recommended Local Architecture
 
@@ -121,7 +131,6 @@ The ThermoPack static-iOS route should continue in parallel only if an iOS-capab
 
 ## Pending Validation
 
-- Generate a successful NeqSim 3.16.0 numeric reference dataset once the local service imports the NeqSim Python bridge.
 - Define parity tolerances before evaluating any local prototype.
 - Run any accepted prototype on iPhone 17 simulator and physical iPhone.
 - Measure binary size, app-size increase, first-call latency, subsequent-call latency and peak memory.

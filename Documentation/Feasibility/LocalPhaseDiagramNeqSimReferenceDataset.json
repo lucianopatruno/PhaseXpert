@@ -1,0 +1,2606 @@
+{
+  "generated_at": "2026-08-04T12:27:26.619538+00:00",
+  "health": {
+    "eos": "SystemSrkEos",
+    "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+    "mixing_rule": "classic",
+    "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+    "neqsim_version": "3.16.0",
+    "production_transport_requires_https": true,
+    "provider_capability_version": "2026.08-pr23",
+    "provider_id": "neqsim-remote-srk-classic",
+    "schema_version": "neqsim-provider.v1",
+    "service_version": "0.1.0",
+    "supported_components": [
+      "co2",
+      "n2"
+    ],
+    "supported_properties": [
+      "density",
+      "dynamicViscosity",
+      "molarMass",
+      "compressibilityFactor",
+      "specificVolume",
+      "enthalpy",
+      "entropy",
+      "internalEnergy",
+      "isobaricHeatCapacity",
+      "isochoricHeatCapacity",
+      "heatCapacityRatio",
+      "speedOfSound",
+      "thermalConductivity",
+      "jouleThomsonCoefficient",
+      "isothermalCompressibility",
+      "thermalExpansionCoefficient",
+      "vapourFraction"
+    ]
+  },
+  "phase_envelope_cases": [
+    {
+      "bubble_count": 31,
+      "calculation_id": "bebac546-a95c-436e-8305-cd16a6cf4a82",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 85.81362499535317,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos calcPTphaseEnvelope",
+        "status": "completed"
+      },
+      "critical_count": 1,
+      "dew_count": 21,
+      "elapsed_ms": 89.696,
+      "http_status": 200,
+      "id": "pure-co2",
+      "is_available": true,
+      "is_complete": true,
+      "point_count": 53,
+      "points": [
+        {
+          "branch": "bubble",
+          "pressure_pa": 110517.09180756476,
+          "provider_order": 0,
+          "temperature_k": 186.7738418728282
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 122140.27581601699,
+          "provider_order": 1,
+          "temperature_k": 188.42973243888795
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 134985.88075760033,
+          "provider_order": 2,
+          "temperature_k": 190.11980224902547
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 149182.46976412705,
+          "provider_order": 3,
+          "temperature_k": 191.84512086258482
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 166529.11949458864,
+          "provider_order": 4,
+          "temperature_k": 193.7850098438891
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 187948.91289619103,
+          "provider_order": 5,
+          "temperature_k": 195.9715378266265
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 214706.11497997082,
+          "provider_order": 6,
+          "temperature_k": 198.44290407393885
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 248558.98610179202,
+          "provider_order": 7,
+          "temperature_k": 201.2449516419187
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 291993.3961208623,
+          "provider_order": 8,
+          "temperature_k": 204.43314640783598
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 348586.80675136147,
+          "provider_order": 9,
+          "temperature_k": 208.07519375067778
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 423587.0305242409,
+          "provider_order": 10,
+          "temperature_k": 212.2545381098925
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 524852.8181929399,
+          "provider_order": 11,
+          "temperature_k": 217.07509943750074
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 664418.7817565072,
+          "provider_order": 12,
+          "temperature_k": 222.6677632147731
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 861165.6617193061,
+          "provider_order": 13,
+          "temperature_k": 229.19938571165946
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1145502.3606666354,
+          "provider_order": 14,
+          "temperature_k": 236.88544671530235
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1567820.003102343,
+          "provider_order": 15,
+          "temperature_k": 246.00804113005458
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2167607.958599721,
+          "provider_order": 16,
+          "temperature_k": 256.23824174633376
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2919262.895047456,
+          "provider_order": 17,
+          "temperature_k": 266.45000219070414
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 3843321.360355048,
+          "provider_order": 18,
+          "temperature_k": 276.64470433914965
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 4960865.2643081155,
+          "provider_order": 19,
+          "temperature_k": 286.8236303498473
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 6293539.630160729,
+          "provider_order": 20,
+          "temperature_k": 296.9879527201932
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 6728418.320032569,
+          "provider_order": 21,
+          "temperature_k": 299.9664867413406
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7050592.1642114045,
+          "provider_order": 22,
+          "temperature_k": 302.08509640524426
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7160259.383157408,
+          "provider_order": 23,
+          "temperature_k": 302.7903974925871
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7260417.586098333,
+          "provider_order": 24,
+          "temperature_k": 303.4278024372639
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7372210.539418549,
+          "provider_order": 25,
+          "temperature_k": 304.131843124813
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7375556.981159287,
+          "provider_order": 26,
+          "temperature_k": 304.1527996527404
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7377230.771626043,
+          "provider_order": 27,
+          "temperature_k": 304.1632789246704
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7379072.37986472,
+          "provider_order": 28,
+          "temperature_k": 304.17480690000264
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7381098.67991773,
+          "provider_order": 29,
+          "temperature_k": 304.187488612156
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7381767.48103495,
+          "provider_order": 30,
+          "temperature_k": 304.19169998632606
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 110517.09180756476,
+          "provider_order": 31,
+          "temperature_k": 186.7738418728282
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 122140.27581601699,
+          "provider_order": 32,
+          "temperature_k": 188.42973243888778
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 134985.88075760033,
+          "provider_order": 33,
+          "temperature_k": 190.11980224902547
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 149182.46976412705,
+          "provider_order": 34,
+          "temperature_k": 191.84512086258482
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 166529.11949458864,
+          "provider_order": 35,
+          "temperature_k": 193.7850098438891
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 187948.91289619103,
+          "provider_order": 36,
+          "temperature_k": 195.9715378266265
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 214706.11497997082,
+          "provider_order": 37,
+          "temperature_k": 198.44290407393885
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 248558.98610179202,
+          "provider_order": 38,
+          "temperature_k": 201.2449516419187
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 291993.3961208623,
+          "provider_order": 39,
+          "temperature_k": 204.43314640783598
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 348586.80675136147,
+          "provider_order": 40,
+          "temperature_k": 208.07519375067778
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 423587.0305242409,
+          "provider_order": 41,
+          "temperature_k": 212.2545381098925
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 524852.8181929399,
+          "provider_order": 42,
+          "temperature_k": 217.07509943750074
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 664418.7817565072,
+          "provider_order": 43,
+          "temperature_k": 222.6677632147731
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 861165.6617193061,
+          "provider_order": 44,
+          "temperature_k": 229.19938571165946
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 1145502.3606666354,
+          "provider_order": 45,
+          "temperature_k": 236.88544671530235
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 1567820.003102343,
+          "provider_order": 46,
+          "temperature_k": 246.00804113005458
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 2167607.95859972,
+          "provider_order": 47,
+          "temperature_k": 256.23824174633376
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 2919262.8950474546,
+          "provider_order": 48,
+          "temperature_k": 266.45000219070414
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 3843321.360355046,
+          "provider_order": 49,
+          "temperature_k": 276.64470433914965
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 4960865.2643081155,
+          "provider_order": 50,
+          "temperature_k": 286.8236303498473
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 6293539.630160724,
+          "provider_order": 51,
+          "temperature_k": 296.98795272019294
+        },
+        {
+          "branch": "critical",
+          "pressure_pa": 110517.09180756476,
+          "provider_order": 52,
+          "temperature_k": 186.7738418728282
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 1.0
+          }
+        ],
+        "maximum_points": 240,
+        "timeout_seconds": 60.0,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim phase envelope is integration output only and has not completed PhaseXpert scientific validation.",
+        "Straight chart segments are display-only connections between adjacent finite NeqSim points."
+      ]
+    },
+    {
+      "bubble_count": 39,
+      "calculation_id": "459d8ab8-ae48-40ac-8244-d48a86c7860d",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 61.750041000777856,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos calcPTphaseEnvelope",
+        "status": "completed"
+      },
+      "critical_count": 1,
+      "dew_count": 25,
+      "elapsed_ms": 64.04,
+      "http_status": 200,
+      "id": "co2-97-n2-3",
+      "is_available": true,
+      "is_complete": true,
+      "point_count": 65,
+      "points": [
+        {
+          "branch": "bubble",
+          "pressure_pa": 128516.11452287162,
+          "provider_order": 38,
+          "temperature_k": 59.063477205875465
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 190348.5663433876,
+          "provider_order": 37,
+          "temperature_k": 63.10066261249501
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 271070.03683102917,
+          "provider_order": 36,
+          "temperature_k": 67.27554318358787
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 372239.99507767527,
+          "provider_order": 35,
+          "temperature_k": 71.57040056492488
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 494080.5659882695,
+          "provider_order": 34,
+          "temperature_k": 75.96682014149224
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 635096.6835531825,
+          "provider_order": 33,
+          "temperature_k": 80.44998222349932
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 791949.8562025942,
+          "provider_order": 32,
+          "temperature_k": 85.01832296680143
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 959854.7977747911,
+          "provider_order": 31,
+          "temperature_k": 89.70246476584285
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1133403.2886223672,
+          "provider_order": 30,
+          "temperature_k": 94.5844340437686
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1306433.233616877,
+          "provider_order": 29,
+          "temperature_k": 99.76289390796704
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1471391.4214120277,
+          "provider_order": 28,
+          "temperature_k": 105.25799877014542
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1621658.9630837103,
+          "provider_order": 27,
+          "temperature_k": 111.00887342565494
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1753626.3647371219,
+          "provider_order": 26,
+          "temperature_k": 116.94326529267896
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1866168.4863624515,
+          "provider_order": 25,
+          "temperature_k": 123.00402869023137
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 1959626.1933782739,
+          "provider_order": 24,
+          "temperature_k": 129.14624094586682
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2035201.0191544103,
+          "provider_order": 23,
+          "temperature_k": 135.3317745635195
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2094656.1432110255,
+          "provider_order": 22,
+          "temperature_k": 141.5264290439399
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2140153.967426791,
+          "provider_order": 21,
+          "temperature_k": 147.69898032380502
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2174140.976987988,
+          "provider_order": 20,
+          "temperature_k": 153.82126041073892
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2199242.824356422,
+          "provider_order": 19,
+          "temperature_k": 159.86870431432519
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2218160.175732855,
+          "provider_order": 18,
+          "temperature_k": 165.8210138181647
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2233569.867966153,
+          "provider_order": 17,
+          "temperature_k": 171.66271483533177
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2248041.2387207136,
+          "provider_order": 16,
+          "temperature_k": 177.3834807811824
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2263976.833492385,
+          "provider_order": 15,
+          "temperature_k": 182.97817658674379
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2283582.679241574,
+          "provider_order": 14,
+          "temperature_k": 188.4466444610601
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2308868.4963489426,
+          "provider_order": 13,
+          "temperature_k": 193.79329701507908
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2341674.4800501233,
+          "provider_order": 12,
+          "temperature_k": 199.02660389198928
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2383719.4908603407,
+          "provider_order": 11,
+          "temperature_k": 204.15855847258172
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2436665.6417567544,
+          "provider_order": 10,
+          "temperature_k": 209.20419899901688
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2509911.1920064674,
+          "provider_order": 9,
+          "temperature_k": 214.70286957168037
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2613011.0574588967,
+          "provider_order": 8,
+          "temperature_k": 220.78457340631527
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2761835.1934034214,
+          "provider_order": 7,
+          "temperature_k": 227.6499728579389
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 3101545.3005423415,
+          "provider_order": 6,
+          "temperature_k": 239.11545307951644
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 3565609.3814726966,
+          "provider_order": 5,
+          "temperature_k": 250.33400834070667
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 4175932.039002391,
+          "provider_order": 4,
+          "temperature_k": 261.4297209027102
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 4961103.912895523,
+          "provider_order": 3,
+          "temperature_k": 272.5658085651523
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 5973389.343774698,
+          "provider_order": 2,
+          "temperature_k": 284.0977677664246
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7099008.391678119,
+          "provider_order": 1,
+          "temperature_k": 294.9019447244966
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7711087.628830428,
+          "provider_order": 0,
+          "temperature_k": 300.6146324600056
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 110517.09180756476,
+          "provider_order": 39,
+          "temperature_k": 186.26461687006258
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 122140.27581601699,
+          "provider_order": 40,
+          "temperature_k": 187.9090915333354
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 134985.88075760033,
+          "provider_order": 41,
+          "temperature_k": 189.58729772491733
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 149182.46976412705,
+          "provider_order": 42,
+          "temperature_k": 191.30027867193928
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 165825.16417073764,
+          "provider_order": 43,
+          "temperature_k": 193.15103198331474
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 186176.96633903592,
+          "provider_order": 44,
+          "temperature_k": 195.22432039323124
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 211306.15468802158,
+          "provider_order": 45,
+          "temperature_k": 197.55085245007274
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 242657.6232079181,
+          "provider_order": 46,
+          "temperature_k": 200.1662810916028
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 282207.3867884753,
+          "provider_order": 47,
+          "temperature_k": 203.11205185802373
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 332687.5696923897,
+          "provider_order": 48,
+          "temperature_k": 206.43634157035171
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 397915.6430151273,
+          "provider_order": 49,
+          "temperature_k": 210.19503070060324
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 483276.798205798,
+          "provider_order": 50,
+          "temperature_k": 214.4525745122364
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 596427.1786368649,
+          "provider_order": 51,
+          "temperature_k": 219.28248688039105
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 748303.159605479,
+          "provider_order": 52,
+          "temperature_k": 224.76686375921176
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 954519.4410467257,
+          "provider_order": 53,
+          "temperature_k": 230.99383794108655
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 1237162.54834652,
+          "provider_order": 54,
+          "temperature_k": 238.05087962741143
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 1626697.976651349,
+          "provider_order": 55,
+          "temperature_k": 246.01013706497466
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 2162891.7590649202,
+          "provider_order": 56,
+          "temperature_k": 254.89918277635684
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 2891695.353897139,
+          "provider_order": 57,
+          "temperature_k": 264.64651474996424
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 3774652.8510092576,
+          "provider_order": 58,
+          "temperature_k": 274.2386775093746
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 4817519.183300341,
+          "provider_order": 59,
+          "temperature_k": 283.57390480717277
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 5722353.451761903,
+          "provider_order": 60,
+          "temperature_k": 290.45028261017364
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 6591742.199207889,
+          "provider_order": 61,
+          "temperature_k": 296.2045610134891
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 7341837.141195535,
+          "provider_order": 62,
+          "temperature_k": 300.47224143592274
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 7774725.65228617,
+          "provider_order": 63,
+          "temperature_k": 302.2271261189044
+        },
+        {
+          "branch": "critical",
+          "pressure_pa": 7799089.281728548,
+          "provider_order": 64,
+          "temperature_k": 302.18579860501626
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.97
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.03
+          }
+        ],
+        "maximum_points": 240,
+        "timeout_seconds": 60.0,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim phase envelope is integration output only and has not completed PhaseXpert scientific validation.",
+        "Straight chart segments are display-only connections between adjacent finite NeqSim points."
+      ]
+    },
+    {
+      "bubble_count": 83,
+      "calculation_id": "a488cfa6-c070-498f-b875-4dffdc13e28d",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 64.4917079989682,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos calcPTphaseEnvelope",
+        "status": "completed"
+      },
+      "critical_count": 1,
+      "dew_count": 26,
+      "elapsed_ms": 66.681,
+      "http_status": 200,
+      "id": "co2-90-n2-10",
+      "is_available": true,
+      "is_complete": true,
+      "point_count": 110,
+      "points": [
+        {
+          "branch": "bubble",
+          "pressure_pa": 110517.09180756476,
+          "provider_order": 51,
+          "temperature_k": 54.67022174565088
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 122140.27581601699,
+          "provider_order": 52,
+          "temperature_k": 55.360741813713496
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 134985.88075760033,
+          "provider_order": 53,
+          "temperature_k": 56.06651141624729
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 149182.46976412705,
+          "provider_order": 54,
+          "temperature_k": 56.78758237412624
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 152115.73475852408,
+          "provider_order": 55,
+          "temperature_k": 56.929763197291
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 155409.8060405546,
+          "provider_order": 56,
+          "temperature_k": 57.08686842121531
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 159116.77689586004,
+          "provider_order": 57,
+          "temperature_k": 57.26053895066503
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 163297.98183298987,
+          "provider_order": 58,
+          "temperature_k": 57.45261049904539
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 168026.01852296633,
+          "provider_order": 59,
+          "temperature_k": 57.66513906596948
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 173387.3004713888,
+          "provider_order": 60,
+          "temperature_k": 57.90042987848054
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 179485.30242343317,
+          "provider_order": 61,
+          "temperature_k": 58.16107008718831
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 186444.71646238246,
+          "provider_order": 62,
+          "temperature_k": 58.449965342366745
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 194416.81381114415,
+          "provider_order": 63,
+          "temperature_k": 58.77038000373579
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 203586.41338616566,
+          "provider_order": 64,
+          "temperature_k": 59.12597996871405
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 214181.0029281034,
+          "provider_order": 65,
+          "temperature_k": 59.520875552596614
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 226482.75135104937,
+          "provider_order": 66,
+          "temperature_k": 59.959658720902304
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 240844.39107987512,
+          "provider_order": 67,
+          "temperature_k": 60.44742251321999
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 257710.1912776766,
+          "provider_order": 68,
+          "temperature_k": 60.989736646985115
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 277643.27383538993,
+          "provider_order": 69,
+          "temperature_k": 61.5925217953145
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 301359.49506241817,
+          "provider_order": 70,
+          "temperature_k": 62.261687123722105
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 329762.54186802276,
+          "provider_order": 71,
+          "temperature_k": 63.00217825764642
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 2746739.4940211824,
+          "provider_order": 82,
+          "temperature_k": 63.37242336034268
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 363948.26737087604,
+          "provider_order": 72,
+          "temperature_k": 63.81535787539066
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 404995.15438451763,
+          "provider_order": 73,
+          "temperature_k": 64.69041871913282
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 866763.0377360778,
+          "provider_order": 81,
+          "temperature_k": 65.3876448722142
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 451890.6380978425,
+          "provider_order": 74,
+          "temperature_k": 65.55988324518388
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 542312.9629210968,
+          "provider_order": 78,
+          "temperature_k": 65.74796361423854
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 534655.1717553344,
+          "provider_order": 77,
+          "temperature_k": 65.75651534064346
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 532512.1850443425,
+          "provider_order": 79,
+          "temperature_k": 65.75890889656864
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 515603.95190312783,
+          "provider_order": 76,
+          "temperature_k": 65.77780008767915
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 499269.037780941,
+          "provider_order": 80,
+          "temperature_k": 65.79606100163124
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 488446.4028947487,
+          "provider_order": 75,
+          "temperature_k": 65.80816517180408
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 13857260.45297598,
+          "provider_order": 50,
+          "temperature_k": 150.6752906055677
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 13285446.831277918,
+          "provider_order": 49,
+          "temperature_k": 151.52393981622745
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 12786117.711198661,
+          "provider_order": 48,
+          "temperature_k": 152.34681224158558
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 12327372.428898958,
+          "provider_order": 47,
+          "temperature_k": 153.1864430522626
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 11945614.950681133,
+          "provider_order": 46,
+          "temperature_k": 153.96067900863193
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 11622855.620215591,
+          "provider_order": 45,
+          "temperature_k": 154.6808260350074
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 11346045.312366672,
+          "provider_order": 44,
+          "temperature_k": 155.35617041497588
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 11105504.173961015,
+          "provider_order": 43,
+          "temperature_k": 155.99452127239664
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 10893897.974815384,
+          "provider_order": 42,
+          "temperature_k": 156.60263065522113
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 10705550.453629041,
+          "provider_order": 41,
+          "temperature_k": 157.18654163522504
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 10535966.135889072,
+          "provider_order": 40,
+          "temperature_k": 157.75190591477923
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 10381485.218496256,
+          "provider_order": 39,
+          "temperature_k": 158.30431439641364
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 10229279.047942398,
+          "provider_order": 38,
+          "temperature_k": 158.88835265913247
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 10092847.127685633,
+          "provider_order": 37,
+          "temperature_k": 159.44996526529505
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9970397.78162809,
+          "provider_order": 36,
+          "temperature_k": 159.98869199442197
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9860369.818999961,
+          "provider_order": 35,
+          "temperature_k": 160.50411991528708
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9761398.40479058,
+          "provider_order": 34,
+          "temperature_k": 160.99592101230394
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9672286.700468285,
+          "provider_order": 33,
+          "temperature_k": 161.46388115324248
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9591982.185544979,
+          "provider_order": 32,
+          "temperature_k": 161.90791981750854
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9519556.795341806,
+          "provider_order": 31,
+          "temperature_k": 162.3281008130898
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9454190.185161013,
+          "provider_order": 30,
+          "temperature_k": 162.72463482240357
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9395155.56780901,
+          "provider_order": 29,
+          "temperature_k": 163.09787503788826
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9341807.678912945,
+          "provider_order": 28,
+          "temperature_k": 163.44830735258518
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9293572.509406885,
+          "provider_order": 27,
+          "temperature_k": 163.77653660604594
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9249938.51199351,
+          "provider_order": 26,
+          "temperature_k": 164.08327029326136
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9210449.042169418,
+          "provider_order": 25,
+          "temperature_k": 164.36930097001112
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9174695.837491078,
+          "provider_order": 24,
+          "temperature_k": 164.63548837243007
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9142313.373428263,
+          "provider_order": 23,
+          "temperature_k": 164.88274204246795
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9112973.962164992,
+          "provider_order": 22,
+          "temperature_k": 165.1120050358571
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9086383.483432729,
+          "provider_order": 21,
+          "temperature_k": 165.324239098091
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9062277.654968524,
+          "provider_order": 20,
+          "temperature_k": 165.52041153318532
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 9040418.765320837,
+          "provider_order": 19,
+          "temperature_k": 165.7014838635361
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8966071.702302756,
+          "provider_order": 18,
+          "temperature_k": 166.34109342197235
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8588950.447244532,
+          "provider_order": 17,
+          "temperature_k": 170.2682057762314
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8335364.596451157,
+          "provider_order": 16,
+          "temperature_k": 173.7595513878499
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7841694.538885315,
+          "provider_order": 15,
+          "temperature_k": 183.68416002228489
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7578062.250434203,
+          "provider_order": 14,
+          "temperature_k": 191.68330719088067
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7401698.887227353,
+          "provider_order": 13,
+          "temperature_k": 198.89274087356938
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7278225.003814923,
+          "provider_order": 12,
+          "temperature_k": 205.5979028737064
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7193946.756998699,
+          "provider_order": 11,
+          "temperature_k": 211.9197297538943
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7142025.213595397,
+          "provider_order": 10,
+          "temperature_k": 217.92376958090915
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7118451.263119,
+          "provider_order": 9,
+          "temperature_k": 223.65186281433847
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7120528.622718274,
+          "provider_order": 8,
+          "temperature_k": 229.13401243372093
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7150223.766508793,
+          "provider_order": 7,
+          "temperature_k": 234.9359462654989
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7214748.964888219,
+          "provider_order": 6,
+          "temperature_k": 241.13086866856946
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7437569.134077182,
+          "provider_order": 5,
+          "temperature_k": 252.9410855725768
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 7797133.109562577,
+          "provider_order": 4,
+          "temperature_k": 264.74916470718466
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8299559.92236793,
+          "provider_order": 3,
+          "temperature_k": 276.86620911261593
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8755195.547406092,
+          "provider_order": 2,
+          "temperature_k": 286.6070884977909
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8986623.84548389,
+          "provider_order": 1,
+          "temperature_k": 292.97492035209734
+        },
+        {
+          "branch": "bubble",
+          "pressure_pa": 8936432.001485232,
+          "provider_order": 0,
+          "temperature_k": 296.4979437072478
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 14514721.769059867,
+          "provider_order": 108,
+          "temperature_k": 149.7986503784304
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 110517.09180756476,
+          "provider_order": 83,
+          "temperature_k": 185.02753685690843
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 122140.27581601699,
+          "provider_order": 84,
+          "temperature_k": 186.64458168918003
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 134985.88075760033,
+          "provider_order": 85,
+          "temperature_k": 188.2942994294078
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 149182.46976412705,
+          "provider_order": 86,
+          "temperature_k": 189.9776723765238
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 165891.09644506252,
+          "provider_order": 87,
+          "temperature_k": 191.80272834119316
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 186336.45276620617,
+          "provider_order": 88,
+          "temperature_k": 193.8470426544705
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 211599.76565556676,
+          "provider_order": 89,
+          "temperature_k": 196.14083403814757
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 243145.81905960967,
+          "provider_order": 90,
+          "temperature_k": 198.71917967625046
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 282981.70268831175,
+          "provider_order": 91,
+          "temperature_k": 201.62284725167297
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 333888.97158860264,
+          "provider_order": 92,
+          "temperature_k": 204.89921506578577
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 399765.2324409347,
+          "provider_order": 93,
+          "temperature_k": 208.60322382971822
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 486128.1892922011,
+          "provider_order": 94,
+          "temperature_k": 212.7982262184072
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 600857.6244520159,
+          "provider_order": 95,
+          "temperature_k": 217.5564500375867
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 755275.1758795846,
+          "provider_order": 96,
+          "temperature_k": 222.95850483554045
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 965672.5908626694,
+          "provider_order": 97,
+          "temperature_k": 229.09082555570993
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 1255347.870898936,
+          "provider_order": 98,
+          "temperature_k": 236.03896085977766
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 1656964.8514264189,
+          "provider_order": 99,
+          "temperature_k": 243.87285652492375
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 2214304.0165628237,
+          "provider_order": 100,
+          "temperature_k": 252.61732978638994
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 2980591.840617853,
+          "provider_order": 101,
+          "temperature_k": 262.1965248728591
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 3942564.0275412546,
+          "provider_order": 102,
+          "temperature_k": 271.76891780482293
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 5112249.309936805,
+          "provider_order": 103,
+          "temperature_k": 281.05417905605464
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 6035510.806294666,
+          "provider_order": 104,
+          "temperature_k": 287.05877024767005
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 6939129.121747665,
+          "provider_order": 105,
+          "temperature_k": 291.959274640953
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 7805695.87197015,
+          "provider_order": 106,
+          "temperature_k": 295.6533440273465
+        },
+        {
+          "branch": "dew",
+          "pressure_pa": 8533377.665210273,
+          "provider_order": 107,
+          "temperature_k": 297.45412580192055
+        },
+        {
+          "branch": "critical",
+          "pressure_pa": 8853201.516698766,
+          "provider_order": 109,
+          "temperature_k": 297.06497712904195
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.9
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.1
+          }
+        ],
+        "maximum_points": 240,
+        "timeout_seconds": 60.0,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim phase envelope is integration output only and has not completed PhaseXpert scientific validation.",
+        "Straight chart segments are display-only connections between adjacent finite NeqSim points."
+      ]
+    }
+  ],
+  "schema_version": "phasexpert-neqsim-reference-dataset.v1",
+  "source": "local development NeqSim service on 127.0.0.1:8091; software parity reference only, not experimental validation",
+  "state_cases": [
+    {
+      "calculation_id": "3f2fd5d7-4e51-436d-9068-3c7acfa4c180",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 49.355082999682054,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos TPflash + initProperties",
+        "status": "completed"
+      },
+      "elapsed_ms": 51.595,
+      "http_status": 200,
+      "id": "pure-co2-10bar-20c",
+      "phase": "gas",
+      "properties": [
+        {
+          "message": null,
+          "property": "density",
+          "status": "calculated",
+          "unit": "kg/m\u00b3",
+          "value": 19.115093375838327
+        },
+        {
+          "message": null,
+          "property": "dynamicViscosity",
+          "status": "calculated",
+          "unit": "Pa\u00b7s",
+          "value": 1.5440229546895744e-05
+        },
+        {
+          "message": null,
+          "property": "molarMass",
+          "status": "calculated",
+          "unit": "kg/mol",
+          "value": 0.04401
+        },
+        {
+          "message": null,
+          "property": "compressibilityFactor",
+          "status": "calculated",
+          "unit": "1",
+          "value": 0.9459716409221512
+        },
+        {
+          "message": null,
+          "property": "specificVolume",
+          "status": "calculated",
+          "unit": "m\u00b3/kg",
+          "value": 0.05231468035955347
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "enthalpy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "entropy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "internalEnergy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isobaricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isochoricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "heatCapacityRatio",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "speedOfSound",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalConductivity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "jouleThomsonCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isothermalCompressibility",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalExpansionCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "vapourFraction",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 1.0
+          }
+        ],
+        "pressure_pa": 1000000.0,
+        "temperature_k": 293.15,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim remote result is integration output only and has not completed PhaseXpert scientific validation."
+      ]
+    },
+    {
+      "calculation_id": "cfaa0a80-17ec-4329-b2c2-8a8552e464e8",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 43.98987500462681,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos TPflash + initProperties",
+        "status": "completed"
+      },
+      "elapsed_ms": 45.735,
+      "http_status": 200,
+      "id": "pure-co2-150bar-20c",
+      "phase": "gas",
+      "properties": [
+        {
+          "message": null,
+          "property": "density",
+          "status": "calculated",
+          "unit": "kg/m\u00b3",
+          "value": 859.8511831475683
+        },
+        {
+          "message": null,
+          "property": "dynamicViscosity",
+          "status": "calculated",
+          "unit": "Pa\u00b7s",
+          "value": 8.590149536348022e-05
+        },
+        {
+          "message": null,
+          "property": "molarMass",
+          "status": "calculated",
+          "unit": "kg/mol",
+          "value": 0.04401
+        },
+        {
+          "message": null,
+          "property": "compressibilityFactor",
+          "status": "calculated",
+          "unit": "1",
+          "value": 0.33546738881009397
+        },
+        {
+          "message": null,
+          "property": "specificVolume",
+          "status": "calculated",
+          "unit": "m\u00b3/kg",
+          "value": 0.0011629919451170648
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "enthalpy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "entropy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "internalEnergy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isobaricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isochoricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "heatCapacityRatio",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "speedOfSound",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalConductivity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "jouleThomsonCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isothermalCompressibility",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalExpansionCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "vapourFraction",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 1.0
+          }
+        ],
+        "pressure_pa": 15000000.0,
+        "temperature_k": 293.15,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim remote result is integration output only and has not completed PhaseXpert scientific validation."
+      ]
+    },
+    {
+      "calculation_id": "52417e78-e0a5-479d-99d9-d700b58e0e68",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 61.61350000184029,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos TPflash + initProperties",
+        "status": "completed"
+      },
+      "elapsed_ms": 64.19,
+      "http_status": 200,
+      "id": "co2-97-n2-3-10bar-20c",
+      "phase": "gas",
+      "properties": [
+        {
+          "message": null,
+          "property": "density",
+          "status": "calculated",
+          "unit": "kg/m\u00b3",
+          "value": 18.859618087820134
+        },
+        {
+          "message": null,
+          "property": "dynamicViscosity",
+          "status": "calculated",
+          "unit": "Pa\u00b7s",
+          "value": 1.5522879793998703e-05
+        },
+        {
+          "message": null,
+          "property": "molarMass",
+          "status": "calculated",
+          "unit": "kg/mol",
+          "value": 0.043530105
+        },
+        {
+          "message": null,
+          "property": "compressibilityFactor",
+          "status": "calculated",
+          "unit": "1",
+          "value": 0.9482981855848135
+        },
+        {
+          "message": null,
+          "property": "specificVolume",
+          "status": "calculated",
+          "unit": "m\u00b3/kg",
+          "value": 0.05302334306789686
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "enthalpy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "entropy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "internalEnergy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isobaricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isochoricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "heatCapacityRatio",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "speedOfSound",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalConductivity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "jouleThomsonCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isothermalCompressibility",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalExpansionCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "vapourFraction",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.97
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.03
+          }
+        ],
+        "pressure_pa": 1000000.0,
+        "temperature_k": 293.15,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim remote result is integration output only and has not completed PhaseXpert scientific validation."
+      ]
+    },
+    {
+      "calculation_id": "49956991-9955-4e9c-9e76-66e8659feebf",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 46.13570799847366,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos TPflash + initProperties",
+        "status": "completed"
+      },
+      "elapsed_ms": 47.887,
+      "http_status": 200,
+      "id": "co2-97-n2-3-150bar-20c",
+      "phase": "gas",
+      "properties": [
+        {
+          "message": null,
+          "property": "density",
+          "status": "calculated",
+          "unit": "kg/m\u00b3",
+          "value": 820.9294755404803
+        },
+        {
+          "message": null,
+          "property": "dynamicViscosity",
+          "status": "calculated",
+          "unit": "Pa\u00b7s",
+          "value": 7.852861718224246e-05
+        },
+        {
+          "message": null,
+          "property": "molarMass",
+          "status": "calculated",
+          "unit": "kg/mol",
+          "value": 0.043530105
+        },
+        {
+          "message": null,
+          "property": "compressibilityFactor",
+          "status": "calculated",
+          "unit": "1",
+          "value": 0.34636137696175967
+        },
+        {
+          "message": null,
+          "property": "specificVolume",
+          "status": "calculated",
+          "unit": "m\u00b3/kg",
+          "value": 0.0012181314349099524
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "enthalpy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "entropy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "internalEnergy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isobaricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isochoricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "heatCapacityRatio",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "speedOfSound",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalConductivity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "jouleThomsonCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isothermalCompressibility",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalExpansionCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "vapourFraction",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.97
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.03
+          }
+        ],
+        "pressure_pa": 15000000.0,
+        "temperature_k": 293.15,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim remote result is integration output only and has not completed PhaseXpert scientific validation."
+      ]
+    },
+    {
+      "calculation_id": "b048f4dd-6855-4513-a992-cae41004ac20",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 43.441458998131566,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos TPflash + initProperties",
+        "status": "completed"
+      },
+      "elapsed_ms": 45.456,
+      "http_status": 200,
+      "id": "co2-90-n2-10-10bar-20c",
+      "phase": "gas",
+      "properties": [
+        {
+          "message": null,
+          "property": "density",
+          "status": "calculated",
+          "unit": "kg/m\u00b3",
+          "value": 18.272192218400292
+        },
+        {
+          "message": null,
+          "property": "dynamicViscosity",
+          "status": "calculated",
+          "unit": "Pa\u00b7s",
+          "value": 1.5717778796239943e-05
+        },
+        {
+          "message": null,
+          "property": "molarMass",
+          "status": "calculated",
+          "unit": "kg/mol",
+          "value": 0.04241035
+        },
+        {
+          "message": null,
+          "property": "compressibilityFactor",
+          "status": "calculated",
+          "unit": "1",
+          "value": 0.9535303826119845
+        },
+        {
+          "message": null,
+          "property": "specificVolume",
+          "status": "calculated",
+          "unit": "m\u00b3/kg",
+          "value": 0.05472797068066027
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "enthalpy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "entropy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "internalEnergy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isobaricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isochoricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "heatCapacityRatio",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "speedOfSound",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalConductivity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "jouleThomsonCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isothermalCompressibility",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalExpansionCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "vapourFraction",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.9
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.1
+          }
+        ],
+        "pressure_pa": 1000000.0,
+        "temperature_k": 293.15,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim remote result is integration output only and has not completed PhaseXpert scientific validation."
+      ]
+    },
+    {
+      "calculation_id": "3217d56c-ea2a-4e3e-a168-5971980629f7",
+      "convergence": {
+        "converged": true,
+        "duration_ms": 43.318542004271876,
+        "iteration_count": null,
+        "method": "NeqSim SystemSrkEos TPflash + initProperties",
+        "status": "completed"
+      },
+      "elapsed_ms": 45.175,
+      "http_status": 200,
+      "id": "co2-90-n2-10-150bar-20c",
+      "phase": "gas",
+      "properties": [
+        {
+          "message": null,
+          "property": "density",
+          "status": "calculated",
+          "unit": "kg/m\u00b3",
+          "value": 724.565283000126
+        },
+        {
+          "message": null,
+          "property": "dynamicViscosity",
+          "status": "calculated",
+          "unit": "Pa\u00b7s",
+          "value": 6.294607688291498e-05
+        },
+        {
+          "message": null,
+          "property": "molarMass",
+          "status": "calculated",
+          "unit": "kg/mol",
+          "value": 0.04241035
+        },
+        {
+          "message": null,
+          "property": "compressibilityFactor",
+          "status": "calculated",
+          "unit": "1",
+          "value": 0.37921781151096556
+        },
+        {
+          "message": null,
+          "property": "specificVolume",
+          "status": "calculated",
+          "unit": "m\u00b3/kg",
+          "value": 0.0013801378888309587
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "enthalpy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "entropy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "internalEnergy",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isobaricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isochoricHeatCapacity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "heatCapacityRatio",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "speedOfSound",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalConductivity",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "jouleThomsonCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "isothermalCompressibility",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "thermalExpansionCoefficient",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        },
+        {
+          "message": "This property is not exposed by the initial NeqSim remote contract.",
+          "property": "vapourFraction",
+          "status": "unavailable",
+          "unit": "",
+          "value": null
+        }
+      ],
+      "provenance": {
+        "alpha_function": "NeqSim default for SystemSrkEos component parameters",
+        "api_schema_version": "neqsim-provider.v1",
+        "eos": "SystemSrkEos",
+        "interaction_data": "neqsim-v3.16.0:src/main/resources/data/INTER.csv:7452:CO2-nitrogen:Classic",
+        "java_runtime_version": "openjdk version \"21.0.12\" 2026-07-21 LTS",
+        "mixing_rule": "classic",
+        "neqsim_source_commit": "3af7b560525b57f2d3da2c803a08e2b41a8d7f5a",
+        "neqsim_version": "3.16.0",
+        "provider_capability_version": "2026.08-pr23",
+        "provider_id": "neqsim-remote-srk-classic",
+        "service_version": "0.1.0"
+      },
+      "request": {
+        "composition": [
+          {
+            "component": "co2",
+            "mole_fraction": 0.9
+          },
+          {
+            "component": "n2",
+            "mole_fraction": 0.1
+          }
+        ],
+        "pressure_pa": 15000000.0,
+        "temperature_k": 293.15,
+        "units": {
+          "composition": "mole_fraction",
+          "pressure": "Pa",
+          "temperature": "K"
+        }
+      },
+      "response": null,
+      "warnings": [
+        "NeqSim remote result is integration output only and has not completed PhaseXpert scientific validation."
+      ]
+    }
+  ],
+  "validation": {
+    "ordering": "phase-envelope points are sorted by branch and ascending temperature for deterministic comparison; each point retains provider_order from the raw NeqSim response",
+    "passed": true,
+    "phase_envelope_errors": {},
+    "state_errors": {}
+  }
+}
