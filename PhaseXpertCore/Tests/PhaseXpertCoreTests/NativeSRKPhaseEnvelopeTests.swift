@@ -132,6 +132,79 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertLessThan(point.finalResidualNorm, 1e-6)
     }
 
+    func testPseudoArcLengthCorrectorContinuesBoundedBubbleState() throws {
+        let composition = [
+            NativeSRKMixtureFraction(component: .carbonDioxide, moleFraction: 0.97),
+            NativeSRKMixtureFraction(component: .nitrogen, moleFraction: 0.03)
+        ]
+        let options = testOptions(minimumTemperatureK: 54)
+        let previous = try tracer.solveBubblePressure(
+            temperatureK: 220,
+            liquidComposition: composition,
+            options: options
+        )
+        let current = try tracer.solveBubblePressure(
+            temperatureK: 228,
+            liquidComposition: composition,
+            options: options,
+            initialPressurePa: previous.pressurePa
+        )
+
+        let diagnostic = try tracer.pseudoArcLengthDiagnosticStep(
+            branch: .bubble,
+            previousTemperatureK: previous.temperatureK,
+            previousPressurePa: previous.pressurePa,
+            previousIncipientCarbonDioxideMoleFraction: try XCTUnwrap(previous.vaporMoleFractions[.carbonDioxide]),
+            currentTemperatureK: current.temperatureK,
+            currentPressurePa: current.pressurePa,
+            currentIncipientCarbonDioxideMoleFraction: try XCTUnwrap(current.vaporMoleFractions[.carbonDioxide]),
+            feedComposition: composition,
+            options: options
+        )
+
+        let corrected = try XCTUnwrap(diagnostic.correctedPoint)
+        XCTAssertEqual(corrected.branch, .bubble)
+        XCTAssertTrue(diagnostic.isContinuousWithSeed)
+        XCTAssertLessThan(diagnostic.finalResidualNorm, 1e-8)
+        XCTAssertGreaterThan(corrected.temperatureK, current.temperatureK)
+        XCTAssertLessThan(corrected.temperatureK - current.temperatureK, 12)
+        XCTAssertTrue(diagnostic.tangent.allSatisfy(\.isFinite))
+    }
+
+    func testPseudoArcLengthRejectsDetachedColdBubbleJump() throws {
+        let composition = [
+            NativeSRKMixtureFraction(component: .carbonDioxide, moleFraction: 0.90),
+            NativeSRKMixtureFraction(component: .nitrogen, moleFraction: 0.10)
+        ]
+        let options = testOptions(minimumTemperatureK: 54)
+        let main = try tracer.solveBubblePressure(
+            temperatureK: 139.986665,
+            liquidComposition: composition,
+            options: options
+        )
+        let detached = try tracer.solveBubblePressure(
+            temperatureK: 61.875,
+            liquidComposition: composition,
+            options: options
+        )
+
+        let diagnostic = try tracer.pseudoArcLengthDiagnosticStep(
+            branch: .bubble,
+            previousTemperatureK: main.temperatureK,
+            previousPressurePa: main.pressurePa,
+            previousIncipientCarbonDioxideMoleFraction: try XCTUnwrap(main.vaporMoleFractions[.carbonDioxide]),
+            currentTemperatureK: detached.temperatureK,
+            currentPressurePa: detached.pressurePa,
+            currentIncipientCarbonDioxideMoleFraction: try XCTUnwrap(detached.vaporMoleFractions[.carbonDioxide]),
+            feedComposition: composition,
+            options: options
+        )
+
+        XCTAssertNil(diagnostic.correctedPoint)
+        XCTAssertFalse(diagnostic.isContinuousWithSeed)
+        XCTAssertTrue(diagnostic.terminationReason.contains("incipient composition boundary"))
+    }
+
     func testIterationLimitBoundsTraceWork() throws {
         let result = try tracer.phaseEnvelope(
             composition: [

@@ -187,6 +187,22 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let composition: [Double]
     }
 
+    public struct PseudoArcLengthDiagnostic: Sendable, Equatable {
+        public let predictedTemperatureK: Double
+        public let predictedPressurePa: Double
+        public let correctedPoint: NativeSRKEnvelopePoint?
+        public let tangent: [Double]
+        public let finalResidualNorm: Double
+        public let terminationReason: String
+        public let isContinuousWithSeed: Bool
+    }
+
+    fileprivate struct ArcState {
+        let temperatureK: Double
+        let logPressure: Double
+        let compositionLogit: Double
+    }
+
     public static let gasConstant = 8.314_462_618_153_24
 
     private let parameters: [ComponentID: Parameter] = [
@@ -361,6 +377,114 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             outcome: outcome,
             components: composition.map(\.component)
         )
+    }
+
+    public func pseudoArcLengthDiagnosticStep(
+        branch: NativeSRKEnvelopeBranch,
+        previousTemperatureK: Double,
+        previousPressurePa: Double,
+        previousIncipientCarbonDioxideMoleFraction: Double,
+        currentTemperatureK: Double,
+        currentPressurePa: Double,
+        currentIncipientCarbonDioxideMoleFraction: Double,
+        feedComposition: [NativeSRKMixtureFraction],
+        options: NativeSRKEnvelopeOptions = NativeSRKEnvelopeOptions(),
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> PseudoArcLengthDiagnostic {
+        let composition = try validatedComposition(feedComposition)
+        guard composition.count == 2 else {
+            throw NativeSRKError.invalidComposition("Pseudo-arc diagnostic currently supports binary mixtures only.")
+        }
+        let components = composition.map(\.component)
+        let feedFractions = composition.map(\.moleFraction)
+        let previous = ArcState(
+            temperatureK: previousTemperatureK,
+            logPressure: log(previousPressurePa),
+            compositionLogit: logit(previousIncipientCarbonDioxideMoleFraction)
+        )
+        let current = ArcState(
+            temperatureK: currentTemperatureK,
+            logPressure: log(currentPressurePa),
+            compositionLogit: logit(currentIncipientCarbonDioxideMoleFraction)
+        )
+        let tangent = try arcTangent(
+            branch: branch,
+            state: current,
+            preferredDirection: arcDelta(from: previous, to: current),
+            feedFractions: feedFractions,
+            components: components,
+            options: options
+        )
+        let arcStep = min(
+            0.4,
+            max(0.05, scaledArcDistance(from: previous, to: current) * 0.5)
+        )
+        let predictor = boundedArcState(
+            ArcState(
+                temperatureK: current.temperatureK + tangent[0] * arcStep,
+                logPressure: current.logPressure + tangent[1] * arcStep,
+                compositionLogit: current.compositionLogit + tangent[2] * arcStep
+            ),
+            options: options
+        )
+        do {
+            let corrected = try correctPseudoArcLength(
+                branch: branch,
+                predictor: predictor,
+                tangent: tangent,
+                current: current,
+                feedFractions: feedFractions,
+                components: components,
+                options: options,
+                shouldCancel: shouldCancel
+            )
+            let residual = try arcEquilibriumResidual(
+                branch: branch,
+                state: corrected,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let outcome = try coupledOutcome(
+                branch: branch,
+                temperatureK: corrected.temperatureK,
+                feedFractions: feedFractions,
+                state: [corrected.logPressure, corrected.compositionLogit],
+                components: components,
+                iterations: options.maximumIterationsPerSolve,
+                residualNorm: vectorNorm(residual),
+                stepNorm: scaledArcDistance(from: current, to: corrected),
+                terminationReason: "pseudo-arc-length bordered corrector converged"
+            )
+            let point = point(
+                branch: branch,
+                temperatureK: corrected.temperatureK,
+                outcome: outcome,
+                components: components
+            )
+            let pressureJump = abs(corrected.logPressure - current.logPressure)
+            let temperatureJump = abs(corrected.temperatureK - current.temperatureK)
+            return PseudoArcLengthDiagnostic(
+                predictedTemperatureK: predictor.temperatureK,
+                predictedPressurePa: exp(predictor.logPressure),
+                correctedPoint: point,
+                tangent: tangent,
+                finalResidualNorm: vectorNorm(residual),
+                terminationReason: "pseudo-arc-length bordered corrector converged",
+                isContinuousWithSeed: pressureJump <= log(3.0)
+                    && temperatureJump <= max(12.0, options.maximumTemperatureStepK * 2)
+            )
+        } catch {
+            return PseudoArcLengthDiagnostic(
+                predictedTemperatureK: predictor.temperatureK,
+                predictedPressurePa: exp(predictor.logPressure),
+                correctedPoint: nil,
+                tangent: tangent,
+                finalResidualNorm: .infinity,
+                terminationReason: "\(error)",
+                isContinuousWithSeed: false
+            )
+        }
     }
 
     private func tracePureCarbonDioxide(
@@ -919,6 +1043,300 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         return [
             [columns[0][0], columns[1][0]],
             [columns[0][1], columns[1][1]]
+        ]
+    }
+
+    private func arcEquilibriumResidual(
+        branch: NativeSRKEnvelopeBranch,
+        state: ArcState,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [Double] {
+        try coupledResidual(
+            branch: branch,
+            temperatureK: state.temperatureK,
+            feedFractions: feedFractions,
+            state: [state.logPressure, state.compositionLogit],
+            components: components,
+            options: options
+        )
+    }
+
+    private func arcJacobian(
+        branch: NativeSRKEnvelopeBranch,
+        state: ArcState,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [[Double]] {
+        let steps = [max(1e-3, state.temperatureK * 1e-6), 1e-4, 1e-4]
+        var columns: [[Double]] = []
+        for index in 0..<3 {
+            var lower = state
+            var upper = state
+            switch index {
+            case 0:
+                lower = ArcState(
+                    temperatureK: state.temperatureK - steps[index],
+                    logPressure: state.logPressure,
+                    compositionLogit: state.compositionLogit
+                )
+                upper = ArcState(
+                    temperatureK: state.temperatureK + steps[index],
+                    logPressure: state.logPressure,
+                    compositionLogit: state.compositionLogit
+                )
+            case 1:
+                lower = ArcState(
+                    temperatureK: state.temperatureK,
+                    logPressure: state.logPressure - steps[index],
+                    compositionLogit: state.compositionLogit
+                )
+                upper = ArcState(
+                    temperatureK: state.temperatureK,
+                    logPressure: state.logPressure + steps[index],
+                    compositionLogit: state.compositionLogit
+                )
+            default:
+                lower = ArcState(
+                    temperatureK: state.temperatureK,
+                    logPressure: state.logPressure,
+                    compositionLogit: state.compositionLogit - steps[index]
+                )
+                upper = ArcState(
+                    temperatureK: state.temperatureK,
+                    logPressure: state.logPressure,
+                    compositionLogit: state.compositionLogit + steps[index]
+                )
+            }
+            lower = boundedArcState(lower, options: options)
+            upper = boundedArcState(upper, options: options)
+            let lowerResidual = try arcEquilibriumResidual(
+                branch: branch,
+                state: lower,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let upperResidual = try arcEquilibriumResidual(
+                branch: branch,
+                state: upper,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let denominator: Double
+            switch index {
+            case 0:
+                denominator = upper.temperatureK - lower.temperatureK
+            case 1:
+                denominator = upper.logPressure - lower.logPressure
+            default:
+                denominator = upper.compositionLogit - lower.compositionLogit
+            }
+            guard denominator.isFinite, abs(denominator) > .ulpOfOne else {
+                throw NativeSRKError.invalidComposition("Pseudo-arc finite-difference step collapsed.")
+            }
+            columns.append([
+                (upperResidual[0] - lowerResidual[0]) / denominator,
+                (upperResidual[1] - lowerResidual[1]) / denominator
+            ])
+        }
+        return [
+            [columns[0][0], columns[1][0], columns[2][0]],
+            [columns[0][1], columns[1][1], columns[2][1]]
+        ]
+    }
+
+    private func arcTangent(
+        branch: NativeSRKEnvelopeBranch,
+        state: ArcState,
+        preferredDirection: [Double],
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [Double] {
+        let jacobian = try arcJacobian(
+            branch: branch,
+            state: state,
+            feedFractions: feedFractions,
+            components: components,
+            options: options
+        )
+        let tangent = cross(jacobian[0], jacobian[1])
+        guard tangent.allSatisfy(\.isFinite), vectorNorm(tangent) > 1e-12 else {
+            throw NativeSRKError.invalidComposition("Pseudo-arc tangent null space is singular.")
+        }
+        var scaled = normalizeArcDirection(tangent)
+        if dot(scaled, preferredDirection) < 0 {
+            scaled = scaled.map { -$0 }
+        }
+        return scaled
+    }
+
+    private func correctPseudoArcLength(
+        branch: NativeSRKEnvelopeBranch,
+        predictor: ArcState,
+        tangent: [Double],
+        current: ArcState,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> ArcState {
+        var state = predictor
+        var bestNorm = Double.infinity
+        let targetArc = scaledArcDistance(from: current, to: predictor)
+        for _ in 1...min(options.maximumIterationsPerSolve, 32) {
+            if shouldCancel() { throw CancellationError() }
+            let residual = try borderedArcResidual(
+                branch: branch,
+                state: state,
+                predictor: predictor,
+                tangent: tangent,
+                targetArc: targetArc,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let residualNorm = vectorNorm(residual)
+            bestNorm = min(bestNorm, residualNorm)
+            if residualNorm <= options.relativeTolerance {
+                return state
+            }
+            let jacobian = try borderedArcJacobian(
+                branch: branch,
+                state: state,
+                predictor: predictor,
+                tangent: tangent,
+                targetArc: targetArc,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let step = try solveLinear3(jacobian, residual.map { -$0 })
+            let boundedStep = [
+                clamp(step[0], -max(1.0, options.maximumTemperatureStepK), max(1.0, options.maximumTemperatureStepK)),
+                clamp(step[1], -log(1.8), log(1.8)),
+                clamp(step[2], -1.5, 1.5)
+            ]
+            var damping = 1.0
+            var accepted: ArcState?
+            while damping >= 1.0 / 64.0 {
+                if shouldCancel() { throw CancellationError() }
+                let candidate = boundedArcState(
+                    ArcState(
+                        temperatureK: state.temperatureK + damping * boundedStep[0],
+                        logPressure: state.logPressure + damping * boundedStep[1],
+                        compositionLogit: state.compositionLogit + damping * boundedStep[2]
+                    ),
+                    options: options
+                )
+                do {
+                    let candidateResidual = try borderedArcResidual(
+                        branch: branch,
+                        state: candidate,
+                        predictor: predictor,
+                        tangent: tangent,
+                        targetArc: targetArc,
+                        feedFractions: feedFractions,
+                        components: components,
+                        options: options
+                    )
+                    if vectorNorm(candidateResidual) < residualNorm {
+                        accepted = candidate
+                        break
+                    }
+                } catch {
+                    damping /= 2
+                    continue
+                }
+                damping /= 2
+            }
+            guard let accepted else {
+                throw NativeSRKError.invalidComposition(
+                    "Pseudo-arc bordered corrector line search failed; best residual norm \(bestNorm)."
+                )
+            }
+            state = accepted
+        }
+        throw NativeSRKError.invalidComposition(
+            "Pseudo-arc bordered corrector did not converge; best residual norm \(bestNorm)."
+        )
+    }
+
+    private func borderedArcResidual(
+        branch: NativeSRKEnvelopeBranch,
+        state: ArcState,
+        predictor: ArcState,
+        tangent: [Double],
+        targetArc: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [Double] {
+        let equilibrium = try arcEquilibriumResidual(
+            branch: branch,
+            state: state,
+            feedFractions: feedFractions,
+            components: components,
+            options: options
+        )
+        let delta = arcDelta(from: predictor, to: state)
+        let arc = dot(delta, tangent) / max(targetArc, 1e-12)
+        return [equilibrium[0], equilibrium[1], arc]
+    }
+
+    private func borderedArcJacobian(
+        branch: NativeSRKEnvelopeBranch,
+        state: ArcState,
+        predictor: ArcState,
+        tangent: [Double],
+        targetArc: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [[Double]] {
+        let steps = [max(1e-3, state.temperatureK * 1e-6), 1e-4, 1e-4]
+        var columns: [[Double]] = []
+        for index in 0..<3 {
+            let lower = boundedArcState(offset(state, index: index, delta: -steps[index]), options: options)
+            let upper = boundedArcState(offset(state, index: index, delta: steps[index]), options: options)
+            let lowerResidual = try borderedArcResidual(
+                branch: branch,
+                state: lower,
+                predictor: predictor,
+                tangent: tangent,
+                targetArc: targetArc,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let upperResidual = try borderedArcResidual(
+                branch: branch,
+                state: upper,
+                predictor: predictor,
+                tangent: tangent,
+                targetArc: targetArc,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let denominator = coordinate(upper, index: index) - coordinate(lower, index: index)
+            guard denominator.isFinite, abs(denominator) > .ulpOfOne else {
+                throw NativeSRKError.invalidComposition("Pseudo-arc bordered Jacobian step collapsed.")
+            }
+            columns.append([
+                (upperResidual[0] - lowerResidual[0]) / denominator,
+                (upperResidual[1] - lowerResidual[1]) / denominator,
+                (upperResidual[2] - lowerResidual[2]) / denominator
+            ])
+        }
+        return [
+            [columns[0][0], columns[1][0], columns[2][0]],
+            [columns[0][1], columns[1][1], columns[2][1]],
+            [columns[0][2], columns[1][2], columns[2][2]]
         ]
     }
 
@@ -1687,11 +2105,132 @@ private func vectorNorm(_ values: [Double]) -> Double {
     sqrt(values.map { $0 * $0 }.reduce(0, +))
 }
 
+private func cross(_ lhs: [Double], _ rhs: [Double]) -> [Double] {
+    [
+        lhs[1] * rhs[2] - lhs[2] * rhs[1],
+        lhs[2] * rhs[0] - lhs[0] * rhs[2],
+        lhs[0] * rhs[1] - lhs[1] * rhs[0]
+    ]
+}
+
+private func dot(_ lhs: [Double], _ rhs: [Double]) -> Double {
+    zip(lhs, rhs).map(*).reduce(0, +)
+}
+
+private func normalizeArcDirection(_ value: [Double]) -> [Double] {
+    let scaled = [value[0] / 20, value[1], value[2] / 2]
+    let norm = max(vectorNorm(scaled), 1e-12)
+    return [value[0] / norm, value[1] / norm, value[2] / norm]
+}
+
 private func boundedState(_ state: [Double], options: NativeSRKEnvelopeOptions) -> [Double] {
     [
         clamp(state[0], log(options.minimumPressurePa), log(options.maximumPressurePa)),
         clamp(state[1], -30, 30)
     ]
+}
+
+private func boundedArcState(
+    _ state: NativeSRKPhaseEnvelopeTracer.ArcState,
+    options: NativeSRKEnvelopeOptions
+) -> NativeSRKPhaseEnvelopeTracer.ArcState {
+    NativeSRKPhaseEnvelopeTracer.ArcState(
+        temperatureK: clamp(state.temperatureK, options.minimumTemperatureK, options.maximumTemperatureK),
+        logPressure: clamp(state.logPressure, log(options.minimumPressurePa), log(options.maximumPressurePa)),
+        compositionLogit: clamp(state.compositionLogit, -30, 30)
+    )
+}
+
+private func arcDelta(
+    from lhs: NativeSRKPhaseEnvelopeTracer.ArcState,
+    to rhs: NativeSRKPhaseEnvelopeTracer.ArcState
+) -> [Double] {
+    [
+        (rhs.temperatureK - lhs.temperatureK) / 20,
+        rhs.logPressure - lhs.logPressure,
+        (rhs.compositionLogit - lhs.compositionLogit) / 2
+    ]
+}
+
+private func scaledArcDistance(
+    from lhs: NativeSRKPhaseEnvelopeTracer.ArcState,
+    to rhs: NativeSRKPhaseEnvelopeTracer.ArcState
+) -> Double {
+    vectorNorm(arcDelta(from: lhs, to: rhs))
+}
+
+private func offset(
+    _ state: NativeSRKPhaseEnvelopeTracer.ArcState,
+    index: Int,
+    delta: Double
+) -> NativeSRKPhaseEnvelopeTracer.ArcState {
+    switch index {
+    case 0:
+        return NativeSRKPhaseEnvelopeTracer.ArcState(
+            temperatureK: state.temperatureK + delta,
+            logPressure: state.logPressure,
+            compositionLogit: state.compositionLogit
+        )
+    case 1:
+        return NativeSRKPhaseEnvelopeTracer.ArcState(
+            temperatureK: state.temperatureK,
+            logPressure: state.logPressure + delta,
+            compositionLogit: state.compositionLogit
+        )
+    default:
+        return NativeSRKPhaseEnvelopeTracer.ArcState(
+            temperatureK: state.temperatureK,
+            logPressure: state.logPressure,
+            compositionLogit: state.compositionLogit + delta
+        )
+    }
+}
+
+private func coordinate(_ state: NativeSRKPhaseEnvelopeTracer.ArcState, index: Int) -> Double {
+    switch index {
+    case 0:
+        return state.temperatureK
+    case 1:
+        return state.logPressure
+    default:
+        return state.compositionLogit
+    }
+}
+
+private func solveLinear3(_ matrix: [[Double]], _ rhs: [Double]) throws -> [Double] {
+    var augmented = [
+        [matrix[0][0], matrix[0][1], matrix[0][2], rhs[0]],
+        [matrix[1][0], matrix[1][1], matrix[1][2], rhs[1]],
+        [matrix[2][0], matrix[2][1], matrix[2][2], rhs[2]]
+    ]
+    for pivot in 0..<3 {
+        let pivotRow = (pivot..<3).max {
+            abs(augmented[$0][pivot]) < abs(augmented[$1][pivot])
+        }!
+        augmented.swapAt(pivot, pivotRow)
+        let pivotValue = augmented[pivot][pivot]
+        guard pivotValue.isFinite, abs(pivotValue) > 1e-12 else {
+            throw NativeSRKPhaseEnvelopeTracer.NativeSRKError.invalidComposition(
+                "Pseudo-arc bordered system is singular or ill-conditioned."
+            )
+        }
+        for column in pivot...3 {
+            augmented[pivot][column] /= pivotValue
+        }
+        for row in 0..<3 where row != pivot {
+            let factor = augmented[row][pivot]
+            for column in pivot...3 {
+                augmented[row][column] -= factor * augmented[pivot][column]
+            }
+        }
+    }
+    let solution = [augmented[0][3], augmented[1][3], augmented[2][3]]
+    guard solution.allSatisfy(\.isFinite) else {
+        throw NativeSRKPhaseEnvelopeTracer.NativeSRKError.invalidComposition(
+            "Pseudo-arc bordered linear solve produced a non-finite step."
+        )
+    }
+    return solution
 }
 
 private func binaryFractions(fromLogit value: Double) -> [Double] {

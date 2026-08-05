@@ -58,6 +58,8 @@ The implementation includes:
 - safeguarded finite-difference Newton updates with line search, pressure bounds, composition bounds and deterministic singular-Jacobian failure reporting;
 - bounded bubble-solve reseeding from minimized TPD, Wilson estimates and pressure-grid seeds;
 - continuity-oriented dew tracing from Wilson or previous-pressure continuation to avoid jumping to unrelated dew roots;
+- diagnostic pseudo-arc-length continuation state `[T, ln(P), incipient-composition logit]` with finite-difference null-space tangent construction and a bounded bordered corrector;
+- explicit diagnostic rejection for detached or pressure-inconsistent cold-bubble candidates that cannot be connected to an accepted branch;
 - bounded reseeding after branch loss during temperature-oriented continuation;
 - independent bubble and dew tracing over a bounded temperature grid;
 - explicit iteration limits, tolerances, pressure bounds and consecutive-failure limits;
@@ -98,11 +100,11 @@ These are software-parity tolerances only. They are not experimental validation 
 - The prototype is not integrated into the UI or provider registry.
 - Critical-region handling is conservative and rejects coalesced pure-component roots rather than forcing branch closure.
 - The current TPD minimization is bounded and multi-start, but it is still a binary-composition minimizer used for stability diagnostics and seeding rather than a full arc-length continuation corrector.
-- The 90/10 CO2/N2 bubble branch can now produce TPD-backed cold near-boundary points below 140 K, but they are disconnected from the main branch and do not satisfy the pressure-parity gate.
-- The continuation variable is temperature only; arc-length or pressure-oriented continuation may be required for higher coverage.
+- The 90/10 CO2/N2 bubble branch can now produce TPD-backed cold near-boundary points below 140 K, but diagnostic pseudo-arc checks still reject them as disconnected from the main branch and they do not satisfy the pressure-parity gate.
+- The production trace still uses temperature-oriented stepping; the current pseudo-arc machinery is diagnostic and bounded, but it is not yet used to replace the full branch tracer.
 - Simulator and physical-iPhone execution, app-size delta, peak memory and UI responsiveness measurements remain pending.
 - Independent published-data comparisons remain pending.
 
 ## Recommended Next Step
 
-Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be a true pseudo-arc-length continuation with a bordered pressure/composition corrector that can connect or reject the detached cold branch on numerical grounds, not parameter tuning to force visual agreement.
+Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should promote the diagnostic pseudo-arc-length corrector into the actual branch tracer with explicit continuity bookkeeping, so it can either connect the cold branch through bounded steps or reject it from coverage without relying on temperature-only stepping.
