@@ -142,6 +142,7 @@ struct ColdBranchExperimentMetric: Encodable {
     let continuousFlashCount: Int
     let lowestContinuousFlashTemperatureK: Double?
     let flashFailureReason: String
+    let betaLimitDiagnostic: BetaLimitDiagnosticMetric
     let bestContinuousTPD: TPDMinimumMetric?
     let rootClassification: String
     let rootSeparation: Double
@@ -162,12 +163,43 @@ struct ColdBranchExperimentMetric: Encodable {
         case continuousFlashCount = "continuous_flash_count"
         case lowestContinuousFlashTemperatureK = "lowest_continuous_flash_temperature_k"
         case flashFailureReason = "flash_failure_reason"
+        case betaLimitDiagnostic = "beta_limit_diagnostic"
         case bestContinuousTPD = "best_continuous_tpd"
         case rootClassification = "root_classification"
         case rootSeparation = "root_separation"
         case densitySeparationMolesPerCubicMeter = "density_separation_moles_per_cubic_meter"
         case phaseCompositionDistance = "phase_composition_distance"
         case failureClassification = "failure_classification"
+    }
+}
+
+struct BetaLimitDiagnosticMetric: Encodable {
+    let startingTemperatureK: Double?
+    let startingPressurePa: Double?
+    let startingVaporFraction: Double?
+    let betaSchedule: [Double]
+    let attemptedStateCount: Int
+    let acceptedStateCount: Int
+    let lowestAcceptedBeta: Double?
+    let lowestAcceptedTemperatureK: Double?
+    let verifiedBubbleLimit: Bool
+    let bubbleResidualNorm: Double?
+    let sumZKMinusOne: Double?
+    let terminationReason: String
+
+    enum CodingKeys: String, CodingKey {
+        case startingTemperatureK = "starting_temperature_k"
+        case startingPressurePa = "starting_pressure_pa"
+        case startingVaporFraction = "starting_vapor_fraction"
+        case betaSchedule = "beta_schedule"
+        case attemptedStateCount = "attempted_state_count"
+        case acceptedStateCount = "accepted_state_count"
+        case lowestAcceptedBeta = "lowest_accepted_beta"
+        case lowestAcceptedTemperatureK = "lowest_accepted_temperature_k"
+        case verifiedBubbleLimit = "verified_bubble_limit"
+        case bubbleResidualNorm = "bubble_residual_norm"
+        case sumZKMinusOne = "sum_zk_minus_one"
+        case terminationReason = "termination_reason"
     }
 }
 
@@ -340,6 +372,20 @@ enum NativeSRKComparisonReport {
             continuousFlashCount: experiment.continuousFlashCount,
             lowestContinuousFlashTemperatureK: experiment.lowestContinuousFlashTemperatureK,
             flashFailureReason: experiment.flashFailureReason,
+            betaLimitDiagnostic: BetaLimitDiagnosticMetric(
+                startingTemperatureK: experiment.betaLimitDiagnostic.startingTemperatureK,
+                startingPressurePa: experiment.betaLimitDiagnostic.startingPressurePa,
+                startingVaporFraction: experiment.betaLimitDiagnostic.startingVaporFraction,
+                betaSchedule: experiment.betaLimitDiagnostic.betaSchedule,
+                attemptedStateCount: experiment.betaLimitDiagnostic.attemptedStateCount,
+                acceptedStateCount: experiment.betaLimitDiagnostic.acceptedStateCount,
+                lowestAcceptedBeta: experiment.betaLimitDiagnostic.lowestAcceptedBeta,
+                lowestAcceptedTemperatureK: experiment.betaLimitDiagnostic.lowestAcceptedTemperatureK,
+                verifiedBubbleLimit: experiment.betaLimitDiagnostic.verifiedBubbleLimit,
+                bubbleResidualNorm: experiment.betaLimitDiagnostic.bubbleResidualNorm,
+                sumZKMinusOne: experiment.betaLimitDiagnostic.sumZKMinusOne,
+                terminationReason: experiment.betaLimitDiagnostic.terminationReason
+            ),
             bestContinuousTPD: experiment.bestContinuousMinimum.map {
                 TPDMinimumMetric(
                     minimumTangentPlaneDistance: $0.minimumTangentPlaneDistance,

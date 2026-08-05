@@ -59,6 +59,7 @@ The implementation includes:
 - explicit EOS root diagnostics for admissible compressibility roots, selected roots, density separation and phase-composition separation;
 - diagnostic fixed-pressure bubble-temperature solving for the 90/10 cold endpoint;
 - diagnostic binary two-phase flash solving with `ln(K1)`, `ln(K2)` and vapour-fraction-logit unknowns, Rachford-Rice material balance and fugacity-equality residuals;
+- diagnostic beta-limit continuation from continuity-compatible finite-vapour-fraction flash states toward the `beta -> 0` bubble-boundary limit;
 - safeguarded finite-difference Newton updates with line search, pressure bounds, composition bounds and deterministic singular-Jacobian failure reporting;
 - bounded bubble-solve reseeding from minimized TPD, Wilson estimates and pressure-grid seeds;
 - continuity-oriented dew tracing from Wilson or previous-pressure continuation to avoid jumping to unrelated dew roots;
@@ -107,10 +108,11 @@ These are software-parity tolerances only. They are not experimental validation 
 - The 90/10 CO2/N2 bubble branch can still produce TPD-backed cold near-boundary points below 140 K, but production pseudo-arc continuity checks reject them as disconnected from the main branch and exclude them from parity statistics.
 - The production mixture trace now uses bidirectional pseudo-arc continuation after bounded initialization, but it has not yet found a continuous route through the 90/10 cold-bubble gap.
 - A focused cold-side diagnostic at the accepted 90/10 bubble endpoint found no negative TPD stationary point inside the accepted-branch continuity neighborhood and found only a single admissible root per phase calculation there.
-- The bounded two-phase flash diagnostic found finite-vapour-fraction states continuous with the accepted endpoint down to `123.986665 K`, but these are diagnostic flash states rather than accepted bubble-boundary points. The missing cold bubble boundary is therefore classified as a bubble-point parameterization limitation that still requires verified `beta -> 0` boundary tracking before any coverage can be counted.
+- The bounded two-phase flash diagnostic found finite-vapour-fraction states continuous with the accepted endpoint down to `123.986665 K`, but these are diagnostic flash states rather than accepted bubble-boundary points.
+- The beta-limit diagnostic started from a continuity-compatible finite-beta state at `137.986665 K` and accepted finite-beta states only down to `beta = 0.0113515`; it did not satisfy the bubble residual, `sum(z_i K_i) -> 1`, or beta-threshold criteria and terminated at the next beta target by bounded flash line-search failure. The result is classified as `finite-beta path terminates before the bubble limit`.
 - Simulator and physical-iPhone execution, app-size delta, peak memory and UI responsiveness measurements remain pending.
 - Independent published-data comparisons remain pending.
 
 ## Recommended Next Step
 
-Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should promote finite-beta flash-boundary tracking into a bounded continuation toward the `beta -> 0` bubble limit below `139.987 K`, and accept points only if the flash path converges back to a genuine continuous bubble boundary with preserved pressure parity.
+Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should implement augmented pseudo-arc flash continuation with beta as a state coordinate to determine whether the finite-beta path can pass through the current beta-limit rank/line-search failure and recover a genuine bubble boundary.

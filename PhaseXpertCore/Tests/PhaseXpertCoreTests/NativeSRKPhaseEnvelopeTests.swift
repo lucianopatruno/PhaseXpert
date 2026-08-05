@@ -166,6 +166,11 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertGreaterThan(experiment.convergedFlashCount, 0)
         XCTAssertGreaterThan(experiment.continuousFlashCount, 0)
         XCTAssertLessThan(try XCTUnwrap(experiment.lowestContinuousFlashTemperatureK), point.temperatureK)
+        XCTAssertFalse(experiment.betaLimitDiagnostic.betaSchedule.isEmpty)
+        XCTAssertGreaterThan(experiment.betaLimitDiagnostic.attemptedStateCount, 0)
+        XCTAssertGreaterThanOrEqual(experiment.betaLimitDiagnostic.acceptedStateCount, 0)
+        XCTAssertFalse(experiment.betaLimitDiagnostic.verifiedBubbleLimit)
+        XCTAssertFalse(experiment.betaLimitDiagnostic.terminationReason.isEmpty)
         XCTAssertTrue(experiment.rootDiagnostic.selectedLiquidRoot.isFinite)
         XCTAssertTrue(experiment.rootDiagnostic.selectedVaporRoot.isFinite)
         XCTAssertFalse(experiment.productionAttemptReason.isEmpty)
@@ -202,6 +207,35 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertEqual(diagnostic.vaporFractions.count, 2)
         XCTAssertGreaterThan(diagnostic.rootDiagnostic.phaseCompositionDistance, 0)
         XCTAssertTrue(diagnostic.terminationReason.contains("two-phase flash converged"))
+    }
+
+    func testFiniteBetaStatesRemainExcludedFromBubbleStatistics() throws {
+        let composition = [
+            NativeSRKMixtureFraction(component: .carbonDioxide, moleFraction: 0.90),
+            NativeSRKMixtureFraction(component: .nitrogen, moleFraction: 0.10)
+        ]
+        let result = try tracer.phaseEnvelope(
+            composition: composition,
+            options: testOptions(minimumTemperatureK: 54)
+        )
+        let point = try tracer.solveBubblePressure(
+            temperatureK: 139.986665,
+            liquidComposition: composition,
+            options: testOptions(minimumTemperatureK: 54)
+        )
+        let experiment = try tracer.coldBubbleInitializationExperiment(
+            startingTemperatureK: point.temperatureK,
+            startingPressurePa: point.pressurePa,
+            startingVaporCarbonDioxideMoleFraction: try XCTUnwrap(point.vaporMoleFractions[.carbonDioxide]),
+            feedComposition: composition,
+            options: testOptions(minimumTemperatureK: 54)
+        )
+
+        XCTAssertGreaterThan(experiment.continuousFlashCount, 0)
+        XCTAssertNil(result.points.filter { $0.branch == .bubble }.map(\.temperatureK).min { $0 < $1 }.flatMap {
+            $0 < 139.0 ? $0 : nil
+        })
+        XCTAssertFalse(experiment.betaLimitDiagnostic.verifiedBubbleLimit)
     }
 
     func testConvergedCoupledBubbleCarriesDiagnostics() throws {

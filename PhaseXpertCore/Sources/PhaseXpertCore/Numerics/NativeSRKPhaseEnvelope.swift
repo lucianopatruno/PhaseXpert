@@ -114,9 +114,25 @@ public struct NativeSRKColdBranchExperiment: Sendable, Equatable {
     public let continuousFlashCount: Int
     public let lowestContinuousFlashTemperatureK: Double?
     public let flashFailureReason: String
+    public let betaLimitDiagnostic: NativeSRKBetaLimitDiagnostic
     public let bestContinuousMinimum: NativeSRKTPDStationaryPoint?
     public let rootDiagnostic: NativeSRKRootSelectionDiagnostic
     public let failureClassification: String
+}
+
+public struct NativeSRKBetaLimitDiagnostic: Sendable, Equatable {
+    public let startingTemperatureK: Double?
+    public let startingPressurePa: Double?
+    public let startingVaporFraction: Double?
+    public let betaSchedule: [Double]
+    public let attemptedStateCount: Int
+    public let acceptedStateCount: Int
+    public let lowestAcceptedBeta: Double?
+    public let lowestAcceptedTemperatureK: Double?
+    public let verifiedBubbleLimit: Bool
+    public let bubbleResidualNorm: Double?
+    public let sumZKMinusOne: Double?
+    public let terminationReason: String
 }
 
 public struct NativeSRKFlashDiagnostic: Sendable, Equatable {
@@ -506,6 +522,13 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 && maxRelativeDelta($0.vaporFractions, incipient) <= 0.5
                 && $0.rootDiagnostic.phaseCompositionDistance > 1e-5
         }
+        let betaLimit = betaLimitDiagnostic(
+            flashStates: continuousFlash,
+            feedFractions: feedFractions,
+            components: components,
+            options: options,
+            shouldCancel: shouldCancel
+        )
         let continuousTPD = tpdPoints.filter {
             !$0.isTrivialFeedStationaryPoint
                 && !$0.isBoundaryPinned
@@ -533,8 +556,10 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let classification: String
         if rootDiagnostic.rootSeparation <= 1e-8 || rootDiagnostic.densitySeparationMolesPerCubicMeter <= 1e-6 {
             classification = "loss or coalescence of admissible EOS roots"
+        } else if betaLimit.verifiedBubbleLimit {
+            classification = "finite-beta flash path successfully connected to the genuine bubble boundary"
         } else if !continuousFlash.isEmpty {
-            classification = "bubble-point parameterization failure resolved by flash-boundary tracking"
+            classification = "finite-beta path terminates before the bubble limit"
         } else if continuousTPD.contains(where: { $0.minimumTangentPlaneDistance < -1e-8 }) {
             classification = "bordered-corrector/continuation failure"
         } else if !negativeTPD.isEmpty {
@@ -557,6 +582,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             continuousFlashCount: continuousFlash.count,
             lowestContinuousFlashTemperatureK: continuousFlash.map(\.temperatureK).min(),
             flashFailureReason: flashDiagnostics.failureReason,
+            betaLimitDiagnostic: betaLimit,
             bestContinuousMinimum: continuousTPD.first,
             rootDiagnostic: rootDiagnostic,
             failureClassification: classification
@@ -1404,6 +1430,132 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 return $0.pressurePa < $1.pressurePa
             },
             failures.joined(separator: " | ")
+        )
+    }
+
+    private func betaLimitDiagnostic(
+        flashStates: [NativeSRKFlashDiagnostic],
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool
+    ) -> NativeSRKBetaLimitDiagnostic {
+        let schedule = [1e-2, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]
+        guard let start = flashStates
+            .filter({ $0.vaporFraction > 1e-5 })
+            .min(by: { abs($0.vaporFraction - 0.01) < abs($1.vaporFraction - 0.01) })
+        else {
+            return NativeSRKBetaLimitDiagnostic(
+                startingTemperatureK: nil,
+                startingPressurePa: nil,
+                startingVaporFraction: nil,
+                betaSchedule: schedule,
+                attemptedStateCount: 0,
+                acceptedStateCount: 0,
+                lowestAcceptedBeta: nil,
+                lowestAcceptedTemperatureK: nil,
+                verifiedBubbleLimit: false,
+                bubbleResidualNorm: nil,
+                sumZKMinusOne: nil,
+                terminationReason: "no continuity-compatible finite-beta flash state available for beta-limit continuation"
+            )
+        }
+        let baseK = zip(start.vaporFractions, start.liquidFractions).map {
+            clamp($0 / max($1, 1e-12), 1e-8, 1e8)
+        }
+        var accepted: [NativeSRKFlashDiagnostic] = []
+        var attempts = 0
+        var previous = start
+        var failures: [String] = []
+        for beta in schedule {
+            if shouldCancel() {
+                return NativeSRKBetaLimitDiagnostic(
+                    startingTemperatureK: start.temperatureK,
+                    startingPressurePa: start.pressurePa,
+                    startingVaporFraction: start.vaporFraction,
+                    betaSchedule: schedule,
+                    attemptedStateCount: attempts,
+                    acceptedStateCount: accepted.count,
+                    lowestAcceptedBeta: accepted.map(\.vaporFraction).min(),
+                    lowestAcceptedTemperatureK: accepted.map(\.temperatureK).min(),
+                    verifiedBubbleLimit: false,
+                    bubbleResidualNorm: nil,
+                    sumZKMinusOne: nil,
+                    terminationReason: "cancelled during beta-limit continuation"
+                )
+            }
+            attempts += 1
+            do {
+                let diagnostic = try solveTwoPhaseFlash(
+                    temperatureK: previous.temperatureK,
+                    pressurePa: previous.pressurePa,
+                    feedFractions: feedFractions,
+                    components: components,
+                    initialState: [log(baseK[0]), log(baseK[1]), logit(beta)],
+                    options: options,
+                    shouldCancel: shouldCancel
+                )
+                guard diagnostic.vaporFraction <= max(beta * 10, previous.vaporFraction),
+                      abs(diagnostic.temperatureK - previous.temperatureK) <= 4,
+                      abs(log(diagnostic.pressurePa / previous.pressurePa)) <= log(1.5),
+                      maxRelativeDelta(diagnostic.vaporFractions, previous.vaporFractions) <= 0.75
+                else {
+                    failures.append("beta \(beta) converged outside continuity bounds")
+                    break
+                }
+                accepted.append(diagnostic)
+                previous = diagnostic
+            } catch {
+                failures.append("beta \(beta): \(error)")
+                break
+            }
+        }
+        let last = accepted.last
+        let kValues = last.map { zip($0.vaporFractions, $0.liquidFractions).map { $0 / max($1, 1e-12) } }
+        let sumZKMinusOne = kValues.map { zip(feedFractions, $0).reduce(0.0) { $0 + $1.0 * $1.1 } - 1 }
+        let bubbleResidual = last.flatMap { diagnostic -> Double? in
+            let incipientCO2 = diagnostic.vaporFractions.first ?? .nan
+            guard incipientCO2.isFinite else { return nil }
+            do {
+                let residual = try coupledResidual(
+                    branch: .bubble,
+                    temperatureK: diagnostic.temperatureK,
+                    feedFractions: feedFractions,
+                    state: [log(diagnostic.pressurePa), logit(incipientCO2)],
+                    components: components,
+                    options: options
+                )
+                return vectorNorm(residual)
+            } catch {
+                return nil
+            }
+        }
+        let verified = (last?.vaporFraction ?? 1) <= 1e-6
+            && (bubbleResidual ?? .infinity) <= sqrt(options.relativeTolerance)
+            && abs(sumZKMinusOne ?? .infinity) <= sqrt(options.relativeTolerance)
+            && (last?.rootDiagnostic.phaseCompositionDistance ?? 0) > 1e-5
+        let reason: String
+        if verified {
+            reason = "finite-beta continuation reached a verified bubble limit"
+        } else if let last {
+            reason = "finite-beta path remains diagnostic-only; beta \(last.vaporFraction), bubble residual \(bubbleResidual ?? .infinity), sum zK minus one \(sumZKMinusOne ?? .infinity). "
+                + (failures.first ?? "beta schedule ended before boundary acceptance")
+        } else {
+            reason = failures.first ?? "no beta-limit flash state accepted"
+        }
+        return NativeSRKBetaLimitDiagnostic(
+            startingTemperatureK: start.temperatureK,
+            startingPressurePa: start.pressurePa,
+            startingVaporFraction: start.vaporFraction,
+            betaSchedule: schedule,
+            attemptedStateCount: attempts,
+            acceptedStateCount: accepted.count,
+            lowestAcceptedBeta: accepted.map(\.vaporFraction).min(),
+            lowestAcceptedTemperatureK: accepted.map(\.temperatureK).min(),
+            verifiedBubbleLimit: verified,
+            bubbleResidualNorm: bubbleResidual,
+            sumZKMinusOne: sumZKMinusOne,
+            terminationReason: reason
         )
     }
 

@@ -49,14 +49,15 @@ The coupled Newton/stability prototype remains entirely local and deterministic,
 - Cold-side stability/root diagnostic at the accepted 90/10 endpoint: deterministic multi-start vapor-like TPD minimization found `13` deduplicated stationary points and no negative continuous TPD minimum near the accepted branch. The best continuity-neighborhood stationary point has composition `[0.0608755, 0.9391245]`, TPD `6.69e-16`, residual `4.30e-12`, is not feed-trivial and is not boundary-pinned. Root diagnostics report a single admissible root per phase calculation, root separation `0.186764`, density separation `5,400.49 mol m^-3`, and phase-composition distance `13.784`.
 - Controlled initialization experiment: existing production initialization, multi-start TPD initialization, root-continuity-aware diagnostics, and combined TPD/root-continuity screening all fail to advance the same continuous branch below `139.987 K`. The bounded production retry at the next cold step fails by line-search residuals from all candidate seeds, while the TPD search finds no valid negative-TPD minimum inside the accepted-branch continuity neighborhood.
 - Pressure-parameterized saturation diagnostic: fixed-pressure bubble solving from the accepted endpoint advances only to `139.983638 K`, so it confirms local regularity over a tiny step but does not recover the missing cold branch.
-- Full two-phase flash diagnostic: the bounded `ln(K1)`, `ln(K2)` and vapour-fraction-logit formulation found `92` converged finite-beta states from `200` deterministic neighborhood attempts, including `84` continuity-compatible flash states down to `123.986665 K`. These states remain diagnostic because finite-beta flash solutions are not bubble-boundary points and have not yet been continued back to a verified `beta -> 0` boundary below the prior endpoint.
+- Full two-phase flash diagnostic: the bounded `ln(K1)`, `ln(K2)` and vapour-fraction-logit formulation found `92` converged finite-beta states from `200` deterministic neighborhood attempts, including `84` continuity-compatible flash states down to `123.986665 K`. These states remain diagnostic because finite-beta flash solutions are not bubble-boundary points.
+- Beta-limit diagnostic: a deterministic decreasing-beta schedule `[1e-2, 3e-3, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5, 3e-6, 1e-6]` was started from a continuity-compatible flash state at `T = 137.986665 K`, `P = 24,948,837 Pa`, and `beta = 0.0113505`. It accepted `3` states from `4` attempts, with lowest accepted beta `0.0113515`, bubble residual `0.059225`, and `sum(z_i K_i) - 1 = 0.101835`; it then failed at the `3e-4` beta target by bounded flash line-search residual `0.114190`. No verified `beta -> 0` bubble limit was recovered, so production bubble-boundary coverage remains unchanged.
 - Pseudo-arc diagnostic: a bounded 97/3 CO2/N2 bubble continuation step from `220 K` and `228 K` predicts `232.002 K` and corrects to `232.003 K` with residual `1.81e-13`. A forced 90/10 CO2/N2 jump from the main branch near `139.987 K` toward the detached `61.875 K` point is rejected as non-continuous with an incipient-composition-boundary failure.
 - 90/10 CO2/N2 bubble gap examples below 140 K: `54.000 K` fails with singular Jacobian residual norm about `5.85`; `61.375 K` fails with singular Jacobian residual norm about `0.246`; points from roughly `66.908 K` upward fail mainly by bounded line-search failure before the main branch resumes near `139.987 K`.
 
 Likely contributors:
 
 - bidirectional pseudo-arc search now participates in mixture tracing after initialization, but it has not found a continuous route from the 90/10 main branch below `139.987 K`;
-- the focused cold-side pressure/flash diagnostic indicates a bubble-point parameterization limitation that can be entered through finite-beta flash-boundary tracking, but the actual bubble boundary below `139.987 K` has not yet been recovered or counted;
+- the focused cold-side pressure/flash diagnostic indicates finite-beta two-phase states below the endpoint, but the beta-limit continuation terminates before a verified bubble limit, so the actual bubble boundary below `139.987 K` has not yet been recovered or counted;
 - the 90/10 bubble branch can still produce TPD-backed near-boundary cold seed points, but they are disconnected from the main branch and are excluded from parity statistics;
 - pure-CO2 saturation deliberately rejects coalesced single-root states near the critical region, so it reports a gap rather than fabricating a critical endpoint;
 - production mixture continuation uses the bounded pseudo-arc corrector after initialization, but the cold-side endpoint still fails under the deterministic continuity, residual, root and TPD bounds.
@@ -71,12 +72,12 @@ Measured on the local Mac validation run:
 
 | Case | Elapsed s | Attempted points | Converged points | Gaps | Seconds per attempted point |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| pure-co2 | 0.243 | 528 | 50 | 478 | 0.000460 |
-| co2-97-n2-3 | 7.273 | 338 | 87 | 251 | 0.021517 |
-| co2-90-n2-10 | 10.039 | 463 | 62 | 401 | 0.021682 |
+| pure-co2 | 0.551 | 528 | 50 | 478 | 0.001043 |
+| co2-97-n2-3 | 32.295 | 338 | 87 | 251 | 0.095547 |
+| co2-90-n2-10 | 34.765 | 463 | 62 | 401 | 0.075086 |
 
-The focused cold-side pressure/flash diagnostic measured `0.172 s` for `200` flash attempts, `92` converged flashes and `84` continuity-compatible flash states. Repeated full comparison report generation including that diagnostic produced byte-for-byte identical JSON and measured `26.38 s` and `26.84 s` on consecutive runs. A synthetic cancellation check returned in `0.000004 s` before any point was emitted.
+The focused cold-side pressure/flash diagnostic measured `0.313 s` for `200` flash attempts, `92` converged flashes and `84` continuity-compatible flash states. The beta-limit diagnostic accepted `3` finite-beta states from `4` attempts before terminating as diagnostic-only. Repeated full comparison report generation including those diagnostics produced byte-for-byte identical JSON and measured `18.27 s` and `18.52 s` on consecutive runs. A synthetic cancellation check returned in `0.000009 s` before any point was emitted.
 
 ## Next Numerical Step
 
-Promote the diagnostic finite-beta flash-boundary tracking into a bounded continuation toward the `beta -> 0` bubble limit below `139.987 K`, and accept points only if the flash path converges back to a genuine continuous bubble boundary with preserved pressure parity.
+Implement an augmented pseudo-arc flash continuation with beta as a state coordinate so the finite-beta path can be followed through the current rank/line-search failure and tested against the existing bubble-limit acceptance criteria.
