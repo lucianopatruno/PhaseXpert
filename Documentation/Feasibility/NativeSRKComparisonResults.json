@@ -55,11 +55,11 @@
     },
     {
       "bubble" : {
-        "attempted_local_point_count" : 58,
-        "converged_local_point_count" : 46,
+        "attempted_local_point_count" : 60,
+        "converged_local_point_count" : 47,
         "convergence_coverage" : 0.9743589743589743,
         "local_temperature_range_k" : [
-          61.875,
+          61.59114548544134,
           302.17921302603816
         ],
         "maximum_absolute_pressure_error_pa" : 12181.634565655142,
@@ -76,7 +76,7 @@
       },
       "case_id" : "co2-97-n2-3",
       "dew" : {
-        "attempted_local_point_count" : 277,
+        "attempted_local_point_count" : 278,
         "converged_local_point_count" : 40,
         "convergence_coverage" : 0.96,
         "local_temperature_range_k" : [
@@ -95,13 +95,13 @@
           302.2271261189044
         ]
       },
-      "gap_count" : 249,
-      "total_attempted" : 335,
-      "total_converged" : 86
+      "gap_count" : 251,
+      "total_attempted" : 338,
+      "total_converged" : 87
     },
     {
       "bubble" : {
-        "attempted_local_point_count" : 197,
+        "attempted_local_point_count" : 198,
         "converged_local_point_count" : 33,
         "convergence_coverage" : 0.6024096385542169,
         "local_temperature_range_k" : [
@@ -122,7 +122,7 @@
       },
       "case_id" : "co2-90-n2-10",
       "dew" : {
-        "attempted_local_point_count" : 264,
+        "attempted_local_point_count" : 265,
         "converged_local_point_count" : 29,
         "convergence_coverage" : 0.9230769230769231,
         "local_temperature_range_k" : [
@@ -141,8 +141,8 @@
           297.45412580192055
         ]
       },
-      "gap_count" : 399,
-      "total_attempted" : 461,
+      "gap_count" : 401,
+      "total_attempted" : 463,
       "total_converged" : 62
     }
   ],

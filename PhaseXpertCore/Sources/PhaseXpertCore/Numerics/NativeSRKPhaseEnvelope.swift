@@ -619,6 +619,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         }
 
         var selectedSegment = selectedContinuousSegment(acceptedSegments)
+        let selectedAnchorTemperature = selectedSegment.first?.temperatureK
         if selectedSegment.count >= 2 {
             continueSelectedSegmentWithPseudoArc(
                 branch,
@@ -640,8 +641,8 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             )
         })
         let rejectedSegments = acceptedSegments.filter { segment in
-            guard let first = segment.first, let selectedFirst = selectedSegment.first else { return false }
-            return abs(first.temperatureK - selectedFirst.temperatureK) > 1e-9
+            guard let first = segment.first, let selectedAnchorTemperature else { return false }
+            return abs(first.temperatureK - selectedAnchorTemperature) > 1e-9
         }
         for segment in rejectedSegments {
             for candidate in segment {
@@ -673,6 +674,48 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         attempted: inout Int,
         cancelled: inout Bool
     ) {
+        continueSelectedSegmentWithPseudoArc(
+            branch,
+            selectedSegment: &selectedSegment,
+            composition: composition,
+            options: options,
+            shouldCancel: shouldCancel,
+            gaps: &gaps,
+            attempted: &attempted,
+            cancelled: &cancelled,
+            direction: .forward
+        )
+        if !cancelled {
+            continueSelectedSegmentWithPseudoArc(
+                branch,
+                selectedSegment: &selectedSegment,
+                composition: composition,
+                options: options,
+                shouldCancel: shouldCancel,
+                gaps: &gaps,
+                attempted: &attempted,
+                cancelled: &cancelled,
+                direction: .backward
+            )
+        }
+    }
+
+    private enum PseudoArcDirection {
+        case forward
+        case backward
+    }
+
+    private func continueSelectedSegmentWithPseudoArc(
+        _ branch: NativeSRKEnvelopeBranch,
+        selectedSegment: inout [BranchCandidate],
+        composition: [NativeSRKMixtureFraction],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool,
+        gaps: inout [NativeSRKEnvelopeGap],
+        attempted: inout Int,
+        cancelled: inout Bool,
+        direction: PseudoArcDirection
+    ) {
         let components = composition.map(\.component)
         var arcStepCount = 0
         while arcStepCount < 12, selectedSegment.count >= 2 {
@@ -680,8 +723,16 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 cancelled = true
                 return
             }
-            let previous = selectedSegment[selectedSegment.count - 2]
-            let current = selectedSegment[selectedSegment.count - 1]
+            let previous: BranchCandidate
+            let current: BranchCandidate
+            switch direction {
+            case .forward:
+                previous = selectedSegment[selectedSegment.count - 2]
+                current = selectedSegment[selectedSegment.count - 1]
+            case .backward:
+                previous = selectedSegment[1]
+                current = selectedSegment[0]
+            }
             attempted += 1
             do {
                 let diagnostic = try pseudoArcLengthDiagnosticStep(
@@ -706,17 +757,22 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 )
                 guard diagnostic.isContinuousWithSeed,
                       let corrected = diagnostic.correctedPoint,
-                      corrected.temperatureK > current.temperatureK + 1e-6,
-                      corrected.temperatureK <= options.maximumTemperatureK
+                      acceptsPseudoArcCandidate(
+                        corrected,
+                        current: current,
+                        direction: direction,
+                        selectedSegment: selectedSegment,
+                        options: options
+                      )
                 else {
                     gaps.append(.init(
                         branch: branch,
                         temperatureK: diagnostic.predictedTemperatureK,
-                        reason: "Pseudo-arc continuation rejected non-continuous or reversing candidate: \(diagnostic.terminationReason)"
+                        reason: "Pseudo-arc \(direction) continuation rejected non-continuous, duplicate, reversing, or out-of-domain candidate: \(diagnostic.terminationReason)"
                     ))
                     return
                 }
-                selectedSegment.append(.init(
+                let candidate = BranchCandidate(
                     temperatureK: corrected.temperatureK,
                     outcome: SolveOutcome(
                         pressurePa: corrected.pressurePa,
@@ -732,17 +788,54 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                         stabilityAssessment: corrected.stabilityAssessment,
                         terminationReason: corrected.terminationReason
                     )
-                ))
+                )
+                switch direction {
+                case .forward:
+                    selectedSegment.append(candidate)
+                case .backward:
+                    selectedSegment.insert(candidate, at: 0)
+                }
                 arcStepCount += 1
             } catch {
                 gaps.append(.init(
                     branch: branch,
                     temperatureK: current.temperatureK,
-                    reason: "Pseudo-arc continuation failed: \(error)"
+                    reason: "Pseudo-arc \(direction) continuation failed: \(error)"
                 ))
                 return
             }
         }
+    }
+
+    private func acceptsPseudoArcCandidate(
+        _ point: NativeSRKEnvelopePoint,
+        current: BranchCandidate,
+        direction: PseudoArcDirection,
+        selectedSegment: [BranchCandidate],
+        options: NativeSRKEnvelopeOptions
+    ) -> Bool {
+        guard point.temperatureK >= options.minimumTemperatureK,
+              point.temperatureK <= options.maximumTemperatureK,
+              point.pressurePa >= options.minimumPressurePa,
+              point.pressurePa <= options.maximumPressurePa,
+              point.finalResidualNorm.isFinite,
+              point.finalResidualNorm <= sqrt(options.relativeTolerance)
+        else {
+            return false
+        }
+        let temperatureDelta = point.temperatureK - current.temperatureK
+        switch direction {
+        case .forward:
+            guard temperatureDelta > 1e-6 else { return false }
+        case .backward:
+            guard temperatureDelta < -1e-6 else { return false }
+        }
+        let pressureJump = abs(log(point.pressurePa / current.outcome.pressurePa))
+        guard pressureJump <= log(3.0) else { return false }
+        guard !selectedSegment.contains(where: { abs($0.temperatureK - point.temperatureK) < 1e-5 }) else {
+            return false
+        }
+        return true
     }
 
     private func incipientCarbonDioxideFraction(

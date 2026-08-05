@@ -224,6 +224,20 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(bubblePoints.map(\.temperatureK).min() ?? 0, 139.0)
     }
 
+    func testBidirectionalProductionTraceExtendsContinuousBranchBackward() throws {
+        let result = try tracer.phaseEnvelope(
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.97),
+                .init(component: .nitrogen, moleFraction: 0.03)
+            ],
+            options: testOptions(minimumTemperatureK: 54)
+        )
+        let bubblePoints = result.points.filter { $0.branch == .bubble }
+
+        XCTAssertLessThan(bubblePoints.map(\.temperatureK).min() ?? .infinity, 61.875)
+        XCTAssertTrue(bubblePoints.allSatisfy { $0.terminationReason.contains("converged") })
+    }
+
     func testIterationLimitBoundsTraceWork() throws {
         let result = try tracer.phaseEnvelope(
             composition: [
