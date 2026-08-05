@@ -98,11 +98,11 @@ These are software-parity tolerances only. They are not experimental validation 
 - The prototype is not integrated into the UI or provider registry.
 - Critical-region handling is conservative and rejects coalesced pure-component roots rather than forcing branch closure.
 - The current TPD minimization is bounded and multi-start, but it is still a binary-composition minimizer used for stability diagnostics and seeding rather than a full arc-length continuation corrector.
-- The 90/10 CO2/N2 bubble branch does not yet initialize below about 140 K without collapsing to a boundary incipient composition.
+- The 90/10 CO2/N2 bubble branch can now produce TPD-backed cold near-boundary points below 140 K, but they are disconnected from the main branch and do not satisfy the pressure-parity gate.
 - The continuation variable is temperature only; arc-length or pressure-oriented continuation may be required for higher coverage.
 - Simulator and physical-iPhone execution, app-size delta, peak memory and UI responsiveness measurements remain pending.
 - Independent published-data comparisons remain pending.
 
 ## Recommended Next Step
 
-Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be pseudo-arc-length continuation with a bounded pressure/composition corrector seeded from the minimized TPD results, not parameter tuning to force visual agreement.
+Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should be a true pseudo-arc-length continuation with a bordered pressure/composition corrector that can connect or reject the detached cold branch on numerical grounds, not parameter tuning to force visual agreement.

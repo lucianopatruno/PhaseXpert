@@ -9,7 +9,7 @@
   "cases" : [
     {
       "bubble" : {
-        "attempted_local_point_count" : 263,
+        "attempted_local_point_count" : 264,
         "converged_local_point_count" : 25,
         "convergence_coverage" : 0.6451612903225806,
         "local_temperature_range_k" : [
@@ -30,7 +30,7 @@
       },
       "case_id" : "pure-co2",
       "dew" : {
-        "attempted_local_point_count" : 263,
+        "attempted_local_point_count" : 264,
         "converged_local_point_count" : 25,
         "convergence_coverage" : 0.9523809523809523,
         "local_temperature_range_k" : [
@@ -49,25 +49,25 @@
           296.98795272019294
         ]
       },
-      "gap_count" : 476,
-      "total_attempted" : 526,
+      "gap_count" : 478,
+      "total_attempted" : 528,
       "total_converged" : 50
     },
     {
       "bubble" : {
-        "attempted_local_point_count" : 87,
-        "converged_local_point_count" : 41,
-        "convergence_coverage" : 0.8461538461538461,
+        "attempted_local_point_count" : 54,
+        "converged_local_point_count" : 43,
+        "convergence_coverage" : 0.9487179487179487,
         "local_temperature_range_k" : [
-          79.875,
-          298.59679130982033
+          61.875,
+          296.59679130982033
         ],
-        "maximum_absolute_pressure_error_pa" : 270584.5670291735,
-        "maximum_relative_pressure_error" : 0.03811582577453618,
-        "mean_absolute_pressure_error_pa" : 10528.718912921122,
-        "mean_relative_pressure_error" : 0.0019673359538282297,
-        "median_absolute_pressure_error_pa" : 1298.4715447300114,
-        "percentile95_absolute_pressure_error_pa" : 9416.088557662442,
+        "maximum_absolute_pressure_error_pa" : 12181.634565655142,
+        "maximum_relative_pressure_error" : 0.002790477672657856,
+        "mean_absolute_pressure_error_pa" : 2456.5852784250424,
+        "mean_relative_pressure_error" : 0.0009455625317438643,
+        "median_absolute_pressure_error_pa" : 1277.1089563011192,
+        "percentile95_absolute_pressure_error_pa" : 6896.688717500772,
         "reference_point_count" : 39,
         "reference_temperature_range_k" : [
           59.063477205875465,
@@ -95,25 +95,25 @@
           302.2271261189044
         ]
       },
-      "gap_count" : 282,
-      "total_attempted" : 352,
-      "total_converged" : 70
+      "gap_count" : 247,
+      "total_attempted" : 319,
+      "total_converged" : 72
     },
     {
       "bubble" : {
-        "attempted_local_point_count" : 200,
-        "converged_local_point_count" : 33,
-        "convergence_coverage" : 0.6024096385542169,
+        "attempted_local_point_count" : 196,
+        "converged_local_point_count" : 39,
+        "convergence_coverage" : 0.6987951807228916,
         "local_temperature_range_k" : [
-          139.875,
-          294.59679130982033
+          61.875,
+          294.7084561027891
         ],
-        "maximum_absolute_pressure_error_pa" : 209086.58693724312,
-        "maximum_relative_pressure_error" : 0.02326642246657702,
-        "mean_absolute_pressure_error_pa" : 21095.291943033262,
-        "mean_relative_pressure_error" : 0.0021608026283489452,
-        "median_absolute_pressure_error_pa" : 15776.298225356266,
-        "percentile95_absolute_pressure_error_pa" : 42824.825579069555,
+        "maximum_absolute_pressure_error_pa" : 2401464.2548847217,
+        "maximum_relative_pressure_error" : 0.874296328469438,
+        "mean_absolute_pressure_error_pa" : 68060.09011754915,
+        "mean_relative_pressure_error" : 0.027914433635556096,
+        "median_absolute_pressure_error_pa" : 16081.2841103822,
+        "percentile95_absolute_pressure_error_pa" : 78900.36113514047,
         "reference_point_count" : 83,
         "reference_temperature_range_k" : [
           54.67022174565088,
@@ -141,9 +141,9 @@
           297.45412580192055
         ]
       },
-      "gap_count" : 401,
-      "total_attempted" : 463,
-      "total_converged" : 62
+      "gap_count" : 391,
+      "total_attempted" : 459,
+      "total_converged" : 68
     }
   ],
   "comparison_method" : "Linear interpolation in pressure by temperature inside continuous same-branch local intervals; no interpolation across recorded gaps and no extrapolation.",

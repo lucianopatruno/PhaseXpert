@@ -376,7 +376,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         var failures = 0
         let criticalTemperature = parameters[.carbonDioxide]!.criticalTemperatureK
 
-        while temperature <= min(options.maximumTemperatureK, criticalTemperature * 0.999) {
+        while temperature <= min(options.maximumTemperatureK, criticalTemperature * 0.999_999) {
             if shouldCancel() {
                 cancelled = true
                 return
@@ -945,12 +945,26 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             liquidFractions = incipient
             vaporFractions = feedFractions
         }
-        guard incipient.allSatisfy({ $0 > 1e-8 && $0 < 1 - 1e-8 }) else {
+        let stability = try? stabilityAssessment(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            composition: zip(components, feedFractions).map {
+                NativeSRKMixtureFraction(component: $0.0, moleFraction: $0.1)
+            }
+        )
+        let phaseDifference = maxRelativeDelta(liquidFractions, vaporFractions)
+        let minimumTPD = min(
+            stability?.liquidLikeTangentPlaneDistance ?? .infinity,
+            stability?.vaporLikeTangentPlaneDistance ?? .infinity
+        )
+        let acceptsNearBoundary = incipient.allSatisfy { $0 > 1e-12 && $0 < 1 - 1e-12 }
+            && phaseDifference > 0.25
+            && minimumTPD < -1e-6
+        guard incipient.allSatisfy({ $0 > 1e-8 && $0 < 1 - 1e-8 }) || acceptsNearBoundary else {
             throw NativeSRKError.invalidComposition(
                 "\(branch.rawValue) solve reached the incipient composition boundary."
             )
         }
-        let phaseDifference = maxRelativeDelta(liquidFractions, vaporFractions)
         guard phaseDifference > 1e-5 else {
             throw NativeSRKError.invalidComposition("\(branch.rawValue) solve collapsed to a trivial incipient phase.")
         }
@@ -967,13 +981,6 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             fractions: vaporFractions,
             components: components,
             useLiquidRoot: false
-        )
-        let stability = try? stabilityAssessment(
-            temperatureK: temperatureK,
-            pressurePa: pressurePa,
-            composition: zip(components, feedFractions).map {
-                NativeSRKMixtureFraction(component: $0.0, moleFraction: $0.1)
-            }
         )
         return SolveOutcome(
             pressurePa: pressurePa,
@@ -1103,7 +1110,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             useLiquidRoot: false
         )
         guard liquid.rootCount >= 2, vapor.rootCount >= 2,
-              abs(vapor.selectedRoot - liquid.selectedRoot) > 1e-7 else {
+              abs(vapor.selectedRoot - liquid.selectedRoot) > 1e-10 else {
             throw NativeSRKError.invalidComposition("Pure saturation roots have coalesced into a single phase.")
         }
         return log(liquid.coefficients[0]) - log(vapor.coefficients[0])

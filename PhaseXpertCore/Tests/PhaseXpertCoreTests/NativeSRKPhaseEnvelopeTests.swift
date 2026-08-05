@@ -109,15 +109,27 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         ))
     }
 
-    func testBoundaryIncipientCompositionIsRejected() {
-        XCTAssertThrowsError(try tracer.solveBubblePressure(
+    func testColdBubbleNearBoundaryRequiresTPDBackedPhaseSeparation() throws {
+        let point = try tracer.solveBubblePressure(
             temperatureK: 61.875,
             liquidComposition: [
                 .init(component: .carbonDioxide, moleFraction: 0.90),
                 .init(component: .nitrogen, moleFraction: 0.10)
             ],
             options: testOptions(minimumTemperatureK: 54)
-        ))
+        )
+
+        XCTAssertTrue(point.pressurePa.isFinite)
+        XCTAssertGreaterThan(point.pressurePa, 0)
+        let vaporCO2 = try XCTUnwrap(point.vaporMoleFractions[.carbonDioxide])
+        XCTAssertLessThan(vaporCO2, 1e-8)
+        let minimumTPD = min(
+            point.stabilityAssessment?.liquidLikeTangentPlaneDistance ?? .infinity,
+            point.stabilityAssessment?.vaporLikeTangentPlaneDistance ?? .infinity
+        )
+        XCTAssertLessThan(minimumTPD, -1e-6)
+        XCTAssertGreaterThan(point.finalResidualNorm, 0)
+        XCTAssertLessThan(point.finalResidualNorm, 1e-6)
     }
 
     func testIterationLimitBoundsTraceWork() throws {

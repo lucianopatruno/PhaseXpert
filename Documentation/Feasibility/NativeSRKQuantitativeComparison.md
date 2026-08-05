@@ -30,21 +30,27 @@ Acceptance tolerances defined before the run:
 
 | Case | Branch | Reference T range K | Local T range K | Reference points | Local attempted | Local converged | Coverage | Mean abs error Pa | Median abs error Pa | 95th abs error Pa | Max abs error Pa | Mean rel error | Max rel error |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| pure-co2 | bubble | 186.774-304.192 | 174.875-290.096 | 31 | 263 | 25 | 64.5% | 4,423 | 2,554 | 13,482 | 16,481 | 0.5% | 1.0% |
-| pure-co2 | dew | 186.774-296.988 | 174.875-290.096 | 21 | 263 | 25 | 95.2% | 4,423 | 2,554 | 13,482 | 16,481 | 0.5% | 1.0% |
-| co2-97-n2-3 | bubble | 59.063-300.615 | 79.875-298.597 | 39 | 87 | 41 | 84.6% | 10,529 | 1,298 | 9,416 | 270,585 | 0.2% | 3.8% |
+| pure-co2 | bubble | 186.774-304.192 | 174.875-290.096 | 31 | 264 | 25 | 64.5% | 4,423 | 2,554 | 13,482 | 16,481 | 0.5% | 1.0% |
+| pure-co2 | dew | 186.774-296.988 | 174.875-290.096 | 21 | 264 | 25 | 95.2% | 4,423 | 2,554 | 13,482 | 16,481 | 0.5% | 1.0% |
+| co2-97-n2-3 | bubble | 59.063-300.615 | 61.875-296.597 | 39 | 54 | 43 | 94.9% | 2,457 | 1,277 | 6,897 | 12,182 | 0.1% | 0.3% |
 | co2-97-n2-3 | dew | 186.265-302.227 | 174.375-301.097 | 25 | 265 | 29 | 84.0% | 3,774 | 1,328 | 10,232 | 17,745 | 0.3% | 0.7% |
-| co2-90-n2-10 | bubble | 54.670-296.498 | 139.875-294.597 | 83 | 200 | 33 | 60.2% | 21,095 | 15,776 | 42,825 | 209,087 | 0.2% | 2.3% |
+| co2-90-n2-10 | bubble | 54.670-296.498 | 61.875-294.708 | 83 | 196 | 39 | 69.9% | 68,060 | 16,081 | 78,900 | 2,401,464 | 2.8% | 87.4% |
 | co2-90-n2-10 | dew | 149.799-297.454 | 173.375-296.097 | 26 | 263 | 29 | 92.3% | 10,482 | 3,322 | 35,972 | 106,605 | 0.4% | 1.5% |
 
 ## Interpretation
 
-The coupled Newton/stability prototype remains entirely local and deterministic, but it does not yet meet the acceptance gate. The latest run adds bounded multi-start Michelsen TPD minimization for stability diagnostics and bubble-solve seeding while preserving the continuity-oriented dew path. Where converged branches overlap the reference, pressure parity remains within the predefined relative-error tolerances. The remaining acceptance failure is coverage: pure-CO2 bubble coverage terminates before the reference critical-region endpoint, and the 90/10 CO2/N2 bubble branch still does not cover the colder part of the reference domain.
+The coupled Newton/stability prototype remains entirely local and deterministic, but it does not yet meet the acceptance gate. The latest run adds bounded multi-start Michelsen TPD minimization for stability diagnostics and bubble-solve seeding while preserving the continuity-oriented dew path. The 97/3 CO2/N2 bubble branch now extends lower with acceptable pressure parity. The 90/10 CO2/N2 bubble branch also recovers a detached cold segment down to 61.875 K, but that segment degrades maximum relative pressure error to 87.4%, so it cannot be counted as a passing recovery.
+
+## Failure Diagnostics
+
+- Pure CO2: the last accepted saturation point remains `T = 290.096 K`; the reference bubble branch extends to `304.192 K`, leaving an endpoint gap of about `14.096 K`. The next attempted points terminate as coalesced-root critical-region gaps rather than fabricated endpoints.
+- 90/10 CO2/N2 bubble: the previous cold failure at `T = 61.875 K` now converges to `P = 287,466.655 Pa` with `vapor xCO2 = 1.10e-12`, residual `1.36e-12`, and minimum TPD `-3.199`. The low-temperature segment runs only to `65.752 K`, then leaves a large gap until `139.987 K`, so it is not a continuous accepted branch.
+- 90/10 CO2/N2 bubble gap examples below 140 K: `54.000 K` fails with singular Jacobian residual norm about `5.85`; `61.375 K` fails with singular Jacobian residual norm about `0.246`; points from roughly `66.908 K` upward fail mainly by bounded line-search failure before the main branch resumes near `139.987 K`.
 
 Likely contributors:
 
-- the current TPD minimizer is bounded and multi-start, but it is still a one-dimensional binary-composition minimization and not yet coupled into an arc-length branch corrector;
-- the 90/10 bubble branch still cannot be initialized robustly below about 140 K without collapsing the incipient phase to a composition boundary;
+- the current TPD minimizer is bounded and multi-start, but it is still a one-dimensional binary-composition minimization and not yet coupled into a true pseudo-arc-length branch corrector;
+- the 90/10 bubble branch can now produce TPD-backed near-boundary cold points, but they are disconnected from the main branch and fail pressure parity;
 - pure-CO2 saturation deliberately rejects coalesced single-root states near the critical region, so it reports a gap rather than fabricating a critical endpoint;
 - branch continuation still uses temperature stepping plus bounded reseeding, without an arc-length or pressure-oriented continuation mode.
 
@@ -58,11 +64,11 @@ Measured on the local Mac validation run:
 
 | Case | Elapsed s | Attempted points | Converged points | Gaps | Seconds per attempted point |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| pure-co2 | 0.237 | 526 | 50 | 476 | 0.000451 |
-| co2-97-n2-3 | 10.854 | 352 | 70 | 282 | 0.030836 |
-| co2-90-n2-10 | 16.574 | 463 | 62 | 401 | 0.035798 |
+| pure-co2 | 0.224 | 528 | 50 | 478 | 0.000425 |
+| co2-97-n2-3 | 6.935 | 319 | 72 | 247 | 0.021741 |
+| co2-90-n2-10 | 9.782 | 459 | 68 | 391 | 0.021311 |
 
-Repeated full comparison report generation produced byte-for-byte identical JSON and measured `33.44 s` and `29.88 s` on consecutive runs. A synthetic cancellation check returned in `0.000010 s` before any point was emitted.
+Repeated full comparison report generation produced byte-for-byte identical JSON and measured `17.16 s` and `17.00 s` on consecutive runs. A synthetic cancellation check returned in `0.000005 s` before any point was emitted.
 
 ## Next Numerical Step
 
