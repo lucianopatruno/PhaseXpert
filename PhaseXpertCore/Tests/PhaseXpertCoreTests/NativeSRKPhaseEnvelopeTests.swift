@@ -81,6 +81,92 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertFalse(assessment.vaporLikeMinimum.terminationReason.isEmpty)
     }
 
+    func testMultiStartTPDStationaryPointsAreRankedAndDeduplicated() throws {
+        let points = try tracer.tangentPlaneDistanceStationaryPoints(
+            type: .vaporLike,
+            temperatureK: 139.986665,
+            pressurePa: 1_000_000,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            additionalTrialCompositions: [
+                [0.90, 0.10],
+                [0.90, 0.10],
+                [0.02, 0.98],
+                [1e-6, 1 - 1e-6]
+            ]
+        )
+
+        XCTAssertFalse(points.isEmpty)
+        XCTAssertEqual(
+            points.map(\.finalTrialComposition).count,
+            Set(points.map { $0.finalTrialComposition.map { String(format: "%.8f", $0) }.joined(separator: ",") }).count
+        )
+        XCTAssertEqual(
+            points.map(\.minimumTangentPlaneDistance),
+            points.map(\.minimumTangentPlaneDistance).sorted()
+        )
+        XCTAssertTrue(points.allSatisfy { $0.minimumTangentPlaneDistance.isFinite })
+        XCTAssertTrue(points.allSatisfy { $0.residualNorm.isFinite })
+    }
+
+    func testRootSelectionDiagnosticReportsPhaseIdentityContinuity() throws {
+        let point = try tracer.solveBubblePressure(
+            temperatureK: 139.986665,
+            liquidComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            options: testOptions(minimumTemperatureK: 54)
+        )
+        let diagnostic = try tracer.rootSelectionDiagnostic(
+            branch: .bubble,
+            temperatureK: point.temperatureK,
+            pressurePa: point.pressurePa,
+            feedComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            incipientCarbonDioxideMoleFraction: try XCTUnwrap(point.vaporMoleFractions[.carbonDioxide])
+        )
+
+        XCTAssertFalse(diagnostic.liquidCompressibilityRoots.isEmpty)
+        XCTAssertFalse(diagnostic.vaporCompressibilityRoots.isEmpty)
+        XCTAssertTrue(diagnostic.selectedLiquidRoot.isFinite)
+        XCTAssertTrue(diagnostic.selectedVaporRoot.isFinite)
+        XCTAssertGreaterThan(diagnostic.rootSeparation, 0)
+        XCTAssertGreaterThan(diagnostic.densitySeparationMolesPerCubicMeter, 0)
+        XCTAssertGreaterThan(diagnostic.phaseCompositionDistance, 0)
+        XCTAssertFalse(diagnostic.classification.isEmpty)
+    }
+
+    func testColdBubbleInitializationExperimentClassifiesBoundedFailure() throws {
+        let composition = [
+            NativeSRKMixtureFraction(component: .carbonDioxide, moleFraction: 0.90),
+            NativeSRKMixtureFraction(component: .nitrogen, moleFraction: 0.10)
+        ]
+        let point = try tracer.solveBubblePressure(
+            temperatureK: 139.986665,
+            liquidComposition: composition,
+            options: testOptions(minimumTemperatureK: 54)
+        )
+        let experiment = try tracer.coldBubbleInitializationExperiment(
+            startingTemperatureK: point.temperatureK,
+            startingPressurePa: point.pressurePa,
+            startingVaporCarbonDioxideMoleFraction: try XCTUnwrap(point.vaporMoleFractions[.carbonDioxide]),
+            feedComposition: composition,
+            options: testOptions(minimumTemperatureK: 54)
+        )
+
+        XCTAssertGreaterThan(experiment.multiStartTPDMinimumCount, 0)
+        XCTAssertGreaterThanOrEqual(experiment.negativeTPDMinimumCount, 0)
+        XCTAssertTrue(experiment.rootDiagnostic.selectedLiquidRoot.isFinite)
+        XCTAssertTrue(experiment.rootDiagnostic.selectedVaporRoot.isFinite)
+        XCTAssertFalse(experiment.productionAttemptReason.isEmpty)
+        XCTAssertFalse(experiment.failureClassification.isEmpty)
+    }
+
     func testConvergedCoupledBubbleCarriesDiagnostics() throws {
         let point = try tracer.solveBubblePressure(
             temperatureK: 220,

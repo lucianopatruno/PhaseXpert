@@ -86,6 +86,7 @@ struct CaseMetric: Encodable {
     let gapCount: Int
     let bubble: Metric
     let dew: Metric
+    let coldBranchExperiment: ColdBranchExperimentMetric?
 
     enum CodingKeys: String, CodingKey {
         case caseID = "case_id"
@@ -94,6 +95,7 @@ struct CaseMetric: Encodable {
         case gapCount = "gap_count"
         case bubble
         case dew
+        case coldBranchExperiment = "cold_branch_experiment"
     }
 }
 
@@ -124,6 +126,54 @@ struct Metric: Encodable {
         case maximumAbsolutePressureErrorPa = "maximum_absolute_pressure_error_pa"
         case meanRelativePressureError = "mean_relative_pressure_error"
         case maximumRelativePressureError = "maximum_relative_pressure_error"
+    }
+}
+
+struct ColdBranchExperimentMetric: Encodable {
+    let startingTemperatureK: Double
+    let startingPressurePa: Double
+    let productionAttemptReason: String
+    let multiStartTPDMinimumCount: Int
+    let negativeTPDMinimumCount: Int
+    let detachedMinimumCount: Int
+    let bestContinuousTPD: TPDMinimumMetric?
+    let rootClassification: String
+    let rootSeparation: Double
+    let densitySeparationMolesPerCubicMeter: Double
+    let phaseCompositionDistance: Double
+    let failureClassification: String
+
+    enum CodingKeys: String, CodingKey {
+        case startingTemperatureK = "starting_temperature_k"
+        case startingPressurePa = "starting_pressure_pa"
+        case productionAttemptReason = "production_attempt_reason"
+        case multiStartTPDMinimumCount = "multi_start_tpd_minimum_count"
+        case negativeTPDMinimumCount = "negative_tpd_minimum_count"
+        case detachedMinimumCount = "detached_minimum_count"
+        case bestContinuousTPD = "best_continuous_tpd"
+        case rootClassification = "root_classification"
+        case rootSeparation = "root_separation"
+        case densitySeparationMolesPerCubicMeter = "density_separation_moles_per_cubic_meter"
+        case phaseCompositionDistance = "phase_composition_distance"
+        case failureClassification = "failure_classification"
+    }
+}
+
+struct TPDMinimumMetric: Encodable {
+    let minimumTangentPlaneDistance: Double
+    let residualNorm: Double
+    let finalTrialComposition: [Double]
+    let terminationReason: String
+    let isTrivialFeedStationaryPoint: Bool
+    let isBoundaryPinned: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case minimumTangentPlaneDistance = "minimum_tangent_plane_distance"
+        case residualNorm = "residual_norm"
+        case finalTrialComposition = "final_trial_composition"
+        case terminationReason = "termination_reason"
+        case isTrivialFeedStationaryPoint = "is_trivial_feed_stationary_point"
+        case isBoundaryPinned = "is_boundary_pinned"
     }
 }
 
@@ -167,7 +217,13 @@ enum NativeSRKComparisonReport {
                 totalConverged: local.convergedPointCount,
                 gapCount: local.gaps.count,
                 bubble: metric(branch: "bubble", referenceCase: referenceCase, local: local),
-                dew: metric(branch: "dew", referenceCase: referenceCase, local: local)
+                dew: metric(branch: "dew", referenceCase: referenceCase, local: local),
+                coldBranchExperiment: coldBranchExperiment(
+                    referenceCase: referenceCase,
+                    local: local,
+                    tracer: tracer,
+                    options: options
+                )
             )
         }
         let gatePassed = cases.allSatisfy { caseMetric in
@@ -231,6 +287,57 @@ enum NativeSRKComparisonReport {
         return metric.convergenceCoverage >= tolerances.minimumBranchCoverage
             && meanRelative <= tolerances.meanRelativePressureError
             && maximumRelative <= tolerances.maximumRelativePressureError
+    }
+
+    private static func coldBranchExperiment(
+        referenceCase: ReferenceCase,
+        local: NativeSRKEnvelopeResult,
+        tracer: NativeSRKPhaseEnvelopeTracer,
+        options: NativeSRKEnvelopeOptions
+    ) -> ColdBranchExperimentMetric? {
+        guard referenceCase.id == "co2-90-n2-10",
+              let startingPoint = local.points
+                .filter({ $0.branch == .bubble })
+                .min(by: { $0.temperatureK < $1.temperatureK }),
+              let vaporCO2 = startingPoint.vaporMoleFractions[.carbonDioxide]
+        else {
+            return nil
+        }
+        let composition = referenceCase.request.composition.map {
+            NativeSRKMixtureFraction(component: $0.component, moleFraction: $0.moleFraction)
+        }
+        guard let experiment = try? tracer.coldBubbleInitializationExperiment(
+            startingTemperatureK: startingPoint.temperatureK,
+            startingPressurePa: startingPoint.pressurePa,
+            startingVaporCarbonDioxideMoleFraction: vaporCO2,
+            feedComposition: composition,
+            options: options
+        ) else {
+            return nil
+        }
+        return ColdBranchExperimentMetric(
+            startingTemperatureK: experiment.startingTemperatureK,
+            startingPressurePa: experiment.startingPressurePa,
+            productionAttemptReason: experiment.productionAttemptReason,
+            multiStartTPDMinimumCount: experiment.multiStartTPDMinimumCount,
+            negativeTPDMinimumCount: experiment.negativeTPDMinimumCount,
+            detachedMinimumCount: experiment.detachedMinimumCount,
+            bestContinuousTPD: experiment.bestContinuousMinimum.map {
+                TPDMinimumMetric(
+                    minimumTangentPlaneDistance: $0.minimumTangentPlaneDistance,
+                    residualNorm: $0.residualNorm,
+                    finalTrialComposition: $0.finalTrialComposition,
+                    terminationReason: $0.terminationReason,
+                    isTrivialFeedStationaryPoint: $0.isTrivialFeedStationaryPoint,
+                    isBoundaryPinned: $0.isBoundaryPinned
+                )
+            },
+            rootClassification: experiment.rootDiagnostic.classification,
+            rootSeparation: experiment.rootDiagnostic.rootSeparation,
+            densitySeparationMolesPerCubicMeter: experiment.rootDiagnostic.densitySeparationMolesPerCubicMeter,
+            phaseCompositionDistance: experiment.rootDiagnostic.phaseCompositionDistance,
+            failureClassification: experiment.failureClassification
+        )
     }
 
     private static func interpolatedPressure(

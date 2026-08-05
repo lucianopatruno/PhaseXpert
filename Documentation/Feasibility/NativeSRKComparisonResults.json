@@ -64,8 +64,8 @@
         ],
         "maximum_absolute_pressure_error_pa" : 12181.634565655142,
         "maximum_relative_pressure_error" : 0.002790477672657856,
-        "mean_absolute_pressure_error_pa" : 2503.393281994808,
-        "mean_relative_pressure_error" : 0.0009351331676841596,
+        "mean_absolute_pressure_error_pa" : 2503.3932819942443,
+        "mean_relative_pressure_error" : 0.0009351331676839502,
         "median_absolute_pressure_error_pa" : 1278.868769400753,
         "percentile95_absolute_pressure_error_pa" : 6896.688717500772,
         "reference_point_count" : 39,
@@ -110,8 +110,8 @@
         ],
         "maximum_absolute_pressure_error_pa" : 200050.5169520527,
         "maximum_relative_pressure_error" : 0.022260920273477952,
-        "mean_absolute_pressure_error_pa" : 20840.39896849623,
-        "mean_relative_pressure_error" : 0.0021298790679414982,
+        "mean_absolute_pressure_error_pa" : 20840.398968495967,
+        "mean_relative_pressure_error" : 0.0021298790679414666,
         "median_absolute_pressure_error_pa" : 16084.904428426176,
         "percentile95_absolute_pressure_error_pa" : 43249.428491843864,
         "reference_point_count" : 83,
@@ -121,6 +121,30 @@
         ]
       },
       "case_id" : "co2-90-n2-10",
+      "cold_branch_experiment" : {
+        "best_continuous_tpd" : {
+          "final_trial_composition" : [
+            0.060875546611874644,
+            0.9391244533881253
+          ],
+          "is_boundary_pinned" : false,
+          "is_trivial_feed_stationary_point" : false,
+          "minimum_tangent_plane_distance" : 6.690789615417375e-16,
+          "residual_norm" : 4.300242277599975e-12,
+          "termination_reason" : "TPD minimization converged"
+        },
+        "density_separation_moles_per_cubic_meter" : 5400.487057551985,
+        "detached_minimum_count" : 0,
+        "failure_classification" : "still indeterminate: no continuous negative-TPD minimum was found within deterministic bounds",
+        "multi_start_tpd_minimum_count" : 13,
+        "negative_tpd_minimum_count" : 0,
+        "phase_composition_distance" : 13.784261471106428,
+        "production_attempt_reason" : "invalidComposition(\"bubble coupled solve failed for 18 bounded seeds; invalidComposition(\\\"bubble line search failed; best residual norm 0.009971587277171696, residuals [-0.008935092249842569, 0.004426813674987429].\\\") | invalidComposition(\\\"bubble line search failed; best residual norm 0.009129768128644215, residuals [-0.008017833146396924, 0.004366579636208012].\\\") | invalidComposition(\\\"bubble line search failed; best residual norm 0.4156094380620138, residuals [-0.03266147049902646, 0.4143240680325777].\\\")\")",
+        "root_classification" : "single admissible root per phase calculation",
+        "root_separation" : 0.18676436986609368,
+        "starting_pressure_pa" : 29351573.363971073,
+        "starting_temperature_k" : 139.98666479296878
+      },
       "dew" : {
         "attempted_local_point_count" : 265,
         "converged_local_point_count" : 29,

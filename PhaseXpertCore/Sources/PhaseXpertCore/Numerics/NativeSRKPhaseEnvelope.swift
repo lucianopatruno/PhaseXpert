@@ -77,6 +77,42 @@ public struct NativeSRKTPDMinimum: Sendable, Equatable {
     public let terminationReason: String
 }
 
+public struct NativeSRKTPDStationaryPoint: Sendable, Equatable {
+    public let trialType: NativeSRKTPDTrialType
+    public let minimumTangentPlaneDistance: Double
+    public let iterations: Int
+    public let finalTrialComposition: [Double]
+    public let residualNorm: Double
+    public let terminationReason: String
+    public let isTrivialFeedStationaryPoint: Bool
+    public let isBoundaryPinned: Bool
+}
+
+public struct NativeSRKRootSelectionDiagnostic: Sendable, Equatable {
+    public let temperatureK: Double
+    public let pressurePa: Double
+    public let liquidCompressibilityRoots: [Double]
+    public let vaporCompressibilityRoots: [Double]
+    public let selectedLiquidRoot: Double
+    public let selectedVaporRoot: Double
+    public let rootSeparation: Double
+    public let densitySeparationMolesPerCubicMeter: Double
+    public let phaseCompositionDistance: Double
+    public let classification: String
+}
+
+public struct NativeSRKColdBranchExperiment: Sendable, Equatable {
+    public let startingTemperatureK: Double
+    public let startingPressurePa: Double
+    public let productionAttemptReason: String
+    public let multiStartTPDMinimumCount: Int
+    public let negativeTPDMinimumCount: Int
+    public let detachedMinimumCount: Int
+    public let bestContinuousMinimum: NativeSRKTPDStationaryPoint?
+    public let rootDiagnostic: NativeSRKRootSelectionDiagnostic
+    public let failureClassification: String
+}
+
 public struct NativeSRKProvenance: Sendable, Equatable {
     public let modelIdentifier = "phasexpert-native-srk-prototype"
     public let eos = "Soave-Redlich-Kwong"
@@ -353,6 +389,128 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             vaporLikeTangentPlaneDistance: vaporMinimum.minimumTangentPlaneDistance,
             liquidLikeMinimum: liquidMinimum,
             vaporLikeMinimum: vaporMinimum
+        )
+    }
+
+    public func tangentPlaneDistanceStationaryPoints(
+        type: NativeSRKTPDTrialType,
+        temperatureK: Double,
+        pressurePa: Double,
+        composition inputComposition: [NativeSRKMixtureFraction],
+        additionalTrialCompositions: [[Double]] = []
+    ) throws -> [NativeSRKTPDStationaryPoint] {
+        let composition = try validatedComposition(inputComposition)
+        let components = composition.map(\.component)
+        let fractions = composition.map(\.moleFraction)
+        return try rankedTPDStationaryPoints(
+            type: type,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            feedFractions: fractions,
+            components: components,
+            additionalTrialCompositions: additionalTrialCompositions
+        )
+    }
+
+    public func rootSelectionDiagnostic(
+        branch: NativeSRKEnvelopeBranch,
+        temperatureK: Double,
+        pressurePa: Double,
+        feedComposition inputComposition: [NativeSRKMixtureFraction],
+        incipientCarbonDioxideMoleFraction: Double
+    ) throws -> NativeSRKRootSelectionDiagnostic {
+        let composition = try validatedComposition(inputComposition)
+        let components = composition.map(\.component)
+        let feedFractions = composition.map(\.moleFraction)
+        let incipient = binaryFractions(fromLogit: logit(incipientCarbonDioxideMoleFraction))
+        let liquidFractions = branch == .bubble ? feedFractions : incipient
+        let vaporFractions = branch == .bubble ? incipient : feedFractions
+        return try rootSelectionDiagnostic(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            liquidFractions: liquidFractions,
+            vaporFractions: vaporFractions,
+            components: components
+        )
+    }
+
+    public func coldBubbleInitializationExperiment(
+        startingTemperatureK: Double,
+        startingPressurePa: Double,
+        startingVaporCarbonDioxideMoleFraction: Double,
+        feedComposition inputComposition: [NativeSRKMixtureFraction],
+        options: NativeSRKEnvelopeOptions = NativeSRKEnvelopeOptions(),
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> NativeSRKColdBranchExperiment {
+        let composition = try validatedComposition(inputComposition)
+        guard composition.count == 2 else {
+            throw NativeSRKError.invalidComposition("Cold-branch experiment currently supports binary mixtures only.")
+        }
+        if shouldCancel() { throw CancellationError() }
+        let components = composition.map(\.component)
+        let feedFractions = composition.map(\.moleFraction)
+        let incipient = binaryFractions(fromLogit: logit(startingVaporCarbonDioxideMoleFraction))
+        let tpdPoints = try rankedTPDStationaryPoints(
+            type: .vaporLike,
+            temperatureK: startingTemperatureK,
+            pressurePa: startingPressurePa,
+            feedFractions: feedFractions,
+            components: components,
+            additionalTrialCompositions: branchNeighborhoodSeeds(feedFractions: feedFractions, incipient: incipient)
+        )
+        let rootDiagnostic = try rootSelectionDiagnostic(
+            temperatureK: startingTemperatureK,
+            pressurePa: startingPressurePa,
+            liquidFractions: feedFractions,
+            vaporFractions: incipient,
+            components: components
+        )
+        let continuousTPD = tpdPoints.filter {
+            !$0.isTrivialFeedStationaryPoint
+                && !$0.isBoundaryPinned
+                && maxRelativeDelta($0.finalTrialComposition, incipient) <= 0.5
+        }
+        let negativeTPD = tpdPoints.filter { $0.minimumTangentPlaneDistance < -1e-8 }
+        let detached = negativeTPD.filter {
+            maxRelativeDelta($0.finalTrialComposition, incipient) > 0.5 || $0.isBoundaryPinned
+        }
+        let productionReason: String
+        do {
+            _ = try solveBinaryEquilibrium(
+                branch: .bubble,
+                temperatureK: max(options.minimumTemperatureK, startingTemperatureK - options.minimumTemperatureStepK),
+                feedFractions: feedFractions,
+                components: components,
+                options: options,
+                initialPressurePa: startingPressurePa,
+                shouldCancel: shouldCancel
+            )
+            productionReason = "bounded production initialization advances from the accepted branch"
+        } catch {
+            productionReason = "\(error)"
+        }
+        let classification: String
+        if rootDiagnostic.rootSeparation <= 1e-8 || rootDiagnostic.densitySeparationMolesPerCubicMeter <= 1e-6 {
+            classification = "loss or coalescence of admissible EOS roots"
+        } else if continuousTPD.contains(where: { $0.minimumTangentPlaneDistance < -1e-8 }) {
+            classification = "bordered-corrector/continuation failure"
+        } else if !negativeTPD.isEmpty {
+            classification = "genuine native-SRK branch termination or model-parity limitation"
+        } else if tpdPoints.allSatisfy(\.isTrivialFeedStationaryPoint) {
+            classification = "stability minimization failure"
+        } else {
+            classification = "still indeterminate: no continuous negative-TPD minimum was found within deterministic bounds"
+        }
+        return NativeSRKColdBranchExperiment(
+            startingTemperatureK: startingTemperatureK,
+            startingPressurePa: startingPressurePa,
+            productionAttemptReason: productionReason,
+            multiStartTPDMinimumCount: tpdPoints.count,
+            negativeTPDMinimumCount: negativeTPD.count,
+            detachedMinimumCount: detached.count,
+            bestContinuousMinimum: continuousTPD.first,
+            rootDiagnostic: rootDiagnostic,
+            failureClassification: classification
         )
     }
 
@@ -1795,6 +1953,24 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         components: [ComponentID],
         useLiquidRoot: Bool
     ) throws -> FugacityResult {
+        try fugacityResult(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: fractions,
+            components: components,
+            useLiquidRoot: useLiquidRoot,
+            selectedRootOverride: nil
+        )
+    }
+
+    private func fugacityResult(
+        temperatureK: Double,
+        pressurePa: Double,
+        fractions: [Double],
+        components: [ComponentID],
+        useLiquidRoot: Bool,
+        selectedRootOverride: Double?
+    ) throws -> FugacityResult {
         let mixture = try mixtureTerm(temperatureK: temperatureK, fractions: fractions, components: components)
         let a = mixture.a
         let b = mixture.b
@@ -1812,7 +1988,10 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             b: reducedA - reducedB - reducedB * reducedB,
             c: -reducedA * reducedB
         ).filter { $0.isFinite && $0 > reducedB }
-        guard let z = useLiquidRoot ? roots.min() : roots.max() else {
+        let selectedRoot = selectedRootOverride.flatMap { candidate in
+            roots.min { abs($0 - candidate) < abs($1 - candidate) }
+        }
+        guard let z = selectedRoot ?? (useLiquidRoot ? roots.min() : roots.max()) else {
             throw NativeSRKError.invalidComposition("No physical SRK compressibility root.")
         }
         let logTerm = log((z + reducedB) / z)
@@ -1839,6 +2018,79 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         )
     }
 
+    private func physicalCompressibilityRoots(
+        temperatureK: Double,
+        pressurePa: Double,
+        fractions: [Double],
+        components: [ComponentID]
+    ) throws -> [Double] {
+        let mixture = try mixtureTerm(temperatureK: temperatureK, fractions: fractions, components: components)
+        let gasConstant = Self.gasConstant
+        let reducedA = mixture.a * pressurePa / (gasConstant * gasConstant * temperatureK * temperatureK)
+        let reducedB = mixture.b * pressurePa / (gasConstant * temperatureK)
+        guard reducedB > 0, reducedB < 1 else {
+            throw NativeSRKError.invalidComposition("Reduced co-volume is outside the SRK domain.")
+        }
+        return cubicRealRoots(
+            a: -1,
+            b: reducedA - reducedB - reducedB * reducedB,
+            c: -reducedA * reducedB
+        ).filter { $0.isFinite && $0 > reducedB }.sorted()
+    }
+
+    private func rootSelectionDiagnostic(
+        temperatureK: Double,
+        pressurePa: Double,
+        liquidFractions: [Double],
+        vaporFractions: [Double],
+        components: [ComponentID]
+    ) throws -> NativeSRKRootSelectionDiagnostic {
+        let liquidRoots = try physicalCompressibilityRoots(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: liquidFractions,
+            components: components
+        )
+        let vaporRoots = try physicalCompressibilityRoots(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: vaporFractions,
+            components: components
+        )
+        guard let selectedLiquid = liquidRoots.min(),
+              let selectedVapor = vaporRoots.max()
+        else {
+            throw NativeSRKError.invalidComposition("No admissible root pairing.")
+        }
+        let liquidDensity = pressurePa / (selectedLiquid * Self.gasConstant * temperatureK)
+        let vaporDensity = pressurePa / (selectedVapor * Self.gasConstant * temperatureK)
+        let rootSeparation = abs(selectedVapor - selectedLiquid)
+        let densitySeparation = abs(liquidDensity - vaporDensity)
+        let phaseDistance = maxRelativeDelta(liquidFractions, vaporFractions)
+        let classification: String
+        if rootSeparation <= 1e-8 || densitySeparation <= 1e-6 {
+            classification = "coalesced-root critical proximity"
+        } else if phaseDistance <= 1e-5 {
+            classification = "trivial phase-composition collapse"
+        } else if liquidRoots.count > 1 || vaporRoots.count > 1 {
+            classification = "multiple admissible roots with conventional min/max identity preserved"
+        } else {
+            classification = "single admissible root per phase calculation"
+        }
+        return NativeSRKRootSelectionDiagnostic(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            liquidCompressibilityRoots: liquidRoots,
+            vaporCompressibilityRoots: vaporRoots,
+            selectedLiquidRoot: selectedLiquid,
+            selectedVaporRoot: selectedVapor,
+            rootSeparation: rootSeparation,
+            densitySeparationMolesPerCubicMeter: densitySeparation,
+            phaseCompositionDistance: phaseDistance,
+            classification: classification
+        )
+    }
+
     private func minimizedTangentPlaneDistance(
         type: NativeSRKTPDTrialType,
         temperatureK: Double,
@@ -1846,6 +2098,34 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         feedFractions: [Double],
         components: [ComponentID]
     ) throws -> NativeSRKTPDMinimum {
+        guard let best = try rankedTPDStationaryPoints(
+            type: type,
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            feedFractions: feedFractions,
+            components: components,
+            additionalTrialCompositions: []
+        ).first else {
+            throw NativeSRKError.invalidComposition("no bounded TPD trial converged")
+        }
+        return NativeSRKTPDMinimum(
+            trialType: best.trialType,
+            minimumTangentPlaneDistance: best.minimumTangentPlaneDistance,
+            iterations: best.iterations,
+            finalTrialComposition: best.finalTrialComposition,
+            residualNorm: best.residualNorm,
+            terminationReason: best.terminationReason
+        )
+    }
+
+    private func rankedTPDStationaryPoints(
+        type: NativeSRKTPDTrialType,
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        additionalTrialCompositions: [[Double]]
+    ) throws -> [NativeSRKTPDStationaryPoint] {
         let feedPhi = try fugacityCoefficients(
             temperatureK: temperatureK,
             pressurePa: pressurePa,
@@ -1858,9 +2138,10 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             temperatureK: temperatureK,
             pressurePa: pressurePa,
             feedFractions: feedFractions,
-            components: components
+            components: components,
+            additionalTrialCompositions: additionalTrialCompositions
         )
-        var best: NativeSRKTPDMinimum?
+        var stationaryPoints: [NativeSRKTPDStationaryPoint] = []
         var failureReason = "no bounded TPD trial converged"
 
         for trial in trials {
@@ -1873,19 +2154,41 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                     pressurePa: pressurePa,
                     components: components
                 )
-                if best == nil
-                    || minimum.minimumTangentPlaneDistance < best!.minimumTangentPlaneDistance {
-                    best = minimum
+                let stationaryPoint = NativeSRKTPDStationaryPoint(
+                    trialType: minimum.trialType,
+                    minimumTangentPlaneDistance: minimum.minimumTangentPlaneDistance,
+                    iterations: minimum.iterations,
+                    finalTrialComposition: minimum.finalTrialComposition,
+                    residualNorm: minimum.residualNorm,
+                    terminationReason: minimum.terminationReason,
+                    isTrivialFeedStationaryPoint: collapsedComposition(minimum.finalTrialComposition, feedFractions),
+                    isBoundaryPinned: minimum.finalTrialComposition.contains {
+                        $0 <= 1e-10 || $0 >= 1 - 1e-10
+                    }
+                )
+                if !stationaryPoints.contains(where: {
+                    maxRelativeDelta($0.finalTrialComposition, stationaryPoint.finalTrialComposition) < 1e-6
+                        && abs($0.minimumTangentPlaneDistance - stationaryPoint.minimumTangentPlaneDistance) < 1e-8
+                }) {
+                    stationaryPoints.append(stationaryPoint)
                 }
             } catch {
                 failureReason = "\(error)"
             }
         }
 
-        guard let best else {
+        guard !stationaryPoints.isEmpty else {
             throw NativeSRKError.invalidComposition(failureReason)
         }
-        return best
+        return stationaryPoints.sorted { lhs, rhs in
+            if lhs.minimumTangentPlaneDistance != rhs.minimumTangentPlaneDistance {
+                return lhs.minimumTangentPlaneDistance < rhs.minimumTangentPlaneDistance
+            }
+            if lhs.residualNorm != rhs.residualNorm {
+                return lhs.residualNorm < rhs.residualNorm
+            }
+            return lhs.finalTrialComposition.lexicographicallyPrecedes(rhs.finalTrialComposition)
+        }
     }
 
     private func tpdInitialTrials(
@@ -1893,7 +2196,8 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         temperatureK: Double,
         pressurePa: Double,
         feedFractions: [Double],
-        components: [ComponentID]
+        components: [ComponentID],
+        additionalTrialCompositions: [[Double]] = []
     ) -> [TPDTrial] {
         let wilson = wilsonKValues(temperatureK: temperatureK, pressurePa: pressurePa, components: components)
         let wilsonSeed: [Double]
@@ -1903,7 +2207,7 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         case .vaporLike:
             wilsonSeed = normalized(zip(feedFractions, wilson).map { $0 * $1 })
         }
-        return uniqueCompositions([
+        let seeds = [
             wilsonSeed,
             feedFractions,
             [0.999, 0.001],
@@ -1915,7 +2219,8 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             [0.10, 0.90],
             [0.01, 0.99],
             [0.001, 0.999]
-        ].map(boundedBinaryFractions)).map {
+        ] + additionalTrialCompositions
+        return uniqueCompositions(seeds.map(boundedBinaryFractions)).map {
             TPDTrial(type: type, composition: $0)
         }
     }
@@ -2503,6 +2808,24 @@ private func uniqueCompositions(_ values: [[Double]]) -> [[Double]] {
         }
     }
     return result
+}
+
+private func branchNeighborhoodSeeds(feedFractions: [Double], incipient: [Double]) -> [[Double]] {
+    let first = incipient[0]
+    let perturbations = [-0.25, -0.10, -0.03, 0.03, 0.10, 0.25].map {
+        boundedBinaryFractions([first + $0, 1 - first - $0])
+    }
+    let instabilityDirection = incipient[0] >= feedFractions[0] ? 1.0 : -1.0
+    let directed = [0.02, 0.05, 0.10].map {
+        boundedBinaryFractions([first + instabilityDirection * $0, 1 - first - instabilityDirection * $0])
+    }
+    return uniqueCompositions([
+        incipient,
+        feedFractions,
+        boundedBinaryFractions([max(1e-6, first), min(1 - 1e-6, 1 - first)]),
+        [1e-6, 1 - 1e-6],
+        [1 - 1e-6, 1e-6]
+    ] + perturbations + directed)
 }
 
 private func collapsedComposition(_ lhs: [Double], _ rhs: [Double]) -> Bool {

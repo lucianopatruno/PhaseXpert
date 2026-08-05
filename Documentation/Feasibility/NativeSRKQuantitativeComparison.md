@@ -39,22 +39,25 @@ Acceptance tolerances defined before the run:
 
 ## Interpretation
 
-The coupled Newton/stability prototype remains entirely local and deterministic, but it does not yet meet the acceptance gate. The latest run adds bidirectional pseudo-arc search from the selected continuous segment: both tangent orientations are attempted with independent bounded histories, and detached seed segments remain excluded from coverage. The 97/3 CO2/N2 bubble branch extends slightly lower, from `61.875 K` at `c1f0c28` to `61.591 K`. The 90/10 CO2/N2 bubble branch remains unchanged at the cold end: maximum relative pressure error stays controlled at 2.2%, but continuous coverage remains 60.2% and still does not extend below 139.987 K.
+The coupled Newton/stability prototype remains entirely local and deterministic, but it does not yet meet the acceptance gate. The latest run preserves bidirectional pseudo-arc search from the selected continuous segment and adds a bounded cold-branch stability/root-selection diagnostic at the 90/10 CO2/N2 bubble endpoint. The 97/3 CO2/N2 bubble branch remains extended to `61.591 K`. The 90/10 CO2/N2 bubble branch remains unchanged at the cold end: maximum relative pressure error stays controlled at 2.2%, but continuous coverage remains 60.2% and still does not extend below 139.987 K.
 
 ## Failure Diagnostics
 
 - Pure CO2: the last accepted saturation point remains `T = 290.096 K`; the reference bubble branch extends to `304.192 K`, leaving an endpoint gap of about `14.096 K`. The next attempted points terminate as coalesced-root critical-region gaps rather than fabricated endpoints.
 - 90/10 CO2/N2 bubble: the detached diagnostic cold seed at `T = 61.875 K` still converges independently to `P = 287,466.655 Pa` with `vapor xCO2 = 1.10e-12`, residual `1.36e-12`, and minimum TPD `-3.199`, but the production tracer now rejects that low-temperature segment from accepted coverage because it is not connected to the selected continuous branch. The accepted branch still starts near `139.987 K`.
 - Bidirectional search: the backward tangent from the selected 90/10 main branch was explored, but the first accepted cold-side state remains `139.987 K`. No fold connecting the main branch to the detached 61.875 K segment was found under the current bounded step, pressure-jump, residual, and continuity checks.
+- Cold-side stability/root diagnostic at the accepted 90/10 endpoint: deterministic multi-start vapor-like TPD minimization found `13` deduplicated stationary points and no negative continuous TPD minimum near the accepted branch. The best continuity-neighborhood stationary point has composition `[0.0608755, 0.9391245]`, TPD `6.69e-16`, residual `4.30e-12`, is not feed-trivial and is not boundary-pinned. Root diagnostics report a single admissible root per phase calculation, root separation `0.186764`, density separation `5,400.49 mol m^-3`, and phase-composition distance `13.784`.
+- Controlled initialization experiment: existing production initialization, multi-start TPD initialization, root-continuity-aware diagnostics, and combined TPD/root-continuity screening all fail to advance the same continuous branch below `139.987 K`. The bounded production retry at the next cold step fails by line-search residuals from all candidate seeds, while the TPD search finds no valid negative-TPD minimum inside the accepted-branch continuity neighborhood.
 - Pseudo-arc diagnostic: a bounded 97/3 CO2/N2 bubble continuation step from `220 K` and `228 K` predicts `232.002 K` and corrects to `232.003 K` with residual `1.81e-13`. A forced 90/10 CO2/N2 jump from the main branch near `139.987 K` toward the detached `61.875 K` point is rejected as non-continuous with an incipient-composition-boundary failure.
 - 90/10 CO2/N2 bubble gap examples below 140 K: `54.000 K` fails with singular Jacobian residual norm about `5.85`; `61.375 K` fails with singular Jacobian residual norm about `0.246`; points from roughly `66.908 K` upward fail mainly by bounded line-search failure before the main branch resumes near `139.987 K`.
 
 Likely contributors:
 
 - bidirectional pseudo-arc search now participates in mixture tracing after initialization, but it has not found a continuous route from the 90/10 main branch below `139.987 K`;
-- the 90/10 bubble branch can still produce TPD-backed near-boundary cold seed points, but they are disconnected from the main branch and are now excluded from parity statistics;
+- the focused cold-side TPD/root diagnostic did not find a negative-TPD instability that is continuous with the accepted 90/10 endpoint, so the current evidence classifies the failure as still indeterminate rather than proving a pure initialization bug or a native-SRK branch limit;
+- the 90/10 bubble branch can still produce TPD-backed near-boundary cold seed points, but they are disconnected from the main branch and are excluded from parity statistics;
 - pure-CO2 saturation deliberately rejects coalesced single-root states near the critical region, so it reports a gap rather than fabricating a critical endpoint;
-- branch continuation still uses temperature stepping plus bounded reseeding, without an arc-length or pressure-oriented continuation mode.
+- production mixture continuation uses the bounded pseudo-arc corrector after initialization, but the cold-side endpoint still fails under the deterministic continuity, residual, root and TPD bounds.
 
 This is software parity evidence only. It is not validation against experimental data and must not be used for engineering, safety, commercial or regulatory decisions.
 
@@ -66,12 +69,12 @@ Measured on the local Mac validation run:
 
 | Case | Elapsed s | Attempted points | Converged points | Gaps | Seconds per attempted point |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| pure-co2 | 0.181 | 528 | 50 | 478 | 0.000343 |
-| co2-97-n2-3 | 8.087 | 338 | 87 | 251 | 0.023925 |
-| co2-90-n2-10 | 12.363 | 463 | 62 | 401 | 0.026702 |
+| pure-co2 | 0.208 | 528 | 50 | 478 | 0.000394 |
+| co2-97-n2-3 | 7.501 | 338 | 87 | 251 | 0.022192 |
+| co2-90-n2-10 | 10.472 | 463 | 62 | 401 | 0.022618 |
 
-Repeated full comparison report generation produced byte-for-byte identical JSON and measured `25.35 s` and `24.76 s` on consecutive runs. A synthetic cancellation check returned in `0.000004 s` before any point was emitted.
+Repeated full comparison report generation including the cold-side multi-start TPD/root diagnostic produced byte-for-byte identical JSON and measured `33.59 s` and `32.03 s` on consecutive runs. A synthetic cancellation check returned in `0.000005 s` before any point was emitted.
 
 ## Next Numerical Step
 
-Improve the continuation corrector's cold-side initialization and stability/root-selection tests around the 90/10 bubble branch near `139.987 K`, then rerun the bidirectional search to separate a numerical loss of phase identity from an SRK/model-parity limitation.
+Implement a pressure-parameterized or full two-phase flash/stability formulation around the 90/10 bubble endpoint to determine whether the missing cold region is hidden by the current bubble-point formulation rather than by TPD seeding or conventional root selection.
