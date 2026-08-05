@@ -176,6 +176,11 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let terminationReason: String
     }
 
+    private struct BranchCandidate {
+        let temperatureK: Double
+        let outcome: SolveOutcome
+    }
+
     private struct FugacityResult {
         let coefficients: [Double]
         let rootCount: Int
@@ -556,6 +561,8 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         var step = options.initialTemperatureStepK
         var failures = 0
         var pressureGuess: Double?
+        var currentSegment: [BranchCandidate] = []
+        var acceptedSegments: [[BranchCandidate]] = []
         let components = composition.map(\.component)
         let fractions = composition.map(\.moleFraction)
 
@@ -587,17 +594,16 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                         shouldCancel: shouldCancel
                     )
                 }
-                points.append(point(
-                    branch: branch,
-                    temperatureK: temperature,
-                    outcome: outcome,
-                    components: components
-                ))
+                currentSegment.append(.init(temperatureK: temperature, outcome: outcome))
                 pressureGuess = outcome.pressurePa
                 failures = 0
                 step = min(options.maximumTemperatureStepK, step * 1.15)
                 temperature += step
             } catch {
+                if !currentSegment.isEmpty {
+                    acceptedSegments.append(currentSegment)
+                    currentSegment.removeAll()
+                }
                 gaps.append(.init(branch: branch, temperatureK: temperature, reason: "\(error)"))
                 failures += 1
                 if pressureGuess != nil, failures >= options.maximumConsecutiveFailures {
@@ -608,6 +614,145 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
                 temperature += step
             }
         }
+        if !currentSegment.isEmpty {
+            acceptedSegments.append(currentSegment)
+        }
+
+        var selectedSegment = selectedContinuousSegment(acceptedSegments)
+        if selectedSegment.count >= 2 {
+            continueSelectedSegmentWithPseudoArc(
+                branch,
+                selectedSegment: &selectedSegment,
+                composition: composition,
+                options: options,
+                shouldCancel: shouldCancel,
+                gaps: &gaps,
+                attempted: &attempted,
+                cancelled: &cancelled
+            )
+        }
+        points.append(contentsOf: selectedSegment.map {
+            point(
+                branch: branch,
+                temperatureK: $0.temperatureK,
+                outcome: $0.outcome,
+                components: components
+            )
+        })
+        let rejectedSegments = acceptedSegments.filter { segment in
+            guard let first = segment.first, let selectedFirst = selectedSegment.first else { return false }
+            return abs(first.temperatureK - selectedFirst.temperatureK) > 1e-9
+        }
+        for segment in rejectedSegments {
+            for candidate in segment {
+                gaps.append(.init(
+                    branch: branch,
+                    temperatureK: candidate.temperatureK,
+                    reason: "Converged seed rejected because it is detached from the selected continuous pseudo-arc branch."
+                ))
+            }
+        }
+    }
+
+    private func selectedContinuousSegment(_ segments: [[BranchCandidate]]) -> [BranchCandidate] {
+        segments.max { lhs, rhs in
+            if lhs.count != rhs.count {
+                return lhs.count < rhs.count
+            }
+            return (lhs.last?.temperatureK ?? -.infinity) < (rhs.last?.temperatureK ?? -.infinity)
+        } ?? []
+    }
+
+    private func continueSelectedSegmentWithPseudoArc(
+        _ branch: NativeSRKEnvelopeBranch,
+        selectedSegment: inout [BranchCandidate],
+        composition: [NativeSRKMixtureFraction],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool,
+        gaps: inout [NativeSRKEnvelopeGap],
+        attempted: inout Int,
+        cancelled: inout Bool
+    ) {
+        let components = composition.map(\.component)
+        var arcStepCount = 0
+        while arcStepCount < 12, selectedSegment.count >= 2 {
+            if shouldCancel() {
+                cancelled = true
+                return
+            }
+            let previous = selectedSegment[selectedSegment.count - 2]
+            let current = selectedSegment[selectedSegment.count - 1]
+            attempted += 1
+            do {
+                let diagnostic = try pseudoArcLengthDiagnosticStep(
+                    branch: branch,
+                    previousTemperatureK: previous.temperatureK,
+                    previousPressurePa: previous.outcome.pressurePa,
+                    previousIncipientCarbonDioxideMoleFraction: incipientCarbonDioxideFraction(
+                        branch: branch,
+                        outcome: previous.outcome,
+                        components: components
+                    ),
+                    currentTemperatureK: current.temperatureK,
+                    currentPressurePa: current.outcome.pressurePa,
+                    currentIncipientCarbonDioxideMoleFraction: incipientCarbonDioxideFraction(
+                        branch: branch,
+                        outcome: current.outcome,
+                        components: components
+                    ),
+                    feedComposition: composition,
+                    options: options,
+                    shouldCancel: shouldCancel
+                )
+                guard diagnostic.isContinuousWithSeed,
+                      let corrected = diagnostic.correctedPoint,
+                      corrected.temperatureK > current.temperatureK + 1e-6,
+                      corrected.temperatureK <= options.maximumTemperatureK
+                else {
+                    gaps.append(.init(
+                        branch: branch,
+                        temperatureK: diagnostic.predictedTemperatureK,
+                        reason: "Pseudo-arc continuation rejected non-continuous or reversing candidate: \(diagnostic.terminationReason)"
+                    ))
+                    return
+                }
+                selectedSegment.append(.init(
+                    temperatureK: corrected.temperatureK,
+                    outcome: SolveOutcome(
+                        pressurePa: corrected.pressurePa,
+                        iterations: corrected.iterations,
+                        liquidFractions: components.map { corrected.liquidMoleFractions[$0] ?? 0 },
+                        vaporFractions: components.map { corrected.vaporMoleFractions[$0] ?? 0 },
+                        finalResidualNorm: corrected.finalResidualNorm,
+                        finalStepNorm: corrected.finalStepNorm,
+                        liquidRootCount: corrected.liquidRootCount,
+                        vaporRootCount: corrected.vaporRootCount,
+                        selectedLiquidRoot: corrected.selectedLiquidRoot,
+                        selectedVaporRoot: corrected.selectedVaporRoot,
+                        stabilityAssessment: corrected.stabilityAssessment,
+                        terminationReason: corrected.terminationReason
+                    )
+                ))
+                arcStepCount += 1
+            } catch {
+                gaps.append(.init(
+                    branch: branch,
+                    temperatureK: current.temperatureK,
+                    reason: "Pseudo-arc continuation failed: \(error)"
+                ))
+                return
+            }
+        }
+    }
+
+    private func incipientCarbonDioxideFraction(
+        branch: NativeSRKEnvelopeBranch,
+        outcome: SolveOutcome,
+        components: [ComponentID]
+    ) -> Double {
+        let fractions = branch == .bubble ? outcome.vaporFractions : outcome.liquidFractions
+        guard let index = components.firstIndex(of: .carbonDioxide) else { return fractions[0] }
+        return fractions[index]
     }
 
     private func solveBubble(

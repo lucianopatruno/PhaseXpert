@@ -205,6 +205,25 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
         XCTAssertTrue(diagnostic.terminationReason.contains("incipient composition boundary"))
     }
 
+    func testProductionTraceExcludesDetachedColdBubbleSegment() throws {
+        let result = try tracer.phaseEnvelope(
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.10)
+            ],
+            options: testOptions(minimumTemperatureK: 54)
+        )
+        let bubblePoints = result.points.filter { $0.branch == .bubble }
+        let bubbleGaps = result.gaps.filter { $0.branch == .bubble }
+
+        XCTAssertFalse(bubblePoints.contains { $0.temperatureK < 139.0 })
+        XCTAssertTrue(bubbleGaps.contains {
+            $0.temperatureK < 140.0
+                && $0.reason.contains("detached")
+        })
+        XCTAssertGreaterThanOrEqual(bubblePoints.map(\.temperatureK).min() ?? 0, 139.0)
+    }
+
     func testIterationLimitBoundsTraceWork() throws {
         let result = try tracer.phaseEnvelope(
             composition: [
