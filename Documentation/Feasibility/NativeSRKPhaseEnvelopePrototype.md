@@ -57,6 +57,8 @@ The implementation includes:
 - bounded multi-start Michelsen tangent-plane-distance minimization for liquid-like and vapour-like stability diagnostics;
 - deterministic TPD stationary-point deduplication and ranking by TPD value, residual and composition for cold-branch diagnostics;
 - explicit EOS root diagnostics for admissible compressibility roots, selected roots, density separation and phase-composition separation;
+- diagnostic fixed-pressure bubble-temperature solving for the 90/10 cold endpoint;
+- diagnostic binary two-phase flash solving with `ln(K1)`, `ln(K2)` and vapour-fraction-logit unknowns, Rachford-Rice material balance and fugacity-equality residuals;
 - safeguarded finite-difference Newton updates with line search, pressure bounds, composition bounds and deterministic singular-Jacobian failure reporting;
 - bounded bubble-solve reseeding from minimized TPD, Wilson estimates and pressure-grid seeds;
 - continuity-oriented dew tracing from Wilson or previous-pressure continuation to avoid jumping to unrelated dew roots;
@@ -104,10 +106,11 @@ These are software-parity tolerances only. They are not experimental validation 
 - The current TPD minimization is bounded and multi-start, but it is still a binary-composition minimizer used for stability diagnostics and seeding.
 - The 90/10 CO2/N2 bubble branch can still produce TPD-backed cold near-boundary points below 140 K, but production pseudo-arc continuity checks reject them as disconnected from the main branch and exclude them from parity statistics.
 - The production mixture trace now uses bidirectional pseudo-arc continuation after bounded initialization, but it has not yet found a continuous route through the 90/10 cold-bubble gap.
-- A focused cold-side diagnostic at the accepted 90/10 bubble endpoint found no negative TPD stationary point inside the accepted-branch continuity neighborhood and found only a single admissible root per phase calculation there. The current evidence is still indeterminate: it does not prove that the detached cold segment is a valid continuation, and it does not prove an inherent SRK model endpoint.
+- A focused cold-side diagnostic at the accepted 90/10 bubble endpoint found no negative TPD stationary point inside the accepted-branch continuity neighborhood and found only a single admissible root per phase calculation there.
+- The bounded two-phase flash diagnostic found finite-vapour-fraction states continuous with the accepted endpoint down to `123.986665 K`, but these are diagnostic flash states rather than accepted bubble-boundary points. The missing cold bubble boundary is therefore classified as a bubble-point parameterization limitation that still requires verified `beta -> 0` boundary tracking before any coverage can be counted.
 - Simulator and physical-iPhone execution, app-size delta, peak memory and UI responsiveness measurements remain pending.
 - Independent published-data comparisons remain pending.
 
 ## Recommended Next Step
 
-Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should implement a pressure-parameterized or full two-phase flash/stability formulation around the 90/10 bubble endpoint to determine whether the missing cold region is hidden by the current bubble-point formulation rather than by TPD seeding or conventional root selection.
+Run the focused `NativeSRKPhaseEnvelopeTests`, inspect the reference-comparison metrics, then improve the mixture solver if coverage or parity fails. The next numerical improvement should promote finite-beta flash-boundary tracking into a bounded continuation toward the `beta -> 0` bubble limit below `139.987 K`, and accept points only if the flash path converges back to a genuine continuous bubble boundary with preserved pressure parity.

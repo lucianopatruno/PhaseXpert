@@ -133,9 +133,15 @@ struct ColdBranchExperimentMetric: Encodable {
     let startingTemperatureK: Double
     let startingPressurePa: Double
     let productionAttemptReason: String
+    let pressureParameterizedAttemptReason: String
     let multiStartTPDMinimumCount: Int
     let negativeTPDMinimumCount: Int
     let detachedMinimumCount: Int
+    let flashAttemptCount: Int
+    let convergedFlashCount: Int
+    let continuousFlashCount: Int
+    let lowestContinuousFlashTemperatureK: Double?
+    let flashFailureReason: String
     let bestContinuousTPD: TPDMinimumMetric?
     let rootClassification: String
     let rootSeparation: Double
@@ -147,9 +153,15 @@ struct ColdBranchExperimentMetric: Encodable {
         case startingTemperatureK = "starting_temperature_k"
         case startingPressurePa = "starting_pressure_pa"
         case productionAttemptReason = "production_attempt_reason"
+        case pressureParameterizedAttemptReason = "pressure_parameterized_attempt_reason"
         case multiStartTPDMinimumCount = "multi_start_tpd_minimum_count"
         case negativeTPDMinimumCount = "negative_tpd_minimum_count"
         case detachedMinimumCount = "detached_minimum_count"
+        case flashAttemptCount = "flash_attempt_count"
+        case convergedFlashCount = "converged_flash_count"
+        case continuousFlashCount = "continuous_flash_count"
+        case lowestContinuousFlashTemperatureK = "lowest_continuous_flash_temperature_k"
+        case flashFailureReason = "flash_failure_reason"
         case bestContinuousTPD = "best_continuous_tpd"
         case rootClassification = "root_classification"
         case rootSeparation = "root_separation"
@@ -319,9 +331,15 @@ enum NativeSRKComparisonReport {
             startingTemperatureK: experiment.startingTemperatureK,
             startingPressurePa: experiment.startingPressurePa,
             productionAttemptReason: experiment.productionAttemptReason,
+            pressureParameterizedAttemptReason: experiment.pressureParameterizedAttemptReason,
             multiStartTPDMinimumCount: experiment.multiStartTPDMinimumCount,
             negativeTPDMinimumCount: experiment.negativeTPDMinimumCount,
             detachedMinimumCount: experiment.detachedMinimumCount,
+            flashAttemptCount: experiment.flashAttemptCount,
+            convergedFlashCount: experiment.convergedFlashCount,
+            continuousFlashCount: experiment.continuousFlashCount,
+            lowestContinuousFlashTemperatureK: experiment.lowestContinuousFlashTemperatureK,
+            flashFailureReason: experiment.flashFailureReason,
             bestContinuousTPD: experiment.bestContinuousMinimum.map {
                 TPDMinimumMetric(
                     minimumTangentPlaneDistance: $0.minimumTangentPlaneDistance,

@@ -105,12 +105,30 @@ public struct NativeSRKColdBranchExperiment: Sendable, Equatable {
     public let startingTemperatureK: Double
     public let startingPressurePa: Double
     public let productionAttemptReason: String
+    public let pressureParameterizedAttemptReason: String
     public let multiStartTPDMinimumCount: Int
     public let negativeTPDMinimumCount: Int
     public let detachedMinimumCount: Int
+    public let flashAttemptCount: Int
+    public let convergedFlashCount: Int
+    public let continuousFlashCount: Int
+    public let lowestContinuousFlashTemperatureK: Double?
+    public let flashFailureReason: String
     public let bestContinuousMinimum: NativeSRKTPDStationaryPoint?
     public let rootDiagnostic: NativeSRKRootSelectionDiagnostic
     public let failureClassification: String
+}
+
+public struct NativeSRKFlashDiagnostic: Sendable, Equatable {
+    public let temperatureK: Double
+    public let pressurePa: Double
+    public let vaporFraction: Double
+    public let liquidFractions: [Double]
+    public let vaporFractions: [Double]
+    public let fugacityResidualNorm: Double
+    public let materialBalanceResidual: Double
+    public let rootDiagnostic: NativeSRKRootSelectionDiagnostic
+    public let terminationReason: String
 }
 
 public struct NativeSRKProvenance: Sendable, Equatable {
@@ -465,6 +483,29 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             vaporFractions: incipient,
             components: components
         )
+        let pressureParameterizedReason = pressureParameterizedBubbleReason(
+            startingTemperatureK: startingTemperatureK,
+            startingPressurePa: startingPressurePa,
+            feedFractions: feedFractions,
+            components: components,
+            options: options,
+            shouldCancel: shouldCancel
+        )
+        let flashDiagnostics = boundedColdFlashSearch(
+            startingTemperatureK: startingTemperatureK,
+            startingPressurePa: startingPressurePa,
+            startingIncipient: incipient,
+            feedFractions: feedFractions,
+            components: components,
+            options: options,
+            shouldCancel: shouldCancel
+        )
+        let continuousFlash = flashDiagnostics.converged.filter {
+            $0.vaporFraction > 1e-6
+                && $0.vaporFraction < 0.25
+                && maxRelativeDelta($0.vaporFractions, incipient) <= 0.5
+                && $0.rootDiagnostic.phaseCompositionDistance > 1e-5
+        }
         let continuousTPD = tpdPoints.filter {
             !$0.isTrivialFeedStationaryPoint
                 && !$0.isBoundaryPinned
@@ -492,6 +533,8 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         let classification: String
         if rootDiagnostic.rootSeparation <= 1e-8 || rootDiagnostic.densitySeparationMolesPerCubicMeter <= 1e-6 {
             classification = "loss or coalescence of admissible EOS roots"
+        } else if !continuousFlash.isEmpty {
+            classification = "bubble-point parameterization failure resolved by flash-boundary tracking"
         } else if continuousTPD.contains(where: { $0.minimumTangentPlaneDistance < -1e-8 }) {
             classification = "bordered-corrector/continuation failure"
         } else if !negativeTPD.isEmpty {
@@ -499,18 +542,53 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
         } else if tpdPoints.allSatisfy(\.isTrivialFeedStationaryPoint) {
             classification = "stability minimization failure"
         } else {
-            classification = "still indeterminate: no continuous negative-TPD minimum was found within deterministic bounds"
+            classification = "still indeterminate: pressure-parameterized and flash diagnostics found no continuous accepted path within deterministic bounds"
         }
         return NativeSRKColdBranchExperiment(
             startingTemperatureK: startingTemperatureK,
             startingPressurePa: startingPressurePa,
             productionAttemptReason: productionReason,
+            pressureParameterizedAttemptReason: pressureParameterizedReason,
             multiStartTPDMinimumCount: tpdPoints.count,
             negativeTPDMinimumCount: negativeTPD.count,
             detachedMinimumCount: detached.count,
+            flashAttemptCount: flashDiagnostics.attempts,
+            convergedFlashCount: flashDiagnostics.converged.count,
+            continuousFlashCount: continuousFlash.count,
+            lowestContinuousFlashTemperatureK: continuousFlash.map(\.temperatureK).min(),
+            flashFailureReason: flashDiagnostics.failureReason,
             bestContinuousMinimum: continuousTPD.first,
             rootDiagnostic: rootDiagnostic,
             failureClassification: classification
+        )
+    }
+
+    public func twoPhaseFlashDiagnostic(
+        temperatureK: Double,
+        pressurePa: Double,
+        composition inputComposition: [NativeSRKMixtureFraction],
+        initialKValues: [Double],
+        initialVaporFraction: Double,
+        options: NativeSRKEnvelopeOptions = NativeSRKEnvelopeOptions(),
+        shouldCancel: @Sendable () -> Bool = { false }
+    ) throws -> NativeSRKFlashDiagnostic {
+        let composition = try validatedComposition(inputComposition)
+        guard composition.count == 2, initialKValues.count == 2 else {
+            throw NativeSRKError.invalidComposition("Binary flash diagnostic requires two components and two K-values.")
+        }
+        let state = [
+            log(clamp(initialKValues[0], 1e-8, 1e8)),
+            log(clamp(initialKValues[1], 1e-8, 1e8)),
+            logit(initialVaporFraction)
+        ]
+        return try solveTwoPhaseFlash(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            feedFractions: composition.map(\.moleFraction),
+            components: composition.map(\.component),
+            initialState: state,
+            options: options,
+            shouldCancel: shouldCancel
         )
     }
 
@@ -1057,6 +1135,464 @@ public final class NativeSRKPhaseEnvelopeTracer: @unchecked Sendable {
             initialPressurePa: initialPressurePa
                 ?? wilsonDewPressure(temperatureK: temperatureK, fractions: vaporFractions, components: components),
             shouldCancel: shouldCancel
+        )
+    }
+
+    private func pressureParameterizedBubbleReason(
+        startingTemperatureK: Double,
+        startingPressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool
+    ) -> String {
+        let pressureSeeds = uniqueBounded(
+            [
+                startingPressurePa * 0.90,
+                startingPressurePa,
+                startingPressurePa * 1.10
+            ],
+            lower: options.minimumPressurePa,
+            upper: options.maximumPressurePa
+        )
+        var failures: [String] = []
+        for pressure in pressureSeeds.prefix(3) {
+            if shouldCancel() { return "cancelled before pressure-parameterized bubble search" }
+            do {
+                let candidate = try solveBubbleTemperatureAtPressure(
+                    pressurePa: pressure,
+                    initialTemperatureK: startingTemperatureK - options.minimumTemperatureStepK,
+                    feedFractions: feedFractions,
+                    components: components,
+                    options: options,
+                    shouldCancel: shouldCancel
+                )
+                let temperatureDistance = startingTemperatureK - candidate.temperatureK
+                if temperatureDistance > 0, temperatureDistance <= max(4.0, options.maximumTemperatureStepK) {
+                    return "pressure-parameterized bubble solve advanced continuously to \(candidate.temperatureK) K"
+                }
+                failures.append("pressure \(pressure) Pa converged outside continuity neighborhood at \(candidate.temperatureK) K")
+            } catch {
+                failures.append("\(error)")
+            }
+        }
+        return "pressure-parameterized bubble search found no continuous cold-side state: "
+            + failures.prefix(3).joined(separator: " | ")
+    }
+
+    private func solveBubbleTemperatureAtPressure(
+        pressurePa: Double,
+        initialTemperatureK: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> (temperatureK: Double, incipient: [Double], residualNorm: Double) {
+        var state = [
+            clamp(initialTemperatureK, options.minimumTemperatureK, options.maximumTemperatureK),
+            logit(incipientCompositionSeeds(
+                branch: .bubble,
+                temperatureK: clamp(initialTemperatureK, options.minimumTemperatureK, options.maximumTemperatureK),
+                pressurePa: pressurePa,
+                feedFractions: feedFractions,
+                components: components
+            ).first?[0] ?? feedFractions[0])
+        ]
+        var bestNorm = Double.infinity
+        for _ in 1...min(options.maximumIterationsPerSolve, 40) {
+            if shouldCancel() { throw CancellationError() }
+            let residual = try fixedPressureBubbleResidual(
+                pressurePa: pressurePa,
+                state: state,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let norm = vectorNorm(residual)
+            bestNorm = min(bestNorm, norm)
+            if norm <= sqrt(options.relativeTolerance) {
+                return (state[0], binaryFractions(fromLogit: state[1]), norm)
+            }
+            let jacobian = try fixedPressureBubbleJacobian(
+                pressurePa: pressurePa,
+                state: state,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let determinant = jacobian[0][0] * jacobian[1][1] - jacobian[0][1] * jacobian[1][0]
+            guard determinant.isFinite, abs(determinant) > 1e-10 else {
+                throw NativeSRKError.invalidComposition(
+                    "pressure-parameterized bubble system is singular; best residual norm \(bestNorm)."
+                )
+            }
+            let rawStep = [
+                (-residual[0] * jacobian[1][1] + jacobian[0][1] * residual[1]) / determinant,
+                (jacobian[1][0] * residual[0] - jacobian[0][0] * residual[1]) / determinant
+            ]
+            guard rawStep.allSatisfy(\.isFinite) else {
+                throw NativeSRKError.invalidComposition("pressure-parameterized bubble step is non-finite.")
+            }
+            let boundedStep = [
+                clamp(rawStep[0], -max(1.0, options.maximumTemperatureStepK), max(1.0, options.maximumTemperatureStepK)),
+                clamp(rawStep[1], -1.5, 1.5)
+            ]
+            var damping = 1.0
+            var accepted: [Double]?
+            while damping >= 1.0 / 64.0 {
+                if shouldCancel() { throw CancellationError() }
+                let candidate = [
+                    clamp(state[0] + damping * boundedStep[0], options.minimumTemperatureK, options.maximumTemperatureK),
+                    clamp(state[1] + damping * boundedStep[1], -30, 30)
+                ]
+                do {
+                    let candidateNorm = vectorNorm(try fixedPressureBubbleResidual(
+                        pressurePa: pressurePa,
+                        state: candidate,
+                        feedFractions: feedFractions,
+                        components: components,
+                        options: options
+                    ))
+                    if candidateNorm.isFinite, candidateNorm < norm {
+                        accepted = candidate
+                        break
+                    }
+                } catch {
+                    damping /= 2
+                    continue
+                }
+                damping /= 2
+            }
+            guard let accepted else {
+                throw NativeSRKError.invalidComposition(
+                    "pressure-parameterized bubble line search failed; best residual norm \(bestNorm)."
+                )
+            }
+            state = accepted
+        }
+        throw NativeSRKError.invalidComposition(
+            "pressure-parameterized bubble solve did not converge; best residual norm \(bestNorm)."
+        )
+    }
+
+    private func fixedPressureBubbleResidual(
+        pressurePa: Double,
+        state: [Double],
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [Double] {
+        try coupledResidual(
+            branch: .bubble,
+            temperatureK: clamp(state[0], options.minimumTemperatureK, options.maximumTemperatureK),
+            feedFractions: feedFractions,
+            state: [log(pressurePa), state[1]],
+            components: components,
+            options: options
+        )
+    }
+
+    private func fixedPressureBubbleJacobian(
+        pressurePa: Double,
+        state: [Double],
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions
+    ) throws -> [[Double]] {
+        let steps = [max(1e-3, state[0] * 1e-6), 1e-4]
+        var columns: [[Double]] = []
+        for index in 0..<2 {
+            var lower = state
+            var upper = state
+            lower[index] -= steps[index]
+            upper[index] += steps[index]
+            lower[0] = clamp(lower[0], options.minimumTemperatureK, options.maximumTemperatureK)
+            upper[0] = clamp(upper[0], options.minimumTemperatureK, options.maximumTemperatureK)
+            lower[1] = clamp(lower[1], -30, 30)
+            upper[1] = clamp(upper[1], -30, 30)
+            let lowerResidual = try fixedPressureBubbleResidual(
+                pressurePa: pressurePa,
+                state: lower,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let upperResidual = try fixedPressureBubbleResidual(
+                pressurePa: pressurePa,
+                state: upper,
+                feedFractions: feedFractions,
+                components: components,
+                options: options
+            )
+            let denominator = upper[index] - lower[index]
+            guard denominator.isFinite, abs(denominator) > .ulpOfOne else {
+                throw NativeSRKError.invalidComposition("pressure-parameterized finite-difference step collapsed.")
+            }
+            columns.append([
+                (upperResidual[0] - lowerResidual[0]) / denominator,
+                (upperResidual[1] - lowerResidual[1]) / denominator
+            ])
+        }
+        return [
+            [columns[0][0], columns[1][0]],
+            [columns[0][1], columns[1][1]]
+        ]
+    }
+
+    private func boundedColdFlashSearch(
+        startingTemperatureK: Double,
+        startingPressurePa: Double,
+        startingIncipient: [Double],
+        feedFractions: [Double],
+        components: [ComponentID],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool
+    ) -> (attempts: Int, converged: [NativeSRKFlashDiagnostic], failureReason: String) {
+        let temperatureOffsets = [0.0, -0.5, -1.0, -2.0, -4.0, -8.0, -16.0, -32.0]
+        let pressureScales = [1.0, 0.95, 1.05, 0.85, 1.15]
+        let baseK = zip(startingIncipient, feedFractions).map { clamp($0 / max($1, 1e-12), 1e-8, 1e8) }
+        let betaSeeds = [1e-4, 1e-3, 0.01, 0.05, 0.20]
+        var attempts = 0
+        var converged: [NativeSRKFlashDiagnostic] = []
+        var failures: [String] = []
+        for offset in temperatureOffsets {
+            for scale in pressureScales {
+                for beta in betaSeeds {
+                    if shouldCancel() {
+                        return (attempts, converged, "cancelled during bounded flash search")
+                    }
+                    attempts += 1
+                    let temperature = clamp(
+                        startingTemperatureK + offset,
+                        options.minimumTemperatureK,
+                        options.maximumTemperatureK
+                    )
+                    let pressure = clamp(
+                        startingPressurePa * scale,
+                        options.minimumPressurePa,
+                        options.maximumPressurePa
+                    )
+                    do {
+                        let diagnostic = try solveTwoPhaseFlash(
+                            temperatureK: temperature,
+                            pressurePa: pressure,
+                            feedFractions: feedFractions,
+                            components: components,
+                            initialState: [log(baseK[0]), log(baseK[1]), logit(beta)],
+                            options: options,
+                            shouldCancel: shouldCancel
+                        )
+                        if !converged.contains(where: {
+                            abs($0.temperatureK - diagnostic.temperatureK) < 1e-9
+                                && abs(log($0.pressurePa / diagnostic.pressurePa)) < 1e-8
+                                && abs($0.vaporFraction - diagnostic.vaporFraction) < 1e-8
+                        }) {
+                            converged.append(diagnostic)
+                        }
+                    } catch {
+                        if failures.count < 5 {
+                            failures.append("\(error)")
+                        }
+                    }
+                }
+            }
+        }
+        return (
+            attempts,
+            converged.sorted {
+                if $0.temperatureK != $1.temperatureK { return $0.temperatureK < $1.temperatureK }
+                return $0.pressurePa < $1.pressurePa
+            },
+            failures.joined(separator: " | ")
+        )
+    }
+
+    private func solveTwoPhaseFlash(
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        initialState: [Double],
+        options: NativeSRKEnvelopeOptions,
+        shouldCancel: @Sendable () -> Bool
+    ) throws -> NativeSRKFlashDiagnostic {
+        var state = boundedFlashState(initialState)
+        var bestNorm = Double.infinity
+        for iteration in 1...min(options.maximumIterationsPerSolve, 60) {
+            if shouldCancel() { throw CancellationError() }
+            let residual = try flashResidual(
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                feedFractions: feedFractions,
+                components: components,
+                state: state
+            )
+            let norm = vectorNorm(residual)
+            bestNorm = min(bestNorm, norm)
+            if norm <= sqrt(options.relativeTolerance) {
+                return try flashDiagnostic(
+                    temperatureK: temperatureK,
+                    pressurePa: pressurePa,
+                    feedFractions: feedFractions,
+                    components: components,
+                    state: state,
+                    residual: residual,
+                    terminationReason: "two-phase flash converged in \(iteration) iterations"
+                )
+            }
+            let jacobian = try flashJacobian(
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                feedFractions: feedFractions,
+                components: components,
+                state: state
+            )
+            let step = try solveLinear3(jacobian, residual.map { -$0 })
+            let boundedStep = [
+                clamp(step[0], -1.5, 1.5),
+                clamp(step[1], -1.5, 1.5),
+                clamp(step[2], -1.5, 1.5)
+            ]
+            var damping = 1.0
+            var accepted: [Double]?
+            while damping >= 1.0 / 64.0 {
+                if shouldCancel() { throw CancellationError() }
+                let candidate = boundedFlashState(zip(state, boundedStep).map { $0 + damping * $1 })
+                do {
+                    let candidateNorm = vectorNorm(try flashResidual(
+                        temperatureK: temperatureK,
+                        pressurePa: pressurePa,
+                        feedFractions: feedFractions,
+                        components: components,
+                        state: candidate
+                    ))
+                    if candidateNorm.isFinite, candidateNorm < norm {
+                        accepted = candidate
+                        break
+                    }
+                } catch {
+                    damping /= 2
+                    continue
+                }
+                damping /= 2
+            }
+            guard let accepted else {
+                throw NativeSRKError.invalidComposition("two-phase flash line search failed; best residual norm \(bestNorm).")
+            }
+            state = accepted
+        }
+        throw NativeSRKError.invalidComposition("two-phase flash did not converge; best residual norm \(bestNorm).")
+    }
+
+    private func flashResidual(
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        state: [Double]
+    ) throws -> [Double] {
+        let split = flashSplit(feedFractions: feedFractions, state: state)
+        let liquid = try fugacityCoefficients(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: split.liquid,
+            components: components,
+            useLiquidRoot: true
+        )
+        let vapor = try fugacityCoefficients(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            fractions: split.vapor,
+            components: components,
+            useLiquidRoot: false
+        )
+        let fugacityResiduals = feedFractions.indices.map { index in
+            log(max(split.liquid[index], 1e-15)) + log(max(liquid[index], 1e-15))
+                - log(max(split.vapor[index], 1e-15)) - log(max(vapor[index], 1e-15))
+        }
+        return [fugacityResiduals[0], fugacityResiduals[1], split.rachfordRice]
+    }
+
+    private func flashJacobian(
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        state: [Double]
+    ) throws -> [[Double]] {
+        let steps = [1e-4, 1e-4, 1e-4]
+        var columns: [[Double]] = []
+        for index in 0..<3 {
+            var lower = state
+            var upper = state
+            lower[index] -= steps[index]
+            upper[index] += steps[index]
+            lower = boundedFlashState(lower)
+            upper = boundedFlashState(upper)
+            let lowerResidual = try flashResidual(
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                feedFractions: feedFractions,
+                components: components,
+                state: lower
+            )
+            let upperResidual = try flashResidual(
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                feedFractions: feedFractions,
+                components: components,
+                state: upper
+            )
+            let denominator = upper[index] - lower[index]
+            guard denominator.isFinite, abs(denominator) > .ulpOfOne else {
+                throw NativeSRKError.invalidComposition("flash finite-difference step collapsed.")
+            }
+            columns.append([
+                (upperResidual[0] - lowerResidual[0]) / denominator,
+                (upperResidual[1] - lowerResidual[1]) / denominator,
+                (upperResidual[2] - lowerResidual[2]) / denominator
+            ])
+        }
+        return [
+            [columns[0][0], columns[1][0], columns[2][0]],
+            [columns[0][1], columns[1][1], columns[2][1]],
+            [columns[0][2], columns[1][2], columns[2][2]]
+        ]
+    }
+
+    private func flashDiagnostic(
+        temperatureK: Double,
+        pressurePa: Double,
+        feedFractions: [Double],
+        components: [ComponentID],
+        state: [Double],
+        residual: [Double],
+        terminationReason: String
+    ) throws -> NativeSRKFlashDiagnostic {
+        let split = flashSplit(feedFractions: feedFractions, state: state)
+        guard split.vaporFraction > 1e-8, split.vaporFraction < 1 - 1e-8 else {
+            throw NativeSRKError.invalidComposition("flash converged outside finite two-phase vapor-fraction bounds.")
+        }
+        guard maxRelativeDelta(split.liquid, split.vapor) > 1e-5 else {
+            throw NativeSRKError.invalidComposition("flash converged to a trivial phase split.")
+        }
+        let rootDiagnostic = try rootSelectionDiagnostic(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            liquidFractions: split.liquid,
+            vaporFractions: split.vapor,
+            components: components
+        )
+        return NativeSRKFlashDiagnostic(
+            temperatureK: temperatureK,
+            pressurePa: pressurePa,
+            vaporFraction: split.vaporFraction,
+            liquidFractions: split.liquid,
+            vaporFractions: split.vapor,
+            fugacityResidualNorm: vectorNorm([residual[0], residual[1]]),
+            materialBalanceResidual: abs(residual[2]),
+            rootDiagnostic: rootDiagnostic,
+            terminationReason: terminationReason
         )
     }
 
@@ -2671,6 +3207,32 @@ private func boundedState(_ state: [Double], options: NativeSRKEnvelopeOptions) 
         clamp(state[0], log(options.minimumPressurePa), log(options.maximumPressurePa)),
         clamp(state[1], -30, 30)
     ]
+}
+
+private func boundedFlashState(_ state: [Double]) -> [Double] {
+    [
+        clamp(state[0], -20, 20),
+        clamp(state[1], -20, 20),
+        clamp(state[2], -20, 20)
+    ]
+}
+
+private func flashSplit(feedFractions: [Double], state: [Double]) -> (
+    liquid: [Double],
+    vapor: [Double],
+    vaporFraction: Double,
+    rachfordRice: Double
+) {
+    let kValues = [exp(clamp(state[0], -20, 20)), exp(clamp(state[1], -20, 20))]
+    let beta = 1 / (1 + exp(-clamp(state[2], -20, 20)))
+    let denominators = kValues.map { max(1e-12, 1 + beta * ($0 - 1)) }
+    let rawLiquid = zip(feedFractions, denominators).map { $0 / $1 }
+    let liquid = boundedBinaryFractions(rawLiquid)
+    let vapor = boundedBinaryFractions(zip(kValues, liquid).map(*))
+    let rachfordRice = zip(feedFractions, kValues).reduce(0.0) {
+        $0 + $1.0 * ($1.1 - 1) / max(1e-12, 1 + beta * ($1.1 - 1))
+    }
+    return (liquid, vapor, beta, rachfordRice)
 }
 
 private func boundedArcState(

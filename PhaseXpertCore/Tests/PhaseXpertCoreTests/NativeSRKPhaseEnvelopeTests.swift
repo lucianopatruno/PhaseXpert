@@ -161,10 +161,47 @@ final class NativeSRKPhaseEnvelopeTests: XCTestCase {
 
         XCTAssertGreaterThan(experiment.multiStartTPDMinimumCount, 0)
         XCTAssertGreaterThanOrEqual(experiment.negativeTPDMinimumCount, 0)
+        XCTAssertTrue(experiment.pressureParameterizedAttemptReason.contains("pressure-parameterized"))
+        XCTAssertGreaterThan(experiment.flashAttemptCount, 0)
+        XCTAssertGreaterThan(experiment.convergedFlashCount, 0)
+        XCTAssertGreaterThan(experiment.continuousFlashCount, 0)
+        XCTAssertLessThan(try XCTUnwrap(experiment.lowestContinuousFlashTemperatureK), point.temperatureK)
         XCTAssertTrue(experiment.rootDiagnostic.selectedLiquidRoot.isFinite)
         XCTAssertTrue(experiment.rootDiagnostic.selectedVaporRoot.isFinite)
         XCTAssertFalse(experiment.productionAttemptReason.isEmpty)
         XCTAssertFalse(experiment.failureClassification.isEmpty)
+    }
+
+    func testTwoPhaseFlashDiagnosticSolvesMaterialBalanceAndFugacityEquality() throws {
+        let composition = [
+            NativeSRKMixtureFraction(component: .carbonDioxide, moleFraction: 0.90),
+            NativeSRKMixtureFraction(component: .nitrogen, moleFraction: 0.10)
+        ]
+        let options = testOptions(minimumTemperatureK: 54)
+        let point = try tracer.solveBubblePressure(
+            temperatureK: 139.986665,
+            liquidComposition: composition,
+            options: options
+        )
+        let vaporCO2 = try XCTUnwrap(point.vaporMoleFractions[.carbonDioxide])
+        let vaporN2 = try XCTUnwrap(point.vaporMoleFractions[.nitrogen])
+        let diagnostic = try tracer.twoPhaseFlashDiagnostic(
+            temperatureK: point.temperatureK,
+            pressurePa: point.pressurePa,
+            composition: composition,
+            initialKValues: [vaporCO2 / 0.90, vaporN2 / 0.10],
+            initialVaporFraction: 1e-4,
+            options: options
+        )
+
+        XCTAssertGreaterThan(diagnostic.vaporFraction, 0)
+        XCTAssertLessThan(diagnostic.vaporFraction, 1)
+        XCTAssertLessThan(diagnostic.fugacityResidualNorm, 1e-3)
+        XCTAssertLessThan(diagnostic.materialBalanceResidual, 1e-3)
+        XCTAssertEqual(diagnostic.liquidFractions.count, 2)
+        XCTAssertEqual(diagnostic.vaporFractions.count, 2)
+        XCTAssertGreaterThan(diagnostic.rootDiagnostic.phaseCompositionDistance, 0)
+        XCTAssertTrue(diagnostic.terminationReason.contains("two-phase flash converged"))
     }
 
     func testConvergedCoupledBubbleCarriesDiagnostics() throws {
