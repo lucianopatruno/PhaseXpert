@@ -1,0 +1,6202 @@
+{
+  "case_results": [
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "blocked_before_numerical_benchmark",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-gerg2008resid",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "model_data_unproven",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-multifluid-coolprop-format",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-srk",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        1.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "safely-normalizable",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "required_parameters_absent",
+      "temperature_range_K": null,
+      "termination_reason": "stop condition reached before numerical benchmark: public native interface and data review require PhaseXpert-owned initialization and continuation solver development",
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-out-of-domain",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_coverage": "none",
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "lowest_accepted_temperature_K": null,
+      "model": "teqp-canonical-pr",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "phase_compositions": null,
+      "pressure_error_relative": {
+        "basis": "no genuine continuous accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "root_or_phase_identities": null,
+      "status": "rejected_before_teqp",
+      "temperature_range_K": null,
+      "termination_reason": "boundary-pinned composition",
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    }
+  ],
+  "cases": [
+    {
+      "category": "primary",
+      "components": [
+        "CO2"
+      ],
+      "identifier": "pure-co2",
+      "mole_fractions": [
+        1.0
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "primary",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "co2-97-n2-3",
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "primary",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "co2-90-n2-10",
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "additional",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "near-pure-co2-n2",
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "additional",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "ppm-n2-in-co2",
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "additional",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "identifier": "co2-n2-o2-ar",
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "additional",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "identifier": "co2-ch4-h2-co",
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "additional",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "identifier": "co2-h2s-h2o-n2",
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "validation": {
+        "reason": "composition accepted",
+        "requires_explicit_normalization": false,
+        "valid": true
+      }
+    },
+    {
+      "category": "additional",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "safely-normalizable",
+      "mole_fractions": [
+        0.9700000000000001,
+        0.03
+      ],
+      "validation": {
+        "reason": "accepted only after explicit caller normalization",
+        "requires_explicit_normalization": true,
+        "valid": true
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [],
+      "identifier": "invalid-empty",
+      "mole_fractions": [],
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "invalid-negative",
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "invalid-nonnormalized",
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "identifier": "invalid-duplicate",
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "identifier": "invalid-unsupported",
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "invalid-nonfinite",
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      }
+    },
+    {
+      "category": "invalid",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "identifier": "invalid-out-of-domain",
+      "mole_fractions": [
+        1.0,
+        0.0
+      ],
+      "validation": {
+        "reason": "boundary-pinned composition",
+        "valid": false
+      }
+    }
+  ],
+  "cmake_compile_probe": {
+    "apple_platform_blockers": [
+      "No macOS C++ compile blocker found.",
+      "iOS cross-compilation, symbol collision, binary footprint, and static C bridge feasibility remain unproven."
+    ],
+    "build_seconds": 404.01,
+    "build_tree_size": "424M",
+    "command": "cmake -DTEQP_NO_PYTHON=ON -DTEQP_NO_TESTS=ON -DTEQP_NO_TEQPCPP=OFF -DTEQP_TEQPC=OFF",
+    "compiler": "AppleClang 21.0.0.21000101",
+    "configure_seconds": 73.25,
+    "host": "macOS",
+    "result": "passed",
+    "source_size": "238M",
+    "static_library": "libteqpcpp.a",
+    "static_library_size": "62M"
+  },
+  "comparisons": {
+    "neqsim_fixture": "Documentation/Feasibility/LocalPhaseDiagramNeqSimReferenceDataset.json used only as offline parity evidence; not used as a solver target",
+    "pr28_native_srk": {
+      "head": "6537f82a5d894dc172270ff5d1cb153d405c30e1",
+      "lowest_90_10_bubble_temperature_K": 139.986665,
+      "pure_co2_endpoint_gap_K": 14.096,
+      "result": "custom native SRK failed numerical gate"
+    },
+    "pr29_coolprop8": {
+      "head": "1b0c39131e9a63ea05983b14532ce553e0f98467",
+      "result": "CoolProp 8 HEOS, SRK, and PR phase-envelope implementations failed macOS scientific gate"
+    },
+    "production_coolprop": "No production CoolProp provider or XCFramework was modified or replaced"
+  },
+  "created_by": "Scripts/teqp_backend_feasibility.py",
+  "gates": {
+    "architectural_gate": "partially feasible on macOS C++ build only; native/offline iOS architecture remains unproven",
+    "ios_packaging_justified": false,
+    "recommended_next_step": "Review whether PhaseXpert should reject teqp for phase-boundary work or authorize a separately bounded non-production prototype limited to proving one GERG2008 multicomponent bubble/dew continuation path with explicit initialization and stability criteria.",
+    "required_classification": "teqp requires excessive PhaseXpert-owned solver development",
+    "scientific_gate": "failed_before_numerical_benchmark"
+  },
+  "model_selection_matrix": [
+    {
+      "gate_status": "blocked_before_numerical_benchmark",
+      "identifier": "teqp-gerg2008resid",
+      "limitations": [
+        "No turnkey public native multicomponent envelope tracer was found.",
+        "Mixture bubble and dew routines require caller-provided starting densities and component specification.",
+        "PhaseXpert would need bounded initialization, continuation, root tracking, stability checks, branch classification, and detached-segment rejection.",
+        "Natural-gas GERG-2008 component coverage does not establish CCS phase-boundary accuracy."
+      ],
+      "model_family": "GERG-2008 residual model",
+      "phase_equilibrium_apis": [
+        "mix_VLE_Tx",
+        "mix_VLE_Tp",
+        "mixture_VLE_px",
+        "trace_VLE_isotherm_binary",
+        "trace_VLE_isobar_binary",
+        "trace_critical_arclength_binary",
+        "solve_pure_critical",
+        "get_fugacity_coefficients",
+        "get_chempotVLE_autodiff"
+      ],
+      "source_and_license": "Hard-coded in teqp source under the teqp NIST public-domain-style notice.",
+      "supported_components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar",
+        "H2",
+        "CH4",
+        "CO",
+        "H2S",
+        "H2O"
+      ]
+    },
+    {
+      "gate_status": "model_data_unproven",
+      "identifier": "teqp-multifluid-coolprop-format",
+      "limitations": [
+        "Open redistribution is plausible for MIT CoolProp data but must be pinned and packaged separately.",
+        "Current PhaseXpert main does not carry a proven scoped teqp multifluid data bundle.",
+        "Same caller-owned initialization and continuation responsibilities apply."
+      ],
+      "model_family": "teqp multifluid model using CoolProp-format fluid and mixture data",
+      "phase_equilibrium_apis": [
+        "mix_VLE_Tx",
+        "mix_VLE_Tp",
+        "mixture_VLE_px",
+        "binary VLE tracing APIs",
+        "critical APIs"
+      ],
+      "source_and_license": "Requires a separately pinned CoolProp-format data tree and mixture files; not bundled with teqp.",
+      "supported_components": "depends on pinned data tree and mixture/departure files"
+    },
+    {
+      "gate_status": "required_parameters_absent",
+      "identifier": "teqp-canonical-srk",
+      "limitations": [
+        "The repository main branch does not contain a complete vetted open BIP matrix for the required impurity set.",
+        "Using zero or estimated BIPs would violate PhaseXpert scientific safeguards.",
+        "PR #28 is preserved only as native-SRK feasibility evidence and is not reused here."
+      ],
+      "model_family": "Soave-Redlich-Kwong cubic EOS",
+      "phase_equilibrium_apis": [
+        "cubic model construction",
+        "bubble/dew state solves",
+        "binary tracing APIs"
+      ],
+      "source_and_license": "Requires caller-supplied pure critical data, acentric factors, alpha function choices, and binary interaction matrix.",
+      "supported_components": "not accepted as complete for PhaseXpert without a pinned open parameter and BIP dataset"
+    },
+    {
+      "gate_status": "required_parameters_absent",
+      "identifier": "teqp-canonical-pr",
+      "limitations": [
+        "The repository main branch does not contain a complete vetted open BIP matrix for the required impurity set.",
+        "Using zero or estimated BIPs would violate PhaseXpert scientific safeguards.",
+        "No single PR model can be reported as a validated continuation backend from available evidence."
+      ],
+      "model_family": "Peng-Robinson cubic EOS",
+      "phase_equilibrium_apis": [
+        "cubic model construction",
+        "bubble/dew state solves",
+        "binary tracing APIs"
+      ],
+      "source_and_license": "Requires caller-supplied pure critical data, acentric factors, alpha function choices, and binary interaction matrix.",
+      "supported_components": "not accepted as complete for PhaseXpert without a pinned open parameter and BIP dataset"
+    }
+  ],
+  "native_cpp_interface_findings": {
+    "binary_vle_continuation": "trace_VLE_isotherm_binary and trace_VLE_isobar_binary are exposed for binary systems",
+    "c_interface": "teqp can build an optional teqpc shared-library target, but this milestone did not establish a stable static C ABI suitable for Swift",
+    "critical_locus": "trace_critical_arclength_binary and criticality condition APIs are exposed; general multicomponent locus tracing was not established",
+    "mixture_bubble_dew": "mix_VLE_Tx, mix_VLE_Tp, and mixture_VLE_px are exposed but require caller-supplied initial liquid and vapor density vectors",
+    "multicomponent_vle_continuation": "no turnkey public native multicomponent envelope tracer was found",
+    "pure_saturation": "pure_VLE_T and solve_pure_critical are exposed",
+    "stability_phase_identification": "fugacity coefficients, chemical-potential VLE residuals, and Hessian helpers are exposed; PhaseXpert would still own stability classification and branch/root tracking"
+  },
+  "repository_context": {
+    "accepted_main": "f75052489baf8efb798fffcb77137b730d4ceaa4",
+    "prior_prs_preserved": {
+      "28": {
+        "branch": "agent/native-srk-phase-envelope-prototype",
+        "head": "6537f82a5d894dc172270ff5d1cb153d405c30e1",
+        "status": "open draft, untouched"
+      },
+      "29": {
+        "branch": "agent/coolprop8-backend-feasibility",
+        "head": "1b0c39131e9a63ea05983b14532ce553e0f98467",
+        "status": "open draft, untouched"
+      }
+    },
+    "protected_artifacts_preserved": [
+      "PhaseXpert.xcodeproj/project.pbxproj",
+      "Services/",
+      "Vendor/ThermoPack/",
+      "Vendor/CoolProp/ ignored artifacts",
+      "Xcode, SwiftPM, pytest, .DS_Store, dependency, and cache artifacts"
+    ]
+  },
+  "runtime_and_safety": {
+    "cancellation_strategy": "Only cooperative between caller-owned bounded operations was established; internal teqp call interruption was not established",
+    "complete_teqp_numerical_benchmark_runs": 0,
+    "no_process_remains_required": true,
+    "normalized_json_deterministic": true,
+    "peak_memory": "Not measured for numerical benchmark because benchmark stopped before solver implementation",
+    "timeout_strategy": "Required for any future numerical probe: isolate non-interruptible native calls in a killable subprocess with fixed deadline"
+  },
+  "schema_version": 1,
+  "teqp_source": {
+    "commit": "5f62a6f515d517e39c3fb035c11a03524ffa3ad6",
+    "documentation": "https://teqp.readthedocs.io/",
+    "language_standard": "C++20",
+    "license": "NIST public-domain-style notice with disclaimer in LICENSE.md",
+    "release": "v0.23.2",
+    "repository": "https://github.com/usnistgov/teqp",
+    "runtime_constraints": {
+      "fortran_required": false,
+      "java_required": false,
+      "network_required": false,
+      "python_required": false,
+      "refprop_required": false
+    },
+    "transitive_source_dependencies": [
+      "Catch2 4e8d92bf02f7d1c8006a0e7a5ecabd8e62d98502",
+      "Eigen da19f7a9105374958cad7f9ee17c4596a54be51c",
+      "REFPROP-interop 07562a51241431ea6cccbaffb3dd5274364ae99e",
+      "autodiff cb2d6e867b105cd0090ebcce8bddf05a4592b6ab",
+      "json-schema-validator 920bddd7c0aeb26fa02f45f56743aef750cfcc89",
+      "mcx bc5f996f090a93e7e4e9358c4ee20bf06db57afc",
+      "pybind11 8862cd4ef96b16d17a66a81ecd3b6e1604362fd7"
+    ]
+  }
+}
