@@ -1,0 +1,1681 @@
+{
+  "case_results": [
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        1.0
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "not_run",
+      "temperature_range_K": null,
+      "termination_reason": "native Rust benchmark could not run because cargo/rustc are unavailable in this environment",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "pure-co2",
+      "components": [
+        "CO2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        1.0
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "not_run",
+      "temperature_range_K": null,
+      "termination_reason": "native Rust benchmark could not run because cargo/rustc are unavailable in this environment",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-97-n2-3",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.97,
+        0.03
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-90-n2-10",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.9,
+        0.1
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "near-pure-co2-n2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.999,
+        0.001
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "ppm-n2-in-co2",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.999999,
+        1e-06
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2",
+          "CO2/O2",
+          "CO2/Ar",
+          "N2/O2",
+          "N2/Ar",
+          "O2/Ar"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2, CO2/O2, CO2/Ar, N2/O2, N2/Ar, O2/Ar",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-n2-o2-ar",
+      "components": [
+        "CO2",
+        "N2",
+        "O2",
+        "Ar"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.96,
+        0.02,
+        0.01,
+        0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/N2",
+          "CO2/O2",
+          "CO2/Ar",
+          "N2/O2",
+          "N2/Ar",
+          "O2/Ar"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/N2, CO2/O2, CO2/Ar, N2/O2, N2/Ar, O2/Ar",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/H2",
+          "CH4/H2",
+          "CH4/CO",
+          "H2/CO"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/H2, CH4/H2, CH4/CO, H2/CO",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-ch4-h2-co",
+      "components": [
+        "CO2",
+        "CH4",
+        "H2",
+        "CO"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.95,
+        0.03,
+        0.01,
+        0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/H2",
+          "CH4/H2",
+          "CH4/CO",
+          "H2/CO"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/H2, CH4/H2, CH4/CO, H2/CO",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/H2S",
+          "CO2/H2O",
+          "CO2/N2",
+          "H2S/H2O",
+          "H2S/N2",
+          "H2O/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/H2S, CO2/H2O, CO2/N2, H2S/H2O, H2S/N2, H2O/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "co2-h2s-h2o-n2",
+      "components": [
+        "CO2",
+        "H2S",
+        "H2O",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.97,
+        0.01,
+        0.005,
+        0.015
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [
+          "CO2/H2S",
+          "CO2/H2O",
+          "CO2/N2",
+          "H2S/H2O",
+          "H2S/N2",
+          "H2O/N2"
+        ],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "blocked_missing_binary_interaction_parameters",
+      "temperature_range_K": null,
+      "termination_reason": "missing required PC-SAFT binary interaction parameters: CO2/H2S, CO2/H2O, CO2/N2, H2S/H2O, H2S/N2, H2O/N2",
+      "validation": {
+        "reason": "composition accepted",
+        "valid": true
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-empty",
+      "components": [],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "empty composition",
+      "validation": {
+        "reason": "empty composition",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-negative",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        1.01,
+        -0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "negative mole fraction",
+      "validation": {
+        "reason": "negative mole fraction",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonnormalized",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.8,
+        0.1
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "composition is not normalized",
+      "validation": {
+        "reason": "composition is not normalized",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-duplicate",
+      "components": [
+        "CO2",
+        "CO2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.5,
+        0.5
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "duplicate component",
+      "validation": {
+        "reason": "duplicate component",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": false
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-unsupported",
+      "components": [
+        "CO2",
+        "Xe"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        0.99,
+        0.01
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": false
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "unsupported component: Xe",
+      "validation": {
+        "reason": "unsupported component: Xe",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "bubble",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      },
+      "vapor_compositions": null
+    },
+    {
+      "accepted_points": 0,
+      "attempted_points": 0,
+      "branch": "dew",
+      "case": "invalid-nonfinite",
+      "components": [
+        "CO2",
+        "N2"
+      ],
+      "continuous_intervals": [],
+      "converged_points": 0,
+      "critical_region_behavior": "not evaluated",
+      "detached_segments": [],
+      "equilibrium_residuals": null,
+      "gaps": [],
+      "highest_accepted_temperature_K": null,
+      "last_accepted_state": null,
+      "liquid_compositions": null,
+      "lowest_accepted_temperature_K": null,
+      "mole_fractions": [
+        "non-finite:nan",
+        0.03
+      ],
+      "parameter_status": {
+        "missing_binary_interaction_parameters": [],
+        "pure_parameters_available": true
+      },
+      "phase_distinction": "not evaluated",
+      "pressure_error_relative": {
+        "basis": "no FeOs-calculated accepted boundary interval",
+        "max": null,
+        "mean": null,
+        "median": null,
+        "p95": null,
+        "rms": null,
+        "sample_count": 0
+      },
+      "pressure_range_Pa": null,
+      "rejected_points": 0,
+      "runtime_seconds": null,
+      "status": "rejected_before_feos",
+      "temperature_range_K": null,
+      "termination_reason": "non-finite mole fraction",
+      "validation": {
+        "reason": "non-finite mole fraction",
+        "valid": false
+      },
+      "vapor_compositions": null
+    }
+  ],
+  "comparisons": {
+    "neqsim_fixture": "Documentation/Feasibility/LocalPhaseDiagramNeqSimReferenceDataset.json was not used as a solver target",
+    "pr28_native_srk": {
+      "head": "6537f82a5d894dc172270ff5d1cb153d405c30e1",
+      "lowest_90_10_bubble_temperature_K": 139.986665,
+      "pure_co2_endpoint_gap_K": 14.096,
+      "result": "failed numerical gate"
+    },
+    "pr29_coolprop8": {
+      "head": "1b0c39131e9a63ea05983b14532ce553e0f98467",
+      "result": "HEOS, SRK, and PR failed macOS scientific gate"
+    },
+    "pr30_teqp": {
+      "head": "e303c9d2b6e636727edaef92b1e867e4c5a77976",
+      "result": "requires excessive PhaseXpert-owned solver development"
+    }
+  },
+  "created_by": "Scripts/feos_backend_feasibility.py",
+  "feos_source": {
+    "commit": "c658aeab484f7a7096bfbf5425e40effd60da167",
+    "dependency_tree_status": "Cargo metadata for the full dependency tree could not run because cargo is not installed",
+    "license": "MIT OR Apache-2.0",
+    "release": "v0.10.1",
+    "releases": "https://github.com/feos-org/feos/releases",
+    "repository": "https://github.com/feos-org/feos",
+    "rust_docs": [
+      "https://docs.rs/feos",
+      "https://docs.rs/feos-core"
+    ],
+    "workspace_dependencies_from_cargo_toml": [
+      "quantity 0.14",
+      "num-dual 0.14",
+      "ndarray 0.17",
+      "nalgebra 0.35",
+      "thiserror 2.0",
+      "conv 0.3",
+      "num-traits 0.2",
+      "serde 1.0",
+      "serde_json 1.0",
+      "indexmap 2.0",
+      "itertools 0.15",
+      "rayon 1.11",
+      "petgraph 0.8",
+      "rustdct 0.7",
+      "rustfft 6.0",
+      "libm 0.2",
+      "gauss-quad 0.3",
+      "approx 0.5",
+      "criterion 0.8",
+      "paste 1.0",
+      "rusqlite 0.40",
+      "csv 1.0"
+    ],
+    "workspace_edition": "Rust 2024"
+  },
+  "gates": {
+    "classification": "FeOs lacks the required parameters or component coverage",
+    "ios_compilation_gate": "not reached",
+    "ios_packaging_justified": false,
+    "phase_4_reached": false,
+    "recommended_next_step": "Ask FeOs maintainers or the literature owner for a pinned openly redistributable PC-SAFT CO2/N2 binary interaction parameter set before any further FeOs benchmark work.",
+    "scientific_gate": "failed_before_numerical_benchmark"
+  },
+  "model_selection": {
+    "binary_parameters_found": {
+      "CO2/CH4": {
+        "k_ij": 0.0597617573623017,
+        "source": "parameters/pcsaft/rehner2023_binary.json"
+      },
+      "CO2/CO": {
+        "k_ij": -0.0347536475083231,
+        "source": "parameters/pcsaft/rehner2023_binary.json"
+      }
+    },
+    "parameter_license": "Bundled in FeOs repository under MIT OR Apache-2.0 project licensing; publication provenance documented in parameters/pcsaft/README.md",
+    "parameter_selection_decision": "The core CO2/N2 matrix is blocked because a required CO2/N2 PC-SAFT binary interaction parameter was not found in the pinned FeOs parameter files.",
+    "primary_model": "PC-SAFT using Esper 2023 pure parameters plus Rehner 2023 binary parameters where available",
+    "pure_parameters": {
+      "Ar": {
+        "cas": "7440-37-1",
+        "epsilon_k": 117.80903,
+        "m": 1.0,
+        "molarweight": 39.962,
+        "name": "argon",
+        "sigma": 3.37751,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "CH4": {
+        "cas": "74-82-8",
+        "epsilon_k": 150.07147,
+        "m": 1.0,
+        "molarweight": 16.031,
+        "name": "methane",
+        "sigma": 3.70051,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "CO": {
+        "cas": "630-08-0",
+        "epsilon_k": 91.17087,
+        "m": 1.32286,
+        "molarweight": 27.995,
+        "name": "carbon monoxide",
+        "sigma": 3.24532,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "CO2": {
+        "cas": "124-38-9",
+        "epsilon_k": 153.31864,
+        "m": 2.53096,
+        "molarweight": 43.99,
+        "name": "carbon dioxide",
+        "sigma": 2.57855,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "H2": {
+        "cas": "1333-74-0",
+        "epsilon_k": 51.343,
+        "limitation": "not in the primary Esper 2023 set; mixing with Esper 2023 would change parameter provenance",
+        "m": 1.0,
+        "molarweight": 2.016,
+        "name": "hydrogen",
+        "sigma": 3.002,
+        "source": "parameters/pcsaft/eller2022.json"
+      },
+      "H2O": {
+        "association_sites": [
+          {
+            "epsilon_k_ab": 2195.10176,
+            "kappa_ab": 0.35319,
+            "na": 1.0,
+            "nb": 1.0
+          }
+        ],
+        "cas": "7732-18-5",
+        "epsilon_k": 230.71557,
+        "m": 2.36948,
+        "molarweight": 18.011,
+        "name": "water",
+        "sigma": 2.15072,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "H2S": {
+        "cas": "7783-06-4",
+        "epsilon_k": 227.15574,
+        "m": 1.63175,
+        "molarweight": 33.988,
+        "mu": 0.97,
+        "name": "hydrogen sulfide",
+        "sigma": 3.06168,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "N2": {
+        "association_sites": [
+          {
+            "nb": 2.0
+          }
+        ],
+        "cas": "7727-37-9",
+        "epsilon_k": 89.41358,
+        "m": 1.23831,
+        "molarweight": 28.006,
+        "name": "nitrogen",
+        "sigma": 3.30009,
+        "source": "parameters/pcsaft/esper2023.json"
+      },
+      "O2": {
+        "association_sites": [
+          {
+            "nb": 2.0
+          }
+        ],
+        "cas": "7782-44-7",
+        "epsilon_k": 113.62724,
+        "m": 1.14702,
+        "molarweight": 31.99,
+        "name": "oxygen",
+        "sigma": 3.17933,
+        "source": "parameters/pcsaft/esper2023.json"
+      }
+    },
+    "required_missing_binary_parameters": [
+      "CO2/N2",
+      "CO2/O2",
+      "CO2/Ar",
+      "CO2/H2",
+      "CO2/H2S",
+      "CO2/H2O"
+    ]
+  },
+  "native_rust_api_findings": {
+    "binary_diagrams": "PhaseDiagram::binary_vle exists for binary diagrams",
+    "bubble_point_state": "PhaseEquilibrium::bubble_point exists for generic composition dimensions",
+    "critical": "State::critical_point_pure, critical_point_binary, and critical_point exist",
+    "dew_point_state": "PhaseEquilibrium::dew_point exists for generic composition dimensions",
+    "fixed_composition_lines": "PhaseDiagram::bubble_point_line and PhaseDiagram::dew_point_line exist and iterate high-level bubble/dew solves",
+    "phase_compositions": "PhaseEquilibrium exposes liquid and vapor State mole fractions",
+    "pure_saturation": "PhaseDiagram::pure and PhaseEquilibrium::pure exist",
+    "residuals": "State exposes chemical_potential, residual_chemical_potential, and ln_phi",
+    "solver_limits": "SolverOptions exposes max_iter and tol",
+    "stability": "State::stability_analysis exists and returns negative-TPD states",
+    "tp_flash": "PhaseEquilibrium::tp_flash and State::tp_flash exist and initialize through stability analysis when needed"
+  },
+  "repository_context": {
+    "accepted_main": "f75052489baf8efb798fffcb77137b730d4ceaa4",
+    "branch": "agent/feos-backend-feasibility",
+    "prior_prs_preserved": {
+      "28": {
+        "head": "6537f82a5d894dc172270ff5d1cb153d405c30e1",
+        "status": "open draft, untouched"
+      },
+      "29": {
+        "head": "1b0c39131e9a63ea05983b14532ce553e0f98467",
+        "status": "open draft, untouched"
+      },
+      "30": {
+        "head": "e303c9d2b6e636727edaef92b1e867e4c5a77976",
+        "status": "open draft, untouched"
+      }
+    },
+    "protected_artifacts_preserved": [
+      "PhaseXpert.xcodeproj/project.pbxproj",
+      "Services/",
+      "Vendor/ThermoPack/",
+      "Vendor/CoolProp/ ignored artifacts",
+      "Xcode, SwiftPM, Rust, Cargo, Python, dependency, and cache artifacts"
+    ]
+  },
+  "runtime_and_safety": {
+    "cancellation_strategy": "Only planned cooperative cancellation between bounded grid points is documented; no native FeOs cancellation was executed.",
+    "complete_benchmark_runs": 0,
+    "normalized_json_deterministic": true,
+    "peak_memory": "Not measured; native benchmark did not run.",
+    "process_cleanup": "No FeOs benchmark process was started by this harness.",
+    "timeout_strategy": "Future Rust harness must isolate non-interruptible calculations in a killable subprocess with a fixed deadline.",
+    "timing": "No FeOs numerical runtime because cargo/rustc are unavailable and CO2/N2 BIP provenance is missing."
+  },
+  "schema_version": 1,
+  "toolchain_probe": {
+    "cargo": "not found",
+    "rust_benchmark_built": false,
+    "rust_benchmark_ran": false,
+    "rustc": "not evaluated because cargo command was unavailable in the shell path"
+  }
+}
