@@ -1509,6 +1509,43 @@
         "source": "parameters/pcsaft/rehner2023_binary.json"
       }
     },
+    "co2_n2_parameter_search": [
+      {
+        "result": "no nitrogen entries and no CO2/N2 entry found",
+        "source": "FeOs v0.10.1 parameters/pcsaft/rehner2023_binary.json",
+        "usable": false
+      },
+      {
+        "result": "no nitrogen entries and no CO2/N2 entry found",
+        "source": "FeOs main branch parameters/pcsaft/rehner2023_binary.json",
+        "usable": false
+      },
+      {
+        "result": "historical database sizes 7860, 7860, and 7848 records respectively; no nitrogen or CO2/N2 record found",
+        "source": "FeOs historical commits b946c0ef, 0129c5a3, d7d99fdd for rehner2023_binary.json",
+        "usable": false
+      },
+      {
+        "result": "Esper 2023 pure parameters and Rehner 2023 binary-parameter provenance identified; no directly packaged CO2/N2 BIP",
+        "source": "FeOs parameters/pcsaft/README.md and literature.bib",
+        "usable": false
+      },
+      {
+        "result": "publication is the source of FeOs Rehner 2023 parameter files; no redistributable CO2/N2 entry found in the FeOs dataset derived from it",
+        "source": "Rehner, Bardow, Gross, International Journal of Thermophysics 44, 179 (2023), DOI 10.1007/s10765-023-03290-3",
+        "usable": false
+      },
+      {
+        "result": "relevant PC-SAFT BIP benchmark publication found; redistribution and FeOs Esper/Rehner compatibility for a CO2/N2 value remain unproven from accessible authoritative metadata",
+        "source": "Nikolaidis, Privat, Jaubert, Economou, Journal of Chemical & Engineering Data 69, 320-337 (2024), DOI 10.1021/acs.jced.2c00781",
+        "usable": false
+      },
+      {
+        "result": "papers discuss CO2/N2 and PC-SAFT, including cases with kij = 0 or fitted values, but no directly compatible, pinned, redistributable FeOs PC-SAFT CO2/N2 parameter was established",
+        "source": "CO2 impurity / CCS PC-SAFT literature search",
+        "usable": false
+      }
+    ],
     "parameter_license": "Bundled in FeOs repository under MIT OR Apache-2.0 project licensing; publication provenance documented in parameters/pcsaft/README.md",
     "parameter_selection_decision": "The core CO2/N2 matrix is blocked because a required CO2/N2 PC-SAFT binary interaction parameter was not found in the pinned FeOs parameter files.",
     "primary_model": "PC-SAFT using Esper 2023 pure parameters plus Rehner 2023 binary parameters where available",

@@ -331,6 +331,43 @@ def generate_report() -> dict[str, object]:
             "parameter_license": "Bundled in FeOs repository under MIT OR Apache-2.0 project licensing; publication provenance documented in parameters/pcsaft/README.md",
             "pure_parameters": ESPER2023_PURE_PARAMETERS,
             "binary_parameters_found": {"/".join(key): value for key, value in REHNER2023_BINARY_PARAMETERS.items()},
+            "co2_n2_parameter_search": [
+                {
+                    "source": "FeOs v0.10.1 parameters/pcsaft/rehner2023_binary.json",
+                    "result": "no nitrogen entries and no CO2/N2 entry found",
+                    "usable": False,
+                },
+                {
+                    "source": "FeOs main branch parameters/pcsaft/rehner2023_binary.json",
+                    "result": "no nitrogen entries and no CO2/N2 entry found",
+                    "usable": False,
+                },
+                {
+                    "source": "FeOs historical commits b946c0ef, 0129c5a3, d7d99fdd for rehner2023_binary.json",
+                    "result": "historical database sizes 7860, 7860, and 7848 records respectively; no nitrogen or CO2/N2 record found",
+                    "usable": False,
+                },
+                {
+                    "source": "FeOs parameters/pcsaft/README.md and literature.bib",
+                    "result": "Esper 2023 pure parameters and Rehner 2023 binary-parameter provenance identified; no directly packaged CO2/N2 BIP",
+                    "usable": False,
+                },
+                {
+                    "source": "Rehner, Bardow, Gross, International Journal of Thermophysics 44, 179 (2023), DOI 10.1007/s10765-023-03290-3",
+                    "result": "publication is the source of FeOs Rehner 2023 parameter files; no redistributable CO2/N2 entry found in the FeOs dataset derived from it",
+                    "usable": False,
+                },
+                {
+                    "source": "Nikolaidis, Privat, Jaubert, Economou, Journal of Chemical & Engineering Data 69, 320-337 (2024), DOI 10.1021/acs.jced.2c00781",
+                    "result": "relevant PC-SAFT BIP benchmark publication found; redistribution and FeOs Esper/Rehner compatibility for a CO2/N2 value remain unproven from accessible authoritative metadata",
+                    "usable": False,
+                },
+                {
+                    "source": "CO2 impurity / CCS PC-SAFT literature search",
+                    "result": "papers discuss CO2/N2 and PC-SAFT, including cases with kij = 0 or fitted values, but no directly compatible, pinned, redistributable FeOs PC-SAFT CO2/N2 parameter was established",
+                    "usable": False,
+                },
+            ],
             "required_missing_binary_parameters": [
                 "CO2/N2",
                 "CO2/O2",

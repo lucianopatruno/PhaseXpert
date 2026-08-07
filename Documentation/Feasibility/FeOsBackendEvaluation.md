@@ -53,9 +53,25 @@ The pinned `parameters/pcsaft/rehner2023_binary.json` file contains CO2/CH4 and 
 
 Do not treat missing FeOs PC-SAFT binary interaction parameters as zero. The milestone did not tune, estimate, or substitute binary interaction parameters.
 
+## CO2/N2 Parameter Search
+
+The CO2/N2 parameter search checked:
+
+| Source | Result |
+| --- | --- |
+| FeOs v0.10.1 `parameters/pcsaft/rehner2023_binary.json` | No nitrogen entries and no CO2/N2 entry found. |
+| FeOs current `main` `parameters/pcsaft/rehner2023_binary.json` | No nitrogen entries and no CO2/N2 entry found. |
+| FeOs historical commits `b946c0ef`, `0129c5a3`, and `d7d99fdd` for `rehner2023_binary.json` | Historical database sizes were 7860, 7860, and 7848 records; no nitrogen or CO2/N2 record was found. |
+| FeOs `parameters/pcsaft/README.md` and `literature.bib` | Esper 2023 pure-parameter and Rehner 2023 binary-parameter provenance was identified, but no directly packaged CO2/N2 BIP. |
+| Rehner, Bardow, Gross, International Journal of Thermophysics 44, 179 (2023), DOI `10.1007/s10765-023-03290-3` | Relevant source for the FeOs Rehner 2023 parameter database, but no redistributable CO2/N2 entry was found in the FeOs dataset derived from it. |
+| Nikolaidis, Privat, Jaubert, Economou, Journal of Chemical & Engineering Data 69, 320-337 (2024), DOI `10.1021/acs.jced.2c00781` | Relevant PC-SAFT BIP benchmark publication; redistribution terms and direct compatibility with the FeOs Esper/Rehner parameter set remain unproven from accessible authoritative metadata. |
+| CO2 impurity and CCS PC-SAFT literature search | Papers discuss CO2/N2 and PC-SAFT, including cases using fitted values or `kij = 0`, but no directly compatible, pinned, openly redistributable FeOs PC-SAFT CO2/N2 parameter was established. |
+
+This is not proof that no CO2/N2 PC-SAFT parameter exists anywhere. It is proof that this milestone did not find one that is simultaneously pinned, openly redistributable, sign-convention-clear, and directly compatible with the selected FeOs PC-SAFT implementation and pure-component parameter set.
+
 ## Benchmark Outcome
 
-The actual native Rust scientific benchmark did not run. Two independent stop conditions were reached before numerical boundary calculations:
+The actual native Rust scientific benchmark did not run. Two independent stop conditions remain before numerical boundary calculations:
 
 1. The required CO2/N2 PC-SAFT binary interaction parameter was not found in the pinned FeOs parameter files.
 2. `cargo` is not installed in the validation environment, so the pinned native Rust feasibility crate could not be built or run and no `Cargo.lock` could be generated.
