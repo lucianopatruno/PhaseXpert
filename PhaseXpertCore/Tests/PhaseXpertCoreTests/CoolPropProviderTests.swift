@@ -90,7 +90,7 @@ final class CoolPropProviderTests: XCTestCase {
             composition: [MixtureComponent]
         ) async throws -> CoolPropMixtureEnvelopeResult {
             envelopeCallRecorder?.recordCall()
-            mixtureEnvelope
+            return mixtureEnvelope
         }
     }
 
