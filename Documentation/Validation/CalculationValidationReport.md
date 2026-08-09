@@ -57,19 +57,28 @@ for review without changing the scientific gate result.
 
 ## Production Observation Path
 
-`PureCO2ReferenceValidationTests` can write a native production-path observation
-file when `PHASEXPERT_VALIDATION_OBSERVATIONS_PATH` is set for an iOS simulator
-test run. The deterministic runner accepts that file with
-`--observations <path>` and records attempted, observed, passed, failed, failure
-rate, mean absolute relative deviation, signed relative bias and maximum
-absolute relative deviation for the pure-CO2 density and viscosity gates. The
-same writer also records the pure-CO2 critical temperature and pressure returned
-by the production phase-diagram path; the runner validates those coordinates
-against the frozen critical-point tolerances.
+`PureCO2ReferenceValidationTests` writes native production-path observations
+using schema `phasexpert-production-observations.v2`. Each observation records
+fixture identity, reference identifier, input state, normalized composition,
+provider identity, provider and model versions, calculation status, SI units,
+returned phase and the calculated value or critical coordinates.
 
-No committed result in this branch uses provider output as reference data.
-Without an observation file, the affected gates remain
-`runtime_observation_missing`.
+The deterministic runner accepts `Documentation/Validation/ProductionObservations.json`
+with `--observations <path>`. Before evaluating deviations it rejects wrong
+schema versions, wrong providers, missing provider/model versions, duplicate or
+missing observations, fixture/reference mismatches, wrong property or unit,
+state or composition mismatches, malformed statuses and non-finite outputs.
+
+The production observation test can still write directly to
+`PHASEXPERT_VALIDATION_OBSERVATIONS_PATH`. It also attaches the deterministic
+JSON to the Xcode test result and emits a
+`PHASEXPERT_VALIDATION_OBSERVATIONS_BASE64=` log line. Use
+`Scripts/extract_validation_observations.py` to decode that payload without
+manual editing of scientific values.
+
+No committed result in this branch uses provider output as reference data. The
+native observations are used only to compare production calculations against the
+committed independent fixtures.
 
 ## Supported Range Matrix
 
@@ -90,14 +99,14 @@ Without an observation file, the affected gates remain
 Run the deterministic validation evidence writer:
 
 ```text
-python3 Scripts/validate_calculations.py --allow-incomplete
+python3 Scripts/validate_calculations.py --observations Documentation/Validation/ProductionObservations.json --allow-incomplete
 ```
 
 Run strict scientific gating:
 
 ```text
-python3 Scripts/validate_calculations.py
+python3 Scripts/validate_calculations.py --observations Documentation/Validation/ProductionObservations.json
 ```
 
 Strict mode is expected to fail until the missing reference fixtures are
-lawfully sourced and committed and the native observation file is supplied.
+lawfully sourced and committed.

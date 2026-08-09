@@ -1,0 +1,368 @@
+{
+  "metadata": {
+    "observation_kind": "native-production-ios-test",
+    "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
+  },
+  "points": [
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 0,
+      "fixture_section": "pure_co2_density",
+      "gate": "pure_co2_density",
+      "input_pressure_pa": 1998000,
+      "input_temperature_k": 310,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "gas",
+      "property": "density",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "mantilla-2010-pure-co2-density",
+      "status": "calculated",
+      "unit": "kg/m\u00b3",
+      "value": 37.60300647372985
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 1,
+      "fixture_section": "pure_co2_density",
+      "gate": "pure_co2_density",
+      "input_pressure_pa": 10014000,
+      "input_temperature_k": 310,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "supercritical",
+      "property": "density",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "mantilla-2010-pure-co2-density",
+      "status": "calculated",
+      "unit": "kg/m\u00b3",
+      "value": 686.4311112563428
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 2,
+      "fixture_section": "pure_co2_density",
+      "gate": "pure_co2_density",
+      "input_pressure_pa": 29966000,
+      "input_temperature_k": 310,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "supercritical",
+      "property": "density",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "mantilla-2010-pure-co2-density",
+      "status": "calculated",
+      "unit": "kg/m\u00b3",
+      "value": 921.8600279673338
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 3,
+      "fixture_section": "pure_co2_density",
+      "gate": "pure_co2_density",
+      "input_pressure_pa": 19981000,
+      "input_temperature_k": 350,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "supercritical",
+      "property": "density",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "mantilla-2010-pure-co2-density",
+      "status": "calculated",
+      "unit": "kg/m\u00b3",
+      "value": 613.7381642368183
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 4,
+      "fixture_section": "pure_co2_density",
+      "gate": "pure_co2_density",
+      "input_pressure_pa": 29994000,
+      "input_temperature_k": 400,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "supercritical",
+      "property": "density",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "mantilla-2010-pure-co2-density",
+      "status": "calculated",
+      "unit": "kg/m\u00b3",
+      "value": 561.4115732606583
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 0,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 153000,
+      "input_temperature_k": 253.146,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "gas",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "schaefer-2015-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 1.2735862774167438e-05
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 1,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 604500,
+      "input_temperature_k": 298.153,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "gas",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "schaefer-2015-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 1.4967511980461254e-05
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 2,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 304900,
+      "input_temperature_k": 323.16,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "gas",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "schaefer-2015-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 1.6128148119292055e-05
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 3,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 100400,
+      "input_temperature_k": 373.16,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "gas",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "schaefer-2015-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 1.842419102229285e-05
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 4,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 8260000,
+      "input_temperature_k": 220.05,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "dense",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "chapoy-2024-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 0.00025461370119132787
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 5,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 14050000,
+      "input_temperature_k": 230.05,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "dense",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "chapoy-2024-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 0.00022798316595418723
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 6,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 28320000,
+      "input_temperature_k": 240.05,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "dense",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "chapoy-2024-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 0.00022052063170794852
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 7,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 22870000,
+      "input_temperature_k": 260.05,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "dense",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "chapoy-2024-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 0.00016164734012848506
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "fixture_index": 8,
+      "fixture_section": "pure_co2_viscosity",
+      "gate": "pure_co2_viscosity",
+      "input_pressure_pa": 22470000,
+      "input_temperature_k": 280,
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "dense",
+      "property": "dynamicViscosity",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "chapoy-2024-pure-co2-viscosity",
+      "status": "calculated",
+      "unit": "Pa\u00b7s",
+      "value": 0.00012507925613939176
+    },
+    {
+      "composition_basis": "mole_fraction",
+      "critical_pressure_pa": 7377298.373446752,
+      "critical_temperature_k": 304.1282000029807,
+      "fixture_index": 0,
+      "fixture_section": "critical_points",
+      "gate": "pure_co2_critical_point",
+      "model_version": "8.0.0",
+      "normalized_composition": [
+        {
+          "component": "co2",
+          "mole_fraction": 1
+        }
+      ],
+      "phase": "critical",
+      "property": "criticalPoint",
+      "provider_id": "coolprop-heos",
+      "provider_name": "CoolProp HEOS \u2014 Preliminary",
+      "provider_version": "0.8.2",
+      "reference_id": "nist-webbook-co2-critical",
+      "status": "calculated",
+      "unit": "K,Pa"
+    }
+  ],
+  "schema_version": "phasexpert-production-observations.v2"
+}

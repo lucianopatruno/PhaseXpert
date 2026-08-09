@@ -1,4 +1,5 @@
 import json
+import base64
 import subprocess
 import sys
 import tempfile
@@ -9,10 +10,25 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "Scripts" / "validate_calculations.py"
+EXTRACT_SCRIPT = ROOT / "Scripts" / "extract_validation_observations.py"
 MANIFEST = ROOT / "Documentation" / "Validation" / "CalculationReferenceManifest.json"
 
 
 class CalculationValidationRunnerTests(unittest.TestCase):
+    provider_fields = {
+        "provider_id": "coolprop-heos",
+        "provider_name": "CoolProp HEOS",
+        "provider_version": "synthetic-provider-version",
+        "model_version": "synthetic-model-version",
+        "normalized_composition": [
+            {
+                "component": "co2",
+                "mole_fraction": 1.0
+            }
+        ],
+        "composition_basis": "mole_fraction"
+    }
+
     def run_report(
         self,
         allow_incomplete: bool = True,
@@ -51,10 +67,15 @@ class CalculationValidationRunnerTests(unittest.TestCase):
                     "gate": "pure_co2_density",
                     "fixture_section": "pure_co2_density",
                     "fixture_index": index,
+                    "reference_id": point["reference_id"],
                     "property": "density",
+                    "input_temperature_k": point["temperature_k"],
+                    "input_pressure_pa": point["pressure_pa"],
                     "status": "calculated",
                     "value": point["density_kg_m3"],
-                    "unit": "kg/m3"
+                    "unit": "kg/m³",
+                    "phase": "synthetic",
+                    **self.provider_fields
                 }
             )
         for index, point in enumerate(manifest["fixtures"]["pure_co2_viscosity"]):
@@ -63,10 +84,15 @@ class CalculationValidationRunnerTests(unittest.TestCase):
                     "gate": "pure_co2_viscosity",
                     "fixture_section": "pure_co2_viscosity",
                     "fixture_index": index,
+                    "reference_id": point["reference_id"],
                     "property": "dynamicViscosity",
+                    "input_temperature_k": point["temperature_k"],
+                    "input_pressure_pa": point["pressure_pa"],
                     "status": "calculated",
                     "value": point["viscosity_pa_s"],
-                    "unit": "Pa*s"
+                    "unit": "Pa·s",
+                    "phase": "synthetic",
+                    **self.provider_fields
                 }
             )
         for index, point in enumerate(manifest["fixtures"]["critical_points"]):
@@ -75,11 +101,17 @@ class CalculationValidationRunnerTests(unittest.TestCase):
                     "gate": "pure_co2_critical_point",
                     "fixture_section": "critical_points",
                     "fixture_index": index,
+                    "reference_id": point["reference_id"],
                     "property": "criticalPoint",
+                    "input_temperature_k": None,
+                    "input_pressure_pa": None,
                     "status": "calculated",
-                    "temperature_k": point["temperature_k"],
-                    "pressure_pa": point["pressure_pa"],
-                    "unit": "K,Pa"
+                    "value": None,
+                    "unit": "K,Pa",
+                    "phase": "critical",
+                    "critical_temperature_k": point["temperature_k"],
+                    "critical_pressure_pa": point["pressure_pa"],
+                    **self.provider_fields
                 }
             )
         for index, point in enumerate(manifest["fixtures"].get("pure_co2_saturation_pressure", [])):
@@ -88,10 +120,15 @@ class CalculationValidationRunnerTests(unittest.TestCase):
                     "gate": "pure_co2_saturation_pressure",
                     "fixture_section": "pure_co2_saturation_pressure",
                     "fixture_index": index,
+                    "reference_id": point["reference_id"],
                     "property": "saturationPressure",
+                    "input_temperature_k": point["temperature_k"],
+                    "input_pressure_pa": point["pressure_pa"],
                     "status": "calculated",
                     "value": point["pressure_pa"],
-                    "unit": "Pa"
+                    "unit": "Pa",
+                    "phase": "synthetic",
+                    **self.provider_fields
                 }
             )
         for index, point in enumerate(manifest["fixtures"]["co2_n2_density"]):
@@ -100,20 +137,40 @@ class CalculationValidationRunnerTests(unittest.TestCase):
                     "gate": "co2_n2_density",
                     "fixture_section": "co2_n2_density",
                     "fixture_index": index,
+                    "reference_id": point["reference_id"],
                     "property": "density",
+                    "input_temperature_k": point["temperature_k"],
+                    "input_pressure_pa": point["pressure_pa"],
                     "status": "calculated",
                     "value": point["density_kg_m3"],
-                    "unit": "kg/m3"
+                    "unit": "kg/m³",
+                    "phase": "synthetic",
+                    **self.provider_fields
                 }
             )
         return {
-            "schema_version": "phasexpert-production-observations.v1",
+            "schema_version": "phasexpert-production-observations.v2",
             "metadata": {
                 "source": "synthetic test observation fixture",
                 "note": "Exercises runner accounting; not scientific evidence."
             },
             "points": points
         }
+
+    def assert_gate_failed_after_observation_mutation(
+        self,
+        mutate,
+        gate: str = "pure_co2_density"
+    ):
+        observations = self.exact_observations()
+        mutate(observations)
+        _, output = self.run_report(observations=observations)
+        report = json.loads(output)
+        self.assertEqual(report["gates"][gate]["status"], "failed")
+        self.assertIn(
+            f"{gate} gate is failed",
+            report["strict_blockers"],
+        )
 
     def all_passing_manifest(self) -> dict:
         manifest = deepcopy(json.loads(MANIFEST.read_text(encoding="utf-8")))
@@ -224,7 +281,7 @@ class CalculationValidationRunnerTests(unittest.TestCase):
         observations = self.exact_observations()
         for point in observations["points"]:
             if point["gate"] == "pure_co2_critical_point":
-                point["temperature_k"] += 0.02
+                point["critical_temperature_k"] += 0.02
         _, output = self.run_report(observations=observations)
         report = json.loads(output)
 
@@ -234,7 +291,7 @@ class CalculationValidationRunnerTests(unittest.TestCase):
         observations = self.exact_observations()
         for point in observations["points"]:
             if point["gate"] == "pure_co2_critical_point":
-                point["pressure_pa"] *= 1.001
+                point["critical_pressure_pa"] *= 1.001
         _, output = self.run_report(observations=observations)
         report = json.loads(output)
 
@@ -244,11 +301,143 @@ class CalculationValidationRunnerTests(unittest.TestCase):
         observations = self.exact_observations()
         for point in observations["points"]:
             if point["gate"] == "pure_co2_critical_point":
-                point["temperature_k"] = "nan"
+                point["critical_temperature_k"] = "nan"
         _, output = self.run_report(observations=observations)
         report = json.loads(output)
 
         self.assertEqual(report["gates"]["pure_co2_critical_point"]["status"], "failed")
+
+    def test_wrong_observation_schema_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations.update(
+                {"schema_version": "phasexpert-production-observations.v1"}
+            )
+        )
+
+    def test_wrong_provider_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"provider_id": "architecture-demo"}
+            )
+        )
+
+    def test_wrong_property_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"property": "dynamicViscosity"}
+            )
+        )
+
+    def test_wrong_unit_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"unit": "kg/m3"}
+            )
+        )
+
+    def test_wrong_temperature_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"input_temperature_k": 999.0}
+            )
+        )
+
+    def test_wrong_pressure_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"input_pressure_pa": 999.0}
+            )
+        )
+
+    def test_wrong_composition_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {
+                    "normalized_composition": [
+                        {"component": "co2", "mole_fraction": 0.999},
+                        {"component": "n2", "mole_fraction": 0.001}
+                    ]
+                }
+            )
+        )
+
+    def test_wrong_reference_id_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"reference_id": "wrong-reference"}
+            )
+        )
+
+    def test_duplicate_observation_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"].append(
+                dict(observations["points"][0])
+            )
+        )
+
+    def test_missing_observation_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"].pop(0)
+        )
+
+    def test_non_finite_value_prevents_gate_pass(self):
+        self.assert_gate_failed_after_observation_mutation(
+            lambda observations: observations["points"][0].update(
+                {"value": "NaN"}
+            )
+        )
+
+    def test_extract_observation_payload_writes_canonical_json(self):
+        observations = self.exact_observations()
+        payload = base64.b64encode(
+            json.dumps(observations, sort_keys=True).encode("utf-8")
+        ).decode("ascii")
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp) / "xcode.log"
+            output = Path(tmp) / "observations.json"
+            log.write_text(
+                "before\nPHASEXPERT_VALIDATION_OBSERVATIONS_BASE64="
+                + payload
+                + "\nafter\n",
+                encoding="utf-8"
+            )
+            result = subprocess.run(
+                [sys.executable, str(EXTRACT_SCRIPT), str(log), str(output)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(output.read_text(encoding="utf-8")), observations)
+
+    def test_extract_observation_payload_rejects_missing_duplicate_and_invalid_payloads(self):
+        observations = self.exact_observations()
+        payload = base64.b64encode(
+            json.dumps(observations, sort_keys=True).encode("utf-8")
+        ).decode("ascii")
+        cases = [
+            "no payload here",
+            (
+                "PHASEXPERT_VALIDATION_OBSERVATIONS_BASE64="
+                + payload
+                + "\nPHASEXPERT_VALIDATION_OBSERVATIONS_BASE64="
+                + payload
+            ),
+            "PHASEXPERT_VALIDATION_OBSERVATIONS_BASE64=not-base64"
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            for index, content in enumerate(cases):
+                log = Path(tmp) / f"xcode-{index}.log"
+                output = Path(tmp) / f"observations-{index}.json"
+                log.write_text(content, encoding="utf-8")
+                result = subprocess.run(
+                    [sys.executable, str(EXTRACT_SCRIPT), str(log), str(output)],
+                    cwd=ROOT,
+                    text=True,
+                    capture_output=True
+                )
+                self.assertNotEqual(result.returncode, 0, content)
+                self.assertFalse(output.exists())
 
     def test_synthetic_all_passing_configuration_returns_zero_strict_exit(self):
         manifest = self.all_passing_manifest()

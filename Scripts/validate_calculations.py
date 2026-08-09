@@ -21,6 +21,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "Documentation" / "Validation" / "CalculationReferenceManifest.json"
 DEFAULT_RESULTS = ROOT / "Documentation" / "Validation" / "CalculationValidationResults.json"
+OBSERVATION_SCHEMA_VERSION = "phasexpert-production-observations.v2"
+EXPECTED_PROVIDER_ID = "coolprop-heos"
 REQUIRED_GATE_STATUSES = {"blocked", "failed", "runtime_observation_missing"}
 REQUIRED_SCIENTIFIC_GATES = {
     "pure_co2_density",
@@ -28,6 +30,43 @@ REQUIRED_SCIENTIFIC_GATES = {
     "pure_co2_critical_point",
     "pure_co2_saturation_pressure",
     "co2_n2_density"
+}
+GATE_CONTRACTS = {
+    "pure_co2_density": {
+        "fixture_section": "pure_co2_density",
+        "property": "density",
+        "unit": "kg/m³",
+        "requires_input_state": True,
+        "requires_pure_co2": True
+    },
+    "pure_co2_viscosity": {
+        "fixture_section": "pure_co2_viscosity",
+        "property": "dynamicViscosity",
+        "unit": "Pa·s",
+        "requires_input_state": True,
+        "requires_pure_co2": True
+    },
+    "pure_co2_saturation_pressure": {
+        "fixture_section": "pure_co2_saturation_pressure",
+        "property": "saturationPressure",
+        "unit": "Pa",
+        "requires_input_state": True,
+        "requires_pure_co2": True
+    },
+    "pure_co2_critical_point": {
+        "fixture_section": "critical_points",
+        "property": "criticalPoint",
+        "unit": "K,Pa",
+        "requires_input_state": False,
+        "requires_pure_co2": True
+    },
+    "co2_n2_density": {
+        "fixture_section": "co2_n2_density",
+        "property": "density",
+        "unit": "kg/m³",
+        "requires_input_state": True,
+        "requires_pure_co2": False
+    }
 }
 
 
@@ -102,6 +141,117 @@ def empty_metrics(expected_points: int) -> dict[str, Any]:
     }
 
 
+def close_enough(left: Any, right: Any, rel_tol: float = 1e-12, abs_tol: float = 1e-9) -> bool:
+    return (
+        isinstance(left, (int, float))
+        and isinstance(right, (int, float))
+        and math.isfinite(float(left))
+        and math.isfinite(float(right))
+        and math.isclose(float(left), float(right), rel_tol=rel_tol, abs_tol=abs_tol)
+    )
+
+
+def is_pure_co2_composition(value: Any) -> bool:
+    if not isinstance(value, list) or len(value) != 1:
+        return False
+    item = value[0]
+    if not isinstance(item, dict):
+        return False
+    return item.get("component") == "co2" and close_enough(
+        item.get("mole_fraction"),
+        1.0,
+        rel_tol=0,
+        abs_tol=1e-12
+    )
+
+
+def expected_pressure(fixture: dict[str, Any]) -> float | None:
+    pressure = fixture.get("pressure_pa")
+    return float(pressure) if isinstance(pressure, (int, float)) else None
+
+
+def observation_contract_failures(
+    gate: str,
+    fixtures: list[dict[str, Any]],
+    observations: dict[str, Any]
+) -> list[str]:
+    contract = GATE_CONTRACTS[gate]
+    failures: list[str] = []
+    if observations.get("schema_version") != OBSERVATION_SCHEMA_VERSION:
+        failures.append(
+            f"observation schema_version must be {OBSERVATION_SCHEMA_VERSION!r}"
+        )
+    points = observations.get("points")
+    if not isinstance(points, list):
+        return failures + ["observations.points must be an array"]
+
+    matching_points = [
+        point for point in points
+        if point.get("gate") == gate
+        or point.get("fixture_section") == contract["fixture_section"]
+    ]
+    by_key: dict[tuple[str, int], dict[str, Any]] = {}
+    duplicate_keys: set[tuple[str, int]] = set()
+    for point in matching_points:
+        key = (point.get("fixture_section"), point.get("fixture_index"))
+        if key in by_key:
+            duplicate_keys.add(key)
+        elif isinstance(key[1], int):
+            by_key[key] = point
+    for section, index in sorted(duplicate_keys, key=lambda item: str(item)):
+        failures.append(f"{section}[{index}] has duplicate observations")
+
+    for index, fixture in enumerate(fixtures):
+        key = (contract["fixture_section"], index)
+        observed = by_key.get(key)
+        if not observed:
+            failures.append(f"{contract['fixture_section']}[{index}] has no native production observation")
+            continue
+        if observed.get("gate") != gate:
+            failures.append(f"{contract['fixture_section']}[{index}] has gate {observed.get('gate')!r}")
+        if observed.get("fixture_section") != contract["fixture_section"]:
+            failures.append(f"{gate}[{index}] fixture_section is {observed.get('fixture_section')!r}")
+        if observed.get("fixture_index") != index:
+            failures.append(f"{gate}[{index}] fixture_index is {observed.get('fixture_index')!r}")
+        if observed.get("reference_id") != fixture.get("reference_id"):
+            failures.append(f"{gate}[{index}] reference_id does not match manifest")
+        if observed.get("property") != contract["property"]:
+            failures.append(f"{gate}[{index}] property is {observed.get('property')!r}")
+        if observed.get("unit") != contract["unit"]:
+            failures.append(f"{gate}[{index}] unit is {observed.get('unit')!r}")
+        if observed.get("provider_id") != EXPECTED_PROVIDER_ID:
+            failures.append(f"{gate}[{index}] provider_id is {observed.get('provider_id')!r}")
+        for field in ("provider_name", "provider_version", "model_version"):
+            if not isinstance(observed.get(field), str) or not observed[field]:
+                failures.append(f"{gate}[{index}] {field} is missing")
+        if observed.get("composition_basis") != "mole_fraction":
+            failures.append(f"{gate}[{index}] composition_basis is {observed.get('composition_basis')!r}")
+        if contract["requires_pure_co2"] and not is_pure_co2_composition(
+            observed.get("normalized_composition")
+        ):
+            failures.append(f"{gate}[{index}] normalized_composition is not pure CO2")
+        if contract["requires_input_state"]:
+            if not close_enough(observed.get("input_temperature_k"), fixture.get("temperature_k")):
+                failures.append(f"{gate}[{index}] input_temperature_k does not match fixture")
+            pressure = expected_pressure(fixture)
+            if pressure is not None and not close_enough(observed.get("input_pressure_pa"), pressure):
+                failures.append(f"{gate}[{index}] input_pressure_pa does not match fixture")
+        if observed.get("status") != "calculated":
+            failures.append(f"{gate}[{index}] status is {observed.get('status')!r}")
+        if gate == "pure_co2_critical_point":
+            temperature = observed.get("critical_temperature_k")
+            pressure = observed.get("critical_pressure_pa")
+            if not isinstance(temperature, (int, float)) or not math.isfinite(float(temperature)):
+                failures.append(f"{gate}[{index}] critical_temperature_k is not finite")
+            if not isinstance(pressure, (int, float)) or not math.isfinite(float(pressure)) or float(pressure) <= 0:
+                failures.append(f"{gate}[{index}] critical_pressure_pa is not finite and positive")
+        else:
+            value = observed.get("value")
+            if not isinstance(value, (int, float)) or not math.isfinite(float(value)) or float(value) <= 0:
+                failures.append(f"{gate}[{index}] value is not finite and positive")
+    return failures
+
+
 def summarize_observations(
     gate: str,
     fixtures: list[dict[str, Any]],
@@ -117,6 +267,13 @@ def summarize_observations(
         return {
             "status": "runtime_observation_missing",
             "reason": "No native production-path observation file was supplied.",
+            "metrics": empty_metrics(len(fixtures))
+        }
+    contract_failures = observation_contract_failures(gate, fixtures, observations)
+    if contract_failures:
+        return {
+            "status": "failed",
+            "failures": contract_failures,
             "metrics": empty_metrics(len(fixtures))
         }
 
@@ -217,6 +374,25 @@ def summarize_critical_observations(
                 "maximum_relative_pressure_deviation": None
             }
         }
+    contract_failures = observation_contract_failures(
+        "pure_co2_critical_point",
+        fixtures,
+        observations
+    )
+    if contract_failures:
+        return {
+            "status": "failed",
+            "failures": contract_failures,
+            "metrics": {
+                "attempted": len(fixtures),
+                "observed": 0,
+                "passed": 0,
+                "failed": len(fixtures),
+                "failure_rate": 1.0,
+                "maximum_temperature_deviation_k": None,
+                "maximum_relative_pressure_deviation": None
+            }
+        }
 
     by_key = {
         (point.get("fixture_section"), point.get("fixture_index")): point
@@ -236,13 +412,13 @@ def summarize_critical_observations(
         if observed.get("status") != "calculated":
             failures.append(f"critical_points[{index}] status is {observed.get('status')!r}")
             continue
-        temperature = observed.get("temperature_k")
-        pressure = observed.get("pressure_pa")
+        temperature = observed.get("critical_temperature_k")
+        pressure = observed.get("critical_pressure_pa")
         if not isinstance(temperature, (int, float)) or not math.isfinite(temperature):
-            failures.append(f"critical_points[{index}] temperature_k is not finite")
+            failures.append(f"critical_points[{index}] critical_temperature_k is not finite")
             continue
         if not isinstance(pressure, (int, float)) or not math.isfinite(pressure) or pressure <= 0:
-            failures.append(f"critical_points[{index}] pressure_pa is not finite and positive")
+            failures.append(f"critical_points[{index}] critical_pressure_pa is not finite and positive")
             continue
 
         temperature_deviation = abs(float(temperature) - fixture["temperature_k"])

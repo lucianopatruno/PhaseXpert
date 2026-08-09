@@ -16,7 +16,10 @@
       "reason": "Exact tabulated experimental values, composition basis, units, uncertainty and redistribution terms are not committed.",
       "reference_points": 0,
       "runtime_observation_required": true,
-      "runtime_observation_source": null,
+      "runtime_observation_source": {
+        "observation_kind": "native-production-ios-test",
+        "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
+      },
       "status": "blocked"
     },
     "derived_properties": {
@@ -30,31 +33,35 @@
       "maximum_temperature_deviation_k": 0.01,
       "metrics": {
         "attempted": 1,
-        "failed": 1,
-        "failure_rate": 1.0,
-        "maximum_relative_pressure_deviation": null,
-        "maximum_temperature_deviation_k": null,
-        "observed": 0,
-        "passed": 0
+        "failed": 0,
+        "failure_rate": 0.0,
+        "maximum_relative_pressure_deviation": 2.2048083278201377e-07,
+        "maximum_temperature_deviation_k": 2.98069835480419e-09,
+        "observed": 1,
+        "passed": 1
       },
-      "reason": "No native production-path critical-point observation file was supplied.",
+      "reason": null,
       "reference_points": 1,
       "runtime_observation_required": true,
-      "runtime_observation_source": null,
-      "status": "runtime_observation_missing"
+      "runtime_observation_source": {
+        "observation_kind": "native-production-ios-test",
+        "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
+      },
+      "status": "passed"
     },
     "pure_co2_density": {
       "failures": [],
       "maximum_allowed_relative_deviation": 0.006556441750412081,
       "metrics": {
         "attempted": 5,
-        "bias_relative_deviation": null,
-        "failed": 5,
-        "failure_rate": 1.0,
-        "maximum_absolute_relative_deviation": null,
-        "mean_absolute_relative_deviation": null,
-        "observed": 0,
-        "passed": 0
+        "bias_relative_deviation": 7.115681416758297e-05,
+        "failed": 0,
+        "failure_rate": 0.0,
+        "maximum_absolute_deviation_si": 0.271111256342806,
+        "maximum_absolute_relative_deviation": 0.00039511375822374664,
+        "mean_absolute_relative_deviation": 0.00020475630693742153,
+        "observed": 5,
+        "passed": 5
       },
       "reference_points": 5,
       "regions": {
@@ -65,8 +72,11 @@
         "supercritical": 1
       },
       "runtime_observation_required": true,
-      "runtime_observation_source": null,
-      "status": "runtime_observation_missing"
+      "runtime_observation_source": {
+        "observation_kind": "native-production-ios-test",
+        "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
+      },
+      "status": "passed"
     },
     "pure_co2_saturation_pressure": {
       "failures": [],
@@ -83,7 +93,10 @@
       "reason": "No committed independent saturation-pressure fixture with redistribution review.",
       "reference_points": 0,
       "runtime_observation_required": true,
-      "runtime_observation_source": null,
+      "runtime_observation_source": {
+        "observation_kind": "native-production-ios-test",
+        "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
+      },
       "status": "blocked"
     },
     "pure_co2_viscosity": {
@@ -91,13 +104,14 @@
       "maximum_allowed_relative_deviation": 0.07804337501978786,
       "metrics": {
         "attempted": 9,
-        "bias_relative_deviation": null,
-        "failed": 9,
-        "failure_rate": 1.0,
-        "maximum_absolute_relative_deviation": null,
-        "mean_absolute_relative_deviation": null,
-        "observed": 0,
-        "passed": 0
+        "bias_relative_deviation": 0.002086565672460165,
+        "failed": 0,
+        "failure_rate": 0.0,
+        "maximum_absolute_deviation_si": 4.257340128485052e-06,
+        "maximum_absolute_relative_deviation": 0.02704962277454128,
+        "mean_absolute_relative_deviation": 0.00810845103456306,
+        "observed": 9,
+        "passed": 9
       },
       "reference_points": 9,
       "regions": {
@@ -105,8 +119,11 @@
         "low_density_gas": 4
       },
       "runtime_observation_required": true,
-      "runtime_observation_source": null,
-      "status": "runtime_observation_missing"
+      "runtime_observation_source": {
+        "observation_kind": "native-production-ios-test",
+        "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
+      },
+      "status": "passed"
     },
     "unit_conversions": {
       "basis": "Deterministic exact conversions in EngineeringUnits tests.",
@@ -119,19 +136,16 @@
     "co2_n2_density has no committed traceable reference points",
     "pure_co2_saturation_pressure has no committed traceable reference points"
   ],
-  "observation_checksum_sha256": null,
+  "observation_checksum_sha256": "d8c8ae8f1517edd2c597984fa8819db8359a1ea30f7cbff9b02d5f925c7c5304",
   "ordinary_build_requires_network": false,
   "overall_scientific_gate": "not_passed",
-  "reason": "Required scientific gates are incomplete: co2_n2_density gate is blocked; co2_n2_density has no committed traceable reference points; pure_co2_critical_point gate is runtime_observation_missing; pure_co2_density gate is runtime_observation_missing; pure_co2_saturation_pressure gate is blocked; pure_co2_saturation_pressure has no committed traceable reference points; pure_co2_viscosity gate is runtime_observation_missing.",
+  "reason": "Required scientific gates are incomplete: co2_n2_density gate is blocked; co2_n2_density has no committed traceable reference points; pure_co2_saturation_pressure gate is blocked; pure_co2_saturation_pressure has no committed traceable reference points.",
   "schema_version": "phasexpert-calculation-validation-results.v1",
   "strict_blockers": [
     "co2_n2_density gate is blocked",
     "co2_n2_density has no committed traceable reference points",
-    "pure_co2_critical_point gate is runtime_observation_missing",
-    "pure_co2_density gate is runtime_observation_missing",
     "pure_co2_saturation_pressure gate is blocked",
-    "pure_co2_saturation_pressure has no committed traceable reference points",
-    "pure_co2_viscosity gate is runtime_observation_missing"
+    "pure_co2_saturation_pressure has no committed traceable reference points"
   ],
   "validated_range_matrix": {
     "co2_n2_density": "supported; preliminary; independent density fixture blocked",

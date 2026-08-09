@@ -8,29 +8,57 @@ import XCTest
 /// available to the iOS test target. A clean clone without that artifact skips
 /// the cases rather than substituting mock or fabricated scientific values.
 final class PureCO2ReferenceValidationTests: XCTestCase {
+    private struct ObservationComposition: Encodable {
+        let component: String
+        let moleFraction: Double
+
+        enum CodingKeys: String, CodingKey {
+            case component
+            case moleFraction = "mole_fraction"
+        }
+    }
+
     private struct ProductionObservation: Encodable {
         let gate: String
         let fixtureSection: String
         let fixtureIndex: Int
+        let referenceID: String
         let property: String
+        let inputTemperatureK: Double?
+        let inputPressurePa: Double?
+        let normalizedComposition: [ObservationComposition]
+        let compositionBasis: String
+        let providerID: String
+        let providerName: String
+        let providerVersion: String
+        let modelVersion: String
         let status: String
         let value: Double?
-        let temperatureK: Double?
-        let pressurePa: Double?
         let unit: String
         let phase: String
+        let criticalTemperatureK: Double?
+        let criticalPressurePa: Double?
 
         enum CodingKeys: String, CodingKey {
             case gate
             case fixtureSection = "fixture_section"
             case fixtureIndex = "fixture_index"
+            case referenceID = "reference_id"
             case property
+            case inputTemperatureK = "input_temperature_k"
+            case inputPressurePa = "input_pressure_pa"
+            case normalizedComposition = "normalized_composition"
+            case compositionBasis = "composition_basis"
+            case providerID = "provider_id"
+            case providerName = "provider_name"
+            case providerVersion = "provider_version"
+            case modelVersion = "model_version"
             case status
             case value
-            case temperatureK = "temperature_k"
-            case pressurePa = "pressure_pa"
             case unit
             case phase
+            case criticalTemperatureK = "critical_temperature_k"
+            case criticalPressurePa = "critical_pressure_pa"
         }
     }
 
@@ -54,6 +82,7 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
     }
 
     private struct ViscosityReferenceCase {
+        let referenceID: String
         let temperatureK: Double
         let pressureKPa: Double
         let viscosityMicroPascalSeconds: Double
@@ -61,15 +90,6 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
     }
 
     func testWritesProductionValidationObservationsWhenRequested() async throws {
-        guard
-            let outputPath = ProcessInfo.processInfo.environment[
-                "PHASEXPERT_VALIDATION_OBSERVATIONS_PATH"
-            ],
-            !outputPath.isEmpty
-        else {
-            throw XCTSkip("Production validation observation export was not requested.")
-        }
-
         let provider = try requireNativeCoolPropProvider()
         var observations: [ProductionObservation] = []
 
@@ -87,6 +107,10 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
                 try observation(
                     gate: "pure_co2_density",
                     index: index,
+                    referenceID: "mantilla-2010-pure-co2-density",
+                    temperatureK: reference.temperatureK,
+                    pressurePa: reference.pressureKPa * 1_000,
+                    provider: provider,
                     property: .density,
                     result: result,
                     phase: response.phase
@@ -108,6 +132,10 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
                 try observation(
                     gate: "pure_co2_viscosity",
                     index: index,
+                    referenceID: reference.referenceID,
+                    temperatureK: reference.temperatureK,
+                    pressurePa: reference.pressureKPa * 1_000,
+                    provider: provider,
                     property: .dynamicViscosity,
                     result: result,
                     phase: response.phase
@@ -131,23 +159,29 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
                 gate: "pure_co2_critical_point",
                 fixtureSection: "critical_points",
                 fixtureIndex: 0,
+                referenceID: "nist-webbook-co2-critical",
                 property: "criticalPoint",
+                inputTemperatureK: nil,
+                inputPressurePa: nil,
+                normalizedComposition: pureCO2Composition,
+                compositionBasis: "mole_fraction",
+                providerID: provider.descriptor.id,
+                providerName: provider.descriptor.name,
+                providerVersion: provider.descriptor.providerVersion,
+                modelVersion: provider.descriptor.modelVersion,
                 status: envelope.isAvailable ? "calculated" : "unavailable",
                 value: nil,
-                temperatureK: critical.temperatureK,
-                pressurePa: critical.pressurePa,
                 unit: "K,Pa",
-                phase: "critical"
+                phase: "critical",
+                criticalTemperatureK: critical.temperatureK,
+                criticalPressurePa: critical.pressurePa
             )
         )
 
         let report = ProductionObservationReport(
-            schemaVersion: "phasexpert-production-observations.v1",
+            schemaVersion: "phasexpert-production-observations.v2",
             metadata: [
-                "provider_id": provider.descriptor.id,
-                "provider_name": provider.descriptor.name,
-                "provider_version": provider.descriptor.providerVersion,
-                "model_version": provider.descriptor.modelVersion,
+                "observation_kind": "native-production-ios-test",
                 "source": "PhaseXpertTests/PureCO2ReferenceValidationTests.swift"
             ],
             points: observations
@@ -155,12 +189,26 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let data = try encoder.encode(report)
-        let url = URL(fileURLWithPath: outputPath)
-        try FileManager.default.createDirectory(
-            at: url.deletingLastPathComponent(),
-            withIntermediateDirectories: true
+        let json = try XCTUnwrap(String(data: data, encoding: .utf8))
+        let attachment = XCTAttachment(string: json)
+        attachment.name = "PhaseXpert production validation observations"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        print(
+            "PHASEXPERT_VALIDATION_OBSERVATIONS_BASE64="
+                + data.base64EncodedString()
         )
-        try data.write(to: url, options: .atomic)
+
+        if let outputPath = ProcessInfo.processInfo.environment[
+            "PHASEXPERT_VALIDATION_OBSERVATIONS_PATH"
+        ], !outputPath.isEmpty {
+            let url = URL(fileURLWithPath: outputPath)
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try data.write(to: url, options: .atomic)
+        }
     }
 
     func testDensityAgainstMantillaExperimentalData() async throws {
@@ -286,24 +334,28 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
     private var lowDensityViscosityReferences: [ViscosityReferenceCase] {
         [
             ViscosityReferenceCase(
+                referenceID: "schaefer-2015-pure-co2-viscosity",
                 temperatureK: 253.146,
                 pressureKPa: 153.0,
                 viscosityMicroPascalSeconds: 12.714,
                 uncertaintyMicroPascalSeconds: 0.052
             ),
             ViscosityReferenceCase(
+                referenceID: "schaefer-2015-pure-co2-viscosity",
                 temperatureK: 298.153,
                 pressureKPa: 604.5,
                 viscosityMicroPascalSeconds: 14.945,
                 uncertaintyMicroPascalSeconds: 0.030
             ),
             ViscosityReferenceCase(
+                referenceID: "schaefer-2015-pure-co2-viscosity",
                 temperatureK: 323.160,
                 pressureKPa: 304.9,
                 viscosityMicroPascalSeconds: 16.099,
                 uncertaintyMicroPascalSeconds: 0.051
             ),
             ViscosityReferenceCase(
+                referenceID: "schaefer-2015-pure-co2-viscosity",
                 temperatureK: 373.160,
                 pressureKPa: 100.4,
                 viscosityMicroPascalSeconds: 18.396,
@@ -315,30 +367,35 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
     private var coldDenseViscosityReferences: [ViscosityReferenceCase] {
         [
             ViscosityReferenceCase(
+                referenceID: "chapoy-2024-pure-co2-viscosity",
                 temperatureK: 220.05,
                 pressureKPa: 8_260,
                 viscosityMicroPascalSeconds: 257.77,
                 uncertaintyMicroPascalSeconds: 3.51
             ),
             ViscosityReferenceCase(
+                referenceID: "chapoy-2024-pure-co2-viscosity",
                 temperatureK: 230.05,
                 pressureKPa: 14_050,
                 viscosityMicroPascalSeconds: 229.10,
                 uncertaintyMicroPascalSeconds: 2.41
             ),
             ViscosityReferenceCase(
+                referenceID: "chapoy-2024-pure-co2-viscosity",
                 temperatureK: 240.05,
                 pressureKPa: 28_320,
                 viscosityMicroPascalSeconds: 217.85,
                 uncertaintyMicroPascalSeconds: 3.86
             ),
             ViscosityReferenceCase(
+                referenceID: "chapoy-2024-pure-co2-viscosity",
                 temperatureK: 260.05,
                 pressureKPa: 22_870,
                 viscosityMicroPascalSeconds: 157.39,
                 uncertaintyMicroPascalSeconds: 5.33
             ),
             ViscosityReferenceCase(
+                referenceID: "chapoy-2024-pure-co2-viscosity",
                 temperatureK: 280.00,
                 pressureKPa: 22_470,
                 viscosityMicroPascalSeconds: 126.34,
@@ -351,9 +408,22 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
         lowDensityViscosityReferences + coldDenseViscosityReferences
     }
 
+    private var pureCO2Composition: [ObservationComposition] {
+        [
+            ObservationComposition(
+                component: ComponentID.carbonDioxide.rawValue,
+                moleFraction: 1
+            )
+        ]
+    }
+
     private func observation(
         gate: String,
         index: Int,
+        referenceID: String,
+        temperatureK: Double,
+        pressurePa: Double,
+        provider: any ThermodynamicModelProvider,
         property: PropertyID,
         result: PropertyValue,
         phase: PhaseRegion
@@ -362,13 +432,22 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
             gate: gate,
             fixtureSection: gate,
             fixtureIndex: index,
+            referenceID: referenceID,
             property: property.rawValue,
+            inputTemperatureK: temperatureK,
+            inputPressurePa: pressurePa,
+            normalizedComposition: pureCO2Composition,
+            compositionBasis: "mole_fraction",
+            providerID: provider.descriptor.id,
+            providerName: provider.descriptor.name,
+            providerVersion: provider.descriptor.providerVersion,
+            modelVersion: provider.descriptor.modelVersion,
             status: result.status.rawValue,
             value: try XCTUnwrap(result.value),
-            temperatureK: nil,
-            pressurePa: nil,
             unit: result.unit,
-            phase: phase.rawValue
+            phase: phase.rawValue,
+            criticalTemperatureK: nil,
+            criticalPressurePa: nil
         )
     }
 
