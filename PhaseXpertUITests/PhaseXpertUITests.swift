@@ -71,7 +71,7 @@ final class PhaseXpertUITests: XCTestCase {
         )
     }
 
-    func testThreePercentNitrogenRejectsOutOfDomainProviderTrace() {
+    func testThreePercentNitrogenShowsPureCO2PhaseDiagramScope() {
         let app = XCUIApplication()
         app.launch()
 
@@ -104,13 +104,12 @@ final class PhaseXpertUITests: XCTestCase {
         viewPhaseDiagramButton.tap()
 
         XCTAssertTrue(
-            app.otherElements["phase-diagram-error"].waitForExistence(timeout: 10),
-            "The out-of-domain provider trace was not rejected for 3 mol% N₂."
+            app.otherElements["phase-diagram-pure-co2-scope"].waitForExistence(timeout: 10),
+            "The phase-diagram screen did not show the pure-CO₂ scope state for 3 mol% N₂."
         )
         XCTAssertTrue(
             app.staticTexts[
-                "CoolProp mixture phase-envelope continuation left PhaseXpert's supported "
-                    + "0.8–300 bar(a), −55–150 °C domain; no diagram is displayed."
+                "Phase diagrams are available for pure CO₂. Remove all impurities to view the CO₂ phase diagram."
             ].exists
         )
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)

@@ -104,7 +104,7 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(finalText.contains("Deterministic test solver"))
     }
 
-    func testPDFReportLabelsMixtureEnvelopeBranchesSearchably() throws {
+    func testPDFReportRejectsMixtureEnvelopeAttachment() throws {
         let snapshot = makeSnapshot()
         let image = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 400)).image { context in
             UIColor.white.setFill()
@@ -130,16 +130,19 @@ final class CalculationExportTests: XCTestCase {
             response: response
         )
 
-        let data = try CalculationExporter().data(
-            for: snapshot,
-            format: .pdf,
-            phaseDiagram: attachment
-        )
-        let document = try XCTUnwrap(PDFDocument(data: data))
-        let finalText = try XCTUnwrap(document.page(at: document.pageCount - 1)?.string)
-        XCTAssertTrue(finalText.contains("mixture bubble/dew envelope"))
-        XCTAssertTrue(finalText.contains("No scientific values are interpolated or estimated"))
-        XCTAssertTrue(finalText.contains(response.requestID.uuidString))
+        XCTAssertThrowsError(
+            try CalculationExporter().data(
+                for: snapshot,
+                format: .pdf,
+                phaseDiagram: attachment
+            )
+        ) { error in
+            XCTAssertTrue(
+                error.localizedDescription.contains(
+                    PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+                )
+            )
+        }
     }
 
     func testPDFReportPaginatesLongSavedCaseNotes() throws {

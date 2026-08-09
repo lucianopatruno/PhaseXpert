@@ -17,7 +17,7 @@ enum PhaseDiagramExportError: LocalizedError {
         switch self {
         case let .unavailable(message): message
         case .renderingFailed:
-            "PhaseXpert could not render the calculated phase diagram."
+            "PhaseXpert did not render the calculated phase diagram."
         }
     }
 }
@@ -63,22 +63,25 @@ struct PhaseDiagramImageExporter {
         record: CalculationRecord,
         response: PhaseEnvelopeResponse
     ) throws {
+        guard PhaseDiagramEligibility.isPureCarbonDioxide(
+            composition: record.request.composition
+        ) else {
+            throw PhaseDiagramExportError.unavailable(
+                PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            )
+        }
         guard response.isAvailable,
               response.boundaryKind != nil,
               !response.points.isEmpty
         else {
             throw PhaseDiagramExportError.unavailable(
-                "The selected provider did not return an exportable phase boundary."
+                "The CO₂ phase diagram is not ready for export."
             )
         }
         if response.boundaryKind == .mixtureEnvelope {
-            guard response.points.filter({ $0.branch == .bubble }).count >= 2,
-                  response.points.filter({ $0.branch == .dew }).count >= 2
-            else {
-                throw PhaseDiagramExportError.unavailable(
-                    "The selected provider did not return both mixture-envelope branches."
-                )
-            }
+            throw PhaseDiagramExportError.unavailable(
+                PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            )
         }
         guard response.points.allSatisfy({
             $0.temperatureK.isFinite && $0.pressurePa.isFinite && $0.pressurePa > 0
@@ -87,7 +90,7 @@ struct PhaseDiagramImageExporter {
         record.input.pressurePa.isFinite
         else {
             throw PhaseDiagramExportError.unavailable(
-                "The phase diagram contains a non-finite calculated value."
+                "The CO₂ phase diagram is not ready for export."
             )
         }
     }
@@ -119,10 +122,6 @@ private struct PhaseDiagramExportCanvas: View {
         samples.filter { $0.branch == .bubble }
     }
 
-    private var dew: [Sample] {
-        samples.filter { $0.branch == .dew }
-    }
-
     private var critical: Sample? {
         samples.first { $0.branch == .critical }
     }
@@ -134,11 +133,7 @@ private struct PhaseDiagramExportCanvas: View {
                     Text("PhaseXpert")
                         .font(.system(size: 42, weight: .bold))
                         .foregroundStyle(Color.ifePrimary)
-                    Text(response.boundaryKind == .mixtureEnvelope
-                        ? (response.solver?.converged == false
-                            ? "CO₂ mixture pressure–temperature trace"
-                            : "CO₂ mixture pressure–temperature envelope")
-                        : "Pure CO₂ pressure–temperature diagram")
+                    Text("Pure CO₂ pressure–temperature diagram")
                         .font(.system(size: 28, weight: .semibold))
                     Text("PRELIMINARY — VALIDATION PENDING")
                         .font(.system(size: 19, weight: .bold))
@@ -159,18 +154,8 @@ private struct PhaseDiagramExportCanvas: View {
                     )
                     .foregroundStyle(by: .value(
                         "Series",
-                        response.boundaryKind == .mixtureEnvelope
-                            ? "Bubble branch"
-                            : "CO₂ saturation boundary"
+                        "CO₂ saturation boundary"
                     ))
-                    .interpolationMethod(.linear)
-                }
-                ForEach(dew) { sample in
-                    LineMark(
-                        x: .value("Temperature (°C)", sample.temperatureCelsius),
-                        y: .value("Pressure (bar(a))", sample.pressureBar)
-                    )
-                    .foregroundStyle(by: .value("Series", "Dew branch"))
                     .interpolationMethod(.linear)
                 }
                 if let critical {
@@ -190,8 +175,6 @@ private struct PhaseDiagramExportCanvas: View {
             }
             .chartForegroundStyleScale([
                 "CO₂ saturation boundary": Color.ifePrimary,
-                "Bubble branch": Color.ifePrimary,
-                "Dew branch": Color.ifeSignal,
                 "Critical point": Color.ifeSignal,
                 "Operating point": Color.ifeText
             ])
@@ -207,7 +190,7 @@ private struct PhaseDiagramExportCanvas: View {
             }
             .font(.system(size: 18, weight: .medium))
 
-            Text("Model: \(response.model?.name ?? record.response.model.name) • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Provider \(response.model?.providerVersion ?? record.response.model.providerVersion)")
+            Text("Model: Pure CO₂ saturation • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Implementation \(response.model?.providerVersion ?? record.response.model.providerVersion)")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
             Text("Calculation ID: \(record.response.calculationID.uuidString) • Envelope request ID: \(response.requestID.uuidString)")
@@ -216,7 +199,7 @@ private struct PhaseDiagramExportCanvas: View {
             Text("Composition: \(record.request.composition.map { "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%" }.joined(separator: ", "))")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
-            Text("Straight line segments connect adjacent provider-calculated points within each branch for display only. No scientific values are interpolated or estimated.")
+            Text("Straight line segments connect adjacent calculated points for display only. No scientific values are interpolated or estimated.")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
         }
