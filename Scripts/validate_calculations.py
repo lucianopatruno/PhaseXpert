@@ -3,8 +3,9 @@
 
 The runner intentionally does not call CoolProp or any network service. It
 freezes reference provenance and acceptance criteria, verifies fixture
-completeness, and records which scientific gates can and cannot yet be claimed
-from committed evidence.
+completeness, consumes native production-path observations when supplied, and
+records which scientific gates can and cannot yet be claimed from committed
+evidence.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import sys
+import math
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "Documentation" / "Validation" / "CalculationReferenceManifest.json"
 DEFAULT_RESULTS = ROOT / "Documentation" / "Validation" / "CalculationValidationResults.json"
+REQUIRED_GATE_STATUSES = {"blocked", "failed", "runtime_observation_missing"}
 
 
 def canonical(value: Any) -> str:
@@ -46,6 +48,115 @@ def relative_tolerance_viscosity(point: dict[str, Any]) -> float:
     return absolute / measured
 
 
+def absolute_tolerance(gate: str, point: dict[str, Any]) -> float:
+    if gate == "pure_co2_density":
+        return (
+            point["expanded_uncertainty_kg_m3"]
+            + 0.001 * point["density_kg_m3"]
+        )
+    if gate == "pure_co2_viscosity":
+        return relative_tolerance_viscosity(point) * point["viscosity_pa_s"]
+    raise KeyError(f"No absolute tolerance rule for {gate}")
+
+
+def reference_value(gate: str, point: dict[str, Any]) -> float:
+    if gate == "pure_co2_density":
+        return point["density_kg_m3"]
+    if gate == "pure_co2_viscosity":
+        return point["viscosity_pa_s"]
+    raise KeyError(f"No reference value rule for {gate}")
+
+
+def empty_metrics(expected_points: int) -> dict[str, Any]:
+    return {
+        "attempted": expected_points,
+        "observed": 0,
+        "passed": 0,
+        "failed": expected_points,
+        "failure_rate": 1.0 if expected_points else 0.0,
+        "mean_absolute_relative_deviation": None,
+        "bias_relative_deviation": None,
+        "maximum_absolute_relative_deviation": None
+    }
+
+
+def summarize_observations(
+    gate: str,
+    fixtures: list[dict[str, Any]],
+    observations: dict[str, Any] | None
+) -> dict[str, Any]:
+    if not observations:
+        return {
+            "status": "runtime_observation_missing",
+            "reason": "No native production-path observation file was supplied.",
+            "metrics": empty_metrics(len(fixtures))
+        }
+
+    by_key = {
+        (point.get("fixture_section"), point.get("fixture_index")): point
+        for point in observations.get("points", [])
+        if point.get("gate") == gate
+    }
+    deviations: list[float] = []
+    absolute_deviations: list[float] = []
+    failures: list[str] = []
+    passed = 0
+
+    for index, fixture in enumerate(fixtures):
+        observed = by_key.get((gate, index))
+        if not observed:
+            failures.append(f"{gate}[{index}] has no native production observation")
+            continue
+        if observed.get("status") != "calculated":
+            failures.append(f"{gate}[{index}] status is {observed.get('status')!r}")
+            continue
+        value = observed.get("value")
+        if not isinstance(value, (int, float)) or not math.isfinite(value):
+            failures.append(f"{gate}[{index}] value is not finite")
+            continue
+
+        reference = reference_value(gate, fixture)
+        absolute_deviation = float(value) - reference
+        relative_deviation = absolute_deviation / reference
+        deviations.append(relative_deviation)
+        absolute_deviations.append(abs(absolute_deviation))
+        if abs(absolute_deviation) <= absolute_tolerance(gate, fixture):
+            passed += 1
+        else:
+            failures.append(
+                f"{gate}[{index}] deviation exceeds frozen tolerance"
+            )
+
+    observed_count = len(deviations)
+    failed = len(fixtures) - passed
+    metrics = {
+        "attempted": len(fixtures),
+        "observed": observed_count,
+        "passed": passed,
+        "failed": failed,
+        "failure_rate": failed / len(fixtures) if fixtures else 0.0,
+        "mean_absolute_relative_deviation": (
+            sum(abs(item) for item in deviations) / observed_count
+            if observed_count else None
+        ),
+        "bias_relative_deviation": (
+            sum(deviations) / observed_count if observed_count else None
+        ),
+        "maximum_absolute_relative_deviation": (
+            max(abs(item) for item in deviations) if observed_count else None
+        ),
+        "maximum_absolute_deviation_si": (
+            max(absolute_deviations) if absolute_deviations else None
+        )
+    }
+    status = "passed" if not failures else "failed"
+    return {
+        "status": status,
+        "failures": failures,
+        "metrics": metrics
+    }
+
+
 def count_by_region(points: list[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for point in points:
@@ -67,42 +178,66 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
                     failures.append(f"{section}[{index}].{key} is non-finite")
     if len(manifest["fixtures"]["co2_n2_density"]) == 0:
         failures.append("co2_n2_density has no committed traceable reference points")
+    if len(manifest["fixtures"].get("pure_co2_saturation_pressure", [])) == 0:
+        failures.append("pure_co2_saturation_pressure has no committed traceable reference points")
     return failures
 
 
-def build_report(manifest: dict[str, Any]) -> dict[str, Any]:
+def strict_blockers(report: dict[str, Any]) -> list[str]:
+    blockers = list(report["manifest_failures"])
+    for name, gate in report["gates"].items():
+        if gate["status"] in REQUIRED_GATE_STATUSES:
+            blockers.append(f"{name} gate is {gate['status']}")
+    return sorted(set(blockers))
+
+
+def build_report(
+    manifest: dict[str, Any],
+    observations: dict[str, Any] | None = None
+) -> dict[str, Any]:
     density = manifest["fixtures"]["pure_co2_density"]
     viscosity = manifest["fixtures"]["pure_co2_viscosity"]
     critical = manifest["fixtures"]["critical_points"]
+    saturation = manifest["fixtures"].get("pure_co2_saturation_pressure", [])
     co2_n2_density = manifest["fixtures"]["co2_n2_density"]
     manifest_failures = validate_manifest(manifest)
     pure_density_tolerances = [relative_tolerance_density(point) for point in density]
     pure_viscosity_tolerances = [relative_tolerance_viscosity(point) for point in viscosity]
+    density_observations = summarize_observations("pure_co2_density", density, observations)
+    viscosity_observations = summarize_observations("pure_co2_viscosity", viscosity, observations)
+    observation_metadata = observations.get("metadata", {}) if observations else None
     gates = {
         "pure_co2_density": {
-            "status": "reference_protocol_frozen",
+            "status": density_observations["status"],
             "reference_points": len(density),
             "regions": count_by_region(density),
             "maximum_allowed_relative_deviation": max(pure_density_tolerances),
-            "runtime_observation_required": True
+            "runtime_observation_required": True,
+            "runtime_observation_source": observation_metadata,
+            "metrics": density_observations["metrics"],
+            "failures": density_observations.get("failures", [])
         },
         "pure_co2_viscosity": {
-            "status": "reference_protocol_frozen",
+            "status": viscosity_observations["status"],
             "reference_points": len(viscosity),
             "regions": count_by_region(viscosity),
             "maximum_allowed_relative_deviation": max(pure_viscosity_tolerances),
-            "runtime_observation_required": True
+            "runtime_observation_required": True,
+            "runtime_observation_source": observation_metadata,
+            "metrics": viscosity_observations["metrics"],
+            "failures": viscosity_observations.get("failures", [])
         },
         "pure_co2_critical_point": {
-            "status": "reference_protocol_frozen",
+            "status": "runtime_observation_missing",
             "reference_points": len(critical),
             "maximum_temperature_deviation_k": 0.01,
             "maximum_relative_pressure_deviation": 0.0002,
-            "runtime_observation_required": True
+            "runtime_observation_required": True,
+            "reason": "The current native production observation file does not record critical-point values."
         },
         "pure_co2_saturation_pressure": {
             "status": "blocked",
-            "reference_points": 0,
+            "reference_points": len(saturation),
             "reason": "No committed independent saturation-pressure fixture with redistribution review."
         },
         "co2_n2_density": {
@@ -121,11 +256,12 @@ def build_report(manifest: dict[str, Any]) -> dict[str, Any]:
             "basis": "Deterministic exact conversions in EngineeringUnits tests."
         }
     }
-    return {
+    report = {
         "schema_version": "phasexpert-calculation-validation-results.v1",
         "manifest_checksum_sha256": checksum(manifest),
+        "observation_checksum_sha256": checksum(observations) if observations else None,
         "overall_scientific_gate": "not_passed",
-        "reason": "Pure-CO2 density and viscosity reference protocols are frozen, but runtime observations are iOS-native tests; CO2-N2 density and pure-CO2 saturation-pressure reference fixtures remain uncommitted.",
+        "reason": "Selected pure-CO2 runtime deviations can be recorded when native observations are supplied, but the complete scientific gate remains blocked by missing critical-point observations plus CO2-N2 density and pure-CO2 saturation-pressure fixtures.",
         "manifest_failures": manifest_failures,
         "validated_range_matrix": {
             "pure_co2_density": "supported; preliminary until native runtime deviations are recorded in this report",
@@ -140,19 +276,25 @@ def build_report(manifest: dict[str, Any]) -> dict[str, Any]:
         "acceptance_protocol_frozen": True,
         "ordinary_build_requires_network": False
     }
+    report["strict_blockers"] = strict_blockers(report)
+    return report
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--output", type=Path, default=DEFAULT_RESULTS)
+    parser.add_argument("--observations", type=Path)
     parser.add_argument("--allow-incomplete", action="store_true")
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    report = build_report(manifest)
+    observations = None
+    if args.observations:
+        observations = json.loads(args.observations.read_text(encoding="utf-8"))
+    report = build_report(manifest, observations=observations)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
-    if report["manifest_failures"] and not args.allow_incomplete:
+    if report["strict_blockers"] and not args.allow_incomplete:
         return 1
     return 0
 

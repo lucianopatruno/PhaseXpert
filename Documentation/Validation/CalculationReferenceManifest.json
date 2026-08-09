@@ -52,6 +52,17 @@
       "acceptance_rule": "critical temperature within 0.01 K and critical pressure within 0.02%; molar mass exact to committed source precision"
     },
     {
+      "id": "pure-co2-saturation-pressure-needed",
+      "authors": "Linstrom and Mallard, editors; Giauque and Egan",
+      "title": "Candidate pure-CO2 saturation-pressure sources",
+      "year": 2026,
+      "doi": "10.18434/T4D303; 10.1063/1.1749929",
+      "property": "pure CO2 saturation pressure",
+      "source_type": "evaluated database and experimental candidate",
+      "fixture_count": 0,
+      "acceptance_rule": "not frozen because the current reviewed NIST Antoine fixture covers solid-vapour sublimation below the triple point, not the liquid-vapour saturation branch used by the app"
+    },
+    {
       "id": "co2-n2-density-needed",
       "authors": "Mazzoccoli, Bosio and Arato; Brugge, Holste, Hall, Gammon and Marsh",
       "title": "Candidate CO2-rich mixture density sources",
@@ -188,6 +199,7 @@
         "pressure_pa": 7377300.0
       }
     ],
+    "pure_co2_saturation_pressure": [],
     "co2_n2_density": []
   }
 }
