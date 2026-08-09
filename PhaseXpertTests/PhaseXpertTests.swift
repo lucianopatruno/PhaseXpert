@@ -4,6 +4,50 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    private final class PhaseEnvelopeCallCounter: @unchecked Sendable {
+        private(set) var callCount = 0
+
+        func recordCall() {
+            callCount += 1
+        }
+    }
+
+    private struct CountingPhaseEnvelopeProvider: ThermodynamicModelProvider {
+        let descriptor = ArchitectureDemoProvider().descriptor
+        let counter: PhaseEnvelopeCallCounter
+        var delayNanoseconds: UInt64 = 0
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            try await ArchitectureDemoProvider().calculate(request)
+        }
+
+        func phaseEnvelope(
+            _ request: PhaseEnvelopeRequest
+        ) async throws -> PhaseEnvelopeResponse {
+            counter.recordCall()
+            if delayNanoseconds > 0 {
+                try await Task.sleep(nanoseconds: delayNanoseconds)
+            }
+            return PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [
+                    .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                    .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)
+                ],
+                warnings: ["PRELIMINARY — validation pending."],
+                isAvailable: true,
+                boundaryKind: .pureFluidSaturation,
+                model: descriptor,
+                generatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                solver: .init(
+                    method: "Deterministic test saturation",
+                    converged: true,
+                    durationMilliseconds: 1
+                )
+            )
+        }
+    }
+
     private struct DelayedPhaseEnvelopeProvider: ThermodynamicModelProvider {
         let descriptor = ArchitectureDemoProvider().descriptor
         let delayNanoseconds: UInt64
@@ -36,45 +80,8 @@ final class PhaseXpertTests: XCTestCase {
         )
     }
 
-    #if os(iOS) && canImport(PhaseXpertCoolPropBridge)
-    func testNativeCoolPropThreeAndTenPercentNitrogenContinuationStopsAtPointCap() async throws {
-        for nitrogenMoleFraction in [0.03, 0.10] {
-            let result = try await NativeCoolPropEngine()
-                .dryCarbonDioxideMixturePhaseEnvelope(
-                    composition: [
-                        .init(
-                            component: .carbonDioxide,
-                            moleFraction: 1 - nitrogenMoleFraction
-                        ),
-                        .init(
-                            component: .nitrogen,
-                            moleFraction: nitrogenMoleFraction
-                        )
-                    ]
-                )
-
-            XCTAssertLessThanOrEqual(result.points.count, 256)
-            XCTAssertGreaterThanOrEqual(
-                result.points.filter { $0.branch == .bubble }.count,
-                2,
-                "Missing bubble branch at \(nitrogenMoleFraction * 100) mol% N₂"
-            )
-            XCTAssertGreaterThanOrEqual(
-                result.points.filter { $0.branch == .dew }.count,
-                2,
-                "Missing dew branch at \(nitrogenMoleFraction * 100) mol% N₂"
-            )
-            XCTAssertTrue(result.points.allSatisfy {
-                $0.temperatureK.isFinite && $0.temperatureK > 0
-                    && $0.pressurePa.isFinite && $0.pressurePa >= 80_000
-            })
-            XCTAssertTrue(result.solverMethod.contains("maximum 256"))
-        }
-    }
-    #endif
-
     @MainActor
-    func testPhaseDiagramStopsSpinningAndAcceptsLateProviderCompletion() async throws {
+    func testPhaseDiagramStopsSpinningAndAcceptsLatePureCO2Completion() async throws {
         let record = try await makeRecord()
         let viewModel = PhaseDiagramViewModel(
             registry: ProviderRegistry(providers: [
@@ -88,11 +95,147 @@ final class PhaseXpertTests: XCTestCase {
 
         try await Task.sleep(nanoseconds: 60_000_000)
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertTrue(viewModel.errorMessage?.contains("continues in the background") == true)
+        XCTAssertTrue(viewModel.errorMessage?.contains("will appear automatically") == true)
 
         try await Task.sleep(nanoseconds: 100_000_000)
         XCTAssertNil(viewModel.errorMessage)
         XCTAssertNotNil(viewModel.response)
+    }
+
+    @MainActor
+    func testMixturePhaseDiagramShowsScopeMessageWithoutProviderCall() async throws {
+        let counter = PhaseEnvelopeCallCounter()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseEnvelopeProvider(counter: counter)
+            ])
+        )
+
+        viewModel.load(for: try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.999999),
+            .init(component: .nitrogen, moleFraction: 0.000001)
+        ]))
+
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertNil(viewModel.response)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertEqual(
+            viewModel.scopeMessage,
+            PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+        )
+        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("failed") == true)
+        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("error") == true)
+        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("provider") == true)
+        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("CoolProp") == true)
+        XCTAssertEqual(counter.callCount, 0)
+    }
+
+    @MainActor
+    func testPureToMixtureTransitionClearsResultAndRejectsLateCompletion() async throws {
+        let counter = PhaseEnvelopeCallCounter()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseEnvelopeProvider(
+                    counter: counter,
+                    delayNanoseconds: 80_000_000
+                )
+            ])
+        )
+        let pure = try await makeRecord()
+        let mixture = try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.99),
+            .init(component: .nitrogen, moleFraction: 0.01)
+        ])
+
+        viewModel.load(for: pure)
+        XCTAssertTrue(viewModel.isLoading)
+
+        viewModel.load(for: mixture)
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertEqual(
+            viewModel.scopeMessage,
+            PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+        )
+        XCTAssertNil(viewModel.response)
+
+        try await Task.sleep(nanoseconds: 120_000_000)
+        XCTAssertNil(viewModel.response)
+        XCTAssertEqual(counter.callCount, 1)
+    }
+
+    @MainActor
+    func testMixtureToPureTransitionRestoresPhaseDiagramAvailability() async throws {
+        let counter = PhaseEnvelopeCallCounter()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseEnvelopeProvider(counter: counter)
+            ])
+        )
+        let mixture = try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.99),
+            .init(component: .nitrogen, moleFraction: 0.01)
+        ])
+
+        viewModel.load(for: mixture)
+        XCTAssertEqual(counter.callCount, 0)
+        XCTAssertNotNil(viewModel.scopeMessage)
+
+        viewModel.load(for: try await makeRecord())
+        try await Task.sleep(nanoseconds: 20_000_000)
+
+        XCTAssertNil(viewModel.scopeMessage)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNotNil(viewModel.response)
+        XCTAssertEqual(counter.callCount, 1)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportRejectsMulticomponentAndPreservesPureCO2Export() async throws {
+        let pure = try await makeRecord()
+        let mixture = try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.99),
+            .init(component: .nitrogen, moleFraction: 0.01)
+        ])
+        let pureResponse = PhaseEnvelopeResponse(
+            requestID: pure.request.requestID,
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: pure.response.model
+        )
+        let mixtureResponse = PhaseEnvelopeResponse(
+            requestID: mixture.request.requestID,
+            points: [
+                .init(temperatureK: 240, pressurePa: 1_000_000, branch: .bubble),
+                .init(temperatureK: 268, pressurePa: 2_900_000, branch: .dew)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .mixtureEnvelope,
+            model: mixture.response.model
+        )
+
+        XCTAssertNoThrow(
+            try PhaseDiagramImageExporter().attachment(
+                for: pure,
+                response: pureResponse
+            )
+        )
+        XCTAssertThrowsError(
+            try PhaseDiagramImageExporter().attachment(
+                for: mixture,
+                response: mixtureResponse
+            )
+        ) { error in
+            XCTAssertEqual(
+                error.localizedDescription,
+                PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            )
+        }
     }
 
     @MainActor
@@ -352,12 +495,19 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     private func makeRecord() async throws -> CalculationRecord {
+        try await makeRecord(composition: [.init(component: .carbonDioxide, moleFraction: 1)])
+    }
+
+    @MainActor
+    private func makeRecord(
+        composition: [MixtureComponent]
+    ) async throws -> CalculationRecord {
         let provider = ArchitectureDemoProvider()
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
             pressurePa: 15_000_000,
             temperatureK: 293.15,
-            composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+            composition: composition,
             requestedProperties: [.density],
             clientVersion: "test"
         )
@@ -371,9 +521,13 @@ final class PhaseXpertTests: XCTestCase {
                 temperatureValue: 20,
                 temperatureUnit: .celsius,
                 temperatureK: 293.15,
-                originalComposition: [
-                    .init(component: .carbonDioxide, value: 100, unit: .molePercent)
-                ]
+                originalComposition: composition.map {
+                    .init(
+                        component: $0.component,
+                        value: $0.moleFraction * 100,
+                        unit: .molePercent
+                    )
+                }
             ),
             response: response,
             application: .init(version: "1.0", build: "1")

@@ -9,6 +9,7 @@ final class PhaseDiagramViewModel {
     private(set) var response: PhaseEnvelopeResponse?
     private(set) var isLoading = false
     private(set) var errorMessage: String?
+    private(set) var scopeMessage: String?
 
     private let registry: ProviderRegistry
     private let timeoutNanoseconds: UInt64
@@ -31,6 +32,7 @@ final class PhaseDiagramViewModel {
             loadingRecordID = nil
             response = nil
             errorMessage = nil
+            scopeMessage = nil
             isLoading = false
             return
         }
@@ -40,11 +42,25 @@ final class PhaseDiagramViewModel {
         loadingRecordID = record.id
         response = nil
         errorMessage = nil
+        scopeMessage = nil
+        isLoading = false
+
+        switch PhaseDiagramEligibility.evaluate(composition: record.request.composition) {
+        case .pureCarbonDioxide:
+            break
+        case .multicomponent:
+            scopeMessage = PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            return
+        case .invalidComposition:
+            errorMessage = "The CO₂ phase diagram cannot be shown for this calculation."
+            return
+        }
+
         isLoading = true
 
         guard let provider = registry.provider(id: record.request.modelID) else {
             isLoading = false
-            errorMessage = "The model used by this calculation is not installed."
+            errorMessage = "The CO₂ phase diagram cannot be shown for this calculation."
             return
         }
 
@@ -89,7 +105,7 @@ final class PhaseDiagramViewModel {
                   self.loadingRecordID == recordID,
                   self.response == nil else { return }
             self.isLoading = false
-            self.errorMessage = "CoolProp did not finish the phase-boundary calculation within 30 seconds. The provider calculation continues in the background; the diagram will appear automatically if it completes."
+            self.errorMessage = "The CO₂ phase diagram is taking longer than expected. It will appear automatically if the calculation completes."
         }
     }
 
@@ -104,19 +120,18 @@ final class PhaseDiagramViewModel {
 
     private func userMessage(for error: Error) -> String {
         guard let providerError = error as? ProviderError else {
-            return "The phase-boundary calculation failed unexpectedly."
+            return "The CO₂ phase diagram cannot be shown for this calculation."
         }
         return switch providerError {
-        case let .modelUnavailable(message),
-             let .invalidRequest(message),
-             let .malformedResponse(message):
-            message
-        case let .unsupportedComponent(component):
-            "\(component.symbol) is not supported by the selected phase model."
+        case .modelUnavailable,
+             .invalidRequest,
+             .malformedResponse,
+             .unsupportedComponent:
+            "The CO₂ phase diagram cannot be shown for this calculation."
         case .timeout:
-            "The phase-boundary calculation timed out."
+            "The CO₂ phase diagram is taking longer than expected."
         case .cancelled:
-            "The phase-boundary calculation was cancelled."
+            "The CO₂ phase diagram request was cancelled."
         }
     }
 }
@@ -151,17 +166,27 @@ struct PhaseDiagramView: View {
 
     @ViewBuilder
     private func diagramContent(for record: CalculationRecord) -> some View {
-        if viewModel.isLoading {
+        if let scopeMessage = viewModel.scopeMessage {
+            ContentUnavailableView {
+                Label(PhaseDiagramEligibility.title, systemImage: "chart.xyaxis.line")
+            } description: {
+                VStack(spacing: IFESpacing.small) {
+                    Text(scopeMessage)
+                    Text(PhaseDiagramEligibility.mixturePropertySupportMessage)
+                }
+            }
+            .accessibilityIdentifier("phase-diagram-pure-co2-scope")
+        } else if viewModel.isLoading {
             VStack(spacing: IFESpacing.medium) {
                 ProgressView()
-                Text("Calculating provider phase boundary…")
+                Text("Calculating CO₂ phase diagram…")
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .accessibilityIdentifier("phase-diagram-loading")
         } else if let error = viewModel.errorMessage {
             ContentUnavailableView(
-                "Phase diagram failed",
+                PhaseDiagramEligibility.title,
                 systemImage: "exclamationmark.triangle",
                 description: Text(error)
             )
@@ -170,14 +195,14 @@ struct PhaseDiagramView: View {
             PhaseBoundaryChart(record: record, response: response)
         } else {
             ContentUnavailableView(
-                "Phase diagram unavailable",
+                PhaseDiagramEligibility.title,
                 systemImage: "chart.xyaxis.line",
                 description: Text(
                     viewModel.response?.warnings.joined(separator: " ")
-                        ?? "The selected provider did not return a real phase boundary."
+                        ?? "Run a pure CO₂ calculation to view the CO₂ phase diagram."
                 )
             )
-            .accessibilityIdentifier("phase-diagram-unavailable")
+            .accessibilityIdentifier("phase-diagram-empty")
         }
     }
 }
@@ -210,8 +235,6 @@ private struct PhaseBoundaryChart: View {
     }
 
     private var bubble: [Sample] { samples.filter { $0.branch == .bubble } }
-    private var dew: [Sample] { samples.filter { $0.branch == .dew } }
-
     private var critical: Sample? {
         guard let point = response.points.first(where: { $0.branch == .critical }) else {
             return nil
@@ -258,12 +281,8 @@ private struct PhaseBoundaryChart: View {
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
                 ScientificStatusBanner(
-                    title: response.boundaryKind == .mixtureEnvelope
-                        ? (response.solver?.converged == false
-                            ? "Preliminary mixture phase-boundary trace"
-                            : "Preliminary mixture phase envelope")
-                        : "Preliminary pure CO₂ boundary",
-                    message: response.warnings.joined(separator: " ")
+                    title: "Preliminary pure CO₂ boundary",
+                    message: "Calculated saturation values are preliminary and validation pending."
                 )
 
                 IFECard {
@@ -294,12 +313,7 @@ private struct PhaseBoundaryChart: View {
                                 )
                                 .foregroundStyle(.secondary)
                             }
-                            Button(
-                                exportErrorMessage == nil
-                                    ? "Prepare diagram image"
-                                    : "Retry diagram image",
-                                systemImage: "photo"
-                            ) {
+                            Button("Prepare diagram image", systemImage: "photo") {
                                 prepareDiagramImage()
                             }
                             .accessibilityIdentifier("prepare-phase-diagram-image")
@@ -309,7 +323,7 @@ private struct PhaseBoundaryChart: View {
 
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
-                        Text(record.response.model.name)
+                        Text("Pure CO₂ saturation model")
                             .font(.headline)
                         LabeledContent(
                             "Operating pressure",
@@ -319,11 +333,9 @@ private struct PhaseBoundaryChart: View {
                             "Operating temperature",
                             value: "\(number(operatingTemperatureCelsius)) °C"
                         )
-                        LabeledContent("Provider phase", value: record.response.phase.displayName)
+                        LabeledContent("Calculated phase", value: record.response.phase.displayName)
                         Text(
-                            response.boundaryKind == .mixtureEnvelope
-                                ? "Bubble and dew branches are provider-calculated for the recorded composition. The operating phase shown above comes from the source calculation."
-                                : "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the provider calculation."
+                            "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the source calculation."
                         )
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -343,19 +355,8 @@ private struct PhaseBoundaryChart: View {
                                 )
                                 .foregroundStyle(by: .value(
                                     "Series",
-                                    response.boundaryKind == .mixtureEnvelope
-                                        ? "Bubble branch"
-                                        : "CO₂ saturation boundary"
+                                    "CO₂ saturation boundary"
                                 ))
-                                .interpolationMethod(.linear)
-                            }
-
-                            ForEach(dew) { sample in
-                                LineMark(
-                                    x: .value("Temperature (°C)", sample.temperatureCelsius),
-                                    y: .value("Pressure (bar(a))", sample.pressureBar)
-                                )
-                                .foregroundStyle(by: .value("Series", "Dew branch"))
                                 .interpolationMethod(.linear)
                             }
 
@@ -386,8 +387,6 @@ private struct PhaseBoundaryChart: View {
                         }
                         .chartForegroundStyleScale([
                             "CO₂ saturation boundary": Color.ifePrimary,
-                            "Bubble branch": Color.ifePrimary,
-                            "Dew branch": Color.ifeSignal,
                             "Critical point": Color.ifeSignal,
                             "Operating point": Color.ifeText
                         ])
@@ -399,9 +398,7 @@ private struct PhaseBoundaryChart: View {
                         .frame(minHeight: 360)
                         .accessibilityIdentifier("phase-boundary-chart")
                         .accessibilityLabel(
-                            response.boundaryKind == .mixtureEnvelope
-                                ? "Carbon dioxide mixture bubble and dew phase envelope with operating point"
-                                : "Pure carbon dioxide saturation boundary with critical point and operating point"
+                            "Pure carbon dioxide saturation boundary with critical point and operating point"
                         )
 
                         if let selectedSample {
@@ -411,9 +408,7 @@ private struct PhaseBoundaryChart: View {
                                 value: "\(number(selectedSample.temperatureCelsius)) °C"
                             )
                             LabeledContent(
-                                selectedSample.branch == .dew
-                                    ? "Selected dew pressure"
-                                    : "Selected bubble pressure",
+                                "Selected saturation pressure",
                                 value: "\(number(selectedSample.pressureBar)) bar(a)"
                             )
                         }
@@ -421,7 +416,7 @@ private struct PhaseBoundaryChart: View {
                 }
 
                 Text(
-                    "Straight line segments connect adjacent provider-calculated points within each branch for display only. No scientific values are interpolated or estimated."
+                    "Straight line segments connect adjacent calculated points for display only. No scientific values are interpolated or estimated."
                 )
                 .font(.footnote)
                 .foregroundStyle(.secondary)
@@ -431,11 +426,7 @@ private struct PhaseBoundaryChart: View {
                     IFEExpandableRow("Phase-boundary traceability") {
                         LabeledContent(
                             "Boundary type",
-                            value: response.boundaryKind == .pureFluidSaturation
-                                ? "Pure-fluid saturation"
-                                : (response.solver?.converged == false
-                                    ? "Open provider bubble/dew trace"
-                                    : "Mixture bubble/dew envelope")
+                            value: "Pure-fluid saturation"
                         )
                         LabeledContent("Calculated points", value: "\(response.points.count)")
                         LabeledContent("Composition") {
@@ -445,9 +436,9 @@ private struct PhaseBoundaryChart: View {
                             .multilineTextAlignment(.trailing)
                         }
                         if let model = response.model {
-                            LabeledContent("Model", value: model.name)
+                            LabeledContent("Model", value: "Pure CO₂ saturation")
                             LabeledContent("Model version", value: model.modelVersion)
-                            LabeledContent("Provider version", value: model.providerVersion)
+                            LabeledContent("Implementation version", value: model.providerVersion)
                         }
                         if let generatedAt = response.generatedAt {
                             LabeledContent("Generated at") {
@@ -457,7 +448,7 @@ private struct PhaseBoundaryChart: View {
                             }
                         }
                         if let solver = response.solver {
-                            LabeledContent("Method", value: solver.method)
+                            LabeledContent("Method", value: "Pure CO₂ saturation calculation")
                             LabeledContent(
                                 "Converged",
                                 value: solver.converged ? "Yes" : "No"

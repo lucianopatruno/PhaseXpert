@@ -131,9 +131,16 @@ struct SavedCaseExportView: View {
     private func phaseDiagramAttachment(
         for record: CalculationRecord
     ) async -> PhaseDiagramReportAttachment? {
+        guard PhaseDiagramEligibility.isPureCarbonDioxide(
+            composition: record.request.composition
+        ) else {
+            phaseDiagramNote = PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            return nil
+        }
+
         let registry = ProviderRegistry()
         guard let provider = registry.provider(id: record.request.modelID) else {
-            phaseDiagramNote = "No diagram was embedded because the recorded provider is not installed."
+            phaseDiagramNote = "The CO₂ phase diagram was not embedded for this saved calculation."
             return nil
         }
         let current = provider.descriptor
@@ -141,7 +148,7 @@ struct SavedCaseExportView: View {
         guard current.modelVersion == recorded.modelVersion,
               current.providerVersion == recorded.providerVersion
         else {
-            phaseDiagramNote = "No diagram was embedded because the installed model/provider version differs from the saved calculation provenance."
+            phaseDiagramNote = "The CO₂ phase diagram was not embedded because this saved calculation was made with a different installed model version."
             return nil
         }
 
@@ -157,11 +164,11 @@ struct SavedCaseExportView: View {
                 response: response
             )
             phaseDiagramNote = response.boundaryKind == .mixtureEnvelope
-                ? "The PDF includes a newly calculated mixture phase envelope from the same recorded composition, model and provider versions."
-                : "The PDF includes a newly calculated pure CO₂ boundary from the same recorded model and provider versions."
+                ? PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+                : "The PDF includes a newly calculated pure CO₂ phase diagram from the same recorded model version."
             return attachment
         } catch {
-            phaseDiagramNote = "No diagram was embedded: \(error.localizedDescription)"
+            phaseDiagramNote = "The CO₂ phase diagram was not embedded for this saved calculation."
             return nil
         }
     }
