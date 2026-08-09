@@ -1,0 +1,72 @@
+{
+  "acceptance_protocol_frozen": true,
+  "gates": {
+    "co2_n2_density": {
+      "reason": "Exact tabulated experimental values, composition basis, units, uncertainty and redistribution terms are not committed.",
+      "reference_points": 0,
+      "status": "blocked"
+    },
+    "derived_properties": {
+      "basis": "Transparent equations M=sum(x_i M_i), v=1/rho, Z=pM/(rhoRT) with NIST molar masses and CODATA R.",
+      "reference_points": 0,
+      "status": "validated_by_formula_tests"
+    },
+    "pure_co2_critical_point": {
+      "maximum_relative_pressure_deviation": 0.0002,
+      "maximum_temperature_deviation_k": 0.01,
+      "reference_points": 1,
+      "runtime_observation_required": true,
+      "status": "reference_protocol_frozen"
+    },
+    "pure_co2_density": {
+      "maximum_allowed_relative_deviation": 0.006556441750412081,
+      "reference_points": 5,
+      "regions": {
+        "dense_liquid_like": 1,
+        "gas_or_dense_single_phase": 1,
+        "high_pressure_liquid_like": 1,
+        "high_temperature_supercritical": 1,
+        "supercritical": 1
+      },
+      "runtime_observation_required": true,
+      "status": "reference_protocol_frozen"
+    },
+    "pure_co2_saturation_pressure": {
+      "reason": "No committed independent saturation-pressure fixture with redistribution review.",
+      "reference_points": 0,
+      "status": "blocked"
+    },
+    "pure_co2_viscosity": {
+      "maximum_allowed_relative_deviation": 0.07804337501978786,
+      "reference_points": 9,
+      "regions": {
+        "cold_dense_liquid_like": 5,
+        "low_density_gas": 4
+      },
+      "runtime_observation_required": true,
+      "status": "reference_protocol_frozen"
+    },
+    "unit_conversions": {
+      "basis": "Deterministic exact conversions in EngineeringUnits tests.",
+      "reference_points": 0,
+      "status": "validated_by_unit_tests"
+    }
+  },
+  "manifest_checksum_sha256": "ce05971f40bb7dd3fd32ab0e149eaf6ab43be254969830c87b87a4c0c2fc51df",
+  "manifest_failures": [
+    "co2_n2_density has no committed traceable reference points"
+  ],
+  "ordinary_build_requires_network": false,
+  "overall_scientific_gate": "not_passed",
+  "reason": "Pure-CO2 density and viscosity reference protocols are frozen, but runtime observations are iOS-native tests; CO2-N2 density and pure-CO2 saturation-pressure reference fixtures remain uncommitted.",
+  "schema_version": "phasexpert-calculation-validation-results.v1",
+  "validated_range_matrix": {
+    "co2_n2_density": "supported; preliminary; independent density fixture blocked",
+    "co2_n2_viscosity": "unavailable",
+    "multicomponent_phase_diagrams": "unavailable",
+    "pure_co2_density": "supported; preliminary until native runtime deviations are recorded in this report",
+    "pure_co2_phase_identification": "supported; preliminary; no independent phase-boundary classification fixture committed",
+    "pure_co2_saturation_boundary": "supported; preliminary; critical point fixture recorded but saturation-pressure fixture blocked",
+    "pure_co2_viscosity": "supported; preliminary until native runtime deviations are recorded in this report"
+  }
+}

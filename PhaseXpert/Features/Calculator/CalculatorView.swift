@@ -41,7 +41,9 @@ struct CalculatorView: View {
                 Section("Calculation model") {
                     Picker("Model", selection: $viewModel.selectedModelID) {
                         ForEach(viewModel.descriptors) { descriptor in
-                            Text(descriptor.name).tag(descriptor.id)
+                            Text(descriptor.name)
+                                .tag(descriptor.id)
+                                .disabled(descriptor.availability == .unavailable)
                         }
                     }
 
@@ -517,13 +519,11 @@ struct CalculatorView: View {
     private func modelBannerMessage(_ descriptor: ModelDescriptor) -> String {
         switch descriptor.availability {
         case .available:
-            descriptor.id == "architecture-demo"
-                ? "Workflow demonstration only. No thermophysical values are calculated."
-                : "Review the model domain and limitations before calculating."
+            "Review the model domain and limitations before calculating."
         case .preliminary:
             "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
         case .unavailable:
-            "This provider cannot perform calculations in the current build."
+            "This model is not available in this version."
         }
     }
 }

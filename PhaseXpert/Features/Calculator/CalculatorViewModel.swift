@@ -41,6 +41,10 @@ final class CalculatorViewModel {
         descriptors.first { $0.id == selectedModelID }
     }
 
+    var selectableDescriptors: [ModelDescriptor] {
+        descriptors.filter { $0.availability != .unavailable }
+    }
+
     var canNormalize: Bool {
         false
     }
@@ -167,7 +171,7 @@ final class CalculatorViewModel {
                 .init(
                     code: .modelUnavailable,
                     severity: .error,
-                    message: "\(descriptor.name) is not available for calculation."
+                    message: "This model is not available in this version."
                 ),
                 at: 0
             )
@@ -195,7 +199,7 @@ final class CalculatorViewModel {
     func loadInputs(from record: CalculationRecord) {
         pressureText = String(format: "%.8g", record.input.pressurePa / 100_000)
         temperatureText = String(format: "%.8g", record.input.temperatureK - 273.15)
-        if registry.provider(id: record.request.modelID) != nil {
+        if descriptors.contains(where: { $0.id == record.request.modelID }) {
             selectedModelID = record.request.modelID
         }
         if !record.input.originalComposition.isEmpty,

@@ -1,0 +1,193 @@
+{
+  "schema_version": "phasexpert-calculation-reference-manifest.v1",
+  "retrieval_date": "2026-08-09",
+  "license_review": {
+    "bulk_dataset_redistribution": "not_performed",
+    "committed_values": "small manually reviewed reference subset already used by automated tests",
+    "co2_n2_density_tables": "not_committed_until lawful tabulated values, units, composition basis, and redistribution terms are recorded"
+  },
+  "references": [
+    {
+      "id": "mantilla-2010-pure-co2-density",
+      "authors": "Mantilla et al.",
+      "title": "P-rho-T Data for Carbon Dioxide from (310 to 450) K up to 160 MPa",
+      "year": 2010,
+      "doi": "10.1021/je1001158",
+      "property": "pure CO2 density",
+      "source_type": "experimental",
+      "fixture_count": 5,
+      "acceptance_rule": "absolute tolerance equals reported expanded uncertainty plus 0.1% of experimental density"
+    },
+    {
+      "id": "schaefer-2015-pure-co2-viscosity",
+      "authors": "Schaefer, Richter and Span",
+      "title": "Measurements of the viscosity of carbon dioxide at temperatures from (253.15 to 473.15) K with pressures up to 1.2 MPa",
+      "year": 2015,
+      "doi": "10.1016/j.jct.2015.04.015",
+      "property": "low-density pure CO2 viscosity",
+      "source_type": "experimental",
+      "fixture_count": 4,
+      "acceptance_rule": "absolute tolerance equals max(reported expanded uncertainty, 0.5% of measured viscosity)"
+    },
+    {
+      "id": "chapoy-2024-pure-co2-viscosity",
+      "authors": "Chapoy, Owuna, Burgass and Ahmadi",
+      "title": "Viscosity of the CO2 + CH4 Binary Systems from 238 to 423 K at Pressures up to 80 MPa",
+      "year": 2024,
+      "doi": "10.1021/acs.jced.4c00083",
+      "property": "cold dense pure CO2 viscosity",
+      "source_type": "experimental",
+      "fixture_count": 5,
+      "acceptance_rule": "absolute tolerance equals max(2 times reported combined standard uncertainty, 4% of measured viscosity)"
+    },
+    {
+      "id": "nist-webbook-co2-critical",
+      "authors": "Linstrom and Mallard, editors",
+      "title": "NIST Chemistry WebBook, NIST Standard Reference Database Number 69",
+      "year": 2026,
+      "doi": "10.18434/T4D303",
+      "property": "CO2 molar mass and critical coordinates",
+      "source_type": "evaluated database",
+      "fixture_count": 1,
+      "acceptance_rule": "critical temperature within 0.01 K and critical pressure within 0.02%; molar mass exact to committed source precision"
+    },
+    {
+      "id": "co2-n2-density-needed",
+      "authors": "Mazzoccoli, Bosio and Arato; Brugge, Holste, Hall, Gammon and Marsh",
+      "title": "Candidate CO2-rich mixture density sources",
+      "year": 2012,
+      "doi": "10.1021/je300590v; 10.1021/je970044w",
+      "property": "CO2-N2 density",
+      "source_type": "experimental candidates",
+      "fixture_count": 0,
+      "acceptance_rule": "not frozen because exact tabulated values and redistribution terms are not committed"
+    }
+  ],
+  "fixtures": {
+    "pure_co2_density": [
+      {
+        "reference_id": "mantilla-2010-pure-co2-density",
+        "region": "gas_or_dense_single_phase",
+        "temperature_k": 310.0,
+        "pressure_pa": 1998000.0,
+        "density_kg_m3": 37.614,
+        "expanded_uncertainty_kg_m3": 0.209
+      },
+      {
+        "reference_id": "mantilla-2010-pure-co2-density",
+        "region": "dense_liquid_like",
+        "temperature_k": 310.0,
+        "pressure_pa": 10014000.0,
+        "density_kg_m3": 686.16,
+        "expanded_uncertainty_kg_m3": 0.361
+      },
+      {
+        "reference_id": "mantilla-2010-pure-co2-density",
+        "region": "high_pressure_liquid_like",
+        "temperature_k": 310.0,
+        "pressure_pa": 29966000.0,
+        "density_kg_m3": 921.817,
+        "expanded_uncertainty_kg_m3": 0.066
+      },
+      {
+        "reference_id": "mantilla-2010-pure-co2-density",
+        "region": "supercritical",
+        "temperature_k": 350.0,
+        "pressure_pa": 19981000.0,
+        "density_kg_m3": 613.586,
+        "expanded_uncertainty_kg_m3": 0.215
+      },
+      {
+        "reference_id": "mantilla-2010-pure-co2-density",
+        "region": "high_temperature_supercritical",
+        "temperature_k": 400.0,
+        "pressure_pa": 29994000.0,
+        "density_kg_m3": 561.435,
+        "expanded_uncertainty_kg_m3": 0.118
+      }
+    ],
+    "pure_co2_viscosity": [
+      {
+        "reference_id": "schaefer-2015-pure-co2-viscosity",
+        "region": "low_density_gas",
+        "temperature_k": 253.146,
+        "pressure_pa": 153000.0,
+        "viscosity_pa_s": 0.000012714,
+        "uncertainty_pa_s": 0.000000052
+      },
+      {
+        "reference_id": "schaefer-2015-pure-co2-viscosity",
+        "region": "low_density_gas",
+        "temperature_k": 298.153,
+        "pressure_pa": 604500.0,
+        "viscosity_pa_s": 0.000014945,
+        "uncertainty_pa_s": 0.00000003
+      },
+      {
+        "reference_id": "schaefer-2015-pure-co2-viscosity",
+        "region": "low_density_gas",
+        "temperature_k": 323.16,
+        "pressure_pa": 304900.0,
+        "viscosity_pa_s": 0.000016099,
+        "uncertainty_pa_s": 0.000000051
+      },
+      {
+        "reference_id": "schaefer-2015-pure-co2-viscosity",
+        "region": "low_density_gas",
+        "temperature_k": 373.16,
+        "pressure_pa": 100400.0,
+        "viscosity_pa_s": 0.000018396,
+        "uncertainty_pa_s": 0.00000005
+      },
+      {
+        "reference_id": "chapoy-2024-pure-co2-viscosity",
+        "region": "cold_dense_liquid_like",
+        "temperature_k": 220.05,
+        "pressure_pa": 8260000.0,
+        "viscosity_pa_s": 0.00025777,
+        "uncertainty_pa_s": 0.00000351
+      },
+      {
+        "reference_id": "chapoy-2024-pure-co2-viscosity",
+        "region": "cold_dense_liquid_like",
+        "temperature_k": 230.05,
+        "pressure_pa": 14050000.0,
+        "viscosity_pa_s": 0.0002291,
+        "uncertainty_pa_s": 0.00000241
+      },
+      {
+        "reference_id": "chapoy-2024-pure-co2-viscosity",
+        "region": "cold_dense_liquid_like",
+        "temperature_k": 240.05,
+        "pressure_pa": 28320000.0,
+        "viscosity_pa_s": 0.00021785,
+        "uncertainty_pa_s": 0.00000386
+      },
+      {
+        "reference_id": "chapoy-2024-pure-co2-viscosity",
+        "region": "cold_dense_liquid_like",
+        "temperature_k": 260.05,
+        "pressure_pa": 22870000.0,
+        "viscosity_pa_s": 0.00015739,
+        "uncertainty_pa_s": 0.00000533
+      },
+      {
+        "reference_id": "chapoy-2024-pure-co2-viscosity",
+        "region": "cold_dense_liquid_like",
+        "temperature_k": 280.0,
+        "pressure_pa": 22470000.0,
+        "viscosity_pa_s": 0.00012634,
+        "uncertainty_pa_s": 0.00000493
+      }
+    ],
+    "critical_points": [
+      {
+        "reference_id": "nist-webbook-co2-critical",
+        "component": "co2",
+        "temperature_k": 304.1282,
+        "pressure_pa": 7377300.0
+      }
+    ],
+    "co2_n2_density": []
+  }
+}

@@ -4,6 +4,59 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    private static let testDescriptor = ModelDescriptor(
+        id: "test-calculation-provider",
+        name: "Test calculation provider",
+        modelVersion: "test",
+        providerVersion: "test",
+        availability: .available,
+        calculationMode: .local,
+        supportedComponents: [.carbonDioxide, .nitrogen],
+        supportedProperties: [.density],
+        domain: .initialCO2Transport,
+        scientificBasis: "Test double for app-state tests.",
+        equationOrMethod: "Test double",
+        limitations: ["Not a production provider."],
+        references: []
+    )
+
+    private struct TestCalculationProvider: ThermodynamicModelProvider {
+        let descriptor = PhaseXpertTests.testDescriptor
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            CalculationResponse(
+                requestID: request.requestID,
+                model: descriptor,
+                phase: .dense,
+                properties: [
+                    PropertyValue(
+                        property: .density,
+                        value: 800,
+                        unit: "kg/m³",
+                        status: .calculated,
+                        message: "Test density."
+                    )
+                ],
+                solver: SolverMetadata(
+                    method: "Test calculation",
+                    converged: true,
+                    durationMilliseconds: 1
+                ),
+                warnings: [],
+                isScientificResult: false
+            )
+        }
+
+        func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse {
+            PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [],
+                warnings: [],
+                isAvailable: false
+            )
+        }
+    }
+
     private final class PhaseEnvelopeCallCounter: @unchecked Sendable {
         private(set) var callCount = 0
 
@@ -13,12 +66,12 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     private struct CountingPhaseEnvelopeProvider: ThermodynamicModelProvider {
-        let descriptor = ArchitectureDemoProvider().descriptor
+        let descriptor = PhaseXpertTests.testDescriptor
         let counter: PhaseEnvelopeCallCounter
         var delayNanoseconds: UInt64 = 0
 
         func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
-            try await ArchitectureDemoProvider().calculate(request)
+            try await TestCalculationProvider().calculate(request)
         }
 
         func phaseEnvelope(
@@ -49,11 +102,11 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     private struct DelayedPhaseEnvelopeProvider: ThermodynamicModelProvider {
-        let descriptor = ArchitectureDemoProvider().descriptor
+        let descriptor = PhaseXpertTests.testDescriptor
         let delayNanoseconds: UInt64
 
         func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
-            try await ArchitectureDemoProvider().calculate(request)
+            try await TestCalculationProvider().calculate(request)
         }
 
         func phaseEnvelope(
@@ -74,10 +127,51 @@ final class PhaseXpertTests: XCTestCase {
         let identifiers = Set(registry.descriptors.map(\.id))
         XCTAssertTrue(identifiers.contains("coolprop-heos"))
         XCTAssertTrue(identifiers.contains("ife-model"))
+        XCTAssertFalse(identifiers.contains("architecture-demo"))
+        XCTAssertNil(registry.provider(id: "ife-model"))
         XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
             expectedDefaultCoolPropAvailability
         )
+    }
+
+    @MainActor
+    func testIFEModelIsVisibleUnavailableAndCannotCalculateOrFallback() async throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "ife-model"
+        viewModel.validate()
+
+        XCTAssertEqual(viewModel.selectedDescriptor?.name, "IFE Model")
+        XCTAssertEqual(viewModel.selectedDescriptor?.availability, .unavailable)
+        XCTAssertTrue(viewModel.validationReport.issues.contains {
+            $0.code == .modelUnavailable
+                && $0.message == "This model is not available in this version."
+        })
+
+        await viewModel.calculate()
+
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertNil(viewModel.calculationError)
+        XCTAssertNil(ProviderRegistry().provider(id: "ife-model"))
+    }
+
+    @MainActor
+    func testLegacyIFESavedCaseLoadsAsUnavailableWithoutChangingProvenance() async throws {
+        let legacy = try await makeRecord(
+            modelID: "ife-model",
+            modelDescriptor: ProviderRegistry.ifeModelDescriptor,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+        let viewModel = CalculatorViewModel()
+
+        viewModel.loadInputs(from: legacy)
+
+        XCTAssertEqual(viewModel.selectedModelID, "ife-model")
+        XCTAssertEqual(viewModel.selectedDescriptor?.availability, .unavailable)
+        XCTAssertEqual(legacy.response.model.id, "ife-model")
+        XCTAssertTrue(viewModel.validationReport.issues.contains {
+            $0.code == .modelUnavailable
+        })
     }
 
     @MainActor
@@ -500,18 +594,39 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     private func makeRecord(
+        modelID: String = PhaseXpertTests.testDescriptor.id,
+        modelDescriptor: ModelDescriptor = PhaseXpertTests.testDescriptor,
         composition: [MixtureComponent]
     ) async throws -> CalculationRecord {
-        let provider = ArchitectureDemoProvider()
         let request = CalculationRequest(
-            modelID: provider.descriptor.id,
+            modelID: modelID,
             pressurePa: 15_000_000,
             temperatureK: 293.15,
             composition: composition,
             requestedProperties: [.density],
             clientVersion: "test"
         )
-        let response = try await provider.calculate(request)
+        let response = CalculationResponse(
+            requestID: request.requestID,
+            model: modelDescriptor,
+            phase: .dense,
+            properties: [
+                PropertyValue(
+                    property: .density,
+                    value: 800,
+                    unit: "kg/m³",
+                    status: .calculated,
+                    message: "Test density."
+                )
+            ],
+            solver: SolverMetadata(
+                method: "Test calculation",
+                converged: true,
+                durationMilliseconds: 1
+            ),
+            warnings: [],
+            isScientificResult: false
+        )
         return CalculationRecord(
             request: request,
             input: CalculationInputSnapshot(
