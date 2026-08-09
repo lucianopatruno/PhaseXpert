@@ -48,10 +48,12 @@ evidence, not code execution:
 - no committed CO2-N2 density table values with composition basis, units,
   uncertainty and redistribution terms.
 
-The validation runner therefore exits nonzero in strict mode for every required
-blocked or failed gate, including missing native production observations. Its
-`--allow-incomplete` mode writes deterministic evidence for review without
-claiming a successful scientific gate.
+The validation runner derives `overall_scientific_gate` from the required gate
+statuses rather than from a hardcoded outcome. Strict-mode exit status uses the
+same blocker list, so any blocked gate, failed gate or missing required
+production observation yields `overall_scientific_gate: not_passed` and a
+nonzero strict exit. Its `--allow-incomplete` mode writes deterministic evidence
+for review without changing the scientific gate result.
 
 ## Production Observation Path
 
@@ -60,7 +62,10 @@ file when `PHASEXPERT_VALIDATION_OBSERVATIONS_PATH` is set for an iOS simulator
 test run. The deterministic runner accepts that file with
 `--observations <path>` and records attempted, observed, passed, failed, failure
 rate, mean absolute relative deviation, signed relative bias and maximum
-absolute relative deviation for the pure-CO2 density and viscosity gates.
+absolute relative deviation for the pure-CO2 density and viscosity gates. The
+same writer also records the pure-CO2 critical temperature and pressure returned
+by the production phase-diagram path; the runner validates those coordinates
+against the frozen critical-point tolerances.
 
 No committed result in this branch uses provider output as reference data.
 Without an observation file, the affected gates remain

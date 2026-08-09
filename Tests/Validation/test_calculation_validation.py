@@ -3,6 +3,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 
@@ -12,10 +13,22 @@ MANIFEST = ROOT / "Documentation" / "Validation" / "CalculationReferenceManifest
 
 
 class CalculationValidationRunnerTests(unittest.TestCase):
-    def run_report(self, allow_incomplete: bool = True, observations: dict | None = None):
+    def run_report(
+        self,
+        allow_incomplete: bool = True,
+        observations: dict | None = None,
+        manifest: dict | None = None
+    ):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / "results.json"
-            command = [sys.executable, str(SCRIPT), "--manifest", str(MANIFEST), "--output", str(output)]
+            manifest_path = MANIFEST
+            if manifest is not None:
+                manifest_path = Path(tmp) / "manifest.json"
+                manifest_path.write_text(
+                    json.dumps(manifest, sort_keys=True),
+                    encoding="utf-8"
+                )
+            command = [sys.executable, str(SCRIPT), "--manifest", str(manifest_path), "--output", str(output)]
             if observations is not None:
                 observations_path = Path(tmp) / "observations.json"
                 observations_path.write_text(
@@ -28,8 +41,9 @@ class CalculationValidationRunnerTests(unittest.TestCase):
             result = subprocess.run(command, cwd=ROOT, text=True, capture_output=True)
             return result, output.read_bytes() if output.exists() else b""
 
-    def exact_observations(self) -> dict:
-        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    def exact_observations(self, manifest: dict | None = None) -> dict:
+        if manifest is None:
+            manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
         points = []
         for index, point in enumerate(manifest["fixtures"]["pure_co2_density"]):
             points.append(
@@ -55,6 +69,43 @@ class CalculationValidationRunnerTests(unittest.TestCase):
                     "unit": "Pa*s"
                 }
             )
+        for index, point in enumerate(manifest["fixtures"]["critical_points"]):
+            points.append(
+                {
+                    "gate": "pure_co2_critical_point",
+                    "fixture_section": "critical_points",
+                    "fixture_index": index,
+                    "property": "criticalPoint",
+                    "status": "calculated",
+                    "temperature_k": point["temperature_k"],
+                    "pressure_pa": point["pressure_pa"],
+                    "unit": "K,Pa"
+                }
+            )
+        for index, point in enumerate(manifest["fixtures"].get("pure_co2_saturation_pressure", [])):
+            points.append(
+                {
+                    "gate": "pure_co2_saturation_pressure",
+                    "fixture_section": "pure_co2_saturation_pressure",
+                    "fixture_index": index,
+                    "property": "saturationPressure",
+                    "status": "calculated",
+                    "value": point["pressure_pa"],
+                    "unit": "Pa"
+                }
+            )
+        for index, point in enumerate(manifest["fixtures"]["co2_n2_density"]):
+            points.append(
+                {
+                    "gate": "co2_n2_density",
+                    "fixture_section": "co2_n2_density",
+                    "fixture_index": index,
+                    "property": "density",
+                    "status": "calculated",
+                    "value": point["density_kg_m3"],
+                    "unit": "kg/m3"
+                }
+            )
         return {
             "schema_version": "phasexpert-production-observations.v1",
             "metadata": {
@@ -63,6 +114,29 @@ class CalculationValidationRunnerTests(unittest.TestCase):
             },
             "points": points
         }
+
+    def all_passing_manifest(self) -> dict:
+        manifest = deepcopy(json.loads(MANIFEST.read_text(encoding="utf-8")))
+        manifest["fixtures"]["pure_co2_saturation_pressure"] = [
+            {
+                "reference_id": "pure-co2-saturation-pressure-needed",
+                "region": "synthetic_runner_logic_only",
+                "temperature_k": 280.0,
+                "pressure_pa": 4_160_000.0,
+                "absolute_tolerance_pa": 1_000.0
+            }
+        ]
+        manifest["fixtures"]["co2_n2_density"] = [
+            {
+                "reference_id": "co2-n2-density-needed",
+                "region": "synthetic_runner_logic_only",
+                "temperature_k": 300.0,
+                "pressure_pa": 10_000_000.0,
+                "density_kg_m3": 500.0,
+                "expanded_uncertainty_kg_m3": 0.5
+            }
+        ]
+        return manifest
 
     def test_manifest_has_traceable_references_for_committed_pure_co2_points(self):
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -91,6 +165,7 @@ class CalculationValidationRunnerTests(unittest.TestCase):
             "pure_co2_density gate is runtime_observation_missing",
             report["strict_blockers"],
         )
+        self.assertTrue(report["reason"].startswith("Required scientific gates are incomplete:"))
 
     def test_observations_record_aad_bias_maximum_deviation_and_failure_rate(self):
         _, output = self.run_report(observations=self.exact_observations())
@@ -107,9 +182,14 @@ class CalculationValidationRunnerTests(unittest.TestCase):
         self.assertEqual(density["metrics"]["maximum_absolute_relative_deviation"], 0)
         self.assertEqual(density["metrics"]["failure_rate"], 0)
         self.assertEqual(viscosity["metrics"]["failure_rate"], 0)
-        self.assertIn(
-            "pure_co2_critical_point gate is runtime_observation_missing",
-            report["strict_blockers"],
+        self.assertEqual(report["gates"]["pure_co2_critical_point"]["status"], "passed")
+        self.assertEqual(
+            report["gates"]["pure_co2_critical_point"]["metrics"]["maximum_temperature_deviation_k"],
+            0
+        )
+        self.assertEqual(
+            report["gates"]["pure_co2_critical_point"]["metrics"]["maximum_relative_pressure_deviation"],
+            0
         )
 
     def test_out_of_tolerance_observation_fails_its_gate(self):
@@ -123,6 +203,82 @@ class CalculationValidationRunnerTests(unittest.TestCase):
         self.assertIn(
             "pure_co2_density gate is failed",
             report["strict_blockers"],
+        )
+
+    def test_missing_critical_observation_fails_critical_gate(self):
+        observations = self.exact_observations()
+        observations["points"] = [
+            point for point in observations["points"]
+            if point["gate"] != "pure_co2_critical_point"
+        ]
+        _, output = self.run_report(observations=observations)
+        report = json.loads(output)
+
+        self.assertEqual(report["gates"]["pure_co2_critical_point"]["status"], "failed")
+        self.assertIn(
+            "pure_co2_critical_point gate is failed",
+            report["strict_blockers"],
+        )
+
+    def test_critical_temperature_outside_tolerance_fails_gate(self):
+        observations = self.exact_observations()
+        for point in observations["points"]:
+            if point["gate"] == "pure_co2_critical_point":
+                point["temperature_k"] += 0.02
+        _, output = self.run_report(observations=observations)
+        report = json.loads(output)
+
+        self.assertEqual(report["gates"]["pure_co2_critical_point"]["status"], "failed")
+
+    def test_critical_pressure_outside_tolerance_fails_gate(self):
+        observations = self.exact_observations()
+        for point in observations["points"]:
+            if point["gate"] == "pure_co2_critical_point":
+                point["pressure_pa"] *= 1.001
+        _, output = self.run_report(observations=observations)
+        report = json.loads(output)
+
+        self.assertEqual(report["gates"]["pure_co2_critical_point"]["status"], "failed")
+
+    def test_non_finite_critical_observation_fails_gate(self):
+        observations = self.exact_observations()
+        for point in observations["points"]:
+            if point["gate"] == "pure_co2_critical_point":
+                point["temperature_k"] = "nan"
+        _, output = self.run_report(observations=observations)
+        report = json.loads(output)
+
+        self.assertEqual(report["gates"]["pure_co2_critical_point"]["status"], "failed")
+
+    def test_synthetic_all_passing_configuration_returns_zero_strict_exit(self):
+        manifest = self.all_passing_manifest()
+        observations = self.exact_observations(manifest=manifest)
+        result, output = self.run_report(
+            allow_incomplete=False,
+            observations=observations,
+            manifest=manifest
+        )
+        report = json.loads(output)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(report["overall_scientific_gate"], "passed")
+        self.assertEqual(report["strict_blockers"], [])
+
+    def test_allow_incomplete_never_changes_scientific_gate_result(self):
+        strict_result, strict_output = self.run_report(allow_incomplete=False)
+        incomplete_result, incomplete_output = self.run_report(allow_incomplete=True)
+        strict_report = json.loads(strict_output)
+        incomplete_report = json.loads(incomplete_output)
+
+        self.assertNotEqual(strict_result.returncode, 0)
+        self.assertEqual(incomplete_result.returncode, 0)
+        self.assertEqual(
+            strict_report["overall_scientific_gate"],
+            incomplete_report["overall_scientific_gate"]
+        )
+        self.assertEqual(
+            strict_report["strict_blockers"],
+            incomplete_report["strict_blockers"]
         )
 
     def test_report_is_deterministic(self):

@@ -2,8 +2,21 @@
   "acceptance_protocol_frozen": true,
   "gates": {
     "co2_n2_density": {
+      "failures": [],
+      "metrics": {
+        "attempted": 0,
+        "bias_relative_deviation": null,
+        "failed": 0,
+        "failure_rate": 0.0,
+        "maximum_absolute_relative_deviation": null,
+        "mean_absolute_relative_deviation": null,
+        "observed": 0,
+        "passed": 0
+      },
       "reason": "Exact tabulated experimental values, composition basis, units, uncertainty and redistribution terms are not committed.",
       "reference_points": 0,
+      "runtime_observation_required": true,
+      "runtime_observation_source": null,
       "status": "blocked"
     },
     "derived_properties": {
@@ -12,11 +25,22 @@
       "status": "validated_by_formula_tests"
     },
     "pure_co2_critical_point": {
+      "failures": [],
       "maximum_relative_pressure_deviation": 0.0002,
       "maximum_temperature_deviation_k": 0.01,
-      "reason": "The current native production observation file does not record critical-point values.",
+      "metrics": {
+        "attempted": 1,
+        "failed": 1,
+        "failure_rate": 1.0,
+        "maximum_relative_pressure_deviation": null,
+        "maximum_temperature_deviation_k": null,
+        "observed": 0,
+        "passed": 0
+      },
+      "reason": "No native production-path critical-point observation file was supplied.",
       "reference_points": 1,
       "runtime_observation_required": true,
+      "runtime_observation_source": null,
       "status": "runtime_observation_missing"
     },
     "pure_co2_density": {
@@ -45,8 +69,21 @@
       "status": "runtime_observation_missing"
     },
     "pure_co2_saturation_pressure": {
+      "failures": [],
+      "metrics": {
+        "attempted": 0,
+        "bias_relative_deviation": null,
+        "failed": 0,
+        "failure_rate": 0.0,
+        "maximum_absolute_relative_deviation": null,
+        "mean_absolute_relative_deviation": null,
+        "observed": 0,
+        "passed": 0
+      },
       "reason": "No committed independent saturation-pressure fixture with redistribution review.",
       "reference_points": 0,
+      "runtime_observation_required": true,
+      "runtime_observation_source": null,
       "status": "blocked"
     },
     "pure_co2_viscosity": {
@@ -85,7 +122,7 @@
   "observation_checksum_sha256": null,
   "ordinary_build_requires_network": false,
   "overall_scientific_gate": "not_passed",
-  "reason": "Selected pure-CO2 runtime deviations can be recorded when native observations are supplied, but the complete scientific gate remains blocked by missing critical-point observations plus CO2-N2 density and pure-CO2 saturation-pressure fixtures.",
+  "reason": "Required scientific gates are incomplete: co2_n2_density gate is blocked; co2_n2_density has no committed traceable reference points; pure_co2_critical_point gate is runtime_observation_missing; pure_co2_density gate is runtime_observation_missing; pure_co2_saturation_pressure gate is blocked; pure_co2_saturation_pressure has no committed traceable reference points; pure_co2_viscosity gate is runtime_observation_missing.",
   "schema_version": "phasexpert-calculation-validation-results.v1",
   "strict_blockers": [
     "co2_n2_density gate is blocked",

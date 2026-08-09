@@ -14,7 +14,9 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
         let fixtureIndex: Int
         let property: String
         let status: String
-        let value: Double
+        let value: Double?
+        let temperatureK: Double?
+        let pressurePa: Double?
         let unit: String
         let phase: String
 
@@ -25,6 +27,8 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
             case property
             case status
             case value
+            case temperatureK = "temperature_k"
+            case pressurePa = "pressure_pa"
             case unit
             case phase
         }
@@ -110,6 +114,32 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
                 )
             )
         }
+
+        let envelope = try await provider.phaseEnvelope(
+            PhaseEnvelopeRequest(
+                modelID: provider.descriptor.id,
+                composition: [
+                    MixtureComponent(component: .carbonDioxide, moleFraction: 1)
+                ]
+            )
+        )
+        let critical = try XCTUnwrap(
+            envelope.points.first { $0.branch == .critical }
+        )
+        observations.append(
+            ProductionObservation(
+                gate: "pure_co2_critical_point",
+                fixtureSection: "critical_points",
+                fixtureIndex: 0,
+                property: "criticalPoint",
+                status: envelope.isAvailable ? "calculated" : "unavailable",
+                value: nil,
+                temperatureK: critical.temperatureK,
+                pressurePa: critical.pressurePa,
+                unit: "K,Pa",
+                phase: "critical"
+            )
+        )
 
         let report = ProductionObservationReport(
             schemaVersion: "phasexpert-production-observations.v1",
@@ -335,6 +365,8 @@ final class PureCO2ReferenceValidationTests: XCTestCase {
             property: property.rawValue,
             status: result.status.rawValue,
             value: try XCTUnwrap(result.value),
+            temperatureK: nil,
+            pressurePa: nil,
             unit: result.unit,
             phase: phase.rawValue
         )

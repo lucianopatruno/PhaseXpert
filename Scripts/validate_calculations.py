@@ -22,6 +22,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "Documentation" / "Validation" / "CalculationReferenceManifest.json"
 DEFAULT_RESULTS = ROOT / "Documentation" / "Validation" / "CalculationValidationResults.json"
 REQUIRED_GATE_STATUSES = {"blocked", "failed", "runtime_observation_missing"}
+REQUIRED_SCIENTIFIC_GATES = {
+    "pure_co2_density",
+    "pure_co2_viscosity",
+    "pure_co2_critical_point",
+    "pure_co2_saturation_pressure",
+    "co2_n2_density"
+}
 
 
 def canonical(value: Any) -> str:
@@ -54,16 +61,31 @@ def absolute_tolerance(gate: str, point: dict[str, Any]) -> float:
             point["expanded_uncertainty_kg_m3"]
             + 0.001 * point["density_kg_m3"]
         )
+    if gate == "co2_n2_density":
+        return (
+            point["expanded_uncertainty_kg_m3"]
+            + 0.001 * point["density_kg_m3"]
+        )
     if gate == "pure_co2_viscosity":
         return relative_tolerance_viscosity(point) * point["viscosity_pa_s"]
+    if gate == "pure_co2_saturation_pressure":
+        return (
+            point.get("expanded_uncertainty_pa")
+            or point.get("absolute_tolerance_pa")
+            or 0.001 * point["pressure_pa"]
+        )
     raise KeyError(f"No absolute tolerance rule for {gate}")
 
 
 def reference_value(gate: str, point: dict[str, Any]) -> float:
     if gate == "pure_co2_density":
         return point["density_kg_m3"]
+    if gate == "co2_n2_density":
+        return point["density_kg_m3"]
     if gate == "pure_co2_viscosity":
         return point["viscosity_pa_s"]
+    if gate == "pure_co2_saturation_pressure":
+        return point["pressure_pa"]
     raise KeyError(f"No reference value rule for {gate}")
 
 
@@ -85,6 +107,12 @@ def summarize_observations(
     fixtures: list[dict[str, Any]],
     observations: dict[str, Any] | None
 ) -> dict[str, Any]:
+    if len(fixtures) == 0:
+        return {
+            "status": "blocked",
+            "reason": "No committed traceable reference points.",
+            "metrics": empty_metrics(0)
+        }
     if not observations:
         return {
             "status": "runtime_observation_missing",
@@ -157,6 +185,91 @@ def summarize_observations(
     }
 
 
+def summarize_critical_observations(
+    fixtures: list[dict[str, Any]],
+    observations: dict[str, Any] | None
+) -> dict[str, Any]:
+    if len(fixtures) == 0:
+        return {
+            "status": "blocked",
+            "reason": "No committed traceable critical-point reference.",
+            "metrics": {
+                "attempted": 0,
+                "observed": 0,
+                "passed": 0,
+                "failed": 0,
+                "failure_rate": 0.0,
+                "maximum_temperature_deviation_k": None,
+                "maximum_relative_pressure_deviation": None
+            }
+        }
+    if not observations:
+        return {
+            "status": "runtime_observation_missing",
+            "reason": "No native production-path critical-point observation file was supplied.",
+            "metrics": {
+                "attempted": len(fixtures),
+                "observed": 0,
+                "passed": 0,
+                "failed": len(fixtures),
+                "failure_rate": 1.0,
+                "maximum_temperature_deviation_k": None,
+                "maximum_relative_pressure_deviation": None
+            }
+        }
+
+    by_key = {
+        (point.get("fixture_section"), point.get("fixture_index")): point
+        for point in observations.get("points", [])
+        if point.get("gate") == "pure_co2_critical_point"
+    }
+    failures: list[str] = []
+    temperature_deviations: list[float] = []
+    pressure_deviations: list[float] = []
+    passed = 0
+
+    for index, fixture in enumerate(fixtures):
+        observed = by_key.get(("critical_points", index))
+        if not observed:
+            failures.append(f"critical_points[{index}] has no native production observation")
+            continue
+        if observed.get("status") != "calculated":
+            failures.append(f"critical_points[{index}] status is {observed.get('status')!r}")
+            continue
+        temperature = observed.get("temperature_k")
+        pressure = observed.get("pressure_pa")
+        if not isinstance(temperature, (int, float)) or not math.isfinite(temperature):
+            failures.append(f"critical_points[{index}] temperature_k is not finite")
+            continue
+        if not isinstance(pressure, (int, float)) or not math.isfinite(pressure) or pressure <= 0:
+            failures.append(f"critical_points[{index}] pressure_pa is not finite and positive")
+            continue
+
+        temperature_deviation = abs(float(temperature) - fixture["temperature_k"])
+        pressure_relative_deviation = abs(float(pressure) - fixture["pressure_pa"]) / fixture["pressure_pa"]
+        temperature_deviations.append(temperature_deviation)
+        pressure_deviations.append(pressure_relative_deviation)
+        if temperature_deviation <= 0.01 and pressure_relative_deviation <= 0.0002:
+            passed += 1
+        else:
+            failures.append(f"critical_points[{index}] deviation exceeds frozen tolerance")
+
+    failed = len(fixtures) - passed
+    return {
+        "status": "passed" if not failures else "failed",
+        "failures": failures,
+        "metrics": {
+            "attempted": len(fixtures),
+            "observed": len(temperature_deviations),
+            "passed": passed,
+            "failed": failed,
+            "failure_rate": failed / len(fixtures),
+            "maximum_temperature_deviation_k": max(temperature_deviations) if temperature_deviations else None,
+            "maximum_relative_pressure_deviation": max(pressure_deviations) if pressure_deviations else None
+        }
+    }
+
+
 def count_by_region(points: list[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for point in points:
@@ -186,9 +299,21 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
 def strict_blockers(report: dict[str, Any]) -> list[str]:
     blockers = list(report["manifest_failures"])
     for name, gate in report["gates"].items():
-        if gate["status"] in REQUIRED_GATE_STATUSES:
+        if name in REQUIRED_SCIENTIFIC_GATES and gate["status"] in REQUIRED_GATE_STATUSES:
             blockers.append(f"{name} gate is {gate['status']}")
     return sorted(set(blockers))
+
+
+def overall_status_and_reason(blockers: list[str]) -> tuple[str, str]:
+    if not blockers:
+        return (
+            "passed",
+            "Every required scientific gate passed with committed fixtures and supplied production observations."
+        )
+    return (
+        "not_passed",
+        "Required scientific gates are incomplete: " + "; ".join(blockers) + "."
+    )
 
 
 def build_report(
@@ -205,6 +330,17 @@ def build_report(
     pure_viscosity_tolerances = [relative_tolerance_viscosity(point) for point in viscosity]
     density_observations = summarize_observations("pure_co2_density", density, observations)
     viscosity_observations = summarize_observations("pure_co2_viscosity", viscosity, observations)
+    critical_observations = summarize_critical_observations(critical, observations)
+    saturation_observations = summarize_observations(
+        "pure_co2_saturation_pressure",
+        saturation,
+        observations
+    )
+    co2_n2_density_observations = summarize_observations(
+        "co2_n2_density",
+        co2_n2_density,
+        observations
+    )
     observation_metadata = observations.get("metadata", {}) if observations else None
     gates = {
         "pure_co2_density": {
@@ -228,22 +364,35 @@ def build_report(
             "failures": viscosity_observations.get("failures", [])
         },
         "pure_co2_critical_point": {
-            "status": "runtime_observation_missing",
+            "status": critical_observations["status"],
             "reference_points": len(critical),
             "maximum_temperature_deviation_k": 0.01,
             "maximum_relative_pressure_deviation": 0.0002,
             "runtime_observation_required": True,
-            "reason": "The current native production observation file does not record critical-point values."
+            "runtime_observation_source": observation_metadata,
+            "metrics": critical_observations["metrics"],
+            "failures": critical_observations.get("failures", []),
+            "reason": critical_observations.get("reason")
         },
         "pure_co2_saturation_pressure": {
-            "status": "blocked",
+            "status": saturation_observations["status"],
             "reference_points": len(saturation),
+            "runtime_observation_required": True,
+            "runtime_observation_source": observation_metadata,
+            "metrics": saturation_observations["metrics"],
+            "failures": saturation_observations.get("failures", []),
             "reason": "No committed independent saturation-pressure fixture with redistribution review."
+                if len(saturation) == 0 else saturation_observations.get("reason")
         },
         "co2_n2_density": {
-            "status": "blocked",
+            "status": co2_n2_density_observations["status"],
             "reference_points": len(co2_n2_density),
+            "runtime_observation_required": True,
+            "runtime_observation_source": observation_metadata,
+            "metrics": co2_n2_density_observations["metrics"],
+            "failures": co2_n2_density_observations.get("failures", []),
             "reason": "Exact tabulated experimental values, composition basis, units, uncertainty and redistribution terms are not committed."
+                if len(co2_n2_density) == 0 else co2_n2_density_observations.get("reason")
         },
         "derived_properties": {
             "status": "validated_by_formula_tests",
@@ -256,12 +405,22 @@ def build_report(
             "basis": "Deterministic exact conversions in EngineeringUnits tests."
         }
     }
+    blockers = sorted(set(
+        list(manifest_failures)
+        + [
+            f"{name} gate is {gate['status']}"
+            for name, gate in gates.items()
+            if name in REQUIRED_SCIENTIFIC_GATES
+            and gate["status"] in REQUIRED_GATE_STATUSES
+        ]
+    ))
+    overall_gate, reason = overall_status_and_reason(blockers)
     report = {
         "schema_version": "phasexpert-calculation-validation-results.v1",
         "manifest_checksum_sha256": checksum(manifest),
         "observation_checksum_sha256": checksum(observations) if observations else None,
-        "overall_scientific_gate": "not_passed",
-        "reason": "Selected pure-CO2 runtime deviations can be recorded when native observations are supplied, but the complete scientific gate remains blocked by missing critical-point observations plus CO2-N2 density and pure-CO2 saturation-pressure fixtures.",
+        "overall_scientific_gate": overall_gate,
+        "reason": reason,
         "manifest_failures": manifest_failures,
         "validated_range_matrix": {
             "pure_co2_density": "supported; preliminary until native runtime deviations are recorded in this report",
@@ -276,7 +435,7 @@ def build_report(
         "acceptance_protocol_frozen": True,
         "ordinary_build_requires_network": False
     }
-    report["strict_blockers"] = strict_blockers(report)
+    report["strict_blockers"] = blockers
     return report
 
 

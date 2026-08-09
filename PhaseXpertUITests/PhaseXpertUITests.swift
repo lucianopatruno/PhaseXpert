@@ -38,13 +38,80 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.buttons["OK"].exists)
     }
 
+    func testImpurityKeyboardDoneDismissesInPPMAndMolPercentModes() {
+        let app = XCUIApplication()
+        app.launch()
+
+        addImpurity(in: app)
+
+        let ppmField = app.textFields["N₂ ppm"]
+        XCTAssertTrue(ppmField.waitForExistence(timeout: 3))
+        ppmField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+        ppmField.typeText("250")
+        XCTAssertTrue(app.buttons["keyboard-done"].waitForExistence(timeout: 2))
+        app.buttons["keyboard-done"].tap()
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
+        XCTAssertEqual(ppmField.value as? String, "250")
+
+        app.buttons["mol%"].tap()
+        let molePercentField = app.textFields["N₂ mol%"]
+        XCTAssertTrue(molePercentField.waitForExistence(timeout: 3))
+        molePercentField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["keyboard-done"].waitForExistence(timeout: 2))
+        app.buttons["keyboard-done"].tap()
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
+    }
+
+    func testImpurityKeyboardDismissesOnOutsideTapRunBasisChangeAndRemoval() {
+        let app = XCUIApplication()
+        app.launch()
+
+        addImpurity(in: app)
+        addImpurity(in: app)
+
+        let nitrogenField = app.textFields["N₂ ppm"]
+        XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
+        nitrogenField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+        nitrogenField.typeText("100")
+        app.staticTexts["Composition"].tap()
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
+        XCTAssertEqual(nitrogenField.value as? String, "100")
+
+        nitrogenField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+        app.buttons["mol%"].tap()
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
+        let nitrogenMolePercentField = app.textFields["N₂ mol%"]
+        XCTAssertTrue(nitrogenMolePercentField.waitForExistence(timeout: 3))
+
+        let oxygenField = app.textFields["O₂ mol%"]
+        XCTAssertTrue(oxygenField.waitForExistence(timeout: 3))
+        oxygenField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+        openImpurityMenu("O₂", in: app)
+        app.buttons["Remove impurity"].tap()
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
+        XCTAssertFalse(app.textFields["O₂ mol%"].exists)
+
+        let runCalculationButton = app.buttons["run-calculation"]
+        for _ in 0..<6 where !runCalculationButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(runCalculationButton.waitForExistence(timeout: 2))
+        nitrogenMolePercentField.tap()
+        XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
+        runCalculationButton.tap()
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
+    }
+
     func testImpurityMenuProvidesExplicitRemoval() {
         let app = XCUIApplication()
         app.launch()
 
-        let addImpurityButton = app.buttons["Add impurity"]
-        XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
-        addImpurityButton.tap()
+        addImpurity(in: app)
 
         let impurityMenu = app.buttons["N₂ impurity menu"]
         XCTAssertTrue(impurityMenu.waitForExistence(timeout: 3))
@@ -75,9 +142,7 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        let addImpurityButton = app.buttons["Add impurity"]
-        XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
-        addImpurityButton.tap()
+        addImpurity(in: app)
 
         let nitrogenField = app.textFields["N₂ ppm"]
         XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
@@ -113,5 +178,20 @@ final class PhaseXpertUITests: XCTestCase {
             ].exists
         )
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
+    }
+
+    private func addImpurity(in app: XCUIApplication) {
+        let addImpurityButton = app.buttons["Add impurity"]
+        for _ in 0..<4 where !addImpurityButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
+        addImpurityButton.tap()
+    }
+
+    private func openImpurityMenu(_ symbol: String, in app: XCUIApplication) {
+        let menu = app.buttons["\(symbol) impurity menu"]
+        XCTAssertTrue(menu.waitForExistence(timeout: 3))
+        menu.tap()
     }
 }

@@ -78,7 +78,10 @@ struct CalculatorView: View {
                         "Composition basis",
                         selection: Binding(
                             get: { viewModel.compositionBasis },
-                            set: { viewModel.changeCompositionBasis(to: $0) }
+                            set: { basis in
+                                focusedField = nil
+                                viewModel.changeCompositionBasis(to: basis)
+                            }
                         )
                     ) {
                         ForEach(CompositionInputBasis.allCases) { basis in
@@ -185,11 +188,15 @@ struct CalculatorView: View {
                             Text(viewModel.compositionBasis.rawValue)
                                 .foregroundStyle(.secondary)
                                 .frame(width: 48, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    dismissImpurityKeyboardIfNeeded()
+                                }
                                 .accessibilityHidden(true)
                         }
                         .accessibilityElement(children: .contain)
                     }
-                    .onDelete(perform: viewModel.removeImpurities)
+                    .onDelete(perform: removeImpurities)
                     .onMove(perform: viewModel.moveImpurities)
 
                     Button("Add impurity", systemImage: "plus") {
@@ -200,12 +207,20 @@ struct CalculatorView: View {
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
                 } header: {
                     Text("Composition")
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            dismissImpurityKeyboardIfNeeded()
+                        }
                 } footer: {
                     Text(
                         viewModel.compositionBasis == .partsPerMillion
                             ? "Enter impurities in molar ppm. CO₂ is calculated exactly as 1,000,000 ppm minus the impurity total."
                             : "Enter impurities in mol%. CO₂ is calculated exactly as 100 mol% minus the impurity total."
                     )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        dismissImpurityKeyboardIfNeeded()
+                    }
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {
@@ -230,6 +245,7 @@ struct CalculatorView: View {
 
                 Section {
                     Button {
+                        focusedField = nil
                         Task {
                             await viewModel.calculate()
                             if let record = viewModel.calculationRecord {
@@ -304,7 +320,10 @@ struct CalculatorView: View {
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
             .onChange(of: viewModel.pressureText) { _, _ in viewModel.validate() }
             .onChange(of: viewModel.temperatureText) { _, _ in viewModel.validate() }
-            .onChange(of: viewModel.composition) { _, _ in viewModel.validate() }
+            .onChange(of: viewModel.composition) { _, _ in
+                reconcileCompositionFocus()
+                viewModel.validate()
+            }
             .onChange(of: focusedField) { _, newField in
                 guard let newField else { return }
                 Task { @MainActor in
@@ -343,6 +362,16 @@ struct CalculatorView: View {
                     .disabled(!canMoveFocus(by: 1))
                     .accessibilityLabel("Next input field")
 
+                    Spacer()
+
+                    if isImpurityAmountFocused {
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                        .font(.body.weight(.semibold))
+                        .accessibilityIdentifier("keyboard-done")
+                        .accessibilityLabel("Done")
+                    }
                 }
             }
             .sheet(isPresented: $showsScientificTraceability) {
@@ -389,6 +418,21 @@ struct CalculatorView: View {
         viewModel.removeImpurity(id: id)
     }
 
+    private func removeImpurities(at offsets: IndexSet) {
+        let removedIDs = offsets.compactMap { index -> UUID? in
+            guard viewModel.composition.indices.contains(index) else { return nil }
+            let entry = viewModel.composition[index]
+            return entry.component == .carbonDioxide ? nil : entry.id
+        }
+        if let focusedImpurityID, removedIDs.contains(focusedImpurityID) {
+            focusedField = nil
+        }
+        for id in removedIDs {
+            compositionSelections.removeValue(forKey: id)
+        }
+        viewModel.removeImpurities(at: offsets)
+    }
+
     private func compositionSelectionBinding(
         for id: UUID
     ) -> Binding<TextSelection?> {
@@ -413,6 +457,38 @@ struct CalculatorView: View {
         case let .composition(id):
             let value = viewModel.composition.first(where: { $0.id == id })?.value ?? ""
             compositionSelections[id] = fullSelection(for: value)
+        }
+    }
+
+    private var focusedImpurityID: UUID? {
+        guard case let .composition(id) = focusedField else { return nil }
+        return id
+    }
+
+    private var isImpurityAmountFocused: Bool {
+        guard let focusedImpurityID else { return false }
+        return viewModel.composition.contains {
+            $0.id == focusedImpurityID && $0.component != .carbonDioxide
+        }
+    }
+
+    private func dismissImpurityKeyboardIfNeeded() {
+        if isImpurityAmountFocused {
+            focusedField = nil
+        }
+    }
+
+    private func reconcileCompositionFocus() {
+        let activeImpurityIDs = Set(
+            viewModel.composition
+                .filter { $0.component != .carbonDioxide }
+                .map(\.id)
+        )
+        if let focusedImpurityID, !activeImpurityIDs.contains(focusedImpurityID) {
+            focusedField = nil
+        }
+        compositionSelections = compositionSelections.filter {
+            activeImpurityIDs.contains($0.key)
         }
     }
 

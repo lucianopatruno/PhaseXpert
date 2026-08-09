@@ -3,9 +3,15 @@ import Observation
 import PhaseXpertCore
 
 struct CompositionInput: Identifiable, Equatable {
-    let id = UUID()
+    let id: UUID
     var component: ComponentID
     var value: String
+
+    init(id: UUID = UUID(), component: ComponentID, value: String) {
+        self.id = id
+        self.component = component
+        self.value = value
+    }
 }
 
 enum CompositionInputBasis: String, CaseIterable, Identifiable {
@@ -238,6 +244,7 @@ final class CalculatorViewModel {
             }
             let moleFraction = oldValue / (oldBasis == .partsPerMillion ? 1_000_000 : 100)
             return CompositionInput(
+                id: entry.id,
                 component: entry.component,
                 value: String(
                     format: newBasis == .partsPerMillion ? "%.12g" : "%.8g",
