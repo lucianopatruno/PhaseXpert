@@ -766,43 +766,44 @@ private struct UnitAwareNumericField: View {
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
-                Spacer(minLength: IFESpacing.regular)
                 titleView
-                    .frame(width: 96, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .layoutPriority(2)
-                inputView
-                    .layoutPriority(1)
-                unitMenu
-                    .layoutPriority(1)
+                controlGroup
+                    .layoutPriority(3)
             }
 
-            VStack(alignment: .trailing, spacing: IFESpacing.small) {
+            VStack(alignment: .leading, spacing: IFESpacing.small) {
                 titleView
-                HStack(spacing: IFESpacing.regular) {
-                    inputView
-                    unitMenu
-                }
+                controlGroup
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityElement(children: .contain)
     }
 
     private var titleView: some View {
-        VStack(alignment: .trailing, spacing: IFESpacing.xSmall) {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
             Text(title)
                 .font(.body.weight(.medium))
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
-                .multilineTextAlignment(.trailing)
+                .multilineTextAlignment(.leading)
                 .accessibilityIdentifier("\(accessibilityIdentifier)-label")
             if title == "Pressure" {
                 Text("absolute")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .multilineTextAlignment(.trailing)
+                    .multilineTextAlignment(.leading)
             }
+        }
+    }
+
+    private var controlGroup: some View {
+        HStack(spacing: IFESpacing.regular) {
+            inputView
+            unitMenu
         }
     }
 
