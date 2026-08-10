@@ -1382,4 +1382,181 @@ final class PhaseXpertTests: XCTestCase {
         try Data("csv".utf8).write(to: csv)
         return PhaseDiagramExportArtifacts(files: [pdf, csv])
     }
+
+    @MainActor
+    func testStreamMixingStartsWithTwoEditableStreams() {
+        let viewModel = StreamMixingViewModel()
+
+        XCTAssertEqual(viewModel.streams.count, 2)
+        XCTAssertEqual(viewModel.streams[0].name, "Stream 1")
+        XCTAssertEqual(viewModel.streams[1].name, "Stream 2")
+        XCTAssertTrue(viewModel.canCalculate)
+    }
+
+    @MainActor
+    func testStreamMixingAddsOnlyUpToSixStreams() {
+        let viewModel = StreamMixingViewModel()
+
+        XCTAssertNotNil(viewModel.addStream())
+        XCTAssertNotNil(viewModel.addStream())
+        XCTAssertNotNil(viewModel.addStream())
+        XCTAssertNotNil(viewModel.addStream())
+        XCTAssertEqual(viewModel.streams.count, 6)
+        XCTAssertFalse(viewModel.canAddStream)
+        XCTAssertNil(viewModel.addStream())
+        XCTAssertEqual(viewModel.streams.count, 6)
+    }
+
+    @MainActor
+    func testStreamMixingDuplicateUsesNewIdentifierAndCopiesValues() {
+        let viewModel = StreamMixingViewModel()
+        let source = viewModel.streams[0]
+
+        let duplicateID = viewModel.duplicateStream(id: source.id)
+
+        let duplicate = viewModel.streams.first { $0.id == duplicateID }
+        XCTAssertNotNil(duplicateID)
+        XCTAssertNotEqual(duplicate?.id, source.id)
+        XCTAssertEqual(duplicate?.flowText, source.flowText)
+        XCTAssertEqual(duplicate?.flowUnit, source.flowUnit)
+        XCTAssertEqual(duplicate?.compositionBasis, source.compositionBasis)
+        XCTAssertEqual(duplicate?.composition.map(\.component), source.composition.map(\.component))
+        XCTAssertTrue(duplicate?.name.contains("copy") == true)
+    }
+
+    @MainActor
+    func testStreamMixingRemoveEnforcesTwoStreamMinimum() {
+        let viewModel = StreamMixingViewModel()
+        _ = viewModel.addStream()
+        let removableID = viewModel.streams[2].id
+
+        viewModel.removeStream(id: removableID)
+        viewModel.removeStream(id: viewModel.streams[0].id)
+
+        XCTAssertEqual(viewModel.streams.count, 2)
+        XCTAssertFalse(viewModel.canRemoveStream)
+    }
+
+    @MainActor
+    func testStreamMixingReorderPreservesNumericalResult() {
+        let viewModel = StreamMixingViewModel()
+        viewModel.calculate()
+        let first = viewModel.result
+
+        viewModel.moveStreams(from: IndexSet(integer: 0), to: 2)
+        viewModel.calculate()
+        let second = viewModel.result
+
+        XCTAssertEqual(first?.totalMolarFlowMolesPerSecond, second?.totalMolarFlowMolesPerSecond)
+        XCTAssertEqual(first?.totalMassFlowKilogramsPerSecond, second?.totalMassFlowKilogramsPerSecond)
+        XCTAssertEqual(first?.composition, second?.composition)
+        XCTAssertEqual(viewModel.streams[1].name, "Stream 1")
+    }
+
+    @MainActor
+    func testStreamMixingFlowPressureAndTemperatureUnitsReachCoreRequest() throws {
+        let viewModel = StreamMixingViewModel()
+        viewModel.streams[0].flowText = "3600"
+        viewModel.streams[0].flowUnit = .kilogramsPerHour
+        viewModel.streams[0].pressureText = "12"
+        viewModel.streams[0].pressureDisplayUnit = .megapascalAbsolute
+        viewModel.streams[0].temperatureText = "68"
+        viewModel.streams[0].temperatureDisplayUnit = .fahrenheit
+        viewModel.outletPressureText = "1500"
+        viewModel.outletPressureDisplayUnit = .psiAbsolute
+        viewModel.outletTemperatureText = "298.15"
+        viewModel.outletTemperatureDisplayUnit = .kelvin
+        viewModel.markInputsChanged()
+
+        let request = try XCTUnwrap(viewModel.request())
+
+        XCTAssertEqual(request.streams[0].flowUnit, .kilogramsPerHour)
+        XCTAssertEqual(request.streams[0].flowBasis, .mass)
+        XCTAssertEqual(request.streams[0].pressureUnit, .megapascal)
+        XCTAssertEqual(request.streams[0].temperatureUnit, .fahrenheit)
+        XCTAssertEqual(request.outlet.pressureUnit, .psia)
+        XCTAssertEqual(request.outlet.temperatureUnit, .kelvin)
+    }
+
+    @MainActor
+    func testStreamMixingSuccessfulTwoStreamCalculationDisplaysHandCheckedTotals() {
+        let viewModel = StreamMixingViewModel()
+
+        viewModel.calculate()
+
+        XCTAssertEqual(viewModel.result?.status, .calculated)
+        XCTAssertEqual(viewModel.result?.totalMolarFlowMolesPerSecond ?? .nan, 15, accuracy: 1e-12)
+        let carbonDioxide = viewModel.result?.composition.first {
+            $0.component == .carbonDioxide
+        }?.moleFraction
+        let nitrogen = viewModel.result?.composition.first {
+            $0.component == .nitrogen
+        }?.moleFraction
+        XCTAssertEqual(carbonDioxide ?? .nan, 14.5 / 15, accuracy: 1e-12)
+        XCTAssertEqual(nitrogen ?? .nan, 0.5 / 15, accuracy: 1e-12)
+    }
+
+    @MainActor
+    func testStreamMixingDifferentInletPressuresProduceOneWarning() {
+        let viewModel = StreamMixingViewModel()
+        viewModel.streams[0].pressureText = "120"
+        viewModel.streams[1].pressureText = "150"
+        viewModel.markInputsChanged()
+
+        viewModel.calculate()
+
+        XCTAssertEqual(viewModel.result?.warnings.count, 1)
+        XCTAssertEqual(viewModel.result?.warnings.first?.code, .inletPressureDifference)
+    }
+
+    @MainActor
+    func testStreamMixingValidationAndExplicitNormalization() {
+        let viewModel = StreamMixingViewModel()
+        viewModel.streams[0].composition = [
+            CompositionInput(component: .carbonDioxide, value: "97.05"),
+            CompositionInput(component: .nitrogen, value: "3")
+        ]
+        viewModel.markInputsChanged()
+
+        viewModel.calculate()
+        XCTAssertNil(viewModel.result)
+        XCTAssertTrue(viewModel.validationReport.issues.contains {
+            $0.code == .normalizationRequired
+        })
+
+        viewModel.applyExplicitNormalization(for: viewModel.streams[0].id)
+        viewModel.calculate()
+
+        XCTAssertEqual(viewModel.result?.status, .calculated)
+        XCTAssertEqual(
+            viewModel.result?.assumptions.filter {
+                $0.code == .explicitCompositionNormalization
+            }.count,
+            1
+        )
+    }
+
+    @MainActor
+    func testStreamMixingMarksResultStaleAfterInputChange() {
+        let viewModel = StreamMixingViewModel()
+
+        viewModel.calculate()
+        XCTAssertFalse(viewModel.isResultStale)
+
+        viewModel.streams[0].flowText = "20"
+        viewModel.markInputsChanged()
+
+        XCTAssertTrue(viewModel.isResultStale)
+        XCTAssertNotNil(viewModel.result)
+    }
+
+    @MainActor
+    func testStreamMixingCalculatesWithoutProviderSelectionOrProviderCall() {
+        let viewModel = StreamMixingViewModel()
+        viewModel.calculate()
+
+        XCTAssertEqual(viewModel.result?.status, .calculated)
+        XCTAssertFalse(viewModel.statusMessage.localizedCaseInsensitiveContains("provider"))
+        XCTAssertFalse(viewModel.statusMessage.localizedCaseInsensitiveContains("CoolProp"))
+    }
 }

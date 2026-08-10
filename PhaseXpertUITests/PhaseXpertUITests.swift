@@ -342,6 +342,157 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
     }
 
+    func testStreamMixingNavigationAndInitialTwoStreamState() {
+        let app = XCUIApplication()
+        app.launch()
+
+        openStreamMixing(in: app)
+
+        XCTAssertTrue(app.navigationBars["Stream Mixing"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Stream Mixing v1"].exists)
+        let addStream = app.buttons["Add stream"]
+        for _ in 0..<4 where !addStream.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(addStream.exists)
+        XCTAssertTrue(app.staticTexts["stream-mixing-stream-count"].exists)
+        let calculate = app.buttons["Calculate mixture"]
+        for _ in 0..<6 where !calculate.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(calculate.exists)
+    }
+
+    func testStreamMixingAddDuplicateAndMaximumStreamBehavior() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        let addStream = streamMixingAddStreamButton(in: app)
+        for _ in 0..<4 {
+            addStream.tap()
+        }
+
+        XCTAssertFalse(addStream.isEnabled)
+
+        app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions")).element(boundBy: 0).tap()
+        XCTAssertTrue(app.buttons["Duplicate stream"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["Duplicate stream"].isEnabled)
+        app.tap()
+    }
+
+    func testStreamMixingDuplicateAndRemovePreserveMinimum() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions")).element(boundBy: 0).tap()
+        app.buttons["Duplicate stream"].tap()
+        XCTAssertTrue(app.staticTexts["stream-mixing-stream-count"].waitForExistence(timeout: 2))
+        XCTAssertEqual(app.staticTexts["stream-mixing-stream-count"].label, "3 of 6 streams")
+
+        app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions")).element(boundBy: 0).tap()
+        app.buttons["Remove stream"].tap()
+
+        XCTAssertEqual(app.staticTexts["stream-mixing-stream-count"].label, "2 of 6 streams")
+        app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions")).element(boundBy: 0).tap()
+        XCTAssertFalse(app.buttons["Remove stream"].isEnabled)
+        app.tap()
+    }
+
+    func testStreamMixingFlowAndOutletUnitSelection() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        let firstFlowUnit = app.buttons.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
+        XCTAssertTrue(firstFlowUnit.waitForExistence(timeout: 3))
+        firstFlowUnit.tap()
+        app.buttons["kg/h"].tap()
+        XCTAssertEqual(firstFlowUnit.value as? String, "kg/h")
+
+        let outletPressureUnit = app.buttons["stream-mixing-outlet-pressure-unit-menu"]
+        for _ in 0..<5 where !outletPressureUnit.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(outletPressureUnit.exists)
+        outletPressureUnit.tap()
+        app.buttons["psi(a)"].tap()
+        XCTAssertEqual(outletPressureUnit.value as? String, "psi(a)")
+
+        let outletTemperatureUnit = app.buttons["stream-mixing-outlet-temperature-unit-menu"]
+        XCTAssertTrue(outletTemperatureUnit.exists)
+        outletTemperatureUnit.tap()
+        app.buttons["K"].tap()
+        XCTAssertEqual(outletTemperatureUnit.value as? String, "K")
+    }
+
+    func testStreamMixingSuccessfulCalculationWarningTraceabilityAndStaleState() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        let calculate = app.buttons["Calculate mixture"]
+        for _ in 0..<8 where !calculate.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(calculate.waitForExistence(timeout: 3))
+        XCTAssertTrue(calculate.isEnabled)
+        calculate.tap()
+
+        for _ in 0..<8 where !app.staticTexts["Preliminary V1 aggregation"].waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(app.staticTexts["Preliminary V1 aggregation"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Total molar flow"].exists)
+        XCTAssertTrue(app.staticTexts["Total mass flow"].exists)
+        XCTAssertEqual(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "does not model pressure equalization")).count,
+            1
+        )
+
+        let traceability = app.buttons["Assumptions and traceability"]
+        for _ in 0..<8 where !traceability.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(traceability.exists)
+        traceability.tap()
+        XCTAssertTrue(app.staticTexts["Outlet pressure — SI"].waitForExistence(timeout: 2))
+    }
+
+    func testStreamMixingLargeDynamicTypeEssentialControlsRemainReachable() {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-UIPreferredContentSizeCategoryName",
+            "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+        ]
+        app.launch()
+
+        openStreamMixing(in: app)
+
+        XCTAssertTrue(app.buttons["Add stream"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0).exists)
+        let calculate = app.buttons["stream-mixing-calculate"]
+        for _ in 0..<10 where !calculate.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(calculate.exists)
+    }
+
+    func testCalculatorCompositionEditingRemainsUnchangedAfterStreamMixingTabAdded() {
+        let app = XCUIApplication()
+        app.launch()
+
+        addImpurity(in: app)
+
+        let ppmField = app.textFields["N₂ ppm"]
+        XCTAssertTrue(ppmField.waitForExistence(timeout: 3))
+        ppmField.tap()
+        ppmField.typeText("250")
+        app.buttons["keyboard-done"].tap()
+        XCTAssertEqual(ppmField.value as? String, "250")
+    }
+
     private func addImpurity(in app: XCUIApplication) {
         let addImpurityButton = app.buttons["Add impurity"]
         for _ in 0..<4 where !addImpurityButton.waitForExistence(timeout: 0.5) {
@@ -355,5 +506,30 @@ final class PhaseXpertUITests: XCTestCase {
         let menu = app.buttons["\(symbol) impurity menu"]
         XCTAssertTrue(menu.waitForExistence(timeout: 3))
         menu.tap()
+    }
+
+    private func openStreamMixing(in app: XCUIApplication) {
+        if app.tabBars.buttons["Stream Mixing"].waitForExistence(timeout: 2) {
+            app.tabBars.buttons["Stream Mixing"].tap()
+            return
+        }
+
+        let more = app.tabBars.buttons["More"]
+        XCTAssertTrue(more.waitForExistence(timeout: 2))
+        more.tap()
+        let streamMixing = app.cells["Stream Mixing"].exists
+            ? app.cells["Stream Mixing"]
+            : app.buttons["Stream Mixing"]
+        XCTAssertTrue(streamMixing.waitForExistence(timeout: 2))
+        streamMixing.tap()
+    }
+
+    private func streamMixingAddStreamButton(in app: XCUIApplication) -> XCUIElement {
+        let addStream = app.buttons["Add stream"]
+        for _ in 0..<6 where !addStream.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(addStream.waitForExistence(timeout: 3))
+        return addStream
     }
 }
