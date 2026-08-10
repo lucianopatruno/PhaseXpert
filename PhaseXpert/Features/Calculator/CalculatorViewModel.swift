@@ -3,9 +3,15 @@ import Observation
 import PhaseXpertCore
 
 struct CompositionInput: Identifiable, Equatable {
-    let id = UUID()
+    let id: UUID
     var component: ComponentID
     var value: String
+
+    init(id: UUID = UUID(), component: ComponentID, value: String) {
+        self.id = id
+        self.component = component
+        self.value = value
+    }
 }
 
 enum CompositionInputBasis: String, CaseIterable, Identifiable {
@@ -39,6 +45,10 @@ final class CalculatorViewModel {
 
     var selectedDescriptor: ModelDescriptor? {
         descriptors.first { $0.id == selectedModelID }
+    }
+
+    var selectableDescriptors: [ModelDescriptor] {
+        descriptors.filter { $0.availability != .unavailable }
     }
 
     var canNormalize: Bool {
@@ -167,7 +177,7 @@ final class CalculatorViewModel {
                 .init(
                     code: .modelUnavailable,
                     severity: .error,
-                    message: "\(descriptor.name) is not available for calculation."
+                    message: "This model is not available in this version."
                 ),
                 at: 0
             )
@@ -195,7 +205,7 @@ final class CalculatorViewModel {
     func loadInputs(from record: CalculationRecord) {
         pressureText = String(format: "%.8g", record.input.pressurePa / 100_000)
         temperatureText = String(format: "%.8g", record.input.temperatureK - 273.15)
-        if registry.provider(id: record.request.modelID) != nil {
+        if descriptors.contains(where: { $0.id == record.request.modelID }) {
             selectedModelID = record.request.modelID
         }
         if !record.input.originalComposition.isEmpty,
@@ -234,6 +244,7 @@ final class CalculatorViewModel {
             }
             let moleFraction = oldValue / (oldBasis == .partsPerMillion ? 1_000_000 : 100)
             return CompositionInput(
+                id: entry.id,
                 component: entry.component,
                 value: String(
                     format: newBasis == .partsPerMillion ? "%.12g" : "%.8g",

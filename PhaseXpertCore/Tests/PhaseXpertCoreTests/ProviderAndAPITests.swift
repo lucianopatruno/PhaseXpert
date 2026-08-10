@@ -2,6 +2,68 @@ import XCTest
 @testable import PhaseXpertCore
 
 final class ProviderAndAPITests: XCTestCase {
+    private struct TestOnlyProvider: ThermodynamicModelProvider {
+        let descriptor = ModelDescriptor(
+            id: "test-only-provider",
+            name: "Test-only provider",
+            modelVersion: "test",
+            providerVersion: "test",
+            availability: .available,
+            calculationMode: .local,
+            supportedComponents: [.carbonDioxide],
+            supportedProperties: [.density],
+            domain: .initialCO2Transport,
+            scientificBasis: "Test double for provider-contract tests.",
+            equationOrMethod: "Test double",
+            limitations: ["Not compiled into production defaults."],
+            references: []
+        )
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            CalculationResponse(
+                requestID: request.requestID,
+                model: descriptor,
+                phase: .gas,
+                properties: [
+                    PropertyValue(
+                        property: .density,
+                        value: 42,
+                        unit: "kg/m³",
+                        status: .calculated,
+                        message: "Test value."
+                    )
+                ],
+                solver: SolverMetadata(
+                    method: "Test double",
+                    converged: true,
+                    durationMilliseconds: 0
+                ),
+                warnings: [],
+                isScientificResult: false
+            )
+        }
+
+        func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse {
+            PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [
+                    .init(temperatureK: 250, pressurePa: 1_785_000, branch: .bubble),
+                    .init(temperatureK: 304.1, pressurePa: 7_377_000, branch: .critical)
+                ],
+                warnings: ["Test fixture"],
+                isAvailable: true,
+                boundaryKind: .pureFluidSaturation,
+                model: descriptor,
+                generatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                solver: .init(
+                    method: "Test envelope",
+                    converged: true,
+                    durationMilliseconds: 12.5
+                )
+            )
+        }
+    }
+
     func testProviderSelectionUsesStableIdentifier() {
         let registry = ProviderRegistry()
         XCTAssertEqual(registry.provider(id: "coolprop-heos")?.descriptor.id, "coolprop-heos")
@@ -10,6 +72,19 @@ final class ProviderAndAPITests: XCTestCase {
             expectedDefaultCoolPropAvailability
         )
         XCTAssertNil(registry.provider(id: "missing"))
+    }
+
+    func testProductionRegistryExcludesArchitectureDemoAndKeepsIFEUnavailable() {
+        let registry = ProviderRegistry()
+
+        XCTAssertNil(registry.provider(id: "architecture-demo"))
+        XCTAssertFalse(registry.descriptors.contains { $0.id == "architecture-demo" })
+
+        let ife = registry.descriptors.first { $0.id == "ife-model" }
+        XCTAssertEqual(ife?.name, "IFE Model")
+        XCTAssertEqual(ife?.availability, .unavailable)
+        XCTAssertEqual(ife?.limitations, ["This model is not available in this version."])
+        XCTAssertNil(registry.provider(id: "ife-model"))
     }
 
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
@@ -43,8 +118,8 @@ final class ProviderAndAPITests: XCTestCase {
         XCTAssertEqual(decoded.phaseEnvelopeSettings?.maximumPointCount, 120)
     }
 
-    func testArchitectureDemoNeverClaimsScientificOutput() async throws {
-        let provider = ArchitectureDemoProvider()
+    func testTestOnlyProviderDoesNotAppearInProductionDefaults() async throws {
+        let provider = TestOnlyProvider()
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
             pressurePa: 15_000_000,
@@ -55,13 +130,14 @@ final class ProviderAndAPITests: XCTestCase {
         )
 
         let response = try await provider.calculate(request)
+        XCTAssertNil(ProviderRegistry().provider(id: provider.descriptor.id))
         XCTAssertFalse(response.isScientificResult)
-        XCTAssertNil(response.properties.first?.value)
-        XCTAssertEqual(response.properties.first?.status, .unavailable)
+        XCTAssertEqual(response.properties.first?.value, 42)
+        XCTAssertEqual(response.properties.first?.status, .calculated)
     }
 
     func testCalculationRecordRoundTripsWithOriginalAndNormalizedInput() async throws {
-        let provider = ArchitectureDemoProvider()
+        let provider = TestOnlyProvider()
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
             pressurePa: 15_000_000,
@@ -137,7 +213,7 @@ final class ProviderAndAPITests: XCTestCase {
             warnings: ["Validation pending"],
             isAvailable: true,
             boundaryKind: .pureFluidSaturation,
-            model: ArchitectureDemoProvider().descriptor,
+            model: TestOnlyProvider().descriptor,
             generatedAt: generatedAt,
             solver: .init(
                 method: "Deterministic test method",
