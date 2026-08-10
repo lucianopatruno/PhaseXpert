@@ -766,8 +766,9 @@ private struct UnitAwareNumericField: View {
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
+                Spacer(minLength: IFESpacing.regular)
                 titleView
-                    .frame(width: 96, alignment: .leading)
+                    .frame(width: 96, alignment: .trailing)
                     .layoutPriority(2)
                 inputView
                     .layoutPriority(1)
@@ -775,30 +776,32 @@ private struct UnitAwareNumericField: View {
                     .layoutPriority(1)
             }
 
-            VStack(alignment: .leading, spacing: IFESpacing.small) {
+            VStack(alignment: .trailing, spacing: IFESpacing.small) {
                 titleView
                 HStack(spacing: IFESpacing.regular) {
                     inputView
-                        .frame(maxWidth: 150, alignment: .leading)
                     unitMenu
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityElement(children: .contain)
     }
 
     private var titleView: some View {
-        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+        VStack(alignment: .trailing, spacing: IFESpacing.xSmall) {
             Text(title)
                 .font(.body.weight(.medium))
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
+                .multilineTextAlignment(.trailing)
                 .accessibilityIdentifier("\(accessibilityIdentifier)-label")
             if title == "Pressure" {
                 Text("absolute")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .multilineTextAlignment(.trailing)
             }
         }
     }

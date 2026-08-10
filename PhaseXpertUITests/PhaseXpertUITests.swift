@@ -49,6 +49,7 @@ final class PhaseXpertUITests: XCTestCase {
         pressure.tap()
         pressure.typeText("42")
         XCTAssertEqual(pressure.value as? String, "42 bar(a)")
+        app.buttons["keyboard-done"].tap()
 
         let temperature = app.textFields["Temperature value"]
         XCTAssertTrue(temperature.waitForExistence(timeout: 2))
@@ -71,6 +72,7 @@ final class PhaseXpertUITests: XCTestCase {
         pressure.tap()
         pressure.typeText("500")
         XCTAssertEqual(pressure.value as? String, "500 psi(a)")
+        app.buttons["keyboard-done"].tap()
 
         let temperatureUnit = app.buttons["temperature-unit-menu"]
         XCTAssertTrue(temperatureUnit.waitForExistence(timeout: 2))
@@ -135,6 +137,11 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertEqual(pressureField.frame.minX, temperatureField.frame.minX, accuracy: 2)
         XCTAssertEqual(pressureField.frame.width, temperatureField.frame.width, accuracy: 2)
         XCTAssertEqual(pressureUnit.frame.minX, temperatureUnit.frame.minX, accuracy: 2)
+        XCTAssertEqual(pressureUnit.frame.maxX, temperatureUnit.frame.maxX, accuracy: 2)
+        XCTAssertGreaterThan(
+            pressureUnit.frame.maxX,
+            app.windows.element(boundBy: 0).frame.midX
+        )
     }
 
     func testOperatingPointUnitsRemainUsableWithLargeDynamicType() {
