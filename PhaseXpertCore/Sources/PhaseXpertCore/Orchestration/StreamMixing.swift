@@ -595,24 +595,25 @@ public struct StreamMixingEngine: Sendable {
     public func mix(_ request: StreamMixingRequest) -> MixedCompositionResult {
         let initialIssues = validationIssues(for: request)
         let warnings = warnings(for: request.streams)
-        let assumptions = assumptions(for: request.streams)
+        let generalAssumptions = assumptions(acceptedNormalizedStreamIDs: [])
         if !initialIssues.isEmpty {
             return blockedResult(
                 request: request,
                 warnings: warnings,
-                assumptions: assumptions,
+                assumptions: generalAssumptions,
                 issues: initialIssues
             )
         }
 
         var streamContributions: [StreamMixingStreamContribution] = []
+        var acceptedNormalizedStreamIDs: [UUID] = []
 
         for stream in request.streams {
             guard let compositionProvenance = compositionProvenance(for: stream).provenance else {
                 return blockedResult(
                     request: request,
                     warnings: warnings,
-                    assumptions: assumptions,
+                    assumptions: generalAssumptions,
                     issues: [issue(
                         .invalidComposition,
                         field: .composition,
@@ -632,7 +633,7 @@ public struct StreamMixingEngine: Sendable {
                 return blockedResult(
                     request: request,
                     warnings: warnings,
-                    assumptions: assumptions,
+                    assumptions: generalAssumptions,
                     issues: [aggregationIssue(
                         stream: stream,
                         message: "Stream total molar flow was non-finite or non-positive."
@@ -656,7 +657,7 @@ public struct StreamMixingEngine: Sendable {
                 return blockedResult(
                     request: request,
                     warnings: warnings,
-                    assumptions: assumptions,
+                    assumptions: generalAssumptions,
                     issues: [aggregationIssue(
                         stream: stream,
                         message: "Stream component flow calculation produced a non-finite value."
@@ -675,16 +676,23 @@ public struct StreamMixingEngine: Sendable {
                 molarFlowMolesPerSecond: molarFlow,
                 componentMolarFlows: componentFlows
             ))
+            if compositionProvenance.status == .normalizationAccepted {
+                acceptedNormalizedStreamIDs.append(stream.id)
+            }
         }
 
-        let totalMolarFlow = streamContributions.reduce(0) {
+        let canonicalContributions = stableStreamOrder(streamContributions)
+        let calculationAssumptions = assumptions(
+            acceptedNormalizedStreamIDs: acceptedNormalizedStreamIDs
+        )
+        let totalMolarFlow = canonicalContributions.reduce(0) {
             $0 + $1.molarFlowMolesPerSecond
         }
         guard totalMolarFlow.isFinite, totalMolarFlow > 0 else {
             return blockedResult(
                 request: request,
                 warnings: warnings,
-                assumptions: assumptions,
+                assumptions: calculationAssumptions,
                 issues: [StreamMixingValidationIssue(
                     code: .invalidTotalMolarFlow,
                     field: .aggregation,
@@ -693,7 +701,7 @@ public struct StreamMixingEngine: Sendable {
             )
         }
 
-        let componentMolarFlows = orderedComponentFlows(from: streamContributions)
+        let componentMolarFlows = orderedComponentFlows(from: canonicalContributions)
         let totalMassFlow = componentMolarFlows.reduce(0) {
             $0 + $1.massFlowKilogramsPerSecond
         }
@@ -709,7 +717,7 @@ public struct StreamMixingEngine: Sendable {
             return blockedResult(
                 request: request,
                 warnings: warnings,
-                assumptions: assumptions,
+                assumptions: calculationAssumptions,
                 issues: [StreamMixingValidationIssue(
                     code: .nonFiniteResult,
                     field: .aggregation,
@@ -729,7 +737,7 @@ public struct StreamMixingEngine: Sendable {
             return blockedResult(
                 request: request,
                 warnings: warnings,
-                assumptions: assumptions,
+                assumptions: calculationAssumptions,
                 issues: mixedValidation.issues.map {
                     StreamMixingValidationIssue(
                         code: .mixedCompositionUnsupported,
@@ -750,7 +758,7 @@ public struct StreamMixingEngine: Sendable {
             return blockedResult(
                 request: request,
                 warnings: warnings,
-                assumptions: assumptions,
+                assumptions: calculationAssumptions,
                 issues: [StreamMixingValidationIssue(
                     code: .nonFiniteResult,
                     field: .aggregation,
@@ -770,7 +778,7 @@ public struct StreamMixingEngine: Sendable {
             streamContributions: streamContributions,
             conservation: conservation,
             warnings: warnings,
-            assumptions: assumptions,
+            assumptions: calculationAssumptions,
             validationIssues: []
         )
     }
@@ -927,6 +935,21 @@ public struct StreamMixingEngine: Sendable {
                     message: "Composition cannot be empty."
                 )]
             )
+        }
+
+        issues.append(contentsOf: duplicateComponentIssues(
+            in: stream.composition,
+            code: .invalidComposition,
+            stream: stream,
+            message: "Canonical composition may list each component only once."
+        ))
+        if let normalizedComposition = stream.normalizedComposition {
+            issues.append(contentsOf: duplicateComponentIssues(
+                in: normalizedComposition,
+                code: .invalidNormalization,
+                stream: stream,
+                message: "Normalized composition may list each component only once."
+            ))
         }
 
         let units = Set(original.map(\.unit))
@@ -1202,6 +1225,9 @@ public struct StreamMixingEngine: Sendable {
         tolerance: Double = 1e-12
     ) -> Bool {
         guard lhs.count == rhs.count else { return false }
+        guard !hasDuplicateComponents(lhs),
+              !hasDuplicateComponents(rhs)
+        else { return false }
         let left = Dictionary(uniqueKeysWithValues: lhs.map { ($0.component, $0.moleFraction) })
         let right = Dictionary(uniqueKeysWithValues: rhs.map { ($0.component, $0.moleFraction) })
         guard Set(left.keys) == Set(right.keys) else { return false }
@@ -1212,6 +1238,25 @@ public struct StreamMixingEngine: Sendable {
             else { return false }
             return abs(value - other) <= tolerance
         }
+    }
+
+    private func duplicateComponentIssues(
+        in composition: [MixtureComponent],
+        code: StreamMixingValidationCode,
+        stream: InletStreamInput,
+        message: String
+    ) -> [StreamMixingValidationIssue] {
+        hasDuplicateComponents(composition)
+            ? [issue(code, field: .composition, stream: stream, message: message)]
+            : []
+    }
+
+    private func hasDuplicateComponents(_ composition: [MixtureComponent]) -> Bool {
+        var seen: Set<ComponentID> = []
+        for item in composition where !seen.insert(item.component).inserted {
+            return true
+        }
+        return false
     }
 
     private func molarFlowMolesPerSecond(
@@ -1252,9 +1297,9 @@ public struct StreamMixingEngine: Sendable {
     private func orderedComponentFlows(
         from contributions: [StreamMixingStreamContribution]
     ) -> [StreamMixingComponentMolarFlow] {
-        ComponentID.allCases.compactMap { component in
-            let molarFlow = contributions
-                .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+        let orderedContributions = stableStreamOrder(contributions)
+        return ComponentID.allCases.compactMap { component -> StreamMixingComponentMolarFlow? in
+            let molarFlow = orderedContributions
                 .compactMap { contribution in
                     contribution.componentMolarFlows.first {
                         $0.component == component
@@ -1271,20 +1316,25 @@ public struct StreamMixingEngine: Sendable {
         }
     }
 
+    private func stableStreamOrder(
+        _ contributions: [StreamMixingStreamContribution]
+    ) -> [StreamMixingStreamContribution] {
+        contributions.sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+    }
+
     public func conservationCheck(
         componentMolarFlows: [StreamMixingComponentMolarFlow],
         streamContributions: [StreamMixingStreamContribution],
         totalMolarFlow: Double,
         totalMassFlow: Double
     ) -> StreamMixingConservationCheck {
-        let summedStreamMolarFlow = streamContributions
-            .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+        let orderedContributions = stableStreamOrder(streamContributions)
+        let summedStreamMolarFlow = orderedContributions
             .reduce(0) { $0 + $1.molarFlowMolesPerSecond }
         let totalMolarResidual = abs(totalMolarFlow - summedStreamMolarFlow)
 
         let maximumComponentResidual = componentMolarFlows.reduce(0) { maximum, flow in
-            let inletComponentTotal = streamContributions
-                .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+            let inletComponentTotal = orderedContributions
                 .compactMap { contribution in
                     contribution.componentMolarFlows.first {
                         $0.component == flow.component
@@ -1294,8 +1344,7 @@ public struct StreamMixingEngine: Sendable {
             return max(maximum, abs(flow.molarFlowMolesPerSecond - inletComponentTotal))
         }
         let maximumComponentRelativeResidual = componentMolarFlows.reduce(0) { maximum, flow in
-            let inletComponentTotal = streamContributions
-                .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+            let inletComponentTotal = orderedContributions
                 .compactMap { contribution in
                     contribution.componentMolarFlows.first {
                         $0.component == flow.component
@@ -1308,14 +1357,13 @@ public struct StreamMixingEngine: Sendable {
             )
         }
 
-        let summedStreamMassFlow = streamContributions
-            .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+        let summedStreamMassFlow = orderedContributions
             .reduce(0) { $0 + $1.massFlowKilogramsPerSecond }
         let totalMassResidual = abs(totalMassFlow - summedStreamMassFlow)
 
         var maximumMassBasisResidual = 0.0
         var maximumMassBasisRelativeResidual = 0.0
-        for contribution in streamContributions where contribution.input.flowBasis == .mass {
+        for contribution in orderedContributions where contribution.input.flowBasis == .mass {
             guard let enteredMassFlow = contribution.input.flowUnit.kilogramsPerSecond(
                 from: contribution.input.flowValue
             ) else {
@@ -1400,7 +1448,9 @@ public struct StreamMixingEngine: Sendable {
         ]
     }
 
-    private func assumptions(for streams: [InletStreamInput]) -> [StreamMixingAssumption] {
+    private func assumptions(
+        acceptedNormalizedStreamIDs: [UUID]
+    ) -> [StreamMixingAssumption] {
         var assumptions = [
             StreamMixingAssumption(
                 code: .compositionOnlyMixing,
@@ -1415,10 +1465,10 @@ public struct StreamMixingEngine: Sendable {
                 message: "Inlet temperatures are retained for traceability but are not used in an energy balance; v1 is not enthalpy-balanced and does not calculate heat transfer, phase separation or outlet temperature."
             )
         ]
-        for stream in streams where stream.normalizedComposition != nil {
+        for streamID in acceptedNormalizedStreamIDs {
             assumptions.append(StreamMixingAssumption(
                 code: .explicitCompositionNormalization,
-                streamID: stream.id,
+                streamID: streamID,
                 message: "This stream used an explicitly accepted normalized composition recorded in provenance."
             ))
         }

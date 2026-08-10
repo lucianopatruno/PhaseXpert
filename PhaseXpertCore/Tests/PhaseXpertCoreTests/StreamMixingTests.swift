@@ -442,9 +442,8 @@ final class StreamMixingTests: XCTestCase {
         ]))
 
         XCTAssertEqual(result.status, .calculated)
-        XCTAssertTrue(result.assumptions.contains {
-            $0.code == .explicitCompositionNormalization && $0.streamID == inlet.id
-        })
+        XCTAssertEqual(acceptedNormalizationAssumptions(in: result).count, 1)
+        XCTAssertEqual(acceptedNormalizationAssumptions(in: result).first?.streamID, inlet.id)
         assertComposition(
             result.streamContributions.first?.input.normalizedComposition ?? [],
             matches: normalized,
@@ -642,6 +641,7 @@ final class StreamMixingTests: XCTestCase {
 
         XCTAssertEqual(result.status, .blocked)
         XCTAssertTrue(result.validationIssues.contains { $0.code == .invalidNormalization })
+        XCTAssertTrue(acceptedNormalizationAssumptions(in: result).isEmpty)
     }
 
     func testNormalizationFlagOnAlreadyValidCompositionIsRejected() {
@@ -665,6 +665,161 @@ final class StreamMixingTests: XCTestCase {
 
         XCTAssertEqual(result.status, .blocked)
         XCTAssertTrue(result.validationIssues.contains { $0.code == .invalidNormalization })
+        XCTAssertTrue(acceptedNormalizationAssumptions(in: result).isEmpty)
+    }
+
+    func testDuplicateCanonicalCompositionIsBlockedWithoutCrashing() {
+        let inlet = streamFromOriginal(
+            name: "Duplicate canonical",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 1, unit: .moleFraction)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.5),
+                .init(component: .carbonDioxide, moleFraction: 0.5)
+            ]
+        )
+        let mixRequest = request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ])
+
+        let validation = engine.validate(mixRequest)
+        let result = engine.mix(mixRequest)
+
+        XCTAssertTrue(validation.issues.contains {
+            $0.code == .invalidComposition && $0.streamID == inlet.id
+        })
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains {
+            $0.code == .invalidComposition && $0.streamID == inlet.id
+        })
+    }
+
+    func testDuplicateNormalizedCompositionIsBlockedWithoutCrashing() {
+        let normalized = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.970_5 / 1.000_5),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.03 / 1.000_5)
+        ]
+        let inlet = streamFromOriginal(
+            name: "Duplicate normalized",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 97.05, unit: .molePercent),
+                .init(component: .nitrogen, value: 3.0, unit: .molePercent)
+            ],
+            composition: normalized,
+            normalizedComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.5),
+                .init(component: .carbonDioxide, moleFraction: 0.5)
+            ]
+        )
+        let mixRequest = request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ])
+
+        let validation = engine.validate(mixRequest)
+        let result = engine.mix(mixRequest)
+
+        XCTAssertTrue(validation.issues.contains {
+            $0.code == .invalidNormalization && $0.streamID == inlet.id
+        })
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains {
+            $0.code == .invalidNormalization && $0.streamID == inlet.id
+        })
+        XCTAssertTrue(acceptedNormalizationAssumptions(in: result).isEmpty)
+    }
+
+    func testDuplicateOriginalEntriesRemainBlockedWithoutCrashing() {
+        let inlet = streamFromOriginal(
+            name: "Duplicate original",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 0.5, unit: .moleFraction),
+                .init(component: .carbonDioxide, value: 0.5, unit: .moleFraction)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 1)
+            ]
+        )
+        let mixRequest = request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ])
+
+        let validation = engine.validate(mixRequest)
+        let result = engine.mix(mixRequest)
+
+        XCTAssertTrue(validation.issues.contains {
+            $0.code == .invalidComposition && $0.streamID == inlet.id
+        })
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains {
+            $0.code == .invalidComposition && $0.streamID == inlet.id
+        })
+    }
+
+    func testDuplicateNormalizedCompositionDoesNotRecordAcceptedNormalizationAssumption() {
+        let inlet = streamFromOriginal(
+            name: "Duplicate normalized assumption",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 97.05, unit: .molePercent),
+                .init(component: .nitrogen, value: 3.0, unit: .molePercent)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.970_5 / 1.000_5),
+                .init(component: .nitrogen, moleFraction: 0.03 / 1.000_5)
+            ],
+            normalizedComposition: [
+                .init(component: .nitrogen, moleFraction: 0.03 / 1.000_5),
+                .init(component: .nitrogen, moleFraction: 0.970_5 / 1.000_5)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains { $0.code == .invalidNormalization })
+        XCTAssertTrue(acceptedNormalizationAssumptions(in: result).isEmpty)
+    }
+
+    func testTwoAcceptedNormalizedStreamsRecordTwoStreamSpecificAssumptions() {
+        let firstID = UUID(uuidString: "00000000-0000-0000-0000-000000000201")!
+        let secondID = UUID(uuidString: "00000000-0000-0000-0000-000000000202")!
+        let firstNormalized = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.970_5 / 1.000_5),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.03 / 1.000_5)
+        ]
+        let result = engine.mix(request([
+            streamFromOriginal(
+                id: firstID,
+                name: "First normalized",
+                originalComposition: [
+                    .init(component: .carbonDioxide, value: 97.05, unit: .molePercent),
+                    .init(component: .nitrogen, value: 3.0, unit: .molePercent)
+                ],
+                composition: firstNormalized,
+                normalizedComposition: firstNormalized
+            ),
+            streamFromOriginal(
+                id: secondID,
+                name: "Second normalized",
+                flowValue: 2,
+                originalComposition: [
+                    .init(component: .carbonDioxide, value: 97.05, unit: .molePercent),
+                    .init(component: .nitrogen, value: 3.0, unit: .molePercent)
+                ],
+                composition: firstNormalized,
+                normalizedComposition: firstNormalized
+            )
+        ]))
+
+        let normalizationAssumptions = acceptedNormalizationAssumptions(in: result)
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertEqual(normalizationAssumptions.count, 2)
+        XCTAssertEqual(Set(normalizationAssumptions.compactMap(\.streamID)), [firstID, secondID])
     }
 
     func testInvalidCompositionIsRejectedWithoutSilentNormalization() {
@@ -692,24 +847,24 @@ final class StreamMixingTests: XCTestCase {
         let streams = [
             stream(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000101")!,
-                name: "Large",
-                flowValue: 1e12,
+                name: "Small A",
+                flowValue: 1,
                 flowUnit: .molesPerSecond,
-                composition: [.carbonDioxide: 0.999_999_999, .nitrogen: 1e-9]
+                composition: [.carbonDioxide: 0.95, .nitrogen: 0.05]
             ),
             stream(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000102")!,
-                name: "Small",
-                flowValue: 1e-6,
+                name: "Small B",
+                flowValue: 1,
                 flowUnit: .molesPerSecond,
                 composition: [.carbonDioxide: 0.98, .oxygen: 0.02]
             ),
             stream(
                 id: UUID(uuidString: "00000000-0000-0000-0000-000000000103")!,
-                name: "Medium",
-                flowValue: 1e3,
+                name: "Large",
+                flowValue: 1e16,
                 flowUnit: .molesPerSecond,
-                composition: [.carbonDioxide: 0.95, .argon: 0.05]
+                composition: [.carbonDioxide: 0.999_999_999_999, .argon: 1e-12]
             )
         ]
         let reference = engine.mix(request(streams))
@@ -717,8 +872,11 @@ final class StreamMixingTests: XCTestCase {
         for permutation in permutations(of: streams) {
             let result = engine.mix(request(permutation))
             XCTAssertEqual(result.status, .calculated)
+            XCTAssertEqual(result.totalMolarFlowMolesPerSecond, reference.totalMolarFlowMolesPerSecond)
+            XCTAssertEqual(result.totalMassFlowKilogramsPerSecond, reference.totalMassFlowKilogramsPerSecond)
             XCTAssertEqual(result.componentMolarFlows, reference.componentMolarFlows)
             XCTAssertEqual(result.composition, reference.composition)
+            XCTAssertEqual(result.conservation, reference.conservation)
         }
     }
 
@@ -1007,6 +1165,12 @@ final class StreamMixingTests: XCTestCase {
         result.componentMolarFlows.first {
             $0.component == component
         }?.molarFlowMolesPerSecond ?? 0
+    }
+
+    private func acceptedNormalizationAssumptions(
+        in result: MixedCompositionResult
+    ) -> [StreamMixingAssumption] {
+        result.assumptions.filter { $0.code == .explicitCompositionNormalization }
     }
 
     private func assertComposition(
