@@ -148,6 +148,33 @@ public struct InletStreamInput: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
+public enum StreamCompositionConversionStatus: String, Codable, Equatable, Sendable {
+    case valid
+    case normalizationAccepted
+}
+
+public struct StreamCompositionProvenance: Codable, Equatable, Sendable {
+    public let originalComposition: [CompositionInputSnapshot]
+    public let convertedComposition: [MixtureComponent]
+    public let normalizedComposition: [MixtureComponent]?
+    public let canonicalComposition: [MixtureComponent]
+    public let status: StreamCompositionConversionStatus
+
+    public init(
+        originalComposition: [CompositionInputSnapshot],
+        convertedComposition: [MixtureComponent],
+        normalizedComposition: [MixtureComponent]?,
+        canonicalComposition: [MixtureComponent],
+        status: StreamCompositionConversionStatus
+    ) {
+        self.originalComposition = originalComposition
+        self.convertedComposition = convertedComposition
+        self.normalizedComposition = normalizedComposition
+        self.canonicalComposition = canonicalComposition
+        self.status = status
+    }
+}
+
 public struct OriginalStreamInputSnapshot: Codable, Equatable, Sendable {
     public let streamID: UUID
     public let name: String
@@ -161,9 +188,12 @@ public struct OriginalStreamInputSnapshot: Codable, Equatable, Sendable {
     public let temperatureUnit: TemperatureUnit
     public let temperatureK: Double
     public let originalComposition: [CompositionInputSnapshot]
+    public let convertedComposition: [MixtureComponent]
     public let normalizedComposition: [MixtureComponent]?
+    public let canonicalComposition: [MixtureComponent]
+    public let compositionStatus: StreamCompositionConversionStatus
 
-    public init(stream: InletStreamInput) {
+    public init(stream: InletStreamInput, compositionProvenance: StreamCompositionProvenance) {
         self.streamID = stream.id
         self.name = stream.name
         self.flowValue = stream.flowValue
@@ -176,7 +206,10 @@ public struct OriginalStreamInputSnapshot: Codable, Equatable, Sendable {
         self.temperatureUnit = stream.temperatureUnit
         self.temperatureK = stream.temperatureK
         self.originalComposition = stream.originalComposition
-        self.normalizedComposition = stream.normalizedComposition
+        self.convertedComposition = compositionProvenance.convertedComposition
+        self.normalizedComposition = compositionProvenance.normalizedComposition
+        self.canonicalComposition = compositionProvenance.canonicalComposition
+        self.compositionStatus = compositionProvenance.status
     }
 }
 
@@ -227,7 +260,10 @@ public enum StreamMixingValidationCode: String, Codable, Equatable, Sendable {
     case invalidPressure
     case invalidTemperature
     case invalidComposition
+    case inconsistentCompositionBasis
+    case compositionProvenanceMismatch
     case normalizationRequired
+    case invalidNormalization
     case missingMolarMass
     case invalidTotalMolarFlow
     case nonFiniteResult
@@ -360,27 +396,118 @@ public struct StreamMixingStreamContribution: Codable, Equatable, Sendable, Iden
 }
 
 public struct StreamMixingConservationCheck: Codable, Equatable, Sendable {
-    public let tolerance: Double
+    public let molarFlowAbsoluteTolerance: Double
+    public let molarFlowRelativeTolerance: Double
+    public let massFlowAbsoluteTolerance: Double
+    public let massFlowRelativeTolerance: Double
+    public let componentMolarFlowAbsoluteTolerance: Double
+    public let componentMolarFlowRelativeTolerance: Double
     public let totalMolarFlowResidual: Double
+    public let totalMolarFlowRelativeResidual: Double
     public let maximumComponentMolarFlowResidual: Double
+    public let maximumComponentMolarFlowRelativeResidual: Double
     public let totalMassFlowResidual: Double
+    public let totalMassFlowRelativeResidual: Double
+    public let maximumMassBasisInletMassFlowResidual: Double
+    public let maximumMassBasisInletMassFlowRelativeResidual: Double
 
     public var isConserved: Bool {
-        abs(totalMolarFlowResidual) <= tolerance
-            && abs(maximumComponentMolarFlowResidual) <= tolerance
-            && abs(totalMassFlowResidual) <= tolerance
+        residualIsWithinTolerance(
+            absolute: totalMolarFlowResidual,
+            relative: totalMolarFlowRelativeResidual,
+            absoluteTolerance: molarFlowAbsoluteTolerance,
+            relativeTolerance: molarFlowRelativeTolerance
+        )
+            && residualIsWithinTolerance(
+                absolute: maximumComponentMolarFlowResidual,
+                relative: maximumComponentMolarFlowRelativeResidual,
+                absoluteTolerance: componentMolarFlowAbsoluteTolerance,
+                relativeTolerance: componentMolarFlowRelativeTolerance
+            )
+            && residualIsWithinTolerance(
+                absolute: totalMassFlowResidual,
+                relative: totalMassFlowRelativeResidual,
+                absoluteTolerance: massFlowAbsoluteTolerance,
+                relativeTolerance: massFlowRelativeTolerance
+            )
+            && residualIsWithinTolerance(
+                absolute: maximumMassBasisInletMassFlowResidual,
+                relative: maximumMassBasisInletMassFlowRelativeResidual,
+                absoluteTolerance: massFlowAbsoluteTolerance,
+                relativeTolerance: massFlowRelativeTolerance
+            )
     }
 
     public init(
-        tolerance: Double,
+        molarFlowAbsoluteTolerance: Double,
+        molarFlowRelativeTolerance: Double,
+        massFlowAbsoluteTolerance: Double,
+        massFlowRelativeTolerance: Double,
+        componentMolarFlowAbsoluteTolerance: Double,
+        componentMolarFlowRelativeTolerance: Double,
         totalMolarFlowResidual: Double,
+        totalMolarFlowRelativeResidual: Double,
         maximumComponentMolarFlowResidual: Double,
-        totalMassFlowResidual: Double
+        maximumComponentMolarFlowRelativeResidual: Double,
+        totalMassFlowResidual: Double,
+        totalMassFlowRelativeResidual: Double,
+        maximumMassBasisInletMassFlowResidual: Double,
+        maximumMassBasisInletMassFlowRelativeResidual: Double
     ) {
-        self.tolerance = tolerance
+        self.molarFlowAbsoluteTolerance = molarFlowAbsoluteTolerance
+        self.molarFlowRelativeTolerance = molarFlowRelativeTolerance
+        self.massFlowAbsoluteTolerance = massFlowAbsoluteTolerance
+        self.massFlowRelativeTolerance = massFlowRelativeTolerance
+        self.componentMolarFlowAbsoluteTolerance = componentMolarFlowAbsoluteTolerance
+        self.componentMolarFlowRelativeTolerance = componentMolarFlowRelativeTolerance
         self.totalMolarFlowResidual = totalMolarFlowResidual
+        self.totalMolarFlowRelativeResidual = totalMolarFlowRelativeResidual
         self.maximumComponentMolarFlowResidual = maximumComponentMolarFlowResidual
+        self.maximumComponentMolarFlowRelativeResidual = maximumComponentMolarFlowRelativeResidual
         self.totalMassFlowResidual = totalMassFlowResidual
+        self.totalMassFlowRelativeResidual = totalMassFlowRelativeResidual
+        self.maximumMassBasisInletMassFlowResidual = maximumMassBasisInletMassFlowResidual
+        self.maximumMassBasisInletMassFlowRelativeResidual =
+            maximumMassBasisInletMassFlowRelativeResidual
+    }
+
+    private func residualIsWithinTolerance(
+        absolute: Double,
+        relative: Double,
+        absoluteTolerance: Double,
+        relativeTolerance: Double
+    ) -> Bool {
+        absolute.isFinite
+            && relative.isFinite
+            && (
+                abs(absolute) <= absoluteTolerance
+                    || abs(relative) <= relativeTolerance
+            )
+    }
+}
+
+public struct StreamMixingTolerances: Codable, Equatable, Sendable {
+    public let molarFlowAbsoluteTolerance: Double
+    public let molarFlowRelativeTolerance: Double
+    public let massFlowAbsoluteTolerance: Double
+    public let massFlowRelativeTolerance: Double
+    public let componentMolarFlowAbsoluteTolerance: Double
+    public let componentMolarFlowRelativeTolerance: Double
+
+    public init(
+        molarFlowAbsoluteTolerance: Double = 1e-12,
+        molarFlowRelativeTolerance: Double = 1e-12,
+        massFlowAbsoluteTolerance: Double = 1e-12,
+        massFlowRelativeTolerance: Double = 1e-12,
+        componentMolarFlowAbsoluteTolerance: Double = 1e-13,
+        componentMolarFlowRelativeTolerance: Double = 1e-12
+    ) {
+        self.molarFlowAbsoluteTolerance = molarFlowAbsoluteTolerance
+        self.molarFlowRelativeTolerance = molarFlowRelativeTolerance
+        self.massFlowAbsoluteTolerance = massFlowAbsoluteTolerance
+        self.massFlowRelativeTolerance = massFlowRelativeTolerance
+        self.componentMolarFlowAbsoluteTolerance = componentMolarFlowAbsoluteTolerance
+        self.componentMolarFlowRelativeTolerance = componentMolarFlowRelativeTolerance
     }
 }
 
@@ -437,21 +564,28 @@ public struct MixedCompositionResult: Codable, Equatable, Sendable, Identifiable
 }
 
 public struct StreamMixingEngine: Sendable {
-    public static let conservationTolerance = 1e-9
     public static let pressureComparisonTolerancePa = 1.0
 
     private let validator: CalculationValidator
     private let domain: ScientificDomain
     private let supportedComponents: Set<ComponentID>
+    private let tolerances: StreamMixingTolerances
+
+    private struct CompositionConversionOutcome {
+        let provenance: StreamCompositionProvenance?
+        let issues: [StreamMixingValidationIssue]
+    }
 
     public init(
         validator: CalculationValidator = CalculationValidator(),
         domain: ScientificDomain = .initialCO2Transport,
-        supportedComponents: Set<ComponentID> = Set(ComponentID.allCases)
+        supportedComponents: Set<ComponentID> = Set(ComponentID.allCases),
+        tolerances: StreamMixingTolerances = StreamMixingTolerances()
     ) {
         self.validator = validator
         self.domain = domain
         self.supportedComponents = supportedComponents
+        self.tolerances = tolerances
     }
 
     public func validate(_ request: StreamMixingRequest) -> StreamMixingValidationReport {
@@ -472,11 +606,26 @@ public struct StreamMixingEngine: Sendable {
         }
 
         var streamContributions: [StreamMixingStreamContribution] = []
-        var componentTotals: [ComponentID: Double] = [:]
 
         for stream in request.streams {
+            guard let compositionProvenance = compositionProvenance(for: stream).provenance else {
+                return blockedResult(
+                    request: request,
+                    warnings: warnings,
+                    assumptions: assumptions,
+                    issues: [issue(
+                        .invalidComposition,
+                        field: .composition,
+                        stream: stream,
+                        message: "Stream composition provenance could not be converted."
+                    )]
+                )
+            }
             guard
-                let molarFlow = molarFlowMolesPerSecond(for: stream),
+                let molarFlow = molarFlowMolesPerSecond(
+                    for: stream,
+                    composition: compositionProvenance.canonicalComposition
+                ),
                 molarFlow.isFinite,
                 molarFlow > 0
             else {
@@ -492,7 +641,7 @@ public struct StreamMixingEngine: Sendable {
             }
 
             let componentFlows = componentFlowValues(
-                composition: stream.composition,
+                composition: compositionProvenance.canonicalComposition,
                 totalMolarFlow: molarFlow
             )
             let massFlow = componentFlows.reduce(0) { $0 + $1.massFlowKilogramsPerSecond }
@@ -515,15 +664,13 @@ public struct StreamMixingEngine: Sendable {
                 )
             }
 
-            for componentFlow in componentFlows {
-                componentTotals[componentFlow.component, default: 0] +=
-                    componentFlow.molarFlowMolesPerSecond
-            }
-
             streamContributions.append(StreamMixingStreamContribution(
                 streamID: stream.id,
                 streamName: stream.name,
-                input: OriginalStreamInputSnapshot(stream: stream),
+                input: OriginalStreamInputSnapshot(
+                    stream: stream,
+                    compositionProvenance: compositionProvenance
+                ),
                 massFlowKilogramsPerSecond: massFlow,
                 molarFlowMolesPerSecond: molarFlow,
                 componentMolarFlows: componentFlows
@@ -546,7 +693,7 @@ public struct StreamMixingEngine: Sendable {
             )
         }
 
-        let componentMolarFlows = orderedComponentFlows(componentTotals)
+        let componentMolarFlows = orderedComponentFlows(from: streamContributions)
         let totalMassFlow = componentMolarFlows.reduce(0) {
             $0 + $1.massFlowKilogramsPerSecond
         }
@@ -713,32 +860,27 @@ public struct StreamMixingEngine: Sendable {
             ))
         }
 
-        let report = validator.validate(
-            pressurePa: stream.pressurePa,
-            temperatureK: stream.temperatureK,
-            composition: stream.composition,
-            supportedComponents: supportedComponents,
-            domain: domain
-        )
-        for validationIssue in report.issues {
-            issues.append(issue(
-                validationIssue.code == .normalizationAvailable
-                    ? .normalizationRequired
-                    : .invalidComposition,
-                field: .composition,
-                stream: stream,
-                message: validationIssue.message
-            ))
+        let conversion = compositionProvenance(for: stream)
+        issues.append(contentsOf: conversion.issues)
+        if let provenance = conversion.provenance {
+            let report = validator.validate(
+                pressurePa: stream.pressurePa,
+                temperatureK: stream.temperatureK,
+                composition: provenance.canonicalComposition,
+                supportedComponents: supportedComponents,
+                domain: domain
+            )
+            for validationIssue in report.issues {
+                issues.append(issue(
+                    validationIssue.code == .normalizationAvailable
+                        ? .normalizationRequired
+                        : .invalidComposition,
+                    field: .composition,
+                    stream: stream,
+                    message: validationIssue.message
+                ))
+            }
         }
-        if let normalized = stream.normalizedComposition, normalized != stream.composition {
-            issues.append(issue(
-                .invalidComposition,
-                field: .composition,
-                stream: stream,
-                message: "Recorded normalized composition must match the canonical stream composition."
-            ))
-        }
-        issues.append(contentsOf: missingMolarMassIssues(for: stream))
         return issues
     }
 
@@ -769,41 +911,320 @@ public struct StreamMixingEngine: Sendable {
         return issues
     }
 
-    private func missingMolarMassIssues(
+    private func compositionProvenance(
         for stream: InletStreamInput
-    ) -> [StreamMixingValidationIssue] {
-        var missing = Set<ComponentID>()
-        for component in stream.composition
-            where component.moleFraction > 0
-                && component.component.molarMassKilogramsPerMole == nil
-        {
-            missing.insert(component.component)
-        }
-        for entry in stream.originalComposition
-            where entry.unit == .massFraction
-                && entry.value > 0
-                && entry.component.molarMassKilogramsPerMole == nil
-        {
-            missing.insert(entry.component)
-        }
-        return missing.sorted { $0.rawValue < $1.rawValue }.map { component in
-            issue(
-                .missingMolarMass,
-                field: .molarMass,
-                stream: stream,
-                message: "No reviewed molar mass is configured for \(component.symbol)."
+    ) -> CompositionConversionOutcome {
+        var issues: [StreamMixingValidationIssue] = []
+        let original = stream.originalComposition
+
+        guard !original.isEmpty else {
+            return CompositionConversionOutcome(
+                provenance: nil,
+                issues: [issue(
+                    .invalidComposition,
+                    field: .composition,
+                    stream: stream,
+                    message: "Composition cannot be empty."
+                )]
             )
+        }
+
+        let units = Set(original.map(\.unit))
+        guard units.count == 1, let unit = units.first else {
+            return CompositionConversionOutcome(
+                provenance: nil,
+                issues: [issue(
+                    .inconsistentCompositionBasis,
+                    field: .composition,
+                    stream: stream,
+                    message: "Every component in one stream must use the same composition basis."
+                )]
+            )
+        }
+
+        if original.contains(where: { !$0.value.isFinite }) {
+            issues.append(issue(
+                .invalidComposition,
+                field: .composition,
+                stream: stream,
+                message: "Composition values must be finite."
+            ))
+        }
+        if original.contains(where: { $0.value < 0 }) {
+            issues.append(issue(
+                .invalidComposition,
+                field: .composition,
+                stream: stream,
+                message: "Composition values cannot be negative."
+            ))
+        }
+        let grouped = Dictionary(grouping: original, by: \.component)
+        if grouped.values.contains(where: { $0.count > 1 }) {
+            issues.append(issue(
+                .invalidComposition,
+                field: .composition,
+                stream: stream,
+                message: "Each component may appear only once."
+            ))
+        }
+        if unit == .massFraction {
+            let missing = original
+                .filter {
+                    $0.value > 0
+                        && $0.component.molarMassKilogramsPerMole == nil
+                }
+                .map(\.component)
+                .sorted { $0.rawValue < $1.rawValue }
+            issues.append(contentsOf: missing.map { component in
+                issue(
+                    .missingMolarMass,
+                    field: .molarMass,
+                    stream: stream,
+                    message: "No reviewed molar mass is configured for \(component.symbol)."
+                )
+            })
+        }
+        guard issues.isEmpty else {
+            return CompositionConversionOutcome(provenance: nil, issues: issues)
+        }
+
+        guard let converted = convertedComposition(from: original, unit: unit) else {
+            return CompositionConversionOutcome(
+                provenance: nil,
+                issues: [issue(
+                    .invalidComposition,
+                    field: .composition,
+                    stream: stream,
+                    message: "Composition could not be converted to mole fractions."
+                )]
+            )
+        }
+        let missingConvertedMasses = converted
+            .filter {
+                $0.moleFraction > 0
+                    && $0.component.molarMassKilogramsPerMole == nil
+            }
+            .map(\.component)
+            .sorted { $0.rawValue < $1.rawValue }
+        if !missingConvertedMasses.isEmpty {
+            return CompositionConversionOutcome(
+                provenance: nil,
+                issues: missingConvertedMasses.map { component in
+                    issue(
+                        .missingMolarMass,
+                        field: .molarMass,
+                        stream: stream,
+                        message: "No reviewed molar mass is configured for \(component.symbol)."
+                    )
+                }
+            )
+        }
+
+        let scale = compositionScale(for: unit)
+        let total = original.reduce(0) { $0 + $1.value }
+        let fractionalDeviation = abs(total / scale - 1)
+        if fractionalDeviation > CalculationValidator.normalizationTolerance || total <= 0 {
+            return CompositionConversionOutcome(
+                provenance: nil,
+                issues: [issue(
+                    .invalidComposition,
+                    field: .composition,
+                    stream: stream,
+                    message: "Composition must total 100 mol% within ±0.01 mol%."
+                )]
+            )
+        }
+
+        let convertedValidation = validator.validate(
+            pressurePa: stream.pressurePa,
+            temperatureK: stream.temperatureK,
+            composition: converted,
+            supportedComponents: supportedComponents,
+            domain: domain
+        )
+        let normalizedProposal: [MixtureComponent]?
+        if fractionalDeviation > CalculationValidator.compositionTolerance {
+            normalizedProposal = normalizedComposition(from: original, unit: unit)
+        } else {
+            normalizedProposal = convertedValidation.normalizedComposition
+        }
+
+        let canonical: [MixtureComponent]
+        let status: StreamCompositionConversionStatus
+        if let normalizedProposal {
+            guard stream.normalizedComposition != nil else {
+                return CompositionConversionOutcome(
+                    provenance: nil,
+                    issues: [issue(
+                        .normalizationRequired,
+                        field: .composition,
+                        stream: stream,
+                        message: "Composition requires explicit normalization before stream mixing."
+                    )]
+                )
+            }
+            guard compositionsMatch(stream.normalizedComposition ?? [], normalizedProposal) else {
+                return CompositionConversionOutcome(
+                    provenance: nil,
+                    issues: [issue(
+                        .invalidNormalization,
+                        field: .composition,
+                        stream: stream,
+                        message: "Recorded normalized composition does not match the explicit normalization available from the original entries."
+                    )]
+                )
+            }
+            guard compositionsMatch(stream.composition, normalizedProposal) else {
+                return CompositionConversionOutcome(
+                    provenance: nil,
+                    issues: [issue(
+                        .compositionProvenanceMismatch,
+                        field: .composition,
+                        stream: stream,
+                        message: "Canonical composition does not match the recorded normalized composition."
+                    )]
+                )
+            }
+            canonical = normalizedProposal
+            status = .normalizationAccepted
+        } else {
+            if stream.normalizedComposition != nil {
+                return CompositionConversionOutcome(
+                    provenance: nil,
+                    issues: [issue(
+                        .invalidNormalization,
+                        field: .composition,
+                        stream: stream,
+                        message: "Normalization was recorded for a composition already valid as entered."
+                    )]
+                )
+            }
+            guard compositionsMatch(stream.composition, converted) else {
+                return CompositionConversionOutcome(
+                    provenance: nil,
+                    issues: [issue(
+                        .compositionProvenanceMismatch,
+                        field: .composition,
+                        stream: stream,
+                        message: "Canonical composition does not match the original entered composition."
+                    )]
+                )
+            }
+            canonical = converted
+            status = .valid
+        }
+
+        return CompositionConversionOutcome(
+            provenance: StreamCompositionProvenance(
+                originalComposition: original,
+                convertedComposition: converted,
+                normalizedComposition: status == .normalizationAccepted ? canonical : nil,
+                canonicalComposition: canonical,
+                status: status
+            ),
+            issues: []
+        )
+    }
+
+    private func convertedComposition(
+        from original: [CompositionInputSnapshot],
+        unit: CompositionUnit
+    ) -> [MixtureComponent]? {
+        switch unit {
+        case .moleFraction, .molePercent, .partsPerMillion:
+            let scale = compositionScale(for: unit)
+            return original
+                .map {
+                    MixtureComponent(
+                        component: $0.component,
+                        moleFraction: $0.value / scale
+                    )
+                }
+                .sorted { $0.component.rawValue < $1.component.rawValue }
+        case .massFraction:
+            return moleFractionsFromMassFractions(original)
         }
     }
 
-    private func molarFlowMolesPerSecond(for stream: InletStreamInput) -> Double? {
+    private func normalizedComposition(
+        from original: [CompositionInputSnapshot],
+        unit: CompositionUnit
+    ) -> [MixtureComponent]? {
+        let total = original.reduce(0) { $0 + $1.value }
+        guard total.isFinite, total > 0 else { return nil }
+        let normalizedOriginal = original.map {
+            CompositionInputSnapshot(
+                component: $0.component,
+                value: $0.value / total * compositionScale(for: unit),
+                unit: $0.unit
+            )
+        }
+        return convertedComposition(from: normalizedOriginal, unit: unit)
+    }
+
+    private func moleFractionsFromMassFractions(
+        _ original: [CompositionInputSnapshot]
+    ) -> [MixtureComponent]? {
+        var moleAmounts: [(component: ComponentID, amount: Double)] = []
+        for entry in original {
+            guard let molarMass = entry.component.molarMassKilogramsPerMole,
+                  molarMass.isFinite,
+                  molarMass > 0
+            else { return nil }
+            moleAmounts.append((entry.component, entry.value / molarMass))
+        }
+        let total = moleAmounts.reduce(0) { $0 + $1.amount }
+        guard total.isFinite, total > 0 else { return nil }
+        return moleAmounts
+            .map {
+                MixtureComponent(
+                    component: $0.component,
+                    moleFraction: $0.amount / total
+                )
+            }
+            .sorted { $0.component.rawValue < $1.component.rawValue }
+    }
+
+    private func compositionScale(for unit: CompositionUnit) -> Double {
+        switch unit {
+        case .moleFraction, .massFraction:
+            1
+        case .molePercent:
+            100
+        case .partsPerMillion:
+            1_000_000
+        }
+    }
+
+    private func compositionsMatch(
+        _ lhs: [MixtureComponent],
+        _ rhs: [MixtureComponent],
+        tolerance: Double = 1e-12
+    ) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let left = Dictionary(uniqueKeysWithValues: lhs.map { ($0.component, $0.moleFraction) })
+        let right = Dictionary(uniqueKeysWithValues: rhs.map { ($0.component, $0.moleFraction) })
+        guard Set(left.keys) == Set(right.keys) else { return false }
+        return left.allSatisfy { component, value in
+            guard let other = right[component],
+                  value.isFinite,
+                  other.isFinite
+            else { return false }
+            return abs(value - other) <= tolerance
+        }
+    }
+
+    private func molarFlowMolesPerSecond(
+        for stream: InletStreamInput,
+        composition: [MixtureComponent]
+    ) -> Double? {
         switch stream.flowBasis {
         case .molar:
             return stream.flowUnit.molesPerSecond(from: stream.flowValue)
         case .mass:
             guard
                 let massFlow = stream.flowUnit.kilogramsPerSecond(from: stream.flowValue),
-                let molarMass = mixtureMolarMassKilogramsPerMole(stream.composition),
+                let molarMass = mixtureMolarMassKilogramsPerMole(composition),
                 molarMass > 0
             else { return nil }
             return massFlow / molarMass
@@ -829,19 +1250,117 @@ public struct StreamMixingEngine: Sendable {
     }
 
     private func orderedComponentFlows(
-        _ totals: [ComponentID: Double]
+        from contributions: [StreamMixingStreamContribution]
     ) -> [StreamMixingComponentMolarFlow] {
-        totals
-            .filter { $0.value > 0 }
-            .sorted { $0.key.rawValue < $1.key.rawValue }
-            .map { component, molarFlow in
-                StreamMixingComponentMolarFlow(
-                    component: component,
-                    molarFlowMolesPerSecond: molarFlow,
-                    massFlowKilogramsPerSecond: molarFlow
-                        * (component.molarMassKilogramsPerMole ?? .nan)
-                )
+        ComponentID.allCases.compactMap { component in
+            let molarFlow = contributions
+                .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+                .compactMap { contribution in
+                    contribution.componentMolarFlows.first {
+                        $0.component == component
+                    }?.molarFlowMolesPerSecond
+                }
+                .reduce(0, +)
+            guard molarFlow > 0 else { return nil }
+            return StreamMixingComponentMolarFlow(
+                component: component,
+                molarFlowMolesPerSecond: molarFlow,
+                massFlowKilogramsPerSecond: molarFlow
+                    * (component.molarMassKilogramsPerMole ?? .nan)
+            )
+        }
+    }
+
+    public func conservationCheck(
+        componentMolarFlows: [StreamMixingComponentMolarFlow],
+        streamContributions: [StreamMixingStreamContribution],
+        totalMolarFlow: Double,
+        totalMassFlow: Double
+    ) -> StreamMixingConservationCheck {
+        let summedStreamMolarFlow = streamContributions
+            .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+            .reduce(0) { $0 + $1.molarFlowMolesPerSecond }
+        let totalMolarResidual = abs(totalMolarFlow - summedStreamMolarFlow)
+
+        let maximumComponentResidual = componentMolarFlows.reduce(0) { maximum, flow in
+            let inletComponentTotal = streamContributions
+                .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+                .compactMap { contribution in
+                    contribution.componentMolarFlows.first {
+                        $0.component == flow.component
+                    }?.molarFlowMolesPerSecond
+                }
+                .reduce(0, +)
+            return max(maximum, abs(flow.molarFlowMolesPerSecond - inletComponentTotal))
+        }
+        let maximumComponentRelativeResidual = componentMolarFlows.reduce(0) { maximum, flow in
+            let inletComponentTotal = streamContributions
+                .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+                .compactMap { contribution in
+                    contribution.componentMolarFlows.first {
+                        $0.component == flow.component
+                    }?.molarFlowMolesPerSecond
+                }
+                .reduce(0, +)
+            return max(
+                maximum,
+                relativeResidual(flow.molarFlowMolesPerSecond, expected: inletComponentTotal)
+            )
+        }
+
+        let summedStreamMassFlow = streamContributions
+            .sorted { $0.streamID.uuidString < $1.streamID.uuidString }
+            .reduce(0) { $0 + $1.massFlowKilogramsPerSecond }
+        let totalMassResidual = abs(totalMassFlow - summedStreamMassFlow)
+
+        var maximumMassBasisResidual = 0.0
+        var maximumMassBasisRelativeResidual = 0.0
+        for contribution in streamContributions where contribution.input.flowBasis == .mass {
+            guard let enteredMassFlow = contribution.input.flowUnit.kilogramsPerSecond(
+                from: contribution.input.flowValue
+            ) else {
+                maximumMassBasisResidual = .infinity
+                maximumMassBasisRelativeResidual = .infinity
+                continue
             }
+            let residual = abs(contribution.massFlowKilogramsPerSecond - enteredMassFlow)
+            maximumMassBasisResidual = max(maximumMassBasisResidual, residual)
+            maximumMassBasisRelativeResidual = max(
+                maximumMassBasisRelativeResidual,
+                relativeResidual(contribution.massFlowKilogramsPerSecond, expected: enteredMassFlow)
+            )
+        }
+
+        return StreamMixingConservationCheck(
+            molarFlowAbsoluteTolerance: tolerances.molarFlowAbsoluteTolerance,
+            molarFlowRelativeTolerance: tolerances.molarFlowRelativeTolerance,
+            massFlowAbsoluteTolerance: tolerances.massFlowAbsoluteTolerance,
+            massFlowRelativeTolerance: tolerances.massFlowRelativeTolerance,
+            componentMolarFlowAbsoluteTolerance:
+                tolerances.componentMolarFlowAbsoluteTolerance,
+            componentMolarFlowRelativeTolerance:
+                tolerances.componentMolarFlowRelativeTolerance,
+            totalMolarFlowResidual: totalMolarResidual,
+            totalMolarFlowRelativeResidual: relativeResidual(
+                totalMolarFlow,
+                expected: summedStreamMolarFlow
+            ),
+            maximumComponentMolarFlowResidual: maximumComponentResidual,
+            maximumComponentMolarFlowRelativeResidual: maximumComponentRelativeResidual,
+            totalMassFlowResidual: totalMassResidual,
+            totalMassFlowRelativeResidual: relativeResidual(
+                totalMassFlow,
+                expected: summedStreamMassFlow
+            ),
+            maximumMassBasisInletMassFlowResidual: maximumMassBasisResidual,
+            maximumMassBasisInletMassFlowRelativeResidual:
+                maximumMassBasisRelativeResidual
+        )
+    }
+
+    private func relativeResidual(_ actual: Double, expected: Double) -> Double {
+        let denominator = max(abs(actual), abs(expected), Double.leastNonzeroMagnitude)
+        return abs(actual - expected) / denominator
     }
 
     private func mixtureMolarMassKilogramsPerMole(
@@ -865,45 +1384,6 @@ public struct StreamMixingEngine: Sendable {
             molarMass += item.moleFraction * componentMass
         }
         return molarMass.isFinite && molarMass > 0 ? molarMass : nil
-    }
-
-    private func conservationCheck(
-        componentMolarFlows: [StreamMixingComponentMolarFlow],
-        streamContributions: [StreamMixingStreamContribution],
-        totalMolarFlow: Double,
-        totalMassFlow: Double
-    ) -> StreamMixingConservationCheck {
-        let summedStreamMolarFlow = streamContributions.reduce(0) {
-            $0 + $1.molarFlowMolesPerSecond
-        }
-        let componentTotalMolarFlow = componentMolarFlows.reduce(0) {
-            $0 + $1.molarFlowMolesPerSecond
-        }
-        let componentTotalMassFlow = componentMolarFlows.reduce(0) {
-            $0 + $1.massFlowKilogramsPerSecond
-        }
-
-        let streamComponentTotals = streamContributions
-            .flatMap(\.componentMolarFlows)
-            .reduce(into: [ComponentID: Double]()) { result, flow in
-                result[flow.component, default: 0] += flow.molarFlowMolesPerSecond
-            }
-        let maximumComponentResidual = componentMolarFlows.reduce(0) { maximum, flow in
-            max(
-                maximum,
-                abs(flow.molarFlowMolesPerSecond - (streamComponentTotals[flow.component] ?? 0))
-            )
-        }
-
-        return StreamMixingConservationCheck(
-            tolerance: Self.conservationTolerance,
-            totalMolarFlowResidual: max(
-                abs(totalMolarFlow - summedStreamMolarFlow),
-                abs(totalMolarFlow - componentTotalMolarFlow)
-            ),
-            maximumComponentMolarFlowResidual: maximumComponentResidual,
-            totalMassFlowResidual: abs(totalMassFlow - componentTotalMassFlow)
-        )
     }
 
     private func warnings(for streams: [InletStreamInput]) -> [StreamMixingWarning] {
@@ -961,10 +1441,22 @@ public struct StreamMixingEngine: Sendable {
             componentMolarFlows: [],
             streamContributions: [],
             conservation: StreamMixingConservationCheck(
-                tolerance: Self.conservationTolerance,
+                molarFlowAbsoluteTolerance: tolerances.molarFlowAbsoluteTolerance,
+                molarFlowRelativeTolerance: tolerances.molarFlowRelativeTolerance,
+                massFlowAbsoluteTolerance: tolerances.massFlowAbsoluteTolerance,
+                massFlowRelativeTolerance: tolerances.massFlowRelativeTolerance,
+                componentMolarFlowAbsoluteTolerance:
+                    tolerances.componentMolarFlowAbsoluteTolerance,
+                componentMolarFlowRelativeTolerance:
+                    tolerances.componentMolarFlowRelativeTolerance,
                 totalMolarFlowResidual: .infinity,
+                totalMolarFlowRelativeResidual: .infinity,
                 maximumComponentMolarFlowResidual: .infinity,
-                totalMassFlowResidual: .infinity
+                maximumComponentMolarFlowRelativeResidual: .infinity,
+                totalMassFlowResidual: .infinity,
+                totalMassFlowRelativeResidual: .infinity,
+                maximumMassBasisInletMassFlowResidual: .infinity,
+                maximumMassBasisInletMassFlowRelativeResidual: .infinity
             ),
             warnings: warnings,
             assumptions: assumptions,

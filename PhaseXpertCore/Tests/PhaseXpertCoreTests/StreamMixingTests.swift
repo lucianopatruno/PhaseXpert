@@ -263,6 +263,56 @@ final class StreamMixingTests: XCTestCase {
         XCTAssertEqual(result.conservation.totalMassFlowResidual, 0, accuracy: 1e-12)
     }
 
+    func testMassConservationChecksEnteredMassBasisFlows() throws {
+        let co2Mass = try XCTUnwrap(ComponentID.carbonDioxide.molarMassKilogramsPerMole)
+        let nitrogenMass = try XCTUnwrap(ComponentID.nitrogen.molarMassKilogramsPerMole)
+        let mixtureMass = 10 * (0.9 * co2Mass + 0.1 * nitrogenMass)
+        let result = engine.mix(request([
+            stream(
+                name: "Mass basis",
+                flowValue: mixtureMass,
+                flowUnit: .kilogramsPerSecond,
+                composition: [.carbonDioxide: 0.9, .nitrogen: 0.1]
+            ),
+            stream(
+                name: "Molar basis",
+                flowValue: 5,
+                flowUnit: .molesPerSecond,
+                composition: [.carbonDioxide: 1]
+            )
+        ]))
+
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertEqual(
+            result.streamContributions.first?.massFlowKilogramsPerSecond ?? .nan,
+            mixtureMass,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            result.conservation.maximumMassBasisInletMassFlowResidual,
+            0,
+            accuracy: 1e-12
+        )
+        XCTAssertTrue(result.conservation.isConserved)
+    }
+
+    func testDeliberatelyInconsistentMassTotalFailsConservationCheck() {
+        let result = engine.mix(request([
+            stream(name: "A", flowValue: 10, flowUnit: .molesPerSecond),
+            stream(name: "B", flowValue: 5, flowUnit: .molesPerSecond)
+        ]))
+
+        let inconsistent = engine.conservationCheck(
+            componentMolarFlows: result.componentMolarFlows,
+            streamContributions: result.streamContributions,
+            totalMolarFlow: result.totalMolarFlowMolesPerSecond,
+            totalMassFlow: result.totalMassFlowKilogramsPerSecond + 0.001
+        )
+
+        XCTAssertFalse(inconsistent.isConserved)
+        XCTAssertGreaterThan(inconsistent.totalMassFlowResidual, 0)
+    }
+
     func testOriginalValuesAndUnitsArePreservedInProvenance() {
         let inlet = stream(
             name: "Entered",
@@ -288,6 +338,9 @@ final class StreamMixingTests: XCTestCase {
         XCTAssertEqual(contribution?.input.temperatureValue, 77)
         XCTAssertEqual(contribution?.input.temperatureUnit, .fahrenheit)
         XCTAssertEqual(contribution?.input.originalComposition.first?.unit, .molePercent)
+        XCTAssertEqual(contribution?.input.convertedComposition, inlet.composition)
+        XCTAssertEqual(contribution?.input.canonicalComposition, inlet.composition)
+        XCTAssertEqual(contribution?.input.compositionStatus, .valid)
     }
 
     func testUserEnteredOutletPressureAndTemperatureArePreserved() {
@@ -392,10 +445,226 @@ final class StreamMixingTests: XCTestCase {
         XCTAssertTrue(result.assumptions.contains {
             $0.code == .explicitCompositionNormalization && $0.streamID == inlet.id
         })
-        XCTAssertEqual(
-            result.streamContributions.first?.input.normalizedComposition,
-            normalized
+        assertComposition(
+            result.streamContributions.first?.input.normalizedComposition ?? [],
+            matches: normalized,
+            accuracy: 1e-12
         )
+        assertComposition(
+            result.streamContributions.first?.input.convertedComposition ?? [],
+            matches: [
+                .init(component: .carbonDioxide, moleFraction: 0.9705),
+                .init(component: .nitrogen, moleFraction: 0.03)
+            ],
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(result.streamContributions.first?.input.compositionStatus, .normalizationAccepted)
+    }
+
+    func testOriginalMoleFractionConversion() {
+        let inlet = streamFromOriginal(
+            name: "Mole fraction",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 0.97, unit: .moleFraction),
+                .init(component: .nitrogen, value: 0.03, unit: .moleFraction)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.97),
+                .init(component: .nitrogen, moleFraction: 0.03)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertEqual(result.streamContributions.first?.input.convertedComposition, inlet.composition)
+    }
+
+    func testOriginalMolePercentConversion() {
+        let inlet = streamFromOriginal(
+            name: "Mole percent",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 97, unit: .molePercent),
+                .init(component: .nitrogen, value: 3, unit: .molePercent)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.97),
+                .init(component: .nitrogen, moleFraction: 0.03)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertEqual(result.streamContributions.first?.input.convertedComposition, inlet.composition)
+    }
+
+    func testOriginalPPMConversion() {
+        let inlet = streamFromOriginal(
+            name: "PPM",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 950_000, unit: .partsPerMillion),
+                .init(component: .nitrogen, value: 50_000, unit: .partsPerMillion)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertEqual(result.streamContributions.first?.input.convertedComposition, inlet.composition)
+    }
+
+    func testOriginalMassFractionConvertsToMoleFraction() throws {
+        let co2Mass = try XCTUnwrap(ComponentID.carbonDioxide.molarMassKilogramsPerMole)
+        let nitrogenMass = try XCTUnwrap(ComponentID.nitrogen.molarMassKilogramsPerMole)
+        let co2Amount = 0.8 / co2Mass
+        let nitrogenAmount = 0.2 / nitrogenMass
+        let total = co2Amount + nitrogenAmount
+        let expected = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: co2Amount / total),
+            MixtureComponent(component: .nitrogen, moleFraction: nitrogenAmount / total)
+        ]
+        let inlet = streamFromOriginal(
+            name: "Mass fraction",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 0.8, unit: .massFraction),
+                .init(component: .nitrogen, value: 0.2, unit: .massFraction)
+            ],
+            composition: expected
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertEqual(
+            result.streamContributions.first?.input.convertedComposition.first?.moleFraction ?? .nan,
+            expected[0].moleFraction,
+            accuracy: 1e-12
+        )
+    }
+
+    func testMissingMolarMassDuringMassFractionConversionIsRejected() {
+        let inlet = streamFromOriginal(
+            name: "Mass fraction missing",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 0.99, unit: .massFraction),
+                .init(component: .helium, value: 0.01, unit: .massFraction)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.99),
+                .init(component: .helium, moleFraction: 0.01)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains { $0.code == .missingMolarMass })
+    }
+
+    func testOriginalCanonicalCompositionMismatchIsRejected() {
+        let inlet = streamFromOriginal(
+            name: "Mismatch",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 0.9, unit: .moleFraction),
+                .init(component: .nitrogen, value: 0.1, unit: .moleFraction)
+            ],
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains {
+            $0.code == .compositionProvenanceMismatch
+        })
+    }
+
+    func testMixedCompositionBasesWithinOneStreamAreRejected() {
+        let inlet = streamFromOriginal(
+            name: "Mixed basis",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 0.9, unit: .moleFraction),
+                .init(component: .nitrogen, value: 10, unit: .molePercent)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9),
+                .init(component: .nitrogen, moleFraction: 0.1)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains {
+            $0.code == .inconsistentCompositionBasis
+        })
+    }
+
+    func testUnrelatedNormalizedCompositionIsRejected() {
+        let inlet = streamFromOriginal(
+            name: "Bad normalization",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 97.05, unit: .molePercent),
+                .init(component: .nitrogen, value: 3, unit: .molePercent)
+            ],
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.5),
+                .init(component: .nitrogen, moleFraction: 0.5)
+            ],
+            normalizedComposition: [
+                .init(component: .carbonDioxide, moleFraction: 0.5),
+                .init(component: .nitrogen, moleFraction: 0.5)
+            ]
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains { $0.code == .invalidNormalization })
+    }
+
+    func testNormalizationFlagOnAlreadyValidCompositionIsRejected() {
+        let valid = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.97),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.03)
+        ]
+        let inlet = streamFromOriginal(
+            name: "False normalization",
+            originalComposition: [
+                .init(component: .carbonDioxide, value: 97, unit: .molePercent),
+                .init(component: .nitrogen, value: 3, unit: .molePercent)
+            ],
+            composition: valid,
+            normalizedComposition: valid
+        )
+        let result = engine.mix(request([
+            inlet,
+            stream(name: "Other", flowValue: 1, flowUnit: .molesPerSecond)
+        ]))
+
+        XCTAssertEqual(result.status, .blocked)
+        XCTAssertTrue(result.validationIssues.contains { $0.code == .invalidNormalization })
     }
 
     func testInvalidCompositionIsRejectedWithoutSilentNormalization() {
@@ -417,6 +686,61 @@ final class StreamMixingTests: XCTestCase {
             $0.code == .normalizationRequired
         })
         XCTAssertTrue(result.streamContributions.isEmpty)
+    }
+
+    func testStreamOrderIndependenceAcrossNumericallyDifficultPermutations() {
+        let streams = [
+            stream(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000101")!,
+                name: "Large",
+                flowValue: 1e12,
+                flowUnit: .molesPerSecond,
+                composition: [.carbonDioxide: 0.999_999_999, .nitrogen: 1e-9]
+            ),
+            stream(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000102")!,
+                name: "Small",
+                flowValue: 1e-6,
+                flowUnit: .molesPerSecond,
+                composition: [.carbonDioxide: 0.98, .oxygen: 0.02]
+            ),
+            stream(
+                id: UUID(uuidString: "00000000-0000-0000-0000-000000000103")!,
+                name: "Medium",
+                flowValue: 1e3,
+                flowUnit: .molesPerSecond,
+                composition: [.carbonDioxide: 0.95, .argon: 0.05]
+            )
+        ]
+        let reference = engine.mix(request(streams))
+
+        for permutation in permutations(of: streams) {
+            let result = engine.mix(request(permutation))
+            XCTAssertEqual(result.status, .calculated)
+            XCTAssertEqual(result.componentMolarFlows, reference.componentMolarFlows)
+            XCTAssertEqual(result.composition, reference.composition)
+        }
+    }
+
+    func testConservationAtVerySmallAndLargeValidFlowMagnitudes() {
+        let result = engine.mix(request([
+            stream(
+                name: "Tiny",
+                flowValue: 1e-9,
+                flowUnit: .molesPerSecond,
+                composition: [.carbonDioxide: 0.99, .nitrogen: 0.01]
+            ),
+            stream(
+                name: "Huge",
+                flowValue: 1e12,
+                flowUnit: .molesPerSecond,
+                composition: [.carbonDioxide: 0.999, .oxygen: 0.001]
+            )
+        ]))
+
+        XCTAssertEqual(result.status, .calculated)
+        XCTAssertTrue(result.conservation.isConserved)
+        XCTAssertEqual(result.totalMolarFlowMolesPerSecond, 1e12 + 1e-9, accuracy: 1e-3)
     }
 
     func testMissingMolarMassRejectsPositiveFlowComponent() {
@@ -528,6 +852,8 @@ final class StreamMixingTests: XCTestCase {
         XCTAssertEqual(decoded.componentMolarFlows, result.componentMolarFlows)
         XCTAssertEqual(decoded.streamContributions, result.streamContributions)
         XCTAssertEqual(decoded.conservation, result.conservation)
+        XCTAssertEqual(decoded.conservation.molarFlowAbsoluteTolerance, 1e-12)
+        XCTAssertEqual(decoded.streamContributions.first?.input.compositionStatus, .valid)
         XCTAssertEqual(decoded.warnings, result.warnings)
         XCTAssertEqual(decoded.assumptions, result.assumptions)
         XCTAssertEqual(decoded.validationIssues, result.validationIssues)
@@ -627,6 +953,30 @@ final class StreamMixingTests: XCTestCase {
         )
     }
 
+    private func streamFromOriginal(
+        id: UUID = UUID(),
+        name: String,
+        flowValue: Double = 1,
+        flowUnit: StreamFlowUnit = .molesPerSecond,
+        originalComposition: [CompositionInputSnapshot],
+        composition: [MixtureComponent],
+        normalizedComposition: [MixtureComponent]? = nil
+    ) -> InletStreamInput {
+        InletStreamInput(
+            id: id,
+            name: name,
+            flowValue: flowValue,
+            flowUnit: flowUnit,
+            pressureValue: 120,
+            pressureUnit: .bara,
+            temperatureValue: 25,
+            temperatureUnit: .celsius,
+            originalComposition: originalComposition,
+            composition: composition,
+            normalizedComposition: normalizedComposition
+        )
+    }
+
     private func displayValue(
         for moleFraction: Double,
         basis: CompositionUnit
@@ -657,5 +1007,30 @@ final class StreamMixingTests: XCTestCase {
         result.componentMolarFlows.first {
             $0.component == component
         }?.molarFlowMolesPerSecond ?? 0
+    }
+
+    private func assertComposition(
+        _ actual: [MixtureComponent],
+        matches expected: [MixtureComponent],
+        accuracy: Double,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(Set(actual.map(\.component)), Set(expected.map(\.component)), file: file, line: line)
+        for item in expected {
+            let actualValue = actual.first { $0.component == item.component }?.moleFraction
+            XCTAssertEqual(actualValue ?? .nan, item.moleFraction, accuracy: accuracy, file: file, line: line)
+        }
+    }
+
+    private func permutations<T>(of values: [T]) -> [[T]] {
+        guard let first = values.first else { return [[]] }
+        return permutations(of: Array(values.dropFirst())).flatMap { permutation in
+            (0...permutation.count).map { index in
+                var copy = permutation
+                copy.insert(first, at: index)
+                return copy
+            }
+        }
     }
 }
