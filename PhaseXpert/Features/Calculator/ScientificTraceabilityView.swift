@@ -57,16 +57,15 @@ struct ScientificTraceabilityView: View {
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(Array(descriptor.references.enumerated()), id: \.offset) { _, reference in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("\(reference.authors) (\(reference.year))")
-                                        .font(.subheadline.weight(.semibold))
-                                    Text(reference.title)
-                                    if let identifier = reference.doiOrURL {
-                                        Text(identifier)
-                                            .font(.caption)
-                                            .foregroundStyle(Color.ifePrimary)
-                                            .textSelection(.enabled)
+                                if let link = verifiedReferenceURL(reference.doiOrURL) {
+                                    Link(destination: link) {
+                                        referenceLabel(reference, identifier: reference.doiOrURL)
                                     }
+                                    .accessibilityLabel(
+                                        "\(reference.title), opens \(link.absoluteString)"
+                                    )
+                                } else {
+                                    referenceLabel(reference, identifier: reference.doiOrURL)
                                 }
                             }
                         }
@@ -92,11 +91,25 @@ struct ScientificTraceabilityView: View {
                             "Operating point",
                             value: "\(number(record.input.pressureValue)) bar(a), \(number(record.input.temperatureValue)) °C"
                         )
-                        LabeledContent("Composition") {
+                        LabeledContent("Pressure — SI", value: "\(number(record.input.pressurePa)) Pa")
+                        LabeledContent("Temperature — SI", value: "\(number(record.input.temperatureK)) K")
+                        LabeledContent("Original composition") {
                             Text(composition(record))
                                 .multilineTextAlignment(.trailing)
                         }
+                        if let normalized = record.input.normalizedComposition {
+                            LabeledContent("Internal composition") {
+                                Text(normalized.map {
+                                    "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%"
+                                }.joined(separator: ", "))
+                                .multilineTextAlignment(.trailing)
+                            }
+                            LabeledContent("Normalization", value: "Applied and recorded")
+                        } else {
+                            LabeledContent("Normalization", value: "Not applied")
+                        }
                         LabeledContent("Phase", value: record.response.phase.displayName)
+                        LabeledContent("Calculation status", value: record.response.isScientificResult ? "Preliminary scientific result" : "Non-scientific result")
                         LabeledContent(
                             "Converged",
                             value: record.response.solver.converged ? "Yes" : "No"
@@ -111,6 +124,10 @@ struct ScientificTraceabilityView: View {
                                     .foregroundStyle(Color.ifePrimary)
                             }
                         }
+                        LabeledContent(
+                            "Application",
+                            value: "\(record.application.version) (\(record.application.build))"
+                        )
                     } else {
                         Text("No calculation has been completed in this calculator session. Model provenance is shown above.")
                             .foregroundStyle(.secondary)
@@ -143,11 +160,46 @@ struct ScientificTraceabilityView: View {
 
     private func composition(_ record: CalculationRecord) -> String {
         record.input.originalComposition.map {
-            "\($0.component.symbol) \(number($0.value)) mol%"
+            "\($0.component.symbol) \(number($0.value)) \($0.unit.rawValue)"
         }.joined(separator: ", ")
     }
 
     private func number(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0...6)))
+    }
+
+    private func verifiedReferenceURL(_ identifier: String?) -> URL? {
+        guard let identifier, !identifier.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return nil
+        }
+        if let url = URL(string: identifier), url.scheme?.hasPrefix("http") == true {
+            return url
+        }
+        let trimmed = identifier
+            .replacingOccurrences(of: "doi:", with: "", options: .caseInsensitive)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.contains("/") else { return nil }
+        return URL(string: "https://doi.org/\(trimmed)")
+    }
+
+    @ViewBuilder
+    private func referenceLabel(
+        _ reference: SourceReference,
+        identifier: String?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(reference.title)
+                .font(.subheadline.weight(.semibold))
+            Text("\(reference.authors) (\(reference.year))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if let identifier {
+                Label(identifier, systemImage: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(Color.ifePrimary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }

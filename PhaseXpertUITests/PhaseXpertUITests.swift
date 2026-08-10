@@ -38,6 +38,39 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.buttons["OK"].exists)
     }
 
+    func testPressureAndTemperatureValuesReplaceOnFocus() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let pressure = app.textFields["Pressure value"]
+        XCTAssertTrue(pressure.waitForExistence(timeout: 2))
+        pressure.tap()
+        pressure.typeText("42")
+        XCTAssertEqual(pressure.value as? String, "42")
+
+        let temperature = app.textFields["Temperature value"]
+        XCTAssertTrue(temperature.waitForExistence(timeout: 2))
+        temperature.tap()
+        temperature.typeText("-10")
+        XCTAssertEqual(temperature.value as? String, "-10")
+    }
+
+    func testIFEModelIsVisibleUnavailableAndDoesNotEnableCalculation() {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.buttons["model-ife-model"].waitForExistence(timeout: 2))
+        app.buttons["model-ife-model"].tap()
+
+        let runCalculationButton = app.buttons["run-calculation"]
+        for _ in 0..<6 where !runCalculationButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(runCalculationButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(runCalculationButton.isEnabled)
+        XCTAssertTrue(app.buttons["model-coolprop-heos"].exists)
+    }
+
     func testImpurityKeyboardDoneDismissesInPPMAndMolPercentModes() {
         let app = XCUIApplication()
         app.launch()

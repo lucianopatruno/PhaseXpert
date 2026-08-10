@@ -319,6 +319,15 @@ final class PhaseXpertTests: XCTestCase {
                 response: pureResponse
             )
         )
+        let artifacts = try PhaseDiagramImageExporter().writeTemporaryReportFiles(
+            for: pure,
+            response: pureResponse
+        )
+        XCTAssertEqual(Set(artifacts.files.map(\.pathExtension)), ["pdf", "csv"])
+        for file in artifacts.files {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: file.path))
+            try? FileManager.default.removeItem(at: file)
+        }
         XCTAssertThrowsError(
             try PhaseDiagramImageExporter().attachment(
                 for: mixture,
@@ -450,6 +459,65 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testPressureUnitChangePreservesPhysicalSIValue() {
+        let viewModel = CalculatorViewModel()
+        viewModel.pressureText = "150"
+        viewModel.validate()
+
+        viewModel.changePressureDisplayUnit(to: .megapascalAbsolute)
+
+        XCTAssertEqual(Double(viewModel.pressureText) ?? .nan, 15, accuracy: 1e-12)
+        XCTAssertEqual(viewModel.pressureDisplayUnit, .megapascalAbsolute)
+        XCTAssertTrue(viewModel.validationReport.canCalculate)
+    }
+
+    @MainActor
+    func testTemperatureUnitChangePreservesPhysicalSIValue() {
+        let viewModel = CalculatorViewModel()
+        viewModel.temperatureText = "20"
+        viewModel.validate()
+
+        viewModel.changeTemperatureDisplayUnit(to: .kelvin)
+
+        XCTAssertEqual(Double(viewModel.temperatureText) ?? .nan, 293.15, accuracy: 1e-12)
+        XCTAssertEqual(viewModel.temperatureDisplayUnit, .kelvin)
+        XCTAssertTrue(viewModel.validationReport.canCalculate)
+    }
+
+    @MainActor
+    func testInvalidOperatingPointEntryDoesNotCorruptLastValidDisplayUnitConversion() {
+        let viewModel = CalculatorViewModel()
+        viewModel.pressureText = "150"
+        viewModel.temperatureText = "20"
+        viewModel.validate()
+
+        viewModel.pressureText = "not-a-number"
+        viewModel.validate()
+        XCTAssertFalse(viewModel.validationReport.canCalculate)
+
+        viewModel.changePressureDisplayUnit(to: .megapascalAbsolute)
+
+        XCTAssertEqual(Double(viewModel.pressureText) ?? .nan, 15, accuracy: 1e-12)
+        XCTAssertEqual(viewModel.pressureDisplayUnit, .megapascalAbsolute)
+    }
+
+    @MainActor
+    func testMovingImpuritiesKeepsCO2FirstAndPreservesStableIDs() throws {
+        let viewModel = CalculatorViewModel()
+        let firstID = try XCTUnwrap(viewModel.addImpurity())
+        let secondID = try XCTUnwrap(viewModel.addImpurity())
+        viewModel.composition[1].value = "100"
+        viewModel.composition[2].value = "200"
+
+        viewModel.moveImpurities(from: IndexSet(integer: 2), to: 1)
+
+        XCTAssertEqual(viewModel.composition.first?.component, .carbonDioxide)
+        XCTAssertEqual(viewModel.composition.map(\.id).dropFirst(), [secondID, firstID])
+        XCTAssertEqual(viewModel.composition[1].value, "200")
+        XCTAssertEqual(viewModel.composition[2].value, "100")
+    }
+
+    @MainActor
     func testEngineeringFormatterConvertsDisplayUnitsWithoutChangingSIValue() {
         let enthalpy = PropertyValue(
             property: .enthalpy,
@@ -472,6 +540,20 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(displayedViscosity?.unit, "mPa·s")
         XCTAssertEqual(enthalpy.value, 300_000)
         XCTAssertEqual(enthalpy.unit, "J/kg")
+    }
+
+    @MainActor
+    func testUnsupportedPropertyFormattingRemainsExplicitlyUnavailable() {
+        let property = PropertyValue(
+            property: .enthalpy,
+            value: nil,
+            unit: "J/kg",
+            status: .unavailable,
+            message: "Expanded pure-fluid property unavailable for this composition."
+        )
+
+        XCTAssertEqual(EngineeringPropertyFormatter.text(for: property), "Unavailable")
+        XCTAssertEqual(EngineeringPropertyFormatter.effectiveStatus(for: property), .unavailable)
     }
 
     private var expectedDefaultCoolPropAvailability: ModelAvailability {

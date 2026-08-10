@@ -9,6 +9,11 @@ struct PhaseDiagramReportAttachment: Sendable {
     let response: PhaseEnvelopeResponse
 }
 
+struct PhaseDiagramExportArtifacts: Identifiable {
+    let id = UUID()
+    let files: [URL]
+}
+
 enum PhaseDiagramExportError: LocalizedError {
     case unavailable(String)
     case renderingFailed
@@ -59,6 +64,29 @@ struct PhaseDiagramImageExporter {
         return url
     }
 
+    func writeTemporaryReportFiles(
+        for record: CalculationRecord,
+        response: PhaseEnvelopeResponse
+    ) throws -> PhaseDiagramExportArtifacts {
+        let attachment = try attachment(for: record, response: response)
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PhaseXpertPhaseDiagrams", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        let prefix = "PhaseXpert-Phase-Diagram-\(record.response.calculationID.uuidString.prefix(8))"
+        let pdfURL = directory.appendingPathComponent("\(prefix).pdf")
+        let csvURL = directory.appendingPathComponent("\(prefix).csv")
+        try writePDF(attachment: attachment, record: record, response: response, to: pdfURL)
+        try csv(record: record, response: response).write(
+            to: csvURL,
+            atomically: true,
+            encoding: .utf8
+        )
+        return PhaseDiagramExportArtifacts(files: [pdfURL, csvURL])
+    }
+
     private func validate(
         record: CalculationRecord,
         response: PhaseEnvelopeResponse
@@ -93,6 +121,77 @@ struct PhaseDiagramImageExporter {
                 "The CO₂ phase diagram is not ready for export."
             )
         }
+    }
+
+    private func writePDF(
+        attachment: PhaseDiagramReportAttachment,
+        record: CalculationRecord,
+        response: PhaseEnvelopeResponse,
+        to url: URL
+    ) throws {
+        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 612, height: 792))
+        try renderer.writePDF(to: url) { context in
+            context.beginPage()
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.preferredFont(forTextStyle: .title2)
+            ]
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.preferredFont(forTextStyle: .footnote)
+            ]
+            "Pure CO₂ pressure–temperature diagram".draw(
+                at: CGPoint(x: 36, y: 32),
+                withAttributes: titleAttributes
+            )
+            "PRELIMINARY — VALIDATION PENDING".draw(
+                at: CGPoint(x: 36, y: 62),
+                withAttributes: bodyAttributes
+            )
+            if let image = UIImage(data: attachment.pngData) {
+                image.draw(in: CGRect(x: 36, y: 92, width: 540, height: 405))
+            }
+            provenance(record: record, response: response).draw(
+                in: CGRect(x: 36, y: 520, width: 540, height: 220),
+                withAttributes: bodyAttributes
+            )
+        }
+    }
+
+    private func csv(record: CalculationRecord, response: PhaseEnvelopeResponse) -> String {
+        var rows = [
+            ["section", "name", "value", "unit"],
+            ["provenance", "calculation_id", record.response.calculationID.uuidString, ""],
+            ["provenance", "phase_envelope_request_id", response.requestID.uuidString, ""],
+            ["provenance", "model", response.model?.name ?? record.response.model.name, ""],
+            ["provenance", "model_version", response.model?.modelVersion ?? record.response.model.modelVersion, ""],
+            ["provenance", "provider_version", response.model?.providerVersion ?? record.response.model.providerVersion, ""],
+            ["input", "pressure", "\(record.input.pressurePa / 100_000)", "bar(a)"],
+            ["input", "temperature", "\(record.input.temperatureK - 273.15)", "°C"],
+            ["input", "composition", record.request.composition.map { "\($0.component.symbol):\($0.moleFraction)" }.joined(separator: ";"), "mole fraction"],
+            ["status", "preliminary", "validation pending", ""],
+            ["data", "temperature", "pressure", "branch"]
+        ]
+        rows.append(contentsOf: response.points.map {
+            ["point", "\($0.temperatureK - 273.15)", "\($0.pressurePa / 100_000)", $0.branch.rawValue]
+        })
+        return rows.map { row in
+            row.map { "\"\($0.replacingOccurrences(of: "\"", with: "\"\""))\"" }
+                .joined(separator: ",")
+        }.joined(separator: "\n") + "\n"
+    }
+
+    private func provenance(
+        record: CalculationRecord,
+        response: PhaseEnvelopeResponse
+    ) -> String {
+        """
+        Axis units: Temperature (°C), Pressure (bar(a)).
+        Operating point: \(record.input.pressurePa / 100_000) bar(a), \(record.input.temperatureK - 273.15) °C.
+        Phase returned by source calculation: \(record.response.phase.displayName).
+        Provider/model: \(response.model?.name ?? record.response.model.name), model \(response.model?.modelVersion ?? record.response.model.modelVersion), provider \(response.model?.providerVersion ?? record.response.model.providerVersion).
+        Calculation ID: \(record.response.calculationID.uuidString).
+        Phase-envelope request ID: \(response.requestID.uuidString).
+        Straight line segments connect adjacent calculated points for display only. No scientific values are interpolated or estimated.
+        """
     }
 }
 

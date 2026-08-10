@@ -219,13 +219,17 @@ private struct PhaseBoundaryChart: View {
     let response: PhaseEnvelopeResponse
 
     @State private var selectedTemperatureCelsius: Double?
-    @State private var exportedDiagramURL: URL?
+    @State private var exportArtifacts: PhaseDiagramExportArtifacts?
     @State private var exportErrorMessage: String?
     @State private var isPreparingExport = false
 
     private var samples: [Sample] {
-        response.points.enumerated().map { index, point in
-            Sample(
+        response.points.enumerated().compactMap { index, point in
+            guard point.temperatureK.isFinite,
+                  point.pressurePa.isFinite,
+                  point.pressurePa > 0
+            else { return nil }
+            return Sample(
                 id: index,
                 temperatureCelsius: point.temperatureK - 273.15,
                 pressureBar: point.pressurePa / 100_000,
@@ -286,22 +290,25 @@ private struct PhaseBoundaryChart: View {
                 )
 
                 IFECard {
-                    if let exportedDiagramURL {
-                        ShareLink(
-                            item: exportedDiagramURL,
-                            preview: SharePreview(
-                                "PhaseXpert phase diagram",
-                                image: Image(systemName: "photo")
-                            )
-                        ) {
-                            Label("Share diagram image", systemImage: "square.and.arrow.up")
+                    if let exportArtifacts {
+                        ForEach(exportArtifacts.files, id: \.self) { fileURL in
+                            ShareLink(item: fileURL) {
+                                Label(
+                                    fileURL.pathExtension.lowercased() == "pdf"
+                                        ? "Share PDF report"
+                                        : "Share CSV data",
+                                    systemImage: fileURL.pathExtension.lowercased() == "pdf"
+                                        ? "doc.richtext"
+                                        : "tablecells"
+                                )
                                 .frame(maxWidth: .infinity, alignment: .leading)
+                            }
                         }
-                        .accessibilityIdentifier("share-phase-diagram-image")
+                        .accessibilityIdentifier("share-phase-diagram-artifacts")
                     } else if isPreparingExport {
                         HStack {
                             ProgressView()
-                            Text("Preparing diagram image…")
+                            Text("Preparing diagram export…")
                                 .foregroundStyle(.secondary)
                         }
                     } else {
@@ -313,10 +320,10 @@ private struct PhaseBoundaryChart: View {
                                 )
                                 .foregroundStyle(.secondary)
                             }
-                            Button("Prepare diagram image", systemImage: "photo") {
-                                prepareDiagramImage()
+                            Button("Prepare PDF and CSV", systemImage: "doc.badge.arrow.up") {
+                                prepareDiagramExport()
                             }
-                            .accessibilityIdentifier("prepare-phase-diagram-image")
+                            .accessibilityIdentifier("prepare-phase-diagram-export")
                         }
                     }
                 }
@@ -346,6 +353,9 @@ private struct PhaseBoundaryChart: View {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
                         Text("Pressure–temperature diagram")
                             .font(.headline)
+                        Text("Pure CO₂ saturation boundary with operating point")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
                         Chart {
                             ForEach(bubble) { sample in
@@ -386,9 +396,9 @@ private struct PhaseBoundaryChart: View {
                             }
                         }
                         .chartForegroundStyleScale([
-                            "CO₂ saturation boundary": Color.ifePrimary,
-                            "Critical point": Color.ifeSignal,
-                            "Operating point": Color.ifeText
+                            "CO₂ saturation boundary": Color.pxChartBoundary,
+                            "Critical point": Color.pxChartCritical,
+                            "Operating point": Color.pxChartOperatingPoint
                         ])
                         .chartXScale(domain: xDomain)
                         .chartYScale(domain: yDomain)
@@ -411,6 +421,11 @@ private struct PhaseBoundaryChart: View {
                                 "Selected saturation pressure",
                                 value: "\(number(selectedSample.pressureBar)) bar(a)"
                             )
+                            Button("Reset view", systemImage: "arrow.counterclockwise") {
+                                selectedTemperatureCelsius = nil
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityIdentifier("reset-phase-diagram-view")
                         }
                     }
                 }
@@ -466,7 +481,7 @@ private struct PhaseBoundaryChart: View {
         .accessibilityIdentifier("phase-diagram-available")
     }
 
-    private func prepareDiagramImage() {
+    private func prepareDiagramExport() {
         guard !isPreparingExport else { return }
         isPreparingExport = true
         exportErrorMessage = nil
@@ -474,12 +489,12 @@ private struct PhaseBoundaryChart: View {
         Task { @MainActor in
             await Task.yield()
             do {
-                exportedDiagramURL = try PhaseDiagramImageExporter().writeTemporaryPNG(
+                exportArtifacts = try PhaseDiagramImageExporter().writeTemporaryReportFiles(
                     for: record,
                     response: response
                 )
             } catch {
-                exportedDiagramURL = nil
+                exportArtifacts = nil
                 exportErrorMessage = error.localizedDescription
             }
             isPreparingExport = false

@@ -21,11 +21,63 @@ enum CompositionInputBasis: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum PressureDisplayUnit: String, CaseIterable, Identifiable {
+    case barAbsolute = "bar(a)"
+    case megapascalAbsolute = "MPa(a)"
+
+    var id: String { rawValue }
+
+    func pascal(from displayValue: Double) -> Double {
+        switch self {
+        case .barAbsolute:
+            PressureUnit.bar.toPascal(displayValue)
+        case .megapascalAbsolute:
+            displayValue * 1_000_000
+        }
+    }
+
+    func displayValue(from pascal: Double) -> Double {
+        switch self {
+        case .barAbsolute:
+            pascal / 100_000
+        case .megapascalAbsolute:
+            pascal / 1_000_000
+        }
+    }
+}
+
+enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
+    case celsius = "°C"
+    case kelvin = "K"
+
+    var id: String { rawValue }
+
+    func kelvin(from displayValue: Double) -> Double {
+        switch self {
+        case .celsius:
+            TemperatureUnit.celsius.toKelvin(displayValue)
+        case .kelvin:
+            displayValue
+        }
+    }
+
+    func displayValue(from kelvin: Double) -> Double {
+        switch self {
+        case .celsius:
+            kelvin - 273.15
+        case .kelvin:
+            kelvin
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class CalculatorViewModel {
     var pressureText = "150"
     var temperatureText = "20"
+    var pressureDisplayUnit: PressureDisplayUnit = .barAbsolute
+    var temperatureDisplayUnit: TemperatureDisplayUnit = .celsius
     var selectedModelID = "coolprop-heos"
     var compositionBasis: CompositionInputBasis = .partsPerMillion
     var composition: [CompositionInput] = [
@@ -40,6 +92,8 @@ final class CalculatorViewModel {
     private let validator = CalculationValidator()
     private var compositionBeforeNormalization: [CompositionInputSnapshot]?
     private var lastNormalizedComposition: [MixtureComponent]?
+    private var lastValidPressurePa = PressureUnit.bar.toPascal(150)
+    private var lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
 
     var descriptors: [ModelDescriptor] { registry.descriptors }
 
@@ -126,8 +180,8 @@ final class CalculatorViewModel {
 
     func validate() {
         guard
-            let pressure = parse(pressureText),
-            let temperature = parse(temperatureText),
+            let pressurePa = parsedPressurePa,
+            let temperatureK = parsedTemperatureK,
             let descriptor = selectedDescriptor
         else {
             validationReport = ValidationReport(
@@ -140,14 +194,16 @@ final class CalculatorViewModel {
             )
             return
         }
+        lastValidPressurePa = pressurePa
+        lastValidTemperatureK = temperatureK
 
         let requestedComposition = domainComposition()
         let supportedComponents = descriptor.availability == .unavailable
             ? Set(requestedComposition.map(\.component))
             : descriptor.supportedComponents
         let coreReport = validator.validate(
-            pressurePa: PressureUnit.bar.toPascal(pressure),
-            temperatureK: TemperatureUnit.celsius.toKelvin(temperature),
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
             composition: requestedComposition,
             supportedComponents: supportedComponents,
             domain: descriptor.domain
@@ -203,8 +259,18 @@ final class CalculatorViewModel {
     }
 
     func loadInputs(from record: CalculationRecord) {
-        pressureText = String(format: "%.8g", record.input.pressurePa / 100_000)
-        temperatureText = String(format: "%.8g", record.input.temperatureK - 273.15)
+        pressureDisplayUnit = .barAbsolute
+        temperatureDisplayUnit = .celsius
+        lastValidPressurePa = record.input.pressurePa
+        lastValidTemperatureK = record.input.temperatureK
+        pressureText = Self.format(
+            pressureDisplayUnit.displayValue(from: record.input.pressurePa),
+            for: pressureDisplayUnit
+        )
+        temperatureText = Self.format(
+            temperatureDisplayUnit.displayValue(from: record.input.temperatureK),
+            for: temperatureDisplayUnit
+        )
         if descriptors.contains(where: { $0.id == record.request.modelID }) {
             selectedModelID = record.request.modelID
         }
@@ -227,6 +293,32 @@ final class CalculatorViewModel {
         lastNormalizedComposition = nil
         calculationRecord = nil
         calculationError = nil
+        validate()
+    }
+
+    func changePressureDisplayUnit(to newUnit: PressureDisplayUnit) {
+        guard newUnit != pressureDisplayUnit else { return }
+        if let pressurePa = parsedPressurePa {
+            lastValidPressurePa = pressurePa
+        }
+        pressureDisplayUnit = newUnit
+        pressureText = Self.format(
+            newUnit.displayValue(from: lastValidPressurePa),
+            for: newUnit
+        )
+        validate()
+    }
+
+    func changeTemperatureDisplayUnit(to newUnit: TemperatureDisplayUnit) {
+        guard newUnit != temperatureDisplayUnit else { return }
+        if let temperatureK = parsedTemperatureK {
+            lastValidTemperatureK = temperatureK
+        }
+        temperatureDisplayUnit = newUnit
+        temperatureText = Self.format(
+            newUnit.displayValue(from: lastValidTemperatureK),
+            for: newUnit
+        )
         validate()
     }
 
@@ -292,8 +384,8 @@ final class CalculatorViewModel {
         guard validationReport.canCalculate else { return }
         guard
             let provider = registry.provider(id: selectedModelID),
-            let pressure = parse(pressureText),
-            let temperature = parse(temperatureText)
+            let pressurePa = parsedPressurePa,
+            let temperatureK = parsedTemperatureK
         else { return }
 
         isCalculating = true
@@ -301,8 +393,6 @@ final class CalculatorViewModel {
         calculationRecord = nil
         defer { isCalculating = false }
 
-        let pressurePa = PressureUnit.bar.toPascal(pressure)
-        let temperatureK = TemperatureUnit.celsius.toKelvin(temperature)
         let calculatedComposition = domainComposition()
         let request = CalculationRequest(
             modelID: selectedModelID,
@@ -318,10 +408,10 @@ final class CalculatorViewModel {
             calculationRecord = CalculationRecord(
                 request: request,
                 input: CalculationInputSnapshot(
-                    pressureValue: pressure,
+                    pressureValue: pressurePa / 100_000,
                     pressureUnit: .bara,
                     pressurePa: pressurePa,
-                    temperatureValue: temperature,
+                    temperatureValue: temperatureK - 273.15,
                     temperatureUnit: .celsius,
                     temperatureK: temperatureK,
                     originalComposition: normalizationWasUsed
@@ -387,8 +477,34 @@ final class CalculatorViewModel {
         compositionBasis == .partsPerMillion ? 1_000_000 : 100
     }
 
+    private var parsedPressurePa: Double? {
+        guard let value = parse(pressureText) else { return nil }
+        let pressurePa = pressureDisplayUnit.pascal(from: value)
+        return pressurePa.isFinite ? pressurePa : nil
+    }
+
+    private var parsedTemperatureK: Double? {
+        guard let value = parse(temperatureText) else { return nil }
+        let temperatureK = temperatureDisplayUnit.kelvin(from: value)
+        return temperatureK.isFinite ? temperatureK : nil
+    }
+
     private func parse(_ value: String) -> Double? {
         Double(value.replacingOccurrences(of: ",", with: "."))
+    }
+
+    private static func format(
+        _ value: Double,
+        for unit: PressureDisplayUnit
+    ) -> String {
+        String(format: unit == .barAbsolute ? "%.8g" : "%.10g", value)
+    }
+
+    private static func format(
+        _ value: Double,
+        for unit: TemperatureDisplayUnit
+    ) -> String {
+        String(format: unit == .celsius ? "%.8g" : "%.10g", value)
     }
 }
 
