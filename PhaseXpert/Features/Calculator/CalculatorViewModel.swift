@@ -24,6 +24,7 @@ enum CompositionInputBasis: String, CaseIterable, Identifiable {
 enum PressureDisplayUnit: String, CaseIterable, Identifiable {
     case barAbsolute = "bar(a)"
     case megapascalAbsolute = "MPa(a)"
+    case psiAbsolute = "psi(a)"
 
     var id: String { rawValue }
 
@@ -33,6 +34,8 @@ enum PressureDisplayUnit: String, CaseIterable, Identifiable {
             PressureUnit.bar.toPascal(displayValue)
         case .megapascalAbsolute:
             displayValue * 1_000_000
+        case .psiAbsolute:
+            PressureUnit.psia.toPascal(displayValue)
         }
     }
 
@@ -42,6 +45,8 @@ enum PressureDisplayUnit: String, CaseIterable, Identifiable {
             pascal / 100_000
         case .megapascalAbsolute:
             pascal / 1_000_000
+        case .psiAbsolute:
+            PressureUnit.psia.fromPascal(pascal)
         }
     }
 }
@@ -49,6 +54,7 @@ enum PressureDisplayUnit: String, CaseIterable, Identifiable {
 enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
     case celsius = "°C"
     case kelvin = "K"
+    case fahrenheit = "°F"
 
     var id: String { rawValue }
 
@@ -58,6 +64,8 @@ enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
             TemperatureUnit.celsius.toKelvin(displayValue)
         case .kelvin:
             displayValue
+        case .fahrenheit:
+            TemperatureUnit.fahrenheit.toKelvin(displayValue)
         }
     }
 
@@ -67,6 +75,8 @@ enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
             kelvin - 273.15
         case .kelvin:
             kelvin
+        case .fahrenheit:
+            TemperatureUnit.fahrenheit.fromKelvin(kelvin)
         }
     }
 }
@@ -497,6 +507,8 @@ final class CalculatorViewModel {
             .bara
         case .megapascalAbsolute:
             .megapascal
+        case .psiAbsolute:
+            .psia
         }
     }
 
@@ -506,6 +518,8 @@ final class CalculatorViewModel {
             .celsius
         case .kelvin:
             .kelvin
+        case .fahrenheit:
+            .fahrenheit
         }
     }
 
@@ -517,14 +531,24 @@ final class CalculatorViewModel {
         _ value: Double,
         for unit: PressureDisplayUnit
     ) -> String {
-        String(format: unit == .barAbsolute ? "%.8g" : "%.10g", value)
+        switch unit {
+        case .barAbsolute:
+            String(format: "%.8g", value)
+        case .megapascalAbsolute, .psiAbsolute:
+            String(format: "%.10g", value)
+        }
     }
 
     private static func format(
         _ value: Double,
         for unit: TemperatureDisplayUnit
     ) -> String {
-        String(format: unit == .celsius ? "%.8g" : "%.10g", value)
+        switch unit {
+        case .celsius:
+            String(format: "%.8g", value)
+        case .kelvin, .fahrenheit:
+            String(format: "%.10g", value)
+        }
     }
 }
 

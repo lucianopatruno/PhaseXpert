@@ -17,8 +17,11 @@ struct AboutView: View {
                         Text("PhaseXpert")
                             .font(.largeTitle.weight(.semibold))
                             .foregroundStyle(Color.ifeText)
-                        Text("Developed by the IFE Flow Technology Department")
+                        Text("Developed by IFE")
                             .font(.headline)
+                        Text("Flow Technology Department")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
 
                     IFECard {
@@ -64,4 +67,3 @@ struct AboutView: View {
         }
     }
 }
-

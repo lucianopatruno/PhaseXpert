@@ -207,6 +207,8 @@ public struct CalculationInputSnapshot: Codable, Equatable, Sendable {
             "bar(a)"
         case .megapascal:
             "MPa(a)"
+        case .psia:
+            "psi(a)"
         default:
             pressureUnit.rawValue
         }

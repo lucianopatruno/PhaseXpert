@@ -781,6 +781,63 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(Double(viewModel.pressureText) ?? .nan, 15, accuracy: 1e-12)
         XCTAssertEqual(viewModel.pressureDisplayUnit, .megapascalAbsolute)
         XCTAssertTrue(viewModel.validationReport.canCalculate)
+
+        viewModel.changePressureDisplayUnit(to: .psiAbsolute)
+        XCTAssertEqual(
+            Double(viewModel.pressureText) ?? .nan,
+            15_000_000 / UnitConstants.psiToPascal,
+            accuracy: 1e-7
+        )
+        XCTAssertTrue(viewModel.validationReport.canCalculate)
+
+        for _ in 0..<10 {
+            viewModel.changePressureDisplayUnit(to: .barAbsolute)
+            viewModel.changePressureDisplayUnit(to: .megapascalAbsolute)
+            viewModel.changePressureDisplayUnit(to: .psiAbsolute)
+        }
+        XCTAssertEqual(
+            PressureDisplayUnit.psiAbsolute.pascal(from: Double(viewModel.pressureText) ?? .nan),
+            15_000_000,
+            accuracy: 1e-3
+        )
+    }
+
+    @MainActor
+    func testPSIAbsolutePressureDisplayUnitConvertsToAndFromPascal() {
+        XCTAssertEqual(
+            PressureDisplayUnit.psiAbsolute.pascal(from: 1),
+            6_894.757_293_168,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            PressureDisplayUnit.psiAbsolute.displayValue(from: 6_894.757_293_168),
+            1,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            CalculationInputSnapshot(
+                pressureValue: 2_175.566_119_4,
+                pressureUnit: .psia,
+                pressurePa: 15_000_000,
+                temperatureValue: 20,
+                temperatureUnit: .celsius,
+                temperatureK: 293.15,
+                originalComposition: []
+            ).pressureDisplayUnitLabel,
+            "psi(a)"
+        )
+        XCTAssertEqual(
+            CalculationInputSnapshot(
+                pressureValue: 2_175.566_119_4,
+                pressureUnit: .psi,
+                pressurePa: 15_000_000,
+                temperatureValue: 20,
+                temperatureUnit: .celsius,
+                temperatureK: 293.15,
+                originalComposition: []
+            ).pressureDisplayUnitLabel,
+            "psi"
+        )
     }
 
     @MainActor
@@ -801,6 +858,51 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(record.input.pressurePa, 15_000_000, accuracy: 1e-12)
         XCTAssertEqual(record.input.temperatureValue, 293.15, accuracy: 1e-12)
         XCTAssertEqual(record.input.temperatureUnit, .kelvin)
+        XCTAssertEqual(record.input.temperatureK, 293.15, accuracy: 1e-12)
+    }
+
+    @MainActor
+    func testCalculationSnapshotPreservesPSIAndFahrenheitEntryUnits() async throws {
+        let pressurePsi = 2_175.566_119_4
+        let pressurePa = PressureUnit.psia.toPascal(pressurePsi)
+        let record = try await makeRecord(
+            pressureValue: pressurePsi,
+            pressureUnit: .psia,
+            pressurePa: pressurePa,
+            temperatureValue: 68,
+            temperatureUnit: .fahrenheit,
+            temperatureK: TemperatureUnit.fahrenheit.toKelvin(68),
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+
+        XCTAssertEqual(record.input.pressureValue, pressurePsi, accuracy: 1e-12)
+        XCTAssertEqual(record.input.pressureUnit, .psia)
+        XCTAssertEqual(record.input.pressureDisplayUnitLabel, "psi(a)")
+        XCTAssertEqual(record.input.pressurePa, pressurePa, accuracy: 1e-6)
+        XCTAssertEqual(record.input.temperatureValue, 68, accuracy: 1e-12)
+        XCTAssertEqual(record.input.temperatureUnit, .fahrenheit)
+        XCTAssertEqual(record.input.temperatureK, 293.15, accuracy: 1e-12)
+    }
+
+    @MainActor
+    func testViewModelCalculationPreservesPSIAndFahrenheitProvenance() async throws {
+        let viewModel = CalculatorViewModel()
+        let pressurePsi = PressureUnit.psia.fromPascal(15_000_000)
+        viewModel.pressureDisplayUnit = .psiAbsolute
+        viewModel.temperatureDisplayUnit = .fahrenheit
+        viewModel.pressureText = String(pressurePsi)
+        viewModel.temperatureText = "68"
+        viewModel.validate()
+
+        await viewModel.calculate()
+
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertEqual(record.input.pressureUnit, .psia)
+        XCTAssertEqual(record.input.pressureDisplayUnitLabel, "psi(a)")
+        XCTAssertEqual(record.input.pressureValue, pressurePsi, accuracy: 1e-10)
+        XCTAssertEqual(record.input.pressurePa, 15_000_000, accuracy: 1e-3)
+        XCTAssertEqual(record.input.temperatureUnit, .fahrenheit)
+        XCTAssertEqual(record.input.temperatureValue, 68, accuracy: 1e-12)
         XCTAssertEqual(record.input.temperatureK, 293.15, accuracy: 1e-12)
     }
 
@@ -837,6 +939,34 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(Double(viewModel.temperatureText) ?? .nan, 293.15, accuracy: 1e-12)
         XCTAssertEqual(viewModel.temperatureDisplayUnit, .kelvin)
         XCTAssertTrue(viewModel.validationReport.canCalculate)
+
+        viewModel.changeTemperatureDisplayUnit(to: .fahrenheit)
+        XCTAssertEqual(Double(viewModel.temperatureText) ?? .nan, 68, accuracy: 1e-10)
+        XCTAssertTrue(viewModel.validationReport.canCalculate)
+
+        for _ in 0..<10 {
+            viewModel.changeTemperatureDisplayUnit(to: .celsius)
+            viewModel.changeTemperatureDisplayUnit(to: .kelvin)
+            viewModel.changeTemperatureDisplayUnit(to: .fahrenheit)
+        }
+        XCTAssertEqual(
+            TemperatureDisplayUnit.fahrenheit.kelvin(from: Double(viewModel.temperatureText) ?? .nan),
+            293.15,
+            accuracy: 1e-10
+        )
+    }
+
+    @MainActor
+    func testFahrenheitTemperatureDisplayUnitConvertsToAndFromKelvin() {
+        XCTAssertEqual(
+            TemperatureDisplayUnit.fahrenheit.kelvin(from: 0),
+            255.3722222222222,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(TemperatureDisplayUnit.fahrenheit.kelvin(from: 32), 273.15, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureDisplayUnit.fahrenheit.kelvin(from: 212), 373.15, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureDisplayUnit.fahrenheit.displayValue(from: 273.15), 32, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureDisplayUnit.fahrenheit.displayValue(from: 373.15), 212, accuracy: 1e-12)
     }
 
     @MainActor
@@ -854,6 +984,37 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertEqual(Double(viewModel.pressureText) ?? .nan, 15, accuracy: 1e-12)
         XCTAssertEqual(viewModel.pressureDisplayUnit, .megapascalAbsolute)
+
+        viewModel.pressureText = "-"
+        viewModel.validate()
+        XCTAssertFalse(viewModel.validationReport.canCalculate)
+
+        viewModel.changePressureDisplayUnit(to: .psiAbsolute)
+
+        XCTAssertEqual(
+            PressureDisplayUnit.psiAbsolute.pascal(from: Double(viewModel.pressureText) ?? .nan),
+            15_000_000,
+            accuracy: 1e-3
+        )
+        XCTAssertEqual(viewModel.pressureDisplayUnit, .psiAbsolute)
+
+        viewModel.temperatureText = ""
+        viewModel.validate()
+        XCTAssertFalse(viewModel.validationReport.canCalculate)
+
+        viewModel.changeTemperatureDisplayUnit(to: .kelvin)
+
+        XCTAssertEqual(Double(viewModel.temperatureText) ?? .nan, 293.15, accuracy: 1e-12)
+        XCTAssertEqual(viewModel.temperatureDisplayUnit, .kelvin)
+
+        viewModel.temperatureText = "-"
+        viewModel.validate()
+        XCTAssertFalse(viewModel.validationReport.canCalculate)
+
+        viewModel.changeTemperatureDisplayUnit(to: .fahrenheit)
+
+        XCTAssertEqual(Double(viewModel.temperatureText) ?? .nan, 68, accuracy: 1e-10)
+        XCTAssertEqual(viewModel.temperatureDisplayUnit, .fahrenheit)
     }
 
     @MainActor

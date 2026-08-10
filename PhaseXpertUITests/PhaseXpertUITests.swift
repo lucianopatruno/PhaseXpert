@@ -15,6 +15,8 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["bar(a)"].exists)
         XCTAssertTrue(app.staticTexts["Temperature"].exists)
         XCTAssertTrue(app.staticTexts["°C"].exists)
+        XCTAssertEqual(app.buttons["pressure-unit-menu"].value as? String, "bar(a)")
+        XCTAssertEqual(app.buttons["temperature-unit-menu"].value as? String, "°C")
 
         let runCalculationButton = app.buttons["run-calculation"]
         for _ in 0..<5 where !runCalculationButton.waitForExistence(timeout: 0.5) {
@@ -53,6 +55,33 @@ final class PhaseXpertUITests: XCTestCase {
         temperature.tap()
         temperature.typeText("-10")
         XCTAssertEqual(temperature.value as? String, "-10 °C")
+    }
+
+    func testPSIAndFahrenheitValuesReplaceOnFocus() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let pressureUnit = app.buttons["pressure-unit-menu"]
+        XCTAssertTrue(pressureUnit.waitForExistence(timeout: 2))
+        pressureUnit.tap()
+        app.buttons["psi(a)"].tap()
+        XCTAssertEqual(pressureUnit.value as? String, "psi(a)")
+
+        let pressure = app.textFields["Pressure value"]
+        pressure.tap()
+        pressure.typeText("500")
+        XCTAssertEqual(pressure.value as? String, "500 psi(a)")
+
+        let temperatureUnit = app.buttons["temperature-unit-menu"]
+        XCTAssertTrue(temperatureUnit.waitForExistence(timeout: 2))
+        temperatureUnit.tap()
+        app.buttons["°F"].tap()
+        XCTAssertEqual(temperatureUnit.value as? String, "°F")
+
+        let temperature = app.textFields["Temperature value"]
+        temperature.tap()
+        temperature.typeText("68")
+        XCTAssertEqual(temperature.value as? String, "68 °F")
     }
 
     func testIFEModelIsVisibleUnavailableAndDoesNotEnableCalculation() {
@@ -103,6 +132,9 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertEqual(temperatureUnit.value as? String, "°C")
         XCTAssertFalse(pressureField.frame.intersects(pressureUnit.frame))
         XCTAssertFalse(temperatureField.frame.intersects(temperatureUnit.frame))
+        XCTAssertEqual(pressureField.frame.minX, temperatureField.frame.minX, accuracy: 2)
+        XCTAssertEqual(pressureField.frame.width, temperatureField.frame.width, accuracy: 2)
+        XCTAssertEqual(pressureUnit.frame.minX, temperatureUnit.frame.minX, accuracy: 2)
     }
 
     func testOperatingPointUnitsRemainUsableWithLargeDynamicType() {
@@ -117,10 +149,38 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["temperature-label"].exists)
         XCTAssertTrue(app.textFields["pressure-value-field"].exists)
         XCTAssertTrue(app.buttons["pressure-unit-menu"].exists)
+        XCTAssertTrue(app.textFields["temperature-value-field"].exists)
+        XCTAssertTrue(app.buttons["temperature-unit-menu"].exists)
         XCTAssertFalse(
             app.textFields["pressure-value-field"].frame
                 .intersects(app.buttons["pressure-unit-menu"].frame)
         )
+        XCTAssertFalse(
+            app.textFields["temperature-value-field"].frame
+                .intersects(app.buttons["temperature-unit-menu"].frame)
+        )
+    }
+
+    func testAboutShowsIFEAttributionHierarchy() {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.tabBars.buttons["About"].tap()
+
+        XCTAssertTrue(app.staticTexts["Developed by IFE"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Flow Technology Department"].exists)
+        XCTAssertFalse(app.staticTexts["Developed by the IFE Flow Technology Department"].exists)
+    }
+
+    func testCalculatorDoesNotDuplicatePreliminaryWarningCopyAtLaunch() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let repeatedWarning = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Validation remains incomplete")
+        )
+        XCTAssertEqual(repeatedWarning.count, 0)
+        XCTAssertTrue(app.staticTexts["CoolProp HEOS — Preliminary"].exists)
     }
 
     func testImpurityKeyboardDoneDismissesInPPMAndMolPercentModes() {

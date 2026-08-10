@@ -6,6 +6,7 @@ final class UnitConversionTests: XCTestCase {
         XCTAssertEqual(PressureUnit.megapascal.toPascal(15), 15_000_000, accuracy: 1e-9)
         XCTAssertEqual(PressureUnit.bar.toPascal(1), 100_000, accuracy: 1e-9)
         XCTAssertEqual(PressureUnit.psi.toPascal(1), 6_894.757_293_168, accuracy: 1e-9)
+        XCTAssertEqual(PressureUnit.psia.fromPascal(6_894.757_293_168), 1, accuracy: 1e-12)
     }
 
     func testGaugePressureUsesExplicitAtmosphericReference() {
@@ -18,8 +19,11 @@ final class UnitConversionTests: XCTestCase {
 
     func testTemperatureConversions() {
         XCTAssertEqual(TemperatureUnit.celsius.toKelvin(0), 273.15, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(0), 255.3722222222222, accuracy: 1e-12)
         XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(32), 273.15, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(212), 373.15, accuracy: 1e-12)
         XCTAssertEqual(TemperatureUnit.kelvin.fromKelvin(300), 300, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureUnit.fahrenheit.fromKelvin(373.15), 212, accuracy: 1e-12)
     }
 
     func testDynamicViscosityConversions() {

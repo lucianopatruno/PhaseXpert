@@ -41,6 +41,39 @@ final class CalculationExportTests: XCTestCase {
         XCTAssertTrue(text.hasSuffix("\r\n"))
     }
 
+    func testCSVAndPDFExportPreservePSIAndFahrenheitInputProvenance() throws {
+        let pressurePsi = PressureUnit.psia.fromPascal(15_000_000)
+        let snapshot = makeSnapshot(
+            pressureValue: pressurePsi,
+            pressureUnit: .psia,
+            pressurePa: 15_000_000,
+            temperatureValue: 68,
+            temperatureUnit: .fahrenheit,
+            temperatureK: TemperatureUnit.fahrenheit.toKelvin(68)
+        )
+        let csvData = try CalculationExporter().data(for: snapshot, format: .csv)
+        let csv = String(decoding: csvData.dropFirst(3), as: UTF8.self)
+
+        XCTAssertTrue(csv.contains("\"display_input\",\"pressure\""))
+        XCTAssertTrue(csv.contains("\"\(String(pressurePsi))\",\"psi(a)\""))
+        XCTAssertTrue(csv.contains("\"si_input\",\"pressure\""))
+        XCTAssertTrue(csv.contains("\"15000000.0\",\"Pa\""))
+        XCTAssertTrue(csv.contains("\"display_input\",\"temperature\""))
+        XCTAssertTrue(csv.contains("\"68.0\",\"°F\""))
+        XCTAssertTrue(csv.contains("\"293.15\",\"K\""))
+
+        let pdfData = try CalculationExporter().data(for: snapshot, format: .pdf)
+        let document = try XCTUnwrap(PDFDocument(data: pdfData))
+        let text = (0..<document.pageCount)
+            .compactMap { document.page(at: $0)?.string }
+            .joined(separator: "\n")
+
+        XCTAssertTrue(text.contains("psi(a)"))
+        XCTAssertTrue(text.contains("68 °F"))
+        XCTAssertTrue(text.contains("15 000 000 Pa"))
+        XCTAssertTrue(text.contains("293.15 K"))
+    }
+
     func testPDFReportIsSearchableAndContainsRecordedProvenance() throws {
         let data = try CalculationExporter().data(for: makeSnapshot(), format: .pdf)
 
@@ -331,7 +364,13 @@ final class CalculationExportTests: XCTestCase {
     private func makeSnapshot(
         name: String = "Pipeline inlet",
         notes: String = "He said \"check\"\nsecond line",
-        propertyValue: Double = 903.5
+        propertyValue: Double = 903.5,
+        pressureValue: Double = 150,
+        pressureUnit: PressureUnit = .bara,
+        pressurePa: Double = 15_000_000,
+        temperatureValue: Double = 20,
+        temperatureUnit: TemperatureUnit = .celsius,
+        temperatureK: Double = 293.15
     ) -> SavedCaseExportSnapshot {
         let requestID = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
         let model = ModelDescriptor(
@@ -361,8 +400,8 @@ final class CalculationExportTests: XCTestCase {
         let request = CalculationRequest(
             requestID: requestID,
             modelID: model.id,
-            pressurePa: 15_000_000,
-            temperatureK: 293.15,
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
             composition: [.init(component: .carbonDioxide, moleFraction: 1)],
             requestedProperties: [.density],
             clientVersion: "0.1.0 (1)"
@@ -402,11 +441,11 @@ final class CalculationExportTests: XCTestCase {
         let record = CalculationRecord(
             request: request,
             input: .init(
-                pressureValue: 150,
-                pressureUnit: .bara,
+                pressureValue: pressureValue,
+                pressureUnit: pressureUnit,
                 pressurePa: request.pressurePa,
-                temperatureValue: 20,
-                temperatureUnit: .celsius,
+                temperatureValue: temperatureValue,
+                temperatureUnit: temperatureUnit,
                 temperatureK: request.temperatureK,
                 originalComposition: [
                     .init(component: .carbonDioxide, value: 99.99, unit: .molePercent)

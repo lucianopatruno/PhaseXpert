@@ -56,7 +56,7 @@ struct CalculatorView: View {
                     IFESectionHeader(
                         step: 1,
                         title: "Thermodynamic model",
-                        subtitle: "Unavailable models are shown for traceability and cannot calculate."
+                        subtitle: "Choose the calculation provider."
                     )
                 }
 
@@ -94,7 +94,7 @@ struct CalculatorView: View {
                     IFESectionHeader(
                         step: 2,
                         title: "Pressure and temperature",
-                        subtitle: "Pressure is absolute. Unit changes are display-only; SI values remain the calculation source."
+                        subtitle: "Pressure inputs are absolute."
                     )
                 }
 
@@ -234,7 +234,7 @@ struct CalculatorView: View {
                     IFESectionHeader(
                         step: 3,
                         title: "Composition",
-                        subtitle: "CO₂ is calculated as the explicit remainder. Values are never silently normalized."
+                        subtitle: "CO₂ is the remainder."
                     )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -590,8 +590,8 @@ struct CalculatorView: View {
 
     private var compositionFooterText: String {
         viewModel.compositionBasis == .partsPerMillion
-            ? "Enter impurities in molar ppm. CO₂ is calculated exactly as 1,000,000 ppm minus the impurity total; a mismatch remains a validation state, not an automatic normalization."
-            : "Enter impurities in mol%. CO₂ is calculated exactly as 100 mol% minus the impurity total; a mismatch remains a validation state, not an automatic normalization."
+            ? "Impurity total cannot exceed 1,000,000 ppm. CO₂ is not normalized silently."
+            : "Impurity total cannot exceed 100 mol%. CO₂ is not normalized silently."
     }
 
     private var orderedInputFields: [InputField] {
@@ -652,7 +652,7 @@ struct CalculatorView: View {
         case .available:
             "Review the model domain and limitations before calculating."
         case .preliminary:
-            "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
+            "Operational local model. Full provenance is available in Calculation Details."
         case .unavailable:
             "This model is not available in this version."
         }
@@ -722,7 +722,7 @@ private struct ModelSelectionRow: View {
         case .available:
             "Available for local calculations within the recorded provider domain."
         case .preliminary:
-            "Operational local model. Results remain preliminary until independently validated."
+            "Operational local model."
         case .unavailable:
             "Visible for future traceability. It will not fall back to another provider."
         }
@@ -767,8 +767,8 @@ private struct UnitAwareNumericField: View {
         ViewThatFits(in: .horizontal) {
             HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
                 titleView
+                    .frame(width: 96, alignment: .leading)
                     .layoutPriority(2)
-                Spacer(minLength: IFESpacing.small)
                 inputView
                     .layoutPriority(1)
                 unitMenu
@@ -779,6 +779,7 @@ private struct UnitAwareNumericField: View {
                 titleView
                 HStack(spacing: IFESpacing.regular) {
                     inputView
+                        .frame(maxWidth: 150, alignment: .leading)
                     unitMenu
                 }
             }
@@ -809,7 +810,7 @@ private struct UnitAwareNumericField: View {
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
             .font(.body.monospacedDigit())
-            .frame(minWidth: 96, idealWidth: 116, maxWidth: 150)
+            .frame(width: 132)
             .padding(.horizontal, IFESpacing.small)
             .padding(.vertical, 8)
             .background(
@@ -855,7 +856,7 @@ private struct UnitAwareNumericField: View {
             }
             .padding(.horizontal, IFESpacing.regular)
             .padding(.vertical, 8)
-            .frame(minWidth: 72)
+            .frame(minWidth: 86)
             .background(Color.pxSurface, in: RoundedRectangle(cornerRadius: IFECornerRadius.field))
             .overlay {
                 RoundedRectangle(cornerRadius: IFECornerRadius.field)
@@ -919,14 +920,14 @@ struct CalculationResultSections: View {
     var body: some View {
         Group {
             Section {
-                ScientificStatusBanner(
-                    title: record.response.isScientificResult
-                        ? "Preliminary — validation incomplete"
-                        : "Non-scientific demonstration",
-                    message: record.response.warnings.joined(separator: " ")
-                )
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+                if !record.response.isScientificResult {
+                    ScientificStatusBanner(
+                        title: "Non-scientific result",
+                        message: "See Calculation Details for recorded provider status and provenance."
+                    )
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
 
                 IFEValueRow(
                     title: "Phase",
@@ -966,19 +967,8 @@ struct CalculationResultSections: View {
                 if record.input.normalizedComposition == nil {
                     IFEValueRow(
                         title: "Normalization",
-                        value: "Not applied",
-                        status: "Composition was preserved as entered."
+                        value: "Not applied"
                     )
-                }
-            }
-
-            if !record.response.warnings.isEmpty {
-                Section("Warnings") {
-                    ForEach(record.response.warnings, id: \.self) { warning in
-                        Label(warning, systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(Color.pxWarning)
-                            .accessibilityElement(children: .combine)
-                    }
                 }
             }
 
