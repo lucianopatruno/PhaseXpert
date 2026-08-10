@@ -584,6 +584,9 @@ final class StreamMixingViewModel {
     var displayCompositionBasis: CompositionUnit = .molePercent
 
     private let engine: StreamMixingEngine
+    private let compositionConverter = StreamCompositionConverter()
+    private let flowConverter = StreamFlowConverter()
+    private var conversionIssue: StreamMixingValidationIssue?
 
     init(engine: StreamMixingEngine = StreamMixingEngine()) {
         self.engine = engine
@@ -608,6 +611,41 @@ final class StreamMixingViewModel {
             statusMessage = "Inputs changed. Calculate mixture again to refresh results."
         }
         validate()
+    }
+
+    func updateStreamName(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].name = value
+        markInputsChanged()
+    }
+
+    func updateFlowText(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].flowText = value
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func updatePressureText(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].pressureText = value
+        markInputsChanged()
+    }
+
+    func updateTemperatureText(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].temperatureText = value
+        markInputsChanged()
+    }
+
+    func updateOutletPressureText(_ value: String) {
+        outletPressureText = value
+        markInputsChanged()
+    }
+
+    func updateOutletTemperatureText(_ value: String) {
+        outletTemperatureText = value
+        markInputsChanged()
     }
 
     @discardableResult
@@ -643,6 +681,28 @@ final class StreamMixingViewModel {
         markInputsChanged()
     }
 
+    func canMoveStreamUp(id: UUID) -> Bool {
+        guard let index = streams.firstIndex(where: { $0.id == id }) else { return false }
+        return index > 0
+    }
+
+    func canMoveStreamDown(id: UUID) -> Bool {
+        guard let index = streams.firstIndex(where: { $0.id == id }) else { return false }
+        return index < streams.count - 1
+    }
+
+    func moveStreamUp(id: UUID) {
+        guard let index = streams.firstIndex(where: { $0.id == id }), index > 0 else { return }
+        streams.swapAt(index, index - 1)
+        markInputsChanged()
+    }
+
+    func moveStreamDown(id: UUID) {
+        guard let index = streams.firstIndex(where: { $0.id == id }), index < streams.count - 1 else { return }
+        streams.swapAt(index, index + 1)
+        markInputsChanged()
+    }
+
     func addImpurity(to streamID: UUID) -> UUID? {
         guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return nil }
         let selected = Set(streams[index].composition.map(\.component))
@@ -654,6 +714,27 @@ final class StreamMixingViewModel {
         clearAcceptedNormalization(for: index)
         markInputsChanged()
         return input.id
+    }
+
+    func updateCompositionValue(streamID: UUID, entryID: UUID, value: String) {
+        guard let streamIndex = streams.firstIndex(where: { $0.id == streamID }),
+              let entryIndex = streams[streamIndex].composition.firstIndex(where: { $0.id == entryID })
+        else { return }
+        streams[streamIndex].composition[entryIndex].value = value
+        clearAcceptedNormalization(for: streamIndex)
+        markInputsChanged()
+    }
+
+    func replaceComposition(
+        streamID: UUID,
+        basis: CompositionUnit,
+        composition: [CompositionInput]
+    ) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].compositionBasis = basis
+        streams[index].composition = composition
+        clearAcceptedNormalization(for: index)
+        markInputsChanged()
     }
 
     func updateImpurity(streamID: UUID, entryID: UUID, component: ComponentID) {
@@ -697,30 +778,41 @@ final class StreamMixingViewModel {
         guard let index = streams.firstIndex(where: { $0.id == streamID }),
               streams[index].compositionBasis != newBasis
         else { return }
-        let oldBasis = streams[index].compositionBasis
-        let oldScale = Self.compositionScale(for: oldBasis)
-        let newScale = Self.compositionScale(for: newBasis)
+        let oldSnapshots = originalComposition(for: streams[index])
+        guard let moleFractions = try? compositionConverter.moleFractions(from: oldSnapshots),
+              let newSnapshots = try? compositionConverter.compositionSnapshots(
+                from: moleFractions,
+                basis: newBasis
+              )
+        else {
+            conversionIssue = issueForConversionFailure(
+                stream: streams[index],
+                field: .composition,
+                message: "Composition basis could not be changed because the current composition is incomplete, invalid or lacks a reviewed molar mass."
+            )
+            validate()
+            return
+        }
         streams[index].compositionBasis = newBasis
-        streams[index].composition = streams[index].composition.map { entry in
-            let oldValue = parse(entry.value)
-            guard let oldValue else {
-                return CompositionInput(id: entry.id, component: entry.component, value: "")
-            }
-            let fraction = oldValue / oldScale
+        streams[index].composition = newSnapshots.map { snapshot in
+            let existingID = streams[index].composition.first {
+                $0.component == snapshot.component
+            }?.id ?? UUID()
             return CompositionInput(
-                id: entry.id,
-                component: entry.component,
-                value: Self.formatCompositionValue(fraction * newScale, basis: newBasis)
+                id: existingID,
+                component: snapshot.component,
+                value: Self.formatCompositionValue(snapshot.value, basis: newBasis)
             )
         }
         clearAcceptedNormalization(for: index)
+        conversionIssue = nil
         markInputsChanged()
     }
 
     func applyExplicitNormalization(for streamID: UUID) {
         guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
         let snapshots = originalComposition(for: streams[index])
-        guard let normalized = normalizedMoleFractions(from: snapshots) else { return }
+        guard let normalized = try? compositionConverter.normalizedMoleFractions(from: snapshots) else { return }
         streams[index].compositionBeforeNormalization = snapshots
         streams[index].normalizedComposition = normalized
         streams[index].composition = displayComposition(from: normalized, basis: streams[index].compositionBasis)
@@ -755,7 +847,11 @@ final class StreamMixingViewModel {
             validationReport = StreamMixingValidationReport(issues: localValidationIssues())
             return
         }
-        validationReport = engine.validate(request)
+        var issues = engine.validate(request).issues
+        if let conversionIssue {
+            issues.insert(conversionIssue, at: 0)
+        }
+        validationReport = StreamMixingValidationReport(issues: issues)
     }
 
     func issues(for streamID: UUID) -> [StreamMixingValidationIssue] {
@@ -786,15 +882,110 @@ final class StreamMixingViewModel {
     }
 
     func formattedCompositionValue(_ moleFraction: Double, basis: CompositionUnit) -> String {
-        switch basis {
-        case .moleFraction:
-            return Self.formatCompositionValue(moleFraction, basis: basis)
-        case .molePercent:
-            return Self.formatCompositionValue(moleFraction * 100, basis: basis)
-        case .partsPerMillion:
-            return Self.formatCompositionValue(moleFraction * 1_000_000, basis: basis)
-        case .massFraction:
-            return Self.formatCompositionValue(moleFraction, basis: basis)
+        guard let snapshot = try? compositionConverter.compositionSnapshots(
+            from: [MixtureComponent(component: .carbonDioxide, moleFraction: moleFraction)],
+            basis: basis
+        ).first else { return Self.formatCompositionValue(moleFraction, basis: basis) }
+        return Self.formatCompositionValue(snapshot.value, basis: basis)
+    }
+
+    func changeStreamPressureUnit(streamID: UUID, to newUnit: PressureDisplayUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].pressureDisplayUnit != newUnit
+        else { return }
+        guard let value = parse(streams[index].pressureText) else {
+            streams[index].pressureDisplayUnit = newUnit
+            markInputsChanged()
+            return
+        }
+        let pressurePa = streams[index].pressureDisplayUnit.pascal(from: value)
+        streams[index].pressureDisplayUnit = newUnit
+        streams[index].pressureText = Self.formatPressure(newUnit.displayValue(from: pressurePa), for: newUnit)
+        markInputsChanged()
+    }
+
+    func changeStreamTemperatureUnit(streamID: UUID, to newUnit: TemperatureDisplayUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].temperatureDisplayUnit != newUnit
+        else { return }
+        guard let value = parse(streams[index].temperatureText) else {
+            streams[index].temperatureDisplayUnit = newUnit
+            markInputsChanged()
+            return
+        }
+        let temperatureK = streams[index].temperatureDisplayUnit.kelvin(from: value)
+        streams[index].temperatureDisplayUnit = newUnit
+        streams[index].temperatureText = Self.formatTemperature(
+            newUnit.displayValue(from: temperatureK),
+            for: newUnit
+        )
+        markInputsChanged()
+    }
+
+    func changeOutletPressureUnit(to newUnit: PressureDisplayUnit) {
+        guard outletPressureDisplayUnit != newUnit else { return }
+        guard let value = parse(outletPressureText) else {
+            outletPressureDisplayUnit = newUnit
+            markInputsChanged()
+            return
+        }
+        let pressurePa = outletPressureDisplayUnit.pascal(from: value)
+        outletPressureDisplayUnit = newUnit
+        outletPressureText = Self.formatPressure(newUnit.displayValue(from: pressurePa), for: newUnit)
+        markInputsChanged()
+    }
+
+    func changeOutletTemperatureUnit(to newUnit: TemperatureDisplayUnit) {
+        guard outletTemperatureDisplayUnit != newUnit else { return }
+        guard let value = parse(outletTemperatureText) else {
+            outletTemperatureDisplayUnit = newUnit
+            markInputsChanged()
+            return
+        }
+        let temperatureK = outletTemperatureDisplayUnit.kelvin(from: value)
+        outletTemperatureDisplayUnit = newUnit
+        outletTemperatureText = Self.formatTemperature(
+            newUnit.displayValue(from: temperatureK),
+            for: newUnit
+        )
+        markInputsChanged()
+    }
+
+    func changeStreamFlowUnit(streamID: UUID, to newUnit: StreamFlowUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].flowUnit != newUnit
+        else { return }
+        let stream = streams[index]
+        guard let value = parse(stream.flowText) else {
+            conversionIssue = issueForConversionFailure(
+                stream: stream,
+                field: .flow,
+                code: .invalidFlow,
+                message: "Flow unit could not be changed because the current flow value is not numeric."
+            )
+            validate()
+            return
+        }
+        let composition = canonicalComposition(for: stream)
+        do {
+            let converted = try flowConverter.convertedFlowValue(
+                value,
+                from: stream.flowUnit,
+                to: newUnit,
+                composition: composition
+            )
+            streams[index].flowUnit = newUnit
+            streams[index].flowText = Self.formatFlow(converted, for: newUnit)
+            conversionIssue = nil
+            markInputsChanged()
+        } catch {
+            conversionIssue = issueForConversionFailure(
+                stream: stream,
+                field: .flow,
+                code: .invalidFlow,
+                message: "Flow unit could not be changed because the current composition cannot support a mass-molar flow conversion."
+            )
+            validate()
         }
     }
 
@@ -832,6 +1023,9 @@ final class StreamMixingViewModel {
 
     private func localValidationIssues() -> [StreamMixingValidationIssue] {
         var issues: [StreamMixingValidationIssue] = []
+        if let conversionIssue {
+            issues.append(conversionIssue)
+        }
         if parse(outletPressureText) == nil {
             issues.append(StreamMixingValidationIssue(
                 code: .invalidPressure,
@@ -863,61 +1057,21 @@ final class StreamMixingViewModel {
         if let normalized = stream.normalizedComposition {
             return normalized
         }
-        return convertedMoleFractions(from: originalComposition(for: stream)) ?? []
-    }
-
-    private func normalizedMoleFractions(
-        from snapshots: [CompositionInputSnapshot]
-    ) -> [MixtureComponent]? {
-        let total = snapshots.reduce(0) { $0 + $1.value }
-        guard total.isFinite, total > 0 else { return nil }
-        let scale = Self.compositionScale(for: snapshots.first?.unit ?? .moleFraction)
-        let normalized = snapshots.map {
-            CompositionInputSnapshot(
-                component: $0.component,
-                value: $0.value / total * scale,
-                unit: $0.unit
-            )
-        }
-        return convertedMoleFractions(from: normalized)
-    }
-
-    private func convertedMoleFractions(
-        from snapshots: [CompositionInputSnapshot]
-    ) -> [MixtureComponent]? {
-        guard let unit = snapshots.first?.unit,
-              snapshots.allSatisfy({ $0.unit == unit })
-        else { return nil }
-        switch unit {
-        case .moleFraction, .molePercent, .partsPerMillion:
-            let scale = Self.compositionScale(for: unit)
-            return snapshots
-                .map { MixtureComponent(component: $0.component, moleFraction: $0.value / scale) }
-                .sorted { $0.component.rawValue < $1.component.rawValue }
-        case .massFraction:
-            var amounts: [(ComponentID, Double)] = []
-            for snapshot in snapshots {
-                guard let molarMass = snapshot.component.molarMassKilogramsPerMole else {
-                    return nil
-                }
-                amounts.append((snapshot.component, snapshot.value / molarMass))
-            }
-            let total = amounts.reduce(0) { $0 + $1.1 }
-            guard total.isFinite, total > 0 else { return nil }
-            return amounts
-                .map { MixtureComponent(component: $0.0, moleFraction: $0.1 / total) }
-                .sorted { $0.component.rawValue < $1.component.rawValue }
-        }
+        return (try? compositionConverter.moleFractions(from: originalComposition(for: stream))) ?? []
     }
 
     private func displayComposition(
         from composition: [MixtureComponent],
         basis: CompositionUnit
     ) -> [CompositionInput] {
-        composition.map {
+        let snapshots = (try? compositionConverter.compositionSnapshots(
+            from: composition,
+            basis: basis
+        )) ?? []
+        return snapshots.map {
             CompositionInput(
                 component: $0.component,
-                value: formattedCompositionValue($0.moleFraction, basis: basis)
+                value: Self.formatCompositionValue($0.value, basis: basis)
             )
         }
     }
@@ -925,6 +1079,21 @@ final class StreamMixingViewModel {
     private func clearAcceptedNormalization(for index: Int) {
         streams[index].compositionBeforeNormalization = nil
         streams[index].normalizedComposition = nil
+    }
+
+    private func issueForConversionFailure(
+        stream: StreamInputState,
+        field: StreamMixingField,
+        code: StreamMixingValidationCode = .invalidComposition,
+        message: String
+    ) -> StreamMixingValidationIssue {
+        StreamMixingValidationIssue(
+            code: code,
+            field: field,
+            streamID: stream.id,
+            streamName: stream.name,
+            message: message
+        )
     }
 
     private func distinctDuplicateName(for name: String) -> String {
@@ -966,6 +1135,35 @@ final class StreamMixingViewModel {
         case .molePercent:
             String(format: "%.8g", value)
         case .partsPerMillion:
+            String(format: "%.12g", value)
+        }
+    }
+
+    private static func formatPressure(_ value: Double, for unit: PressureDisplayUnit) -> String {
+        switch unit {
+        case .barAbsolute:
+            String(format: "%.8g", value)
+        case .megapascalAbsolute, .psiAbsolute:
+            String(format: "%.10g", value)
+        }
+    }
+
+    private static func formatTemperature(_ value: Double, for unit: TemperatureDisplayUnit) -> String {
+        switch unit {
+        case .celsius:
+            String(format: "%.8g", value)
+        case .kelvin, .fahrenheit:
+            String(format: "%.10g", value)
+        }
+    }
+
+    private static func formatFlow(_ value: Double, for unit: StreamFlowUnit) -> String {
+        switch unit {
+        case .kilogramsPerSecond, .molesPerSecond:
+            String(format: "%.12g", value)
+        case .kilogramsPerHour, .kilomolesPerHour:
+            String(format: "%.10g", value)
+        case .tonnesPerHour:
             String(format: "%.12g", value)
         }
     }

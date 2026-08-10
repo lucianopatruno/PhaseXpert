@@ -736,13 +736,15 @@ struct StreamMixingView: View {
                 Section {
                     operatingPointRow(
                         title: "Outlet pressure",
-                        value: $viewModel.outletPressureText,
+                        value: Binding(
+                            get: { viewModel.outletPressureText },
+                            set: { viewModel.updateOutletPressureText($0) }
+                        ),
                         unit: Binding(
                             get: { viewModel.outletPressureDisplayUnit },
                             set: { unit in
                                 focusedField = nil
-                                viewModel.outletPressureDisplayUnit = unit
-                                viewModel.markInputsChanged()
+                                viewModel.changeOutletPressureUnit(to: unit)
                             }
                         ),
                         field: .outletPressure,
@@ -751,13 +753,15 @@ struct StreamMixingView: View {
 
                     operatingPointRow(
                         title: "Outlet temperature",
-                        value: $viewModel.outletTemperatureText,
+                        value: Binding(
+                            get: { viewModel.outletTemperatureText },
+                            set: { viewModel.updateOutletTemperatureText($0) }
+                        ),
                         unit: Binding(
                             get: { viewModel.outletTemperatureDisplayUnit },
                             set: { unit in
                                 focusedField = nil
-                                viewModel.outletTemperatureDisplayUnit = unit
-                                viewModel.markInputsChanged()
+                                viewModel.changeOutletTemperatureUnit(to: unit)
                             }
                         ),
                         field: .outletTemperature,
@@ -842,15 +846,6 @@ struct StreamMixingView: View {
             .navigationTitle("Stream Mixing")
             .accessibilityIdentifier("stream-mixing-screen")
             .onAppear { viewModel.validate() }
-            .onChange(of: viewModel.streams) { _, _ in
-                viewModel.markInputsChanged()
-            }
-            .onChange(of: viewModel.outletPressureText) { _, _ in
-                viewModel.markInputsChanged()
-            }
-            .onChange(of: viewModel.outletTemperatureText) { _, _ in
-                viewModel.markInputsChanged()
-            }
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
@@ -943,7 +938,13 @@ private struct StreamInputCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.medium) {
             HStack(alignment: .firstTextBaseline) {
-                TextField("Stream name", text: $stream.name)
+                TextField(
+                    "Stream name",
+                    text: Binding(
+                        get: { stream.name },
+                        set: { viewModel.updateStreamName(streamID: stream.id, value: $0) }
+                    )
+                )
                     .font(.headline)
                     .textInputAutocapitalization(.words)
                     .focused(focusedField, equals: .streamName(stream.id))
@@ -955,6 +956,16 @@ private struct StreamInputCard: View {
                         _ = viewModel.duplicateStream(id: stream.id)
                     }
                     .disabled(!viewModel.canAddStream)
+
+                    Button("Move up", systemImage: "chevron.up") {
+                        viewModel.moveStreamUp(id: stream.id)
+                    }
+                    .disabled(!viewModel.canMoveStreamUp(id: stream.id))
+
+                    Button("Move down", systemImage: "chevron.down") {
+                        viewModel.moveStreamDown(id: stream.id)
+                    }
+                    .disabled(!viewModel.canMoveStreamDown(id: stream.id))
 
                     Button("Remove stream", systemImage: "trash", role: .destructive) {
                         viewModel.removeStream(id: stream.id)
@@ -973,7 +984,10 @@ private struct StreamInputCard: View {
 
             UnitAwareNumericField(
                 title: "Pressure",
-                text: $stream.pressureText,
+                text: Binding(
+                    get: { stream.pressureText },
+                    set: { viewModel.updatePressureText(streamID: stream.id, value: $0) }
+                ),
                 selection: textSelectionBinding(for: "stream-pressure-\(stream.id.uuidString)"),
                 keyboardType: .decimalPad,
                 isFocused: focusedField.wrappedValue == .streamPressure(stream.id),
@@ -985,15 +999,17 @@ private struct StreamInputCard: View {
                     guard let selected = PressureDisplayUnit.allCases.first(where: {
                         $0.rawValue == selectedUnit
                     }) else { return }
-                    stream.pressureDisplayUnit = selected
-                    viewModel.markInputsChanged()
+                    viewModel.changeStreamPressureUnit(streamID: stream.id, to: selected)
                 }
             )
             .focused(focusedField, equals: .streamPressure(stream.id))
 
             UnitAwareNumericField(
                 title: "Temperature",
-                text: $stream.temperatureText,
+                text: Binding(
+                    get: { stream.temperatureText },
+                    set: { viewModel.updateTemperatureText(streamID: stream.id, value: $0) }
+                ),
                 selection: textSelectionBinding(for: "stream-temperature-\(stream.id.uuidString)"),
                 keyboardType: .numbersAndPunctuation,
                 isFocused: focusedField.wrappedValue == .streamTemperature(stream.id),
@@ -1005,8 +1021,7 @@ private struct StreamInputCard: View {
                     guard let selected = TemperatureDisplayUnit.allCases.first(where: {
                         $0.rawValue == selectedUnit
                     }) else { return }
-                    stream.temperatureDisplayUnit = selected
-                    viewModel.markInputsChanged()
+                    viewModel.changeStreamTemperatureUnit(streamID: stream.id, to: selected)
                 }
             )
             .focused(focusedField, equals: .streamTemperature(stream.id))
@@ -1041,7 +1056,10 @@ private struct StreamInputCard: View {
     private var flowRow: some View {
         UnitAwareNumericField(
             title: "Flow rate",
-            text: $stream.flowText,
+            text: Binding(
+                get: { stream.flowText },
+                set: { viewModel.updateFlowText(streamID: stream.id, value: $0) }
+            ),
             selection: textSelectionBinding(for: "stream-flow-\(stream.id.uuidString)"),
             keyboardType: .decimalPad,
             isFocused: focusedField.wrappedValue == .streamFlow(stream.id),
@@ -1053,8 +1071,7 @@ private struct StreamInputCard: View {
                 guard let selected = StreamFlowUnit.allCases.first(where: {
                     $0.rawValue == selectedUnit
                 }) else { return }
-                stream.flowUnit = selected
-                viewModel.markInputsChanged()
+                viewModel.changeStreamFlowUnit(streamID: stream.id, to: selected)
             }
         )
         .focused(focusedField, equals: .streamFlow(stream.id))
@@ -1147,7 +1164,16 @@ private struct StreamCompositionEditor: View {
 
                     TextField(
                         "Value",
-                        text: $entry.value,
+                        text: Binding(
+                            get: { entry.value },
+                            set: {
+                                viewModel.updateCompositionValue(
+                                    streamID: stream.id,
+                                    entryID: entry.id,
+                                    value: $0
+                                )
+                            }
+                        ),
                         selection: textSelectionBinding(for: "stream-composition-\(stream.id.uuidString)-\(entry.id.uuidString)")
                     )
                     .keyboardType(.decimalPad)
@@ -1341,11 +1367,8 @@ private struct StreamMixingResultSections: View {
             }
         }
 
-        ForEach(result.warnings) { warning in
-            LabeledContent("Warning") {
-                Text(warning.message)
-                    .multilineTextAlignment(.trailing)
-            }
+        if !result.warnings.isEmpty {
+            LabeledContent("Warnings recorded", value: "\(result.warnings.count)")
         }
 
         LabeledContent(

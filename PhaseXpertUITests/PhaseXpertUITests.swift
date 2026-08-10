@@ -400,7 +400,7 @@ final class PhaseXpertUITests: XCTestCase {
         app.tap()
     }
 
-    func testStreamMixingFlowAndOutletUnitSelection() {
+    func testStreamMixingFlowAndOutletUnitConversionPreservesValues() {
         let app = XCUIApplication()
         app.launch()
         openStreamMixing(in: app)
@@ -408,8 +408,11 @@ final class PhaseXpertUITests: XCTestCase {
         let firstFlowUnit = app.buttons.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
         XCTAssertTrue(firstFlowUnit.waitForExistence(timeout: 3))
         firstFlowUnit.tap()
-        app.buttons["kg/h"].tap()
-        XCTAssertEqual(firstFlowUnit.value as? String, "kg/h")
+        app.buttons["kmol/h"].tap()
+        XCTAssertEqual(firstFlowUnit.value as? String, "kmol/h")
+        let firstFlowValue = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
+        XCTAssertTrue(firstFlowValue.waitForExistence(timeout: 2))
+        XCTAssertTrue((firstFlowValue.value as? String)?.contains("36") == true)
 
         let outletPressureUnit = app.buttons["stream-mixing-outlet-pressure-unit-menu"]
         for _ in 0..<5 where !outletPressureUnit.waitForExistence(timeout: 0.5) {
@@ -419,12 +422,35 @@ final class PhaseXpertUITests: XCTestCase {
         outletPressureUnit.tap()
         app.buttons["psi(a)"].tap()
         XCTAssertEqual(outletPressureUnit.value as? String, "psi(a)")
+        let outletPressureValue = app.textFields["stream-mixing-outlet-pressure-value-field"]
+        XCTAssertTrue((outletPressureValue.value as? String)?.contains("1740.45") == true)
 
         let outletTemperatureUnit = app.buttons["stream-mixing-outlet-temperature-unit-menu"]
         XCTAssertTrue(outletTemperatureUnit.exists)
         outletTemperatureUnit.tap()
         app.buttons["K"].tap()
         XCTAssertEqual(outletTemperatureUnit.value as? String, "K")
+        let outletTemperatureValue = app.textFields["stream-mixing-outlet-temperature-value-field"]
+        XCTAssertTrue((outletTemperatureValue.value as? String)?.contains("298.15") == true)
+    }
+
+    func testStreamMixingMoveDownActionReordersVisibleStreams() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        let streamNames = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-name-"))
+        XCTAssertTrue(streamNames.element(boundBy: 0).waitForExistence(timeout: 3))
+        XCTAssertEqual(streamNames.element(boundBy: 0).value as? String, "Stream 1")
+        XCTAssertEqual(streamNames.element(boundBy: 1).value as? String, "Stream 2")
+
+        app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions")).element(boundBy: 0).tap()
+        XCTAssertTrue(app.buttons["Move down"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["Move up"].isEnabled)
+        app.buttons["Move down"].tap()
+
+        XCTAssertEqual(streamNames.element(boundBy: 0).value as? String, "Stream 2")
+        XCTAssertEqual(streamNames.element(boundBy: 1).value as? String, "Stream 1")
     }
 
     func testStreamMixingSuccessfulCalculationWarningTraceabilityAndStaleState() {
