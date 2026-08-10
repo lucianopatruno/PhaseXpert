@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 extension Color {
     static let ifePrimary = Color("IFEPrimary")
@@ -7,13 +8,45 @@ extension Color {
     static let ifeSignal = Color("IFESignal")
     static let ifeLavender = Color("IFELavender")
     static let ifeBlue = Color("IFEBlue")
+
+    static let pxSurface = Color(.secondarySystemGroupedBackground)
+    static let pxGroupedSurface = Color(.systemGroupedBackground)
+    static let pxSeparator = Color(.separator)
+    static let pxSuccess = Color(.systemGreen)
+    static let pxWarning = Color(.systemOrange)
+    static let pxUnavailable = Color(.systemGray)
+    static let pxError = Color(.systemRed)
+    static let pxChartBoundary = Color.ifePrimary
+    static let pxChartCritical = Color.ifeSignal
+    static let pxChartOperatingPoint = Color.ifeText
 }
 
 enum IFESpacing {
+    static let xSmall: CGFloat = 4
     static let small: CGFloat = 8
+    static let regular: CGFloat = 12
     static let medium: CGFloat = 16
     static let large: CGFloat = 24
     static let extraLarge: CGFloat = 32
+}
+
+enum IFECornerRadius {
+    static let field: CGFloat = 8
+    static let card: CGFloat = 8
+    static let section: CGFloat = 12
+}
+
+enum IFELine {
+    static let hairline: CGFloat = 1
+    static let focus: CGFloat = 1.5
+}
+
+enum IFETypography {
+    static let sectionTitle = Font.subheadline.weight(.semibold)
+    static let cardTitle = Font.headline
+    static let label = Font.subheadline.weight(.medium)
+    static let value = Font.body.monospacedDigit()
+    static let metadata = Font.caption
 }
 
 struct IFECard<Content: View>: View {
@@ -27,12 +60,107 @@ struct IFECard<Content: View>: View {
         content
             .padding(IFESpacing.medium)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.background)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(Color.pxSurface)
+            .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.ifeLavender.opacity(0.8), lineWidth: 1)
+                RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
+                    .stroke(Color.pxSeparator.opacity(0.55), lineWidth: IFELine.hairline)
             }
+    }
+}
+
+struct IFEStatusBadge: View {
+    let text: String
+    let systemImage: String
+    let color: Color
+
+    var body: some View {
+        Label(text, systemImage: systemImage)
+            .font(.caption.weight(.semibold))
+            .labelStyle(.titleAndIcon)
+            .padding(.horizontal, IFESpacing.small)
+            .padding(.vertical, IFESpacing.xSmall)
+            .background(color.opacity(0.14), in: Capsule())
+            .overlay {
+                Capsule().stroke(color.opacity(0.35), lineWidth: IFELine.hairline)
+            }
+            .foregroundStyle(color)
+            .accessibilityElement(children: .combine)
+    }
+}
+
+struct IFESectionHeader: View {
+    let step: Int?
+    let title: String
+    var subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            HStack(alignment: .firstTextBaseline, spacing: IFESpacing.small) {
+                if let step {
+                    Text("\(step)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(Color.ifePrimary, in: Circle())
+                        .accessibilityLabel("Step \(step)")
+                }
+                Text(title)
+                    .font(IFETypography.sectionTitle)
+                    .foregroundStyle(.primary)
+                    .textCase(nil)
+            }
+            if let subtitle {
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .textCase(nil)
+            }
+        }
+    }
+}
+
+struct IFEValueRow: View {
+    let title: String
+    let value: String
+    var unit: String?
+    var status: String?
+    var statusColor: Color = .secondary
+    var copyValue: String?
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
+            VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+                Text(title)
+                    .font(IFETypography.label)
+                if let status {
+                    Text(status)
+                        .font(IFETypography.metadata)
+                        .foregroundStyle(statusColor)
+                }
+            }
+            Spacer(minLength: IFESpacing.medium)
+            VStack(alignment: .trailing, spacing: IFESpacing.xSmall) {
+                Text([value, unit].compactMap { $0 }.joined(separator: " "))
+                    .font(IFETypography.value)
+                    .multilineTextAlignment(.trailing)
+                    .textSelection(.enabled)
+                    .accessibilityLabel(accessibilityValueText)
+                if let copyValue {
+                    Button("Copy", systemImage: "doc.on.doc") {
+                        UIPasteboard.general.string = copyValue
+                    }
+                    .font(.caption.weight(.semibold))
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Copy \(title) value")
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var accessibilityValueText: String {
+        [value, unit].compactMap { $0 }.joined(separator: " ")
     }
 }
 
@@ -93,7 +221,7 @@ struct ScientificStatusBanner: View {
         .padding(IFESpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background((isError ? Color.red : Color.ifeBlue).opacity(isError ? 0.10 : 0.55))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.section, style: .continuous))
     }
 }
 

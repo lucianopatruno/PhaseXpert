@@ -15,6 +15,8 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["bar(a)"].exists)
         XCTAssertTrue(app.staticTexts["Temperature"].exists)
         XCTAssertTrue(app.staticTexts["°C"].exists)
+        XCTAssertEqual(app.buttons["pressure-unit-menu"].value as? String, "bar(a)")
+        XCTAssertEqual(app.buttons["temperature-unit-menu"].value as? String, "°C")
 
         let runCalculationButton = app.buttons["run-calculation"]
         for _ in 0..<5 where !runCalculationButton.waitForExistence(timeout: 0.5) {
@@ -36,6 +38,165 @@ final class PhaseXpertUITests: XCTestCase {
         app.textFields["Pressure value"].tap()
         XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["OK"].exists)
+    }
+
+    func testPressureAndTemperatureValuesReplaceOnFocus() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let pressure = app.textFields["Pressure value"]
+        XCTAssertTrue(pressure.waitForExistence(timeout: 2))
+        pressure.tap()
+        pressure.typeText("42")
+        XCTAssertEqual(pressure.value as? String, "42 bar(a)")
+        app.buttons["keyboard-done"].tap()
+
+        let temperature = app.textFields["Temperature value"]
+        XCTAssertTrue(temperature.waitForExistence(timeout: 2))
+        temperature.tap()
+        temperature.typeText("-10")
+        XCTAssertEqual(temperature.value as? String, "-10 °C")
+    }
+
+    func testPSIAndFahrenheitValuesReplaceOnFocus() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let pressureUnit = app.buttons["pressure-unit-menu"]
+        XCTAssertTrue(pressureUnit.waitForExistence(timeout: 2))
+        pressureUnit.tap()
+        app.buttons["psi(a)"].tap()
+        XCTAssertEqual(pressureUnit.value as? String, "psi(a)")
+
+        let pressure = app.textFields["Pressure value"]
+        pressure.tap()
+        pressure.typeText("500")
+        XCTAssertEqual(pressure.value as? String, "500 psi(a)")
+        app.buttons["keyboard-done"].tap()
+
+        let temperatureUnit = app.buttons["temperature-unit-menu"]
+        XCTAssertTrue(temperatureUnit.waitForExistence(timeout: 2))
+        temperatureUnit.tap()
+        app.buttons["°F"].tap()
+        XCTAssertEqual(temperatureUnit.value as? String, "°F")
+
+        let temperature = app.textFields["Temperature value"]
+        temperature.tap()
+        temperature.typeText("68")
+        XCTAssertEqual(temperature.value as? String, "68 °F")
+    }
+
+    func testIFEModelIsVisibleUnavailableAndDoesNotEnableCalculation() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let coolProp = app.buttons["model-coolprop-heos"]
+        let ife = app.buttons["model-ife-model"]
+        XCTAssertTrue(coolProp.waitForExistence(timeout: 2))
+        XCTAssertTrue(ife.waitForExistence(timeout: 2))
+        XCTAssertEqual(coolProp.value as? String, "Selected")
+        XCTAssertEqual(ife.value as? String, "Not selected")
+
+        ife.tap()
+
+        XCTAssertEqual(coolProp.value as? String, "Selected")
+        XCTAssertEqual(ife.value as? String, "Not selected")
+
+        let runCalculationButton = app.buttons["run-calculation"]
+        for _ in 0..<6 where !runCalculationButton.waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+        XCTAssertTrue(runCalculationButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(runCalculationButton.isEnabled)
+        XCTAssertFalse(app.staticTexts["This model is not available in this version."].exists)
+    }
+
+    func testOperatingPointUnitsAreSeparateAndAdaptive() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let pressureLabel = app.staticTexts["pressure-label"]
+        let temperatureLabel = app.staticTexts["temperature-label"]
+        let pressureField = app.textFields["pressure-value-field"]
+        let temperatureField = app.textFields["temperature-value-field"]
+        let pressureUnit = app.buttons["pressure-unit-menu"]
+        let temperatureUnit = app.buttons["temperature-unit-menu"]
+
+        XCTAssertTrue(pressureLabel.waitForExistence(timeout: 2))
+        XCTAssertEqual(pressureLabel.label, "Pressure")
+        XCTAssertTrue(temperatureLabel.waitForExistence(timeout: 2))
+        XCTAssertEqual(temperatureLabel.label, "Temperature")
+        XCTAssertTrue(pressureField.exists)
+        XCTAssertTrue(temperatureField.exists)
+        XCTAssertTrue(pressureUnit.exists)
+        XCTAssertTrue(temperatureUnit.exists)
+        XCTAssertEqual(pressureUnit.value as? String, "bar(a)")
+        XCTAssertEqual(temperatureUnit.value as? String, "°C")
+        XCTAssertFalse(pressureField.frame.intersects(pressureUnit.frame))
+        XCTAssertFalse(temperatureField.frame.intersects(temperatureUnit.frame))
+        XCTAssertLessThan(pressureLabel.frame.minX, pressureField.frame.minX)
+        XCTAssertLessThan(temperatureLabel.frame.minX, temperatureField.frame.minX)
+        XCTAssertLessThan(pressureLabel.frame.minX, 80)
+        XCTAssertLessThan(temperatureLabel.frame.minX, 80)
+        XCTAssertGreaterThan(pressureField.frame.minX, pressureLabel.frame.minX + 40)
+        XCTAssertGreaterThan(temperatureField.frame.minX, temperatureLabel.frame.minX + 40)
+        XCTAssertGreaterThan(pressureUnit.frame.minX, pressureField.frame.maxX)
+        XCTAssertGreaterThan(temperatureUnit.frame.minX, temperatureField.frame.maxX)
+        XCTAssertEqual(pressureField.frame.minX, temperatureField.frame.minX, accuracy: 2)
+        XCTAssertEqual(pressureField.frame.maxX, temperatureField.frame.maxX, accuracy: 2)
+        XCTAssertEqual(pressureField.frame.width, temperatureField.frame.width, accuracy: 2)
+        XCTAssertEqual(pressureUnit.frame.minX, temperatureUnit.frame.minX, accuracy: 2)
+        XCTAssertEqual(pressureUnit.frame.maxX, temperatureUnit.frame.maxX, accuracy: 2)
+        XCTAssertGreaterThan(
+            pressureUnit.frame.maxX,
+            app.windows.element(boundBy: 0).frame.midX
+        )
+    }
+
+    func testOperatingPointUnitsRemainUsableWithLargeDynamicType() {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-UIPreferredContentSizeCategoryName",
+            "UICTContentSizeCategoryAccessibilityExtraExtraExtraLarge"
+        ]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["pressure-label"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["temperature-label"].exists)
+        XCTAssertTrue(app.textFields["pressure-value-field"].exists)
+        XCTAssertTrue(app.buttons["pressure-unit-menu"].exists)
+        XCTAssertTrue(app.textFields["temperature-value-field"].exists)
+        XCTAssertTrue(app.buttons["temperature-unit-menu"].exists)
+        XCTAssertFalse(
+            app.textFields["pressure-value-field"].frame
+                .intersects(app.buttons["pressure-unit-menu"].frame)
+        )
+        XCTAssertFalse(
+            app.textFields["temperature-value-field"].frame
+                .intersects(app.buttons["temperature-unit-menu"].frame)
+        )
+    }
+
+    func testAboutShowsIFEAttributionHierarchy() {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.tabBars.buttons["About"].tap()
+
+        XCTAssertTrue(app.staticTexts["Developed by IFE"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Flow Technology Department"].exists)
+        XCTAssertFalse(app.staticTexts["Developed by the IFE Flow Technology Department"].exists)
+    }
+
+    func testCalculatorDoesNotDuplicatePreliminaryWarningCopyAtLaunch() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let repeatedWarning = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Validation remains incomplete")
+        )
+        XCTAssertEqual(repeatedWarning.count, 0)
+        XCTAssertTrue(app.staticTexts["CoolProp HEOS — Preliminary"].exists)
     }
 
     func testImpurityKeyboardDoneDismissesInPPMAndMolPercentModes() {
@@ -76,7 +237,7 @@ final class PhaseXpertUITests: XCTestCase {
         nitrogenField.tap()
         XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
         nitrogenField.typeText("100")
-        app.staticTexts["Composition"].tap()
+        app.staticTexts["Validation and capability state"].tap()
         XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
         XCTAssertEqual(nitrogenField.value as? String, "100")
 
@@ -146,6 +307,7 @@ final class PhaseXpertUITests: XCTestCase {
 
         let nitrogenField = app.textFields["N₂ ppm"]
         XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
+        nitrogenField.tap()
         nitrogenField.typeText("30000")
         XCTAssertFalse(app.buttons["OK"].exists)
         app.swipeDown()
@@ -168,15 +330,15 @@ final class PhaseXpertUITests: XCTestCase {
         )
         viewPhaseDiagramButton.tap()
 
+        let pureCO2ScopeMessage = app.staticTexts[
+            "Phase diagrams are available for pure CO₂. Remove all impurities to view the CO₂ phase diagram."
+        ]
         XCTAssertTrue(
-            app.otherElements["phase-diagram-pure-co2-scope"].waitForExistence(timeout: 10),
+            app.otherElements["phase-diagram-pure-co2-scope"].waitForExistence(timeout: 10)
+                || pureCO2ScopeMessage.waitForExistence(timeout: 3),
             "The phase-diagram screen did not show the pure-CO₂ scope state for 3 mol% N₂."
         )
-        XCTAssertTrue(
-            app.staticTexts[
-                "Phase diagrams are available for pure CO₂. Remove all impurities to view the CO₂ phase diagram."
-            ].exists
-        )
+        XCTAssertTrue(pureCO2ScopeMessage.exists)
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
     }
 

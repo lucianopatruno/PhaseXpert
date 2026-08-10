@@ -38,27 +38,40 @@ struct CalculatorView: View {
                     }
                 }
 
-                Section("Calculation model") {
-                    Picker("Model", selection: $viewModel.selectedModelID) {
-                        ForEach(viewModel.descriptors) { descriptor in
-                            Text(descriptor.name)
-                                .tag(descriptor.id)
-                                .disabled(descriptor.availability == .unavailable)
+                Section {
+                    ForEach(viewModel.descriptors) { descriptor in
+                        ModelSelectionRow(
+                            descriptor: descriptor,
+                            isSelected: descriptor.id == viewModel.selectedModelID
+                        ) {
+                            focusedField = nil
+                            if descriptor.availability != .unavailable {
+                                viewModel.selectedModelID = descriptor.id
+                            }
                         }
+                        .disabled(descriptor.availability == .unavailable)
+                        .accessibilityIdentifier("model-\(descriptor.id)")
                     }
-
-                    if let descriptor = viewModel.selectedDescriptor {
-                        LabeledContent("Status", value: descriptor.availability.rawValue.capitalized)
-                        LabeledContent("Execution", value: descriptor.calculationMode.rawValue.capitalized)
-                    }
+                } header: {
+                    IFESectionHeader(
+                        step: 1,
+                        title: "Thermodynamic model",
+                        subtitle: "Choose the calculation provider."
+                    )
                 }
 
-                Section("Operating point") {
+                Section {
                     operatingPointRow(
                         title: "Pressure",
                         value: $viewModel.pressureText,
                         selection: $pressureSelection,
-                        unit: "bar(a)",
+                        unit: Binding(
+                            get: { viewModel.pressureDisplayUnit },
+                            set: { unit in
+                                focusedField = nil
+                                viewModel.changePressureDisplayUnit(to: unit)
+                            }
+                        ),
                         keyboardType: .decimalPad,
                         field: .pressure
                     )
@@ -67,9 +80,21 @@ struct CalculatorView: View {
                         title: "Temperature",
                         value: $viewModel.temperatureText,
                         selection: $temperatureSelection,
-                        unit: "°C",
+                        unit: Binding(
+                            get: { viewModel.temperatureDisplayUnit },
+                            set: { unit in
+                                focusedField = nil
+                                viewModel.changeTemperatureDisplayUnit(to: unit)
+                            }
+                        ),
                         keyboardType: .numbersAndPunctuation,
                         field: .temperature
+                    )
+                } header: {
+                    IFESectionHeader(
+                        step: 2,
+                        title: "Pressure and temperature",
+                        subtitle: "Pressure inputs are absolute."
                     )
                 }
 
@@ -206,17 +231,17 @@ struct CalculatorView: View {
                     }
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
                 } header: {
-                    Text("Composition")
+                    IFESectionHeader(
+                        step: 3,
+                        title: "Composition",
+                        subtitle: "CO₂ is the remainder."
+                    )
                         .contentShape(Rectangle())
                         .onTapGesture {
                             dismissImpurityKeyboardIfNeeded()
                         }
                 } footer: {
-                    Text(
-                        viewModel.compositionBasis == .partsPerMillion
-                            ? "Enter impurities in molar ppm. CO₂ is calculated exactly as 1,000,000 ppm minus the impurity total."
-                            : "Enter impurities in mol%. CO₂ is calculated exactly as 100 mol% minus the impurity total."
-                    )
+                    Text(compositionFooterText)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         dismissImpurityKeyboardIfNeeded()
@@ -224,7 +249,7 @@ struct CalculatorView: View {
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {
-                    Section("Input review") {
+                    Section {
                         ForEach(viewModel.validationReport.issues) { issue in
                             Label(
                                 issue.message,
@@ -240,6 +265,12 @@ struct CalculatorView: View {
                                 viewModel.normalizeComposition()
                             }
                         }
+                    } header: {
+                        IFESectionHeader(step: 4, title: "Validation and capability state")
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = nil
+                            }
                     }
                 }
 
@@ -264,6 +295,8 @@ struct CalculatorView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isCalculating || !viewModel.validationReport.canCalculate)
                     .accessibilityIdentifier("run-calculation")
+                } header: {
+                    IFESectionHeader(step: 5, title: "Run calculation")
                 }
 
                 if let record = viewModel.calculationRecord {
@@ -296,6 +329,8 @@ struct CalculatorView: View {
                             recordToSave = record
                         }
                         .accessibilityIdentifier("save-calculation")
+                    } header: {
+                        IFESectionHeader(step: 8, title: "Traceability, save and export")
                     }
                 }
 
@@ -364,7 +399,7 @@ struct CalculatorView: View {
 
                     Spacer()
 
-                    if isImpurityAmountFocused {
+                    if focusedField != nil {
                         Button("Done") {
                             focusedField = nil
                         }
@@ -501,42 +536,62 @@ struct CalculatorView: View {
         title: String,
         value: Binding<String>,
         selection: Binding<TextSelection?>,
-        unit: String,
+        unit: Binding<PressureDisplayUnit>,
         keyboardType: UIKeyboardType,
         field: InputField
     ) -> some View {
-        HStack(spacing: 10) {
-            Text(title)
-                .font(.body.weight(.medium))
-            Spacer(minLength: 8)
-            TextField("Value", text: value, selection: selection)
-                .keyboardType(keyboardType)
-                .focused($focusedField, equals: field)
-                .multilineTextAlignment(.trailing)
-                .frame(width: 104)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 7)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.secondary.opacity(0.08))
-                )
-                .overlay {
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(
-                            focusedField == field
-                                ? Color.ifePrimary
-                                : Color.secondary.opacity(0.22),
-                            lineWidth: focusedField == field ? 1.5 : 1
-                        )
-                }
-                .contentShape(Rectangle())
-                .accessibilityLabel("\(title) value")
-            Text(unit)
-                .foregroundStyle(.secondary)
-                .frame(width: 50, alignment: .leading)
-                .accessibilityHidden(true)
-        }
-        .accessibilityElement(children: .contain)
+        UnitAwareNumericField(
+            title: title,
+            text: value,
+            selection: selection,
+            keyboardType: keyboardType,
+            isFocused: focusedField == field,
+            unitLabel: unit.wrappedValue.rawValue,
+            unitOptions: PressureDisplayUnit.allCases.map(\.rawValue),
+            selectedUnit: unit.wrappedValue.rawValue,
+            accessibilityIdentifier: title.lowercased(),
+            unitAction: { selectedUnit in
+                guard let selected = PressureDisplayUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                unit.wrappedValue = selected
+            }
+        )
+        .focused($focusedField, equals: field)
+    }
+
+    private func operatingPointRow(
+        title: String,
+        value: Binding<String>,
+        selection: Binding<TextSelection?>,
+        unit: Binding<TemperatureDisplayUnit>,
+        keyboardType: UIKeyboardType,
+        field: InputField
+    ) -> some View {
+        UnitAwareNumericField(
+            title: title,
+            text: value,
+            selection: selection,
+            keyboardType: keyboardType,
+            isFocused: focusedField == field,
+            unitLabel: unit.wrappedValue.rawValue,
+            unitOptions: TemperatureDisplayUnit.allCases.map(\.rawValue),
+            selectedUnit: unit.wrappedValue.rawValue,
+            accessibilityIdentifier: title.lowercased(),
+            unitAction: { selectedUnit in
+                guard let selected = TemperatureDisplayUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                unit.wrappedValue = selected
+            }
+        )
+        .focused($focusedField, equals: field)
+    }
+
+    private var compositionFooterText: String {
+        viewModel.compositionBasis == .partsPerMillion
+            ? "Impurity total cannot exceed 1,000,000 ppm. CO₂ is not normalized silently."
+            : "Impurity total cannot exceed 100 mol%. CO₂ is not normalized silently."
     }
 
     private var orderedInputFields: [InputField] {
@@ -597,10 +652,225 @@ struct CalculatorView: View {
         case .available:
             "Review the model domain and limitations before calculating."
         case .preliminary:
-            "Pure CO₂ supports expanded properties. Dry CO₂-rich mixtures with N₂, O₂, Ar, CH₄ or H₂ up to 10 mol% total impurity remain limited to density, phase and derived values. Validation remains incomplete."
+            "Operational local model. Full provenance is available in Calculation Details."
         case .unavailable:
             "This model is not available in this version."
         }
+    }
+}
+
+private struct ModelSelectionRow: View {
+    let descriptor: ModelDescriptor
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: IFESpacing.regular) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : statusIcon)
+                    .foregroundStyle(statusColor)
+                    .font(.title3)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+                    Text(displayName)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text(statusDescription)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: IFESpacing.small) {
+                        IFEStatusBadge(
+                            text: descriptor.availability.rawValue.capitalized,
+                            systemImage: statusIcon,
+                            color: statusColor
+                        )
+                        IFEStatusBadge(
+                            text: descriptor.calculationMode.rawValue.capitalized,
+                            systemImage: "iphone",
+                            color: .secondary
+                        )
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(displayName), \(descriptor.availability.rawValue)")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(
+            descriptor.availability == .unavailable
+                ? "This model is unavailable and cannot be selected."
+                : "Selects this thermodynamic model."
+        )
+    }
+
+    private var displayName: String {
+        switch descriptor.id {
+        case "coolprop-heos":
+            "CoolProp HEOS — Preliminary"
+        case "ife-model":
+            "IFE Model — Unavailable"
+        default:
+            descriptor.name
+        }
+    }
+
+    private var statusDescription: String {
+        switch descriptor.availability {
+        case .available:
+            "Available for local calculations within the recorded provider domain."
+        case .preliminary:
+            "Operational local model."
+        case .unavailable:
+            "Visible for future traceability. It will not fall back to another provider."
+        }
+    }
+
+    private var statusIcon: String {
+        switch descriptor.availability {
+        case .available:
+            "checkmark.circle"
+        case .preliminary:
+            "exclamationmark.triangle"
+        case .unavailable:
+            "slash.circle"
+        }
+    }
+
+    private var statusColor: Color {
+        switch descriptor.availability {
+        case .available:
+            .pxSuccess
+        case .preliminary:
+            .pxWarning
+        case .unavailable:
+            .pxUnavailable
+        }
+    }
+}
+
+private struct UnitAwareNumericField: View {
+    let title: String
+    @Binding var text: String
+    @Binding var selection: TextSelection?
+    let keyboardType: UIKeyboardType
+    let isFocused: Bool
+    let unitLabel: String
+    let unitOptions: [String]
+    let selectedUnit: String
+    let accessibilityIdentifier: String
+    let unitAction: (String) -> Void
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
+                titleView
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .layoutPriority(2)
+                controlGroup
+                    .layoutPriority(3)
+            }
+
+            VStack(alignment: .leading, spacing: IFESpacing.small) {
+                titleView
+                controlGroup
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var titleView: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            Text(title)
+                .font(.body.weight(.medium))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .multilineTextAlignment(.leading)
+                .accessibilityIdentifier("\(accessibilityIdentifier)-label")
+            if title == "Pressure" {
+                Text("absolute")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+    }
+
+    private var controlGroup: some View {
+        HStack(spacing: IFESpacing.regular) {
+            inputView
+            unitMenu
+        }
+    }
+
+    private var inputView: some View {
+        TextField("Value", text: $text, selection: $selection)
+            .keyboardType(keyboardType)
+            .multilineTextAlignment(.trailing)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .font(.body.monospacedDigit())
+            .frame(width: 132)
+            .padding(.horizontal, IFESpacing.small)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                    .fill(Color.secondary.opacity(0.08))
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                    .stroke(
+                        isFocused ? Color.ifePrimary : Color.secondary.opacity(0.22),
+                        lineWidth: isFocused ? IFELine.focus : IFELine.hairline
+                    )
+            }
+            .contentShape(Rectangle())
+            .accessibilityLabel("\(title) value")
+            .accessibilityValue("\(text) \(unitLabel)")
+            .accessibilityIdentifier("\(accessibilityIdentifier)-value-field")
+    }
+
+    private var unitMenu: some View {
+        Menu {
+            ForEach(unitOptions, id: \.self) { option in
+                Button {
+                    unitAction(option)
+                } label: {
+                    if option == selectedUnit {
+                        Label(option, systemImage: "checkmark")
+                    } else {
+                        Text(option)
+                    }
+                }
+                .accessibilityIdentifier("\(accessibilityIdentifier)-unit-option-\(option)")
+            }
+        } label: {
+            HStack(spacing: IFESpacing.xSmall) {
+                Text(selectedUnit)
+                    .font(.body.weight(.medium).monospacedDigit())
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, IFESpacing.regular)
+            .padding(.vertical, 8)
+            .frame(minWidth: 86)
+            .background(Color.pxSurface, in: RoundedRectangle(cornerRadius: IFECornerRadius.field))
+            .overlay {
+                RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                    .stroke(Color.pxSeparator.opacity(0.7), lineWidth: IFELine.hairline)
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel("\(title) unit")
+        .accessibilityValue(selectedUnit)
+        .accessibilityIdentifier("\(accessibilityIdentifier)-unit-menu")
     }
 }
 
@@ -653,22 +923,56 @@ struct CalculationResultSections: View {
 
     var body: some View {
         Group {
-            Section("State") {
-                ScientificStatusBanner(
-                    title: record.response.isScientificResult
-                        ? "Preliminary — validation incomplete"
-                        : "Non-scientific demonstration",
-                    message: record.response.warnings.joined(separator: " ")
-                )
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+            Section {
+                if !record.response.isScientificResult {
+                    ScientificStatusBanner(
+                        title: "Non-scientific result",
+                        message: "See Calculation Details for recorded provider status and provenance."
+                    )
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
 
-                LabeledContent("Pressure", value: "\(number(record.input.pressureValue)) bar(a)")
-                LabeledContent("Temperature", value: "\(number(record.input.temperatureValue)) °C")
-                LabeledContent("Phase", value: record.response.phase.displayName)
+                IFEValueRow(
+                    title: "Phase",
+                    value: record.response.phase.displayName,
+                    status: "Returned by provider",
+                    statusColor: .ifePrimary
+                )
+                IFEValueRow(
+                    title: "Pressure",
+                    value: number(record.input.pressureValue),
+                    unit: record.input.pressureDisplayUnitLabel,
+                    copyValue: "\(record.input.pressureValue)"
+                )
+                IFEValueRow(
+                    title: "Temperature",
+                    value: number(record.input.temperatureValue),
+                    unit: record.input.temperatureUnit.rawValue,
+                    copyValue: "\(record.input.temperatureValue)"
+                )
 
                 ForEach(stateProperties, id: \.property) { property in
                     PropertyResultRow(property: property)
+                }
+            } header: {
+                IFESectionHeader(step: 6, title: "Results and phase information")
+            }
+
+            Section("Composition summary") {
+                IFEValueRow(
+                    title: "Mixture",
+                    value: SavedCaseNameFormatter.compositionLabel(for: record.request.composition)
+                )
+                IFEValueRow(
+                    title: "Original input",
+                    value: originalCompositionText
+                )
+                if record.input.normalizedComposition == nil {
+                    IFEValueRow(
+                        title: "Normalization",
+                        value: "Not applied"
+                    )
                 }
             }
 
@@ -694,9 +998,17 @@ struct CalculationResultSections: View {
             }
 
             Section("Scientific traceability") {
-                IFEExpandableRow("Calculation details") {
-                    traceabilityContent
-                }
+                IFEValueRow(
+                    title: "Provider",
+                    value: record.response.model.name,
+                    status: "\(record.response.model.providerVersion) • \(record.response.model.availability.rawValue.capitalized)"
+                )
+                IFEValueRow(
+                    title: "Model",
+                    value: record.response.model.modelVersion,
+                    status: record.response.model.equationOrMethod
+                )
+                IFEExpandableRow("Calculation details") { traceabilityContent }
             }
         }
     }
@@ -719,9 +1031,9 @@ struct CalculationResultSections: View {
                 .textSelection(.enabled)
         }
 
-        LabeledContent("Pressure — displayed", value: "\(number(record.input.pressureValue)) bar(a)")
+        LabeledContent("Pressure — entered", value: "\(number(record.input.pressureValue)) \(record.input.pressureDisplayUnitLabel)")
         LabeledContent("Pressure — SI", value: "\(number(record.input.pressurePa)) Pa")
-        LabeledContent("Temperature — displayed", value: "\(number(record.input.temperatureValue)) °C")
+        LabeledContent("Temperature — entered", value: "\(number(record.input.temperatureValue)) \(record.input.temperatureUnit.rawValue)")
         LabeledContent("Temperature — SI", value: "\(number(record.input.temperatureK)) K")
 
         LabeledContent("Original composition") {
@@ -775,14 +1087,11 @@ struct CalculationResultSections: View {
                 .font(.subheadline.weight(.semibold))
 
             ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { index, reference in
-                if
-                    let address = reference.doiOrURL,
-                    let url = URL(string: address)
-                {
+                if let url = ReferenceLinkResolver.url(for: reference.doiOrURL) {
                     Link(destination: url) {
-                        scientificReferenceLabel(reference, address: address)
+                        scientificReferenceLabel(reference, address: reference.doiOrURL)
                     }
-                    .id("scientific-reference-\(index)-\(address)")
+                    .id("scientific-reference-\(index)-\(url.absoluteString)")
                     .accessibilityLabel(
                         "\(reference.authors), \(reference.title), open reference"
                     )
@@ -923,36 +1232,71 @@ enum SavedCaseNameFormatter {
 private struct PropertyResultRow: View {
     let property: PropertyValue
 
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(property.property.displayName)
-                    .font(.body.weight(.semibold))
-                if let message = property.message {
-                    Text(message)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(displayValue)
-                    .monospacedDigit()
-                PropertyStatusBadge(status: effectiveStatus)
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(
-            "\(property.property.displayName), \(displayValue), \(effectiveStatus.displayName)"
-        )
+    private var presentation: PropertyResultPresentation {
+        PropertyResultPresentation(property: property)
     }
 
-    private var effectiveStatus: PropertyStatus {
+    var body: some View {
+        IFEValueRow(
+            title: presentation.title,
+            value: presentation.value,
+            unit: presentation.unit,
+            status: presentation.statusText,
+            statusColor: presentation.statusColor,
+            copyValue: presentation.copyValue
+        )
+    }
+}
+
+struct PropertyResultPresentation {
+    let property: PropertyValue
+
+    var title: String {
+        property.property.displayName
+    }
+
+    var effectiveStatus: PropertyStatus {
         EngineeringPropertyFormatter.effectiveStatus(for: property)
     }
 
-    private var displayValue: String {
-        EngineeringPropertyFormatter.text(for: property)
+    var value: String {
+        displayValue.value
+    }
+
+    var unit: String? {
+        displayValue.unit
+    }
+
+    private var displayValue: (value: String, unit: String?) {
+        guard let measurement = EngineeringPropertyFormatter.measurement(for: property) else {
+            return (EngineeringPropertyFormatter.effectiveStatus(for: property).displayName, nil)
+        }
+        return (
+            measurement.value.formatted(.number.precision(.significantDigits(1...7))),
+            measurement.unit.isEmpty ? nil : measurement.unit
+        )
+    }
+
+    var statusText: String {
+        [effectiveStatus.displayName, property.message].compactMap { $0 }.joined(separator: " — ")
+    }
+
+    var statusColor: Color {
+        switch effectiveStatus {
+        case .calculated:
+            .pxSuccess
+        case .unavailable:
+            .pxUnavailable
+        case .outsideValidatedRange, .extrapolated:
+            .pxWarning
+        case .failed:
+            .pxError
+        }
+    }
+
+    var copyValue: String? {
+        guard let value = property.value, value.isFinite else { return nil }
+        return "\(value) \(property.unit)"
     }
 }
 

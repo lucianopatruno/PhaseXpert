@@ -760,18 +760,42 @@ private struct SavedCaseRow: View {
     let savedCase: SavedCalculation
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(savedCase.name)
-                .font(.headline)
-            Text("\(number(savedCase.pressureBarAbsolute)) bar(a) · \(number(savedCase.temperatureCelsius)) °C")
-                .font(.subheadline)
-            HStack {
-                Text(savedCase.modelName)
-                Spacer()
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(savedCase.name)
+                    .font(.headline)
+                    .lineLimit(2)
+                Spacer(minLength: IFESpacing.small)
                 Text(savedCase.updatedAt, format: .dateTime.year().month().day())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            Text("\(number(savedCase.pressureBarAbsolute)) bar(a) · \(number(savedCase.temperatureCelsius)) °C")
+                .font(.subheadline.monospacedDigit())
+            if let record = savedCase.calculationRecord {
+                Text(SavedCaseNameFormatter.compositionLabel(for: record.request.composition))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            } else {
+                Text("Stored record unavailable")
+                    .font(.caption)
+                    .foregroundStyle(Color.pxUnavailable)
+            }
+            HStack(spacing: IFESpacing.small) {
+                IFEStatusBadge(
+                    text: savedCase.modelName,
+                    systemImage: "cpu",
+                    color: .secondary
+                )
+                if savedCase.calculationRecord?.response.model.availability == .preliminary {
+                    IFEStatusBadge(
+                        text: "Preliminary",
+                        systemImage: "exclamationmark.triangle",
+                        color: .pxWarning
+                    )
+                }
+            }
         }
         .accessibilityElement(children: .combine)
     }
@@ -812,11 +836,19 @@ private struct SavedCaseDetailView: View {
 
             if let record = savedCase.calculationRecord {
                 Section {
-                    Button("Edit inputs and rerun with current model", systemImage: "arrow.trianglehead.2.clockwise") {
+                    Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
                         navigationState.editAndRerun(record)
                     }
+                    Button("Duplicate", systemImage: "plus.square.on.square") {
+                        modelContext.insert(savedCase.duplicate())
+                        saveContext()
+                    }
+                    Button("Export case", systemImage: "square.and.arrow.up") {
+                        isExporting = true
+                    }
+                    .accessibilityIdentifier("export-saved-case")
                 } footer: {
-                    Text("The original saved result is preserved. Rerunning uses the model currently installed in PhaseXpert.")
+                    Text("Opening a case preserves the saved result. Rerunning uses the model currently installed in PhaseXpert and creates a new calculation record.")
                 }
 
                 CalculationResultSections(record: record)
@@ -838,15 +870,6 @@ private struct SavedCaseDetailView: View {
                     Button("Edit name and notes", systemImage: "pencil") {
                         isEditing = true
                     }
-                    Button("Duplicate", systemImage: "plus.square.on.square") {
-                        modelContext.insert(savedCase.duplicate())
-                        saveContext()
-                    }
-                    Button("Export case", systemImage: "square.and.arrow.up") {
-                        isExporting = true
-                    }
-                    .disabled(savedCase.calculationRecord == nil)
-                    .accessibilityIdentifier("export-saved-case")
                     Button("Delete", systemImage: "trash", role: .destructive) {
                         isConfirmingDeletion = true
                     }

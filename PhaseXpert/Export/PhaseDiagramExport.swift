@@ -9,6 +9,110 @@ struct PhaseDiagramReportAttachment: Sendable {
     let response: PhaseEnvelopeResponse
 }
 
+struct PhaseDiagramExportArtifacts: Identifiable {
+    let id = UUID()
+    let files: [URL]
+}
+
+struct PhaseBoundaryPlotPoint: Identifiable, Equatable {
+    let id: Int
+    let originalIndex: Int
+    let temperatureCelsius: Double
+    let pressureBar: Double
+    let branch: PhaseEnvelopePoint.Branch
+
+    init(originalIndex: Int, point: PhaseEnvelopePoint) {
+        self.id = originalIndex
+        self.originalIndex = originalIndex
+        self.temperatureCelsius = point.temperatureK - 273.15
+        self.pressureBar = point.pressurePa / 100_000
+        self.branch = point.branch
+    }
+}
+
+struct PhaseBoundaryLineSegment: Identifiable, Equatable {
+    let id: String
+    let branch: PhaseEnvelopePoint.Branch
+    let points: [PhaseBoundaryPlotPoint]
+}
+
+struct PhaseBoundaryPlotData: Equatable {
+    let receivedPointCount: Int
+    let validPointCount: Int
+    let plottedPointCount: Int
+    let segments: [PhaseBoundaryLineSegment]
+    let criticalPoints: [PhaseBoundaryPlotPoint]
+
+    var hasGaps: Bool {
+        validPointCount != receivedPointCount
+            || segments.count > Set(segments.map(\.branch)).count
+    }
+}
+
+enum PhaseBoundarySeriesBuilder {
+    static func plotData(for response: PhaseEnvelopeResponse) -> PhaseBoundaryPlotData {
+        var validPointCount = 0
+        var segments: [PhaseBoundaryLineSegment] = []
+        var criticalPoints: [PhaseBoundaryPlotPoint] = []
+        var currentBranch: PhaseEnvelopePoint.Branch?
+        var currentPoints: [PhaseBoundaryPlotPoint] = []
+        var segmentOrdinal = 0
+
+        func finishSegment() {
+            guard let branch = currentBranch, currentPoints.count >= 2 else {
+                currentBranch = nil
+                currentPoints = []
+                return
+            }
+            segments.append(PhaseBoundaryLineSegment(
+                id: "\(branch.rawValue)-\(segmentOrdinal)",
+                branch: branch,
+                points: currentPoints
+            ))
+            segmentOrdinal += 1
+            currentBranch = nil
+            currentPoints = []
+        }
+
+        for (index, point) in response.points.enumerated() {
+            guard isFiniteBoundaryPoint(point) else {
+                finishSegment()
+                continue
+            }
+
+            validPointCount += 1
+            let plotPoint = PhaseBoundaryPlotPoint(originalIndex: index, point: point)
+
+            if point.branch == .critical {
+                finishSegment()
+                criticalPoints.append(plotPoint)
+                continue
+            }
+
+            if currentBranch == nil {
+                currentBranch = point.branch
+            } else if currentBranch != point.branch {
+                finishSegment()
+                currentBranch = point.branch
+            }
+            currentPoints.append(plotPoint)
+        }
+        finishSegment()
+
+        return PhaseBoundaryPlotData(
+            receivedPointCount: response.points.count,
+            validPointCount: validPointCount,
+            plottedPointCount: segments.reduce(0) { $0 + $1.points.count } + criticalPoints.count,
+            segments: segments,
+            criticalPoints: criticalPoints
+        )
+    }
+
+    static func isFiniteBoundaryPoint(_ point: PhaseEnvelopePoint) -> Bool {
+        point.temperatureK.isFinite && point.pressurePa.isFinite && point.pressurePa > 0
+    }
+}
+
 enum PhaseDiagramExportError: LocalizedError {
     case unavailable(String)
     case renderingFailed
@@ -46,8 +150,9 @@ struct PhaseDiagramImageExporter {
         response: PhaseEnvelopeResponse
     ) throws -> URL {
         let attachment = try attachment(for: record, response: response)
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("PhaseXpertPhaseDiagrams", isDirectory: true)
+        let store = PhaseDiagramTemporaryExportStore()
+        try store.cleanStaleArtifacts()
+        let directory = store.directory
         try FileManager.default.createDirectory(
             at: directory,
             withIntermediateDirectories: true
@@ -57,6 +162,36 @@ struct PhaseDiagramImageExporter {
         )
         try attachment.pngData.write(to: url, options: .atomic)
         return url
+    }
+
+    func writeTemporaryReportFiles(
+        for record: CalculationRecord,
+        response: PhaseEnvelopeResponse,
+        csvWriter: ((CalculationRecord, PhaseEnvelopeResponse) throws -> String)? = nil
+    ) throws -> PhaseDiagramExportArtifacts {
+        let attachment = try attachment(for: record, response: response)
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PhaseXpertPhaseDiagrams", isDirectory: true)
+        try FileManager.default.createDirectory(
+            at: directory,
+            withIntermediateDirectories: true
+        )
+        let prefix = "PhaseXpert-Phase-Diagram-\(record.response.calculationID.uuidString.prefix(8))"
+        let pdfURL = directory.appendingPathComponent("\(prefix).pdf")
+        let csvURL = directory.appendingPathComponent("\(prefix).csv")
+        do {
+            try writePDF(attachment: attachment, record: record, response: response, to: pdfURL)
+            try (csvWriter?(record, response) ?? csv(record: record, response: response)).write(
+                to: csvURL,
+                atomically: true,
+                encoding: .utf8
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: pdfURL)
+            try? FileManager.default.removeItem(at: csvURL)
+            throw error
+        }
+        return PhaseDiagramExportArtifacts(files: [pdfURL, csvURL])
     }
 
     private func validate(
@@ -83,10 +218,11 @@ struct PhaseDiagramImageExporter {
                 PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
             )
         }
-        guard response.points.allSatisfy({
-            $0.temperatureK.isFinite && $0.pressurePa.isFinite && $0.pressurePa > 0
-        }),
-        record.input.temperatureK.isFinite,
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: response)
+        guard plotData.validPointCount == response.points.count,
+              !plotData.segments.isEmpty,
+              response.solver?.converged != false,
+              record.input.temperatureK.isFinite,
         record.input.pressurePa.isFinite
         else {
             throw PhaseDiagramExportError.unavailable(
@@ -94,36 +230,173 @@ struct PhaseDiagramImageExporter {
             )
         }
     }
-}
 
-private struct PhaseDiagramExportCanvas: View {
-    private struct Sample: Identifiable {
-        let id: Int
-        let temperatureCelsius: Double
-        let pressureBar: Double
-        let branch: PhaseEnvelopePoint.Branch
-    }
-
-    let record: CalculationRecord
-    let response: PhaseEnvelopeResponse
-
-    private var samples: [Sample] {
-        response.points.enumerated().map { index, point in
-            Sample(
-                id: index,
-                temperatureCelsius: point.temperatureK - 273.15,
-                pressureBar: point.pressurePa / 100_000,
-                branch: point.branch
+    private func writePDF(
+        attachment: PhaseDiagramReportAttachment,
+        record: CalculationRecord,
+        response: PhaseEnvelopeResponse,
+        to url: URL
+    ) throws {
+        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 612, height: 792))
+        try renderer.writePDF(to: url) { context in
+            context.beginPage()
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.preferredFont(forTextStyle: .title2)
+            ]
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.preferredFont(forTextStyle: .footnote)
+            ]
+            "Pure CO₂ pressure–temperature diagram".draw(
+                at: CGPoint(x: 36, y: 32),
+                withAttributes: titleAttributes
+            )
+            "PRELIMINARY — VALIDATION PENDING".draw(
+                at: CGPoint(x: 36, y: 62),
+                withAttributes: bodyAttributes
+            )
+            if let image = UIImage(data: attachment.pngData) {
+                image.draw(in: CGRect(x: 36, y: 92, width: 540, height: 405))
+            }
+            provenance(record: record, response: response).draw(
+                in: CGRect(x: 36, y: 520, width: 540, height: 220),
+                withAttributes: bodyAttributes
             )
         }
     }
 
-    private var saturation: [Sample] {
-        samples.filter { $0.branch == .bubble }
+    private func csv(record: CalculationRecord, response: PhaseEnvelopeResponse) -> String {
+        var rows = [
+            ["section", "name", "value", "unit"],
+            ["provenance", "calculation_id", record.response.calculationID.uuidString, ""],
+            ["provenance", "phase_envelope_request_id", response.requestID.uuidString, ""],
+            ["provenance", "model", response.model?.name ?? record.response.model.name, ""],
+            ["provenance", "model_version", response.model?.modelVersion ?? record.response.model.modelVersion, ""],
+            ["provenance", "provider_version", response.model?.providerVersion ?? record.response.model.providerVersion, ""],
+            ["input", "pressure_entered", "\(record.input.pressureValue)", record.input.pressureDisplayUnitLabel],
+            ["input", "pressure_si", "\(record.input.pressurePa)", "Pa"],
+            ["input", "temperature_entered", "\(record.input.temperatureValue)", record.input.temperatureUnit.rawValue],
+            ["input", "temperature_si", "\(record.input.temperatureK)", "K"],
+            ["input", "composition", record.request.composition.map { "\($0.component.symbol):\($0.moleFraction)" }.joined(separator: ";"), "mole fraction"],
+            ["status", "preliminary", "validation pending", ""],
+            ["data", "segment_id", "temperature_c", "pressure_bar", "branch", "original_index"]
+        ]
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: response)
+        for segment in plotData.segments {
+            rows.append(contentsOf: segment.points.map {
+                ["point", segment.id, "\($0.temperatureCelsius)", "\($0.pressureBar)", segment.branch.rawValue, "\($0.originalIndex)"]
+            })
+        }
+        rows.append(contentsOf: plotData.criticalPoints.map {
+            ["critical", "critical", "\($0.temperatureCelsius)", "\($0.pressureBar)", $0.branch.rawValue, "\($0.originalIndex)"]
+        })
+        return rows.map { row in
+            row.map { "\"\($0.replacingOccurrences(of: "\"", with: "\"\""))\"" }
+                .joined(separator: ",")
+        }.joined(separator: "\n") + "\n"
     }
 
-    private var critical: Sample? {
-        samples.first { $0.branch == .critical }
+    private func provenance(
+        record: CalculationRecord,
+        response: PhaseEnvelopeResponse
+    ) -> String {
+        """
+        Axis units: Temperature (°C), Pressure (bar(a)).
+        Operating point: \(record.input.pressureValue) \(record.input.pressureDisplayUnitLabel) (\(record.input.pressurePa) Pa), \(record.input.temperatureValue) \(record.input.temperatureUnit.rawValue) (\(record.input.temperatureK) K).
+        Phase returned by source calculation: \(record.response.phase.displayName).
+        Provider/model: \(response.model?.name ?? record.response.model.name), model \(response.model?.modelVersion ?? record.response.model.modelVersion), provider \(response.model?.providerVersion ?? record.response.model.providerVersion).
+        Calculation ID: \(record.response.calculationID.uuidString).
+        Phase-envelope request ID: \(response.requestID.uuidString).
+        Straight line segments connect adjacent calculated points for display only. No scientific values are interpolated or estimated.
+        """
+    }
+}
+
+struct PhaseDiagramTemporaryExportStore {
+    let directory: URL
+    private let fileManager: FileManager
+
+    init(
+        baseDirectory: URL = FileManager.default.temporaryDirectory,
+        fileManager: FileManager = .default
+    ) {
+        self.directory = baseDirectory.appendingPathComponent(
+            "PhaseXpertPhaseDiagrams",
+            isDirectory: true
+        )
+        self.fileManager = fileManager
+    }
+
+    func cleanStaleArtifacts() throws {
+        guard fileManager.fileExists(atPath: directory.path) else { return }
+        for file in try fileManager.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ) where isOwnedArtifact(file) {
+            try fileManager.removeItem(at: file)
+        }
+    }
+
+    func remove(_ artifacts: PhaseDiagramExportArtifacts?) {
+        guard let artifacts else { return }
+        for file in artifacts.files where isOwnedArtifact(file) {
+            try? fileManager.removeItem(at: file)
+        }
+    }
+
+    private func isOwnedArtifact(_ url: URL) -> Bool {
+        let name = url.lastPathComponent
+        return name.hasPrefix("PhaseXpert-Phase-Diagram-")
+            && ["pdf", "csv", "png"].contains(url.pathExtension.lowercased())
+    }
+}
+
+@MainActor
+final class PhaseDiagramExportLifecycle {
+    private let store: PhaseDiagramTemporaryExportStore
+    private(set) var artifacts: PhaseDiagramExportArtifacts?
+    private(set) var isSharing = false
+
+    init(store: PhaseDiagramTemporaryExportStore = PhaseDiagramTemporaryExportStore()) {
+        self.store = store
+    }
+
+    func prepareReplacement(
+        createArtifacts: () throws -> PhaseDiagramExportArtifacts
+    ) throws {
+        guard !isSharing else { return }
+        store.remove(artifacts)
+        artifacts = nil
+        try store.cleanStaleArtifacts()
+        artifacts = try createArtifacts()
+    }
+
+    func beginSharing() {
+        guard artifacts != nil else { return }
+        isSharing = true
+    }
+
+    func completeSharing() {
+        isSharing = false
+        cleanupIfIdle()
+    }
+
+    func cleanupIfIdle() {
+        guard !isSharing else { return }
+        store.remove(artifacts)
+        artifacts = nil
+    }
+
+    func calculationChanged() {
+        cleanupIfIdle()
+    }
+}
+
+private struct PhaseDiagramExportCanvas: View {
+    let record: CalculationRecord
+    let response: PhaseEnvelopeResponse
+
+    private var plotData: PhaseBoundaryPlotData {
+        PhaseBoundarySeriesBuilder.plotData(for: response)
     }
 
     var body: some View {
@@ -147,18 +420,21 @@ private struct PhaseDiagramExportCanvas: View {
             }
 
             Chart {
-                ForEach(saturation) { sample in
-                    LineMark(
-                        x: .value("Temperature (°C)", sample.temperatureCelsius),
-                        y: .value("Pressure (bar(a))", sample.pressureBar)
-                    )
-                    .foregroundStyle(by: .value(
-                        "Series",
-                        "CO₂ saturation boundary"
-                    ))
-                    .interpolationMethod(.linear)
+                ForEach(plotData.segments) { segment in
+                    ForEach(segment.points) { sample in
+                        LineMark(
+                            x: .value("Temperature (°C)", sample.temperatureCelsius),
+                            y: .value("Pressure (bar(a))", sample.pressureBar),
+                            series: .value("Segment", segment.id)
+                        )
+                        .foregroundStyle(by: .value(
+                            "Series",
+                            "CO₂ saturation boundary"
+                        ))
+                        .interpolationMethod(.linear)
+                    }
                 }
-                if let critical {
+                ForEach(plotData.criticalPoints) { critical in
                     PointMark(
                         x: .value("Temperature (°C)", critical.temperatureCelsius),
                         y: .value("Pressure (bar(a))", critical.pressureBar)
