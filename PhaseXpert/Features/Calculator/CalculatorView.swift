@@ -267,6 +267,10 @@ struct CalculatorView: View {
                         }
                     } header: {
                         IFESectionHeader(step: 4, title: "Validation and capability state")
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = nil
+                            }
                     }
                 }
 
@@ -1234,23 +1238,39 @@ enum SavedCaseNameFormatter {
 private struct PropertyResultRow: View {
     let property: PropertyValue
 
-    var body: some View {
-        IFEValueRow(
-            title: property.property.displayName,
-            value: displayValue.value,
-            unit: displayValue.unit,
-            status: statusText,
-            statusColor: statusColor,
-            copyValue: copyValue
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(
-            "\(property.property.displayName), \(displayValue.value), \(effectiveStatus.displayName)"
-        )
+    private var presentation: PropertyResultPresentation {
+        PropertyResultPresentation(property: property)
     }
 
-    private var effectiveStatus: PropertyStatus {
+    var body: some View {
+        IFEValueRow(
+            title: presentation.title,
+            value: presentation.value,
+            unit: presentation.unit,
+            status: presentation.statusText,
+            statusColor: presentation.statusColor,
+            copyValue: presentation.copyValue
+        )
+    }
+}
+
+struct PropertyResultPresentation {
+    let property: PropertyValue
+
+    var title: String {
+        property.property.displayName
+    }
+
+    var effectiveStatus: PropertyStatus {
         EngineeringPropertyFormatter.effectiveStatus(for: property)
+    }
+
+    var value: String {
+        displayValue.value
+    }
+
+    var unit: String? {
+        displayValue.unit
     }
 
     private var displayValue: (value: String, unit: String?) {
@@ -1263,11 +1283,11 @@ private struct PropertyResultRow: View {
         )
     }
 
-    private var statusText: String {
+    var statusText: String {
         [effectiveStatus.displayName, property.message].compactMap { $0 }.joined(separator: " — ")
     }
 
-    private var statusColor: Color {
+    var statusColor: Color {
         switch effectiveStatus {
         case .calculated:
             .pxSuccess
@@ -1280,7 +1300,7 @@ private struct PropertyResultRow: View {
         }
     }
 
-    private var copyValue: String? {
+    var copyValue: String? {
         guard let value = property.value, value.isFinite else { return nil }
         return "\(value) \(property.unit)"
     }

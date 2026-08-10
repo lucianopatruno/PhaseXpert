@@ -52,7 +52,6 @@ struct PhaseBoundaryPlotData: Equatable {
 enum PhaseBoundarySeriesBuilder {
     static func plotData(for response: PhaseEnvelopeResponse) -> PhaseBoundaryPlotData {
         var validPointCount = 0
-        var plottedPointCount = 0
         var segments: [PhaseBoundaryLineSegment] = []
         var criticalPoints: [PhaseBoundaryPlotPoint] = []
         var currentBranch: PhaseEnvelopePoint.Branch?
@@ -90,7 +89,6 @@ enum PhaseBoundarySeriesBuilder {
                 continue
             }
 
-            plottedPointCount += 1
             if currentBranch == nil {
                 currentBranch = point.branch
             } else if currentBranch != point.branch {
@@ -104,7 +102,7 @@ enum PhaseBoundarySeriesBuilder {
         return PhaseBoundaryPlotData(
             receivedPointCount: response.points.count,
             validPointCount: validPointCount,
-            plottedPointCount: plottedPointCount,
+            plottedPointCount: segments.reduce(0) { $0 + $1.points.count } + criticalPoints.count,
             segments: segments,
             criticalPoints: criticalPoints
         )
@@ -222,7 +220,7 @@ struct PhaseDiagramImageExporter {
         }
         let plotData = PhaseBoundarySeriesBuilder.plotData(for: response)
         guard plotData.validPointCount == response.points.count,
-              plotData.plottedPointCount > 0,
+              !plotData.segments.isEmpty,
               response.solver?.converged != false,
               record.input.temperatureK.isFinite,
         record.input.pressurePa.isFinite
@@ -349,6 +347,47 @@ struct PhaseDiagramTemporaryExportStore {
         let name = url.lastPathComponent
         return name.hasPrefix("PhaseXpert-Phase-Diagram-")
             && ["pdf", "csv", "png"].contains(url.pathExtension.lowercased())
+    }
+}
+
+@MainActor
+final class PhaseDiagramExportLifecycle {
+    private let store: PhaseDiagramTemporaryExportStore
+    private(set) var artifacts: PhaseDiagramExportArtifacts?
+    private(set) var isSharing = false
+
+    init(store: PhaseDiagramTemporaryExportStore = PhaseDiagramTemporaryExportStore()) {
+        self.store = store
+    }
+
+    func prepareReplacement(
+        createArtifacts: () throws -> PhaseDiagramExportArtifacts
+    ) throws {
+        guard !isSharing else { return }
+        store.remove(artifacts)
+        artifacts = nil
+        try store.cleanStaleArtifacts()
+        artifacts = try createArtifacts()
+    }
+
+    func beginSharing() {
+        guard artifacts != nil else { return }
+        isSharing = true
+    }
+
+    func completeSharing() {
+        isSharing = false
+        cleanupIfIdle()
+    }
+
+    func cleanupIfIdle() {
+        guard !isSharing else { return }
+        store.remove(artifacts)
+        artifacts = nil
+    }
+
+    func calculationChanged() {
+        cleanupIfIdle()
     }
 }
 

@@ -294,6 +294,7 @@ final class PhaseXpertTests: XCTestCase {
             requestID: pure.request.requestID,
             points: [
                 .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 2_400_000, branch: .bubble),
                 .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)
             ],
             warnings: [],
@@ -367,7 +368,7 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertEqual(plotData.receivedPointCount, 11)
         XCTAssertEqual(plotData.validPointCount, 9)
-        XCTAssertEqual(plotData.plottedPointCount, 8)
+        XCTAssertEqual(plotData.plottedPointCount, 7)
         XCTAssertEqual(plotData.criticalPoints.map(\.originalIndex), [8])
         XCTAssertEqual(plotData.segments.map { $0.points.map(\.originalIndex) }, [
             [0, 1],
@@ -377,6 +378,120 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertTrue(plotData.segments.allSatisfy { segment in
             Set(segment.points.map(\.branch)) == [segment.branch]
         })
+    }
+
+    @MainActor
+    func testPhaseBoundaryPlotCountsSingletonBoundaryAsValidButNotPlotted() {
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [.init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble)],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation
+        ))
+
+        XCTAssertEqual(plotData.receivedPointCount, 1)
+        XCTAssertEqual(plotData.validPointCount, 1)
+        XCTAssertEqual(plotData.plottedPointCount, 0)
+        XCTAssertTrue(plotData.segments.isEmpty)
+    }
+
+    @MainActor
+    func testPhaseBoundaryPlotCountsTwoAdjacentBoundaryPointsAsPlotted() {
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 2_100_000, branch: .bubble)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation
+        ))
+
+        XCTAssertEqual(plotData.validPointCount, 2)
+        XCTAssertEqual(plotData.plottedPointCount, 2)
+        XCTAssertEqual(plotData.segments.first?.points.map(\.originalIndex), [0, 1])
+    }
+
+    @MainActor
+    func testPhaseBoundaryPlotDropsSingletonBetweenGaps() {
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [
+                .init(temperatureK: .nan, pressurePa: 1_000_000, branch: .bubble),
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: -1, branch: .bubble)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation
+        ))
+
+        XCTAssertEqual(plotData.receivedPointCount, 3)
+        XCTAssertEqual(plotData.validPointCount, 1)
+        XCTAssertEqual(plotData.plottedPointCount, 0)
+        XCTAssertTrue(plotData.segments.isEmpty)
+    }
+
+    @MainActor
+    func testPhaseBoundaryPlotCountsCriticalOnlyWhenRenderedButNoLineSegment() {
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [.init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation
+        ))
+
+        XCTAssertEqual(plotData.validPointCount, 1)
+        XCTAssertEqual(plotData.plottedPointCount, 1)
+        XCTAssertEqual(plotData.criticalPoints.map(\.originalIndex), [0])
+        XCTAssertTrue(plotData.segments.isEmpty)
+    }
+
+    @MainActor
+    func testPhaseBoundaryPlotCountsLineSegmentPlusCriticalPoint() {
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 2_100_000, branch: .bubble),
+                .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation
+        ))
+
+        XCTAssertEqual(plotData.validPointCount, 3)
+        XCTAssertEqual(plotData.plottedPointCount, 3)
+        XCTAssertEqual(plotData.segments.first?.points.count, 2)
+        XCTAssertEqual(plotData.criticalPoints.count, 1)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportRejectsResponseWithoutRenderableBoundarySegment() async throws {
+        let record = try await makeRecord()
+        let response = PhaseEnvelopeResponse(
+            requestID: record.request.requestID,
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: record.response.model,
+            solver: .init(method: "test", converged: true, durationMilliseconds: 1)
+        )
+
+        XCTAssertThrowsError(
+            try PhaseDiagramImageExporter().writeTemporaryReportFiles(
+                for: record,
+                response: response
+            )
+        )
     }
 
     @MainActor
@@ -421,6 +536,89 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertFalse(FileManager.default.fileExists(atPath: owned.path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: unrelated.path))
+        try? FileManager.default.removeItem(at: base)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportLifecycleCleansPreparedArtifactsWhenViewCleansUp() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let store = PhaseDiagramTemporaryExportStore(baseDirectory: base)
+        let lifecycle = PhaseDiagramExportLifecycle(store: store)
+        let artifacts = try makeTemporaryDiagramArtifacts(in: store, id: "cleanup")
+
+        try lifecycle.prepareReplacement { artifacts }
+        lifecycle.cleanupIfIdle()
+
+        XCTAssertNil(lifecycle.artifacts)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: artifacts.files[0].path))
+        try? FileManager.default.removeItem(at: base)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportLifecycleCleansAfterShareCompletionAndCancellation() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let store = PhaseDiagramTemporaryExportStore(baseDirectory: base)
+        let lifecycle = PhaseDiagramExportLifecycle(store: store)
+
+        try lifecycle.prepareReplacement {
+            try makeTemporaryDiagramArtifacts(in: store, id: "completed")
+        }
+        let completed = try XCTUnwrap(lifecycle.artifacts)
+        lifecycle.beginSharing()
+        lifecycle.cleanupIfIdle()
+        XCTAssertTrue(FileManager.default.fileExists(atPath: completed.files[0].path))
+        lifecycle.completeSharing()
+        XCTAssertNil(lifecycle.artifacts)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: completed.files[0].path))
+
+        try lifecycle.prepareReplacement {
+            try makeTemporaryDiagramArtifacts(in: store, id: "cancelled")
+        }
+        let cancelled = try XCTUnwrap(lifecycle.artifacts)
+        lifecycle.beginSharing()
+        lifecycle.completeSharing()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: cancelled.files[0].path))
+        try? FileManager.default.removeItem(at: base)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportLifecycleCleansOnCalculationChangeWhenIdle() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let store = PhaseDiagramTemporaryExportStore(baseDirectory: base)
+        let lifecycle = PhaseDiagramExportLifecycle(store: store)
+        let artifacts = try makeTemporaryDiagramArtifacts(in: store, id: "changed")
+
+        try lifecycle.prepareReplacement { artifacts }
+        lifecycle.calculationChanged()
+
+        XCTAssertNil(lifecycle.artifacts)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: artifacts.files[0].path))
+        try? FileManager.default.removeItem(at: base)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportLifecycleReplacementCleansStaleOwnedFilesOnly() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let store = PhaseDiagramTemporaryExportStore(baseDirectory: base)
+        let lifecycle = PhaseDiagramExportLifecycle(store: store)
+        try FileManager.default.createDirectory(at: store.directory, withIntermediateDirectories: true)
+        let stale = store.directory.appendingPathComponent("PhaseXpert-Phase-Diagram-stale.pdf")
+        let unrelated = store.directory.appendingPathComponent("external.pdf")
+        try Data("stale".utf8).write(to: stale)
+        try Data("external".utf8).write(to: unrelated)
+
+        try lifecycle.prepareReplacement {
+            try makeTemporaryDiagramArtifacts(in: store, id: "replacement")
+        }
+        let replacement = try XCTUnwrap(lifecycle.artifacts)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: stale.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: unrelated.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: replacement.files[0].path))
         try? FileManager.default.removeItem(at: base)
     }
 
@@ -714,6 +912,40 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testPropertyResultRowPresentationExposesCopyOnlyForFiniteValues() {
+        let available = PropertyResultPresentation(property: PropertyValue(
+            property: .density,
+            value: 903.5,
+            unit: "kg/m³",
+            status: .calculated,
+            message: "Calculated density."
+        ))
+        let unavailable = PropertyResultPresentation(property: PropertyValue(
+            property: .enthalpy,
+            value: nil,
+            unit: "J/kg",
+            status: .unavailable,
+            message: "Unavailable for this composition."
+        ))
+        let nonFinite = PropertyResultPresentation(property: PropertyValue(
+            property: .density,
+            value: .nan,
+            unit: "kg/m³",
+            status: .calculated
+        ))
+
+        XCTAssertEqual(available.title, "Density")
+        XCTAssertFalse(available.value.isEmpty)
+        XCTAssertNotEqual(available.value, "Unavailable")
+        XCTAssertEqual(available.unit, "kg/m³")
+        XCTAssertEqual(available.copyValue, "903.5 kg/m³")
+        XCTAssertTrue(available.statusText.contains("Calculated"))
+        XCTAssertNil(unavailable.copyValue)
+        XCTAssertNil(nonFinite.copyValue)
+        XCTAssertEqual(unavailable.value, "Unavailable")
+    }
+
+    @MainActor
     func testReferenceLinkResolverAcceptsOnlyHTTPSAndDOIIdentifiers() {
         XCTAssertEqual(
             ReferenceLinkResolver.url(for: "10.1016/j.fluid.2020.112"),
@@ -968,5 +1200,25 @@ final class PhaseXpertTests: XCTestCase {
             response: response,
             application: base.application
         )
+    }
+
+    @MainActor
+    private func makeTemporaryDiagramArtifacts(
+        in store: PhaseDiagramTemporaryExportStore,
+        id: String
+    ) throws -> PhaseDiagramExportArtifacts {
+        try FileManager.default.createDirectory(
+            at: store.directory,
+            withIntermediateDirectories: true
+        )
+        let pdf = store.directory.appendingPathComponent(
+            "PhaseXpert-Phase-Diagram-\(id).pdf"
+        )
+        let csv = store.directory.appendingPathComponent(
+            "PhaseXpert-Phase-Diagram-\(id).csv"
+        )
+        try Data("pdf".utf8).write(to: pdf)
+        try Data("csv".utf8).write(to: csv)
+        return PhaseDiagramExportArtifacts(files: [pdf, csv])
     }
 }

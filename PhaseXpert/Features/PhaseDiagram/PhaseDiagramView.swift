@@ -2,6 +2,7 @@ import Charts
 import Observation
 import PhaseXpertCore
 import SwiftUI
+import UIKit
 
 @MainActor
 @Observable
@@ -212,12 +213,10 @@ private struct PhaseBoundaryChart: View {
     let response: PhaseEnvelopeResponse
 
     @State private var selectedTemperatureCelsius: Double?
-    @State private var exportArtifacts: PhaseDiagramExportArtifacts?
     @State private var exportErrorMessage: String?
     @State private var isPreparingExport = false
-    @State private var isSharingPreparedExport = false
-
-    private let exportStore = PhaseDiagramTemporaryExportStore()
+    @State private var exportLifecycle = PhaseDiagramExportLifecycle()
+    @State private var showsShareSheet = false
 
     private var plotData: PhaseBoundaryPlotData {
         PhaseBoundarySeriesBuilder.plotData(for: response)
@@ -264,22 +263,13 @@ private struct PhaseBoundaryChart: View {
                 )
 
                 IFECard {
-                    if let exportArtifacts {
-                        ForEach(exportArtifacts.files, id: \.self) { fileURL in
-                            ShareLink(item: fileURL) {
-                                Label(
-                                    fileURL.pathExtension.lowercased() == "pdf"
-                                        ? "Share PDF report"
-                                        : "Share CSV data",
-                                    systemImage: fileURL.pathExtension.lowercased() == "pdf"
-                                        ? "doc.richtext"
-                                        : "tablecells"
-                                )
+                    if exportLifecycle.artifacts != nil {
+                        Button {
+                            exportLifecycle.beginSharing()
+                            showsShareSheet = true
+                        } label: {
+                            Label("Share PDF and CSV", systemImage: "square.and.arrow.up")
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .simultaneousGesture(TapGesture().onEnded {
-                                isSharingPreparedExport = true
-                            })
                         }
                         .accessibilityIdentifier("share-phase-diagram-artifacts")
                     } else if isPreparingExport {
@@ -476,10 +466,16 @@ private struct PhaseBoundaryChart: View {
         }
         .accessibilityIdentifier("phase-diagram-available")
         .onChange(of: record.id) { _, _ in
-            removePreparedExportIfIdle()
+            exportLifecycle.calculationChanged()
         }
         .onDisappear {
-            removePreparedExportIfIdle()
+            exportLifecycle.cleanupIfIdle()
+        }
+        .sheet(isPresented: $showsShareSheet) {
+            PhaseDiagramShareSheet(items: exportLifecycle.artifacts?.files ?? []) {
+                showsShareSheet = false
+                exportLifecycle.completeSharing()
+            }
         }
     }
 
@@ -487,20 +483,17 @@ private struct PhaseBoundaryChart: View {
         guard !isPreparingExport else { return }
         isPreparingExport = true
         exportErrorMessage = nil
-        if !isSharingPreparedExport {
-            exportStore.remove(exportArtifacts)
-            exportArtifacts = nil
-        }
 
         Task { @MainActor in
             await Task.yield()
             do {
-                exportArtifacts = try PhaseDiagramImageExporter().writeTemporaryReportFiles(
-                    for: record,
-                    response: response
-                )
+                try exportLifecycle.prepareReplacement {
+                    try PhaseDiagramImageExporter().writeTemporaryReportFiles(
+                        for: record,
+                        response: response
+                    )
+                }
             } catch {
-                exportArtifacts = nil
                 exportErrorMessage = error.localizedDescription
             }
             isPreparingExport = false
@@ -512,13 +505,7 @@ private struct PhaseBoundaryChart: View {
             && response.boundaryKind == .pureFluidSaturation
             && response.solver?.converged != false
             && plotData.validPointCount == response.points.count
-            && plotData.plottedPointCount > 0
-    }
-
-    private func removePreparedExportIfIdle() {
-        guard !isSharingPreparedExport else { return }
-        exportStore.remove(exportArtifacts)
-        exportArtifacts = nil
+            && !plotData.segments.isEmpty
     }
 
     private func paddedDomain(values: [Double]) -> ClosedRange<Double> {
@@ -532,4 +519,19 @@ private struct PhaseBoundaryChart: View {
     private func number(_ value: Double) -> String {
         value.formatted(.number.precision(.significantDigits(1...7)))
     }
+}
+
+private struct PhaseDiagramShareSheet: UIViewControllerRepresentable {
+    let items: [URL]
+    let onComplete: () -> Void
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, _, _, _ in
+            onComplete()
+        }
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

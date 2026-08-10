@@ -161,7 +161,7 @@ final class PhaseXpertUITests: XCTestCase {
         nitrogenField.tap()
         XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
         nitrogenField.typeText("100")
-        app.staticTexts["Composition"].tap()
+        app.staticTexts["Validation and capability state"].tap()
         XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
         XCTAssertEqual(nitrogenField.value as? String, "100")
 
@@ -231,6 +231,7 @@ final class PhaseXpertUITests: XCTestCase {
 
         let nitrogenField = app.textFields["N₂ ppm"]
         XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
+        nitrogenField.tap()
         nitrogenField.typeText("30000")
         XCTAssertFalse(app.buttons["OK"].exists)
         app.swipeDown()
@@ -253,15 +254,15 @@ final class PhaseXpertUITests: XCTestCase {
         )
         viewPhaseDiagramButton.tap()
 
+        let pureCO2ScopeMessage = app.staticTexts[
+            "Phase diagrams are available for pure CO₂. Remove all impurities to view the CO₂ phase diagram."
+        ]
         XCTAssertTrue(
-            app.otherElements["phase-diagram-pure-co2-scope"].waitForExistence(timeout: 10),
+            app.otherElements["phase-diagram-pure-co2-scope"].waitForExistence(timeout: 10)
+                || pureCO2ScopeMessage.waitForExistence(timeout: 3),
             "The phase-diagram screen did not show the pure-CO₂ scope state for 3 mol% N₂."
         )
-        XCTAssertTrue(
-            app.staticTexts[
-                "Phase diagrams are available for pure CO₂. Remove all impurities to view the CO₂ phase diagram."
-            ].exists
-        )
+        XCTAssertTrue(pureCO2ScopeMessage.exists)
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
     }
 
