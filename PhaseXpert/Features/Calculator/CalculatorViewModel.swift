@@ -629,22 +629,26 @@ final class StreamMixingViewModel {
     func updatePressureText(streamID: UUID, value: String) {
         guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
         streams[index].pressureText = value
+        conversionIssue = nil
         markInputsChanged()
     }
 
     func updateTemperatureText(streamID: UUID, value: String) {
         guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
         streams[index].temperatureText = value
+        conversionIssue = nil
         markInputsChanged()
     }
 
     func updateOutletPressureText(_ value: String) {
         outletPressureText = value
+        conversionIssue = nil
         markInputsChanged()
     }
 
     func updateOutletTemperatureText(_ value: String) {
         outletTemperatureText = value
+        conversionIssue = nil
         markInputsChanged()
     }
 
@@ -778,15 +782,41 @@ final class StreamMixingViewModel {
         guard let index = streams.firstIndex(where: { $0.id == streamID }),
               streams[index].compositionBasis != newBasis
         else { return }
-        let oldSnapshots = originalComposition(for: streams[index])
-        guard let moleFractions = try? compositionConverter.moleFractions(from: oldSnapshots),
-              let newSnapshots = try? compositionConverter.compositionSnapshots(
-                from: moleFractions,
-                basis: newBasis
-              )
-        else {
+        let stream = streams[index]
+        let oldSnapshots = originalComposition(for: stream)
+        let moleFractions: [MixtureComponent]
+        if let normalizedComposition = stream.normalizedComposition {
+            moleFractions = normalizedComposition
+        } else {
+            do {
+                let candidate = try compositionConverter.conversionCandidate(from: oldSnapshots)
+                guard candidate.requirement == .validAsEntered else {
+                    conversionIssue = issueForConversionFailure(
+                        stream: stream,
+                        field: .composition,
+                        code: .normalizationRequired,
+                        message: "Composition basis could not be changed until the available normalization is explicitly accepted."
+                    )
+                    validate()
+                    return
+                }
+                moleFractions = candidate.convertedComposition
+            } catch {
+                conversionIssue = issueForConversionFailure(
+                    stream: stream,
+                    field: .composition,
+                    message: "Composition basis could not be changed because the current composition is incomplete, invalid or lacks a reviewed molar mass."
+                )
+                validate()
+                return
+            }
+        }
+        guard let newSnapshots = try? compositionConverter.compositionSnapshots(
+            from: moleFractions,
+            basis: newBasis
+        ) else {
             conversionIssue = issueForConversionFailure(
-                stream: streams[index],
+                stream: stream,
                 field: .composition,
                 message: "Composition basis could not be changed because the current composition is incomplete, invalid or lacks a reviewed molar mass."
             )
@@ -894,13 +924,19 @@ final class StreamMixingViewModel {
               streams[index].pressureDisplayUnit != newUnit
         else { return }
         guard let value = parse(streams[index].pressureText) else {
-            streams[index].pressureDisplayUnit = newUnit
-            markInputsChanged()
+            conversionIssue = issueForConversionFailure(
+                stream: streams[index],
+                field: .pressure,
+                code: .invalidPressure,
+                message: "Pressure unit could not be changed because the current pressure value is not numeric."
+            )
+            validate()
             return
         }
         let pressurePa = streams[index].pressureDisplayUnit.pascal(from: value)
         streams[index].pressureDisplayUnit = newUnit
         streams[index].pressureText = Self.formatPressure(newUnit.displayValue(from: pressurePa), for: newUnit)
+        conversionIssue = nil
         markInputsChanged()
     }
 
@@ -909,8 +945,13 @@ final class StreamMixingViewModel {
               streams[index].temperatureDisplayUnit != newUnit
         else { return }
         guard let value = parse(streams[index].temperatureText) else {
-            streams[index].temperatureDisplayUnit = newUnit
-            markInputsChanged()
+            conversionIssue = issueForConversionFailure(
+                stream: streams[index],
+                field: .temperature,
+                code: .invalidTemperature,
+                message: "Temperature unit could not be changed because the current temperature value is not numeric."
+            )
+            validate()
             return
         }
         let temperatureK = streams[index].temperatureDisplayUnit.kelvin(from: value)
@@ -919,27 +960,37 @@ final class StreamMixingViewModel {
             newUnit.displayValue(from: temperatureK),
             for: newUnit
         )
+        conversionIssue = nil
         markInputsChanged()
     }
 
     func changeOutletPressureUnit(to newUnit: PressureDisplayUnit) {
         guard outletPressureDisplayUnit != newUnit else { return }
         guard let value = parse(outletPressureText) else {
-            outletPressureDisplayUnit = newUnit
-            markInputsChanged()
+            conversionIssue = StreamMixingValidationIssue(
+                code: .invalidPressure,
+                field: .outletPressure,
+                message: "Outlet pressure unit could not be changed because the current pressure value is not numeric."
+            )
+            validate()
             return
         }
         let pressurePa = outletPressureDisplayUnit.pascal(from: value)
         outletPressureDisplayUnit = newUnit
         outletPressureText = Self.formatPressure(newUnit.displayValue(from: pressurePa), for: newUnit)
+        conversionIssue = nil
         markInputsChanged()
     }
 
     func changeOutletTemperatureUnit(to newUnit: TemperatureDisplayUnit) {
         guard outletTemperatureDisplayUnit != newUnit else { return }
         guard let value = parse(outletTemperatureText) else {
-            outletTemperatureDisplayUnit = newUnit
-            markInputsChanged()
+            conversionIssue = StreamMixingValidationIssue(
+                code: .invalidTemperature,
+                field: .outletTemperature,
+                message: "Outlet temperature unit could not be changed because the current temperature value is not numeric."
+            )
+            validate()
             return
         }
         let temperatureK = outletTemperatureDisplayUnit.kelvin(from: value)
@@ -948,6 +999,7 @@ final class StreamMixingViewModel {
             newUnit.displayValue(from: temperatureK),
             for: newUnit
         )
+        conversionIssue = nil
         markInputsChanged()
     }
 
@@ -1057,7 +1109,9 @@ final class StreamMixingViewModel {
         if let normalized = stream.normalizedComposition {
             return normalized
         }
-        return (try? compositionConverter.moleFractions(from: originalComposition(for: stream))) ?? []
+        return (try? compositionConverter.conversionCandidate(
+            from: originalComposition(for: stream)
+        ).convertedComposition) ?? []
     }
 
     private func displayComposition(

@@ -114,8 +114,64 @@ public enum StreamMixingConversionError: Error, Equatable, Sendable {
     case incompatibleFlowBasis
 }
 
+public enum StreamCompositionConversionRequirement: String, Codable, Equatable, Sendable {
+    case validAsEntered
+    case explicitNormalizationRequired
+}
+
+public struct StreamCompositionConversionCandidate: Codable, Equatable, Sendable {
+    public let originalComposition: [CompositionInputSnapshot]
+    public let convertedComposition: [MixtureComponent]
+    public let normalizedComposition: [MixtureComponent]?
+    public let requirement: StreamCompositionConversionRequirement
+
+    public init(
+        originalComposition: [CompositionInputSnapshot],
+        convertedComposition: [MixtureComponent],
+        normalizedComposition: [MixtureComponent]?,
+        requirement: StreamCompositionConversionRequirement
+    ) {
+        self.originalComposition = originalComposition
+        self.convertedComposition = convertedComposition
+        self.normalizedComposition = normalizedComposition
+        self.requirement = requirement
+    }
+}
+
 public struct StreamCompositionConverter: Sendable {
     public init() {}
+
+    public func conversionCandidate(
+        from original: [CompositionInputSnapshot]
+    ) throws -> StreamCompositionConversionCandidate {
+        let unit = try validatedUnitAndValues(for: original)
+        let total = original.reduce(0) { $0 + $1.value }
+        let scale = compositionScale(for: unit)
+        let fractionalDeviation = abs(total / scale - 1)
+        guard total.isFinite,
+              total > 0,
+              fractionalDeviation <= CalculationValidator.normalizationTolerance
+        else {
+            throw StreamMixingConversionError.invalidCompositionTotal
+        }
+
+        let converted = try moleFractions(from: original)
+        if fractionalDeviation > CalculationValidator.compositionTolerance {
+            return StreamCompositionConversionCandidate(
+                originalComposition: original,
+                convertedComposition: converted,
+                normalizedComposition: try normalizedMoleFractions(from: original),
+                requirement: .explicitNormalizationRequired
+            )
+        }
+
+        return StreamCompositionConversionCandidate(
+            originalComposition: original,
+            convertedComposition: converted,
+            normalizedComposition: nil,
+            requirement: .validAsEntered
+        )
+    }
 
     public func moleFractions(
         from original: [CompositionInputSnapshot]

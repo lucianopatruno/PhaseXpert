@@ -132,6 +132,77 @@ final class UnitConversionTests: XCTestCase {
         )
     }
 
+    func testStreamCompositionConversionCandidateAcceptsValidMassFractionOnlyAsEntered() throws {
+        let converter = StreamCompositionConverter()
+        let co2Mass = try XCTUnwrap(ComponentID.carbonDioxide.molarMassKilogramsPerMole)
+        let nitrogenMass = try XCTUnwrap(ComponentID.nitrogen.molarMassKilogramsPerMole)
+        let mixtureMass = 0.2 * co2Mass + 0.8 * nitrogenMass
+        let original = [
+            CompositionInputSnapshot(
+                component: .carbonDioxide,
+                value: 0.2 * co2Mass / mixtureMass,
+                unit: .massFraction
+            ),
+            CompositionInputSnapshot(
+                component: .nitrogen,
+                value: 0.8 * nitrogenMass / mixtureMass,
+                unit: .massFraction
+            )
+        ]
+
+        let candidate = try converter.conversionCandidate(from: original)
+
+        XCTAssertEqual(candidate.requirement, .validAsEntered)
+        XCTAssertNil(candidate.normalizedComposition)
+        XCTAssertEqual(
+            candidate.convertedComposition.first { $0.component == .carbonDioxide }?.moleFraction ?? .nan,
+            0.2,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            candidate.convertedComposition.first { $0.component == .nitrogen }?.moleFraction ?? .nan,
+            0.8,
+            accuracy: 1e-12
+        )
+    }
+
+    func testStreamCompositionConversionCandidateRequiresExplicitNormalizationForNearMassFraction() throws {
+        let converter = StreamCompositionConverter()
+        let candidate = try converter.conversionCandidate(from: [
+            .init(component: .carbonDioxide, value: 0.5002, unit: .massFraction),
+            .init(component: .nitrogen, value: 0.5002, unit: .massFraction)
+        ])
+
+        XCTAssertEqual(candidate.requirement, .explicitNormalizationRequired)
+        XCTAssertNotNil(candidate.normalizedComposition)
+    }
+
+    func testStreamCompositionConversionCandidateRejectsFarAndZeroMassFractionTotals() {
+        let converter = StreamCompositionConverter()
+        XCTAssertThrowsError(try converter.conversionCandidate(from: [
+            .init(component: .carbonDioxide, value: 0.6, unit: .massFraction),
+            .init(component: .nitrogen, value: 0.6, unit: .massFraction)
+        ])) { error in
+            XCTAssertEqual(error as? StreamMixingConversionError, .invalidCompositionTotal)
+        }
+        XCTAssertThrowsError(try converter.conversionCandidate(from: [
+            .init(component: .carbonDioxide, value: 0, unit: .massFraction),
+            .init(component: .nitrogen, value: 0, unit: .massFraction)
+        ])) { error in
+            XCTAssertEqual(error as? StreamMixingConversionError, .invalidCompositionTotal)
+        }
+    }
+
+    func testStreamCompositionConversionCandidateRejectsMissingMassFractionMolarMass() {
+        let converter = StreamCompositionConverter()
+        XCTAssertThrowsError(try converter.conversionCandidate(from: [
+            .init(component: .carbonDioxide, value: 0.99, unit: .massFraction),
+            .init(component: .helium, value: 0.01, unit: .massFraction)
+        ])) { error in
+            XCTAssertEqual(error as? StreamMixingConversionError, .missingMolarMass(.helium))
+        }
+    }
+
     func testStreamCompositionConverterRoundTripsEveryMoleBasis() throws {
         let converter = StreamCompositionConverter()
         let moleFractions = [

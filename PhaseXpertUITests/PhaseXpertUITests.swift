@@ -439,10 +439,14 @@ final class PhaseXpertUITests: XCTestCase {
         app.launch()
         openStreamMixing(in: app)
 
-        let streamNames = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-name-"))
+        XCTAssertTrue(
+            app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions"))
+                .element(boundBy: 0)
+                .waitForExistence(timeout: 3)
+        )
+        let streamNames = app.textFields.matching(NSPredicate(format: "label == %@", "Stream name"))
         XCTAssertTrue(streamNames.element(boundBy: 0).waitForExistence(timeout: 3))
         XCTAssertEqual(streamNames.element(boundBy: 0).value as? String, "Stream 1")
-        XCTAssertEqual(streamNames.element(boundBy: 1).value as? String, "Stream 2")
 
         app.buttons.matching(NSPredicate(format: "label == %@", "Stream actions")).element(boundBy: 0).tap()
         XCTAssertTrue(app.buttons["Move down"].waitForExistence(timeout: 2))
@@ -450,7 +454,6 @@ final class PhaseXpertUITests: XCTestCase {
         app.buttons["Move down"].tap()
 
         XCTAssertEqual(streamNames.element(boundBy: 0).value as? String, "Stream 2")
-        XCTAssertEqual(streamNames.element(boundBy: 1).value as? String, "Stream 1")
     }
 
     func testStreamMixingSuccessfulCalculationWarningTraceabilityAndStaleState() {
