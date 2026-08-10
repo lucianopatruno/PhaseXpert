@@ -447,7 +447,7 @@ private struct PDFReportContent {
         section("Operating point", in: document)
         row(
             "Pressure — displayed",
-            "\(number(input.pressureValue)) \(pressureUnit(input.pressureUnit))",
+            "\(number(input.pressureValue)) \(input.pressureDisplayUnitLabel)",
             in: document
         )
         row(

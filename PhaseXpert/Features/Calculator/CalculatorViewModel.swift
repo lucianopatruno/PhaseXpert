@@ -384,6 +384,8 @@ final class CalculatorViewModel {
         guard validationReport.canCalculate else { return }
         guard
             let provider = registry.provider(id: selectedModelID),
+            let pressureValue = parse(pressureText),
+            let temperatureValue = parse(temperatureText),
             let pressurePa = parsedPressurePa,
             let temperatureK = parsedTemperatureK
         else { return }
@@ -408,11 +410,11 @@ final class CalculatorViewModel {
             calculationRecord = CalculationRecord(
                 request: request,
                 input: CalculationInputSnapshot(
-                    pressureValue: pressurePa / 100_000,
-                    pressureUnit: .bara,
+                    pressureValue: pressureValue,
+                    pressureUnit: pressureInputSnapshotUnit,
                     pressurePa: pressurePa,
-                    temperatureValue: temperatureK - 273.15,
-                    temperatureUnit: .celsius,
+                    temperatureValue: temperatureValue,
+                    temperatureUnit: temperatureInputSnapshotUnit,
                     temperatureK: temperatureK,
                     originalComposition: normalizationWasUsed
                         ? compositionBeforeNormalization ?? compositionSnapshot()
@@ -487,6 +489,24 @@ final class CalculatorViewModel {
         guard let value = parse(temperatureText) else { return nil }
         let temperatureK = temperatureDisplayUnit.kelvin(from: value)
         return temperatureK.isFinite ? temperatureK : nil
+    }
+
+    private var pressureInputSnapshotUnit: PressureUnit {
+        switch pressureDisplayUnit {
+        case .barAbsolute:
+            .bara
+        case .megapascalAbsolute:
+            .megapascal
+        }
+    }
+
+    private var temperatureInputSnapshotUnit: TemperatureUnit {
+        switch temperatureDisplayUnit {
+        case .celsius:
+            .celsius
+        case .kelvin:
+            .kelvin
+        }
     }
 
     private func parse(_ value: String) -> Double? {

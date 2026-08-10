@@ -57,7 +57,7 @@ struct ScientificTraceabilityView: View {
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(Array(descriptor.references.enumerated()), id: \.offset) { _, reference in
-                                if let link = verifiedReferenceURL(reference.doiOrURL) {
+                                if let link = ReferenceLinkResolver.url(for: reference.doiOrURL) {
                                     Link(destination: link) {
                                         referenceLabel(reference, identifier: reference.doiOrURL)
                                     }
@@ -89,7 +89,7 @@ struct ScientificTraceabilityView: View {
                         identifierRow("Request ID", record.response.requestID)
                         LabeledContent(
                             "Operating point",
-                            value: "\(number(record.input.pressureValue)) bar(a), \(number(record.input.temperatureValue)) °C"
+                            value: "\(number(record.input.pressureValue)) \(record.input.pressureDisplayUnitLabel), \(number(record.input.temperatureValue)) \(record.input.temperatureUnit.rawValue)"
                         )
                         LabeledContent("Pressure — SI", value: "\(number(record.input.pressurePa)) Pa")
                         LabeledContent("Temperature — SI", value: "\(number(record.input.temperatureK)) K")
@@ -168,20 +168,6 @@ struct ScientificTraceabilityView: View {
         value.formatted(.number.precision(.fractionLength(0...6)))
     }
 
-    private func verifiedReferenceURL(_ identifier: String?) -> URL? {
-        guard let identifier, !identifier.trimmingCharacters(in: .whitespaces).isEmpty else {
-            return nil
-        }
-        if let url = URL(string: identifier), url.scheme?.hasPrefix("http") == true {
-            return url
-        }
-        let trimmed = identifier
-            .replacingOccurrences(of: "doi:", with: "", options: .caseInsensitive)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.contains("/") else { return nil }
-        return URL(string: "https://doi.org/\(trimmed)")
-    }
-
     @ViewBuilder
     private func referenceLabel(
         _ reference: SourceReference,
@@ -201,5 +187,38 @@ struct ScientificTraceabilityView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+}
+
+enum ReferenceLinkResolver {
+    private static let doiPattern = #"^10\.\d{4,9}/[-._;()/:A-Z0-9]+$"#
+
+    static func url(for identifier: String?) -> URL? {
+        guard let identifier else { return nil }
+        let trimmed = identifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let url = URL(string: trimmed),
+           url.scheme == "https",
+           url.host?.isEmpty == false {
+            return url
+        }
+
+        let doi = trimmed.hasPrefix("doi:")
+            ? String(trimmed.dropFirst(4)).trimmingCharacters(in: .whitespacesAndNewlines)
+            : trimmed
+        guard isDOI(doi),
+              let encoded = doi.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+        else {
+            return nil
+        }
+        return URL(string: "https://doi.org/\(encoded)")
+    }
+
+    private static func isDOI(_ value: String) -> Bool {
+        value.range(
+            of: doiPattern,
+            options: [.regularExpression, .caseInsensitive]
+        ) != nil
     }
 }

@@ -32,7 +32,7 @@ final class CalculationExportTests: XCTestCase {
         let text = String(decoding: data.dropFirst(3), as: UTF8.self)
         XCTAssertTrue(text.hasPrefix("\"section\",\"key\",\"index\""))
         XCTAssertTrue(text.contains("\"display_input\",\"pressure\""))
-        XCTAssertTrue(text.contains("\"150.0\",\"bara\""))
+        XCTAssertTrue(text.contains("\"150.0\",\"bar(a)\""))
         XCTAssertTrue(text.contains("\"property\",\"result\",\"0\",\"density\",\"903.5\",\"kg/m³\",\"calculated\""))
         XCTAssertTrue(text.contains("PRELIMINARY — validation pending."))
         XCTAssertTrue(text.contains("\"He said \"\"check\"\"\nsecond line\""))

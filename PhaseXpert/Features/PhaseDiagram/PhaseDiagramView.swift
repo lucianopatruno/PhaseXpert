@@ -208,13 +208,6 @@ struct PhaseDiagramView: View {
 }
 
 private struct PhaseBoundaryChart: View {
-    struct Sample: Identifiable {
-        let id: Int
-        let temperatureCelsius: Double
-        let pressureBar: Double
-        let branch: PhaseEnvelopePoint.Branch
-    }
-
     let record: CalculationRecord
     let response: PhaseEnvelopeResponse
 
@@ -222,33 +215,12 @@ private struct PhaseBoundaryChart: View {
     @State private var exportArtifacts: PhaseDiagramExportArtifacts?
     @State private var exportErrorMessage: String?
     @State private var isPreparingExport = false
+    @State private var isSharingPreparedExport = false
 
-    private var samples: [Sample] {
-        response.points.enumerated().compactMap { index, point in
-            guard point.temperatureK.isFinite,
-                  point.pressurePa.isFinite,
-                  point.pressurePa > 0
-            else { return nil }
-            return Sample(
-                id: index,
-                temperatureCelsius: point.temperatureK - 273.15,
-                pressureBar: point.pressurePa / 100_000,
-                branch: point.branch
-            )
-        }
-    }
+    private let exportStore = PhaseDiagramTemporaryExportStore()
 
-    private var bubble: [Sample] { samples.filter { $0.branch == .bubble } }
-    private var critical: Sample? {
-        guard let point = response.points.first(where: { $0.branch == .critical }) else {
-            return nil
-        }
-        return Sample(
-            id: response.points.count,
-            temperatureCelsius: point.temperatureK - 273.15,
-            pressureBar: point.pressurePa / 100_000,
-            branch: .critical
-        )
+    private var plotData: PhaseBoundaryPlotData {
+        PhaseBoundarySeriesBuilder.plotData(for: response)
     }
 
     private var operatingTemperatureCelsius: Double {
@@ -260,22 +232,24 @@ private struct PhaseBoundaryChart: View {
     }
 
     private var xDomain: ClosedRange<Double> {
-        paddedDomain(values: samples.map(\.temperatureCelsius) + [
-            critical?.temperatureCelsius,
+        paddedDomain(values: plottedPoints.map(\.temperatureCelsius) + [
             operatingTemperatureCelsius
-        ].compactMap { $0 })
+        ])
     }
 
     private var yDomain: ClosedRange<Double> {
-        paddedDomain(values: samples.map(\.pressureBar) + [
-            critical?.pressureBar,
+        paddedDomain(values: plottedPoints.map(\.pressureBar) + [
             operatingPressureBar
-        ].compactMap { $0 })
+        ])
     }
 
-    private var selectedSample: Sample? {
+    private var plottedPoints: [PhaseBoundaryPlotPoint] {
+        plotData.segments.flatMap(\.points) + plotData.criticalPoints
+    }
+
+    private var selectedSample: PhaseBoundaryPlotPoint? {
         guard let selectedTemperatureCelsius else { return nil }
-        return samples.filter { $0.branch != .critical }.min {
+        return plotData.segments.flatMap(\.points).min {
             abs($0.temperatureCelsius - selectedTemperatureCelsius)
                 < abs($1.temperatureCelsius - selectedTemperatureCelsius)
         }
@@ -303,6 +277,9 @@ private struct PhaseBoundaryChart: View {
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            .simultaneousGesture(TapGesture().onEnded {
+                                isSharingPreparedExport = true
+                            })
                         }
                         .accessibilityIdentifier("share-phase-diagram-artifacts")
                     } else if isPreparingExport {
@@ -323,6 +300,7 @@ private struct PhaseBoundaryChart: View {
                             Button("Prepare PDF and CSV", systemImage: "doc.badge.arrow.up") {
                                 prepareDiagramExport()
                             }
+                            .disabled(!canExportCompleteDiagram)
                             .accessibilityIdentifier("prepare-phase-diagram-export")
                         }
                     }
@@ -341,6 +319,18 @@ private struct PhaseBoundaryChart: View {
                             value: "\(number(operatingTemperatureCelsius)) °C"
                         )
                         LabeledContent("Calculated phase", value: record.response.phase.displayName)
+                        LabeledContent(
+                            "Boundary points",
+                            value: "\(plotData.receivedPointCount) received, \(plotData.validPointCount) valid, \(plotData.plottedPointCount) plotted"
+                        )
+                        if plotData.hasGaps {
+                            Label(
+                                "Boundary contains gaps; invalid or discontinuous points are not joined.",
+                                systemImage: "exclamationmark.triangle"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(Color.pxWarning)
+                        }
                         Text(
                             "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the source calculation."
                         )
@@ -358,19 +348,22 @@ private struct PhaseBoundaryChart: View {
                             .foregroundStyle(.secondary)
 
                         Chart {
-                            ForEach(bubble) { sample in
-                                LineMark(
-                                    x: .value("Temperature (°C)", sample.temperatureCelsius),
-                                    y: .value("Pressure (bar(a))", sample.pressureBar)
-                                )
-                                .foregroundStyle(by: .value(
-                                    "Series",
-                                    "CO₂ saturation boundary"
-                                ))
-                                .interpolationMethod(.linear)
+                            ForEach(plotData.segments) { segment in
+                                ForEach(segment.points) { sample in
+                                    LineMark(
+                                        x: .value("Temperature (°C)", sample.temperatureCelsius),
+                                        y: .value("Pressure (bar(a))", sample.pressureBar),
+                                        series: .value("Segment", segment.id)
+                                    )
+                                    .foregroundStyle(by: .value(
+                                        "Series",
+                                        "CO₂ saturation boundary"
+                                    ))
+                                    .interpolationMethod(.linear)
+                                }
                             }
 
-                            if let critical {
+                            ForEach(plotData.criticalPoints) { critical in
                                 PointMark(
                                     x: .value("Temperature (°C)", critical.temperatureCelsius),
                                     y: .value("Pressure (bar(a))", critical.pressureBar)
@@ -443,7 +436,10 @@ private struct PhaseBoundaryChart: View {
                             "Boundary type",
                             value: "Pure-fluid saturation"
                         )
-                        LabeledContent("Calculated points", value: "\(response.points.count)")
+                        LabeledContent(
+                            "Calculated points",
+                            value: "\(plotData.receivedPointCount) received, \(plotData.validPointCount) valid, \(plotData.plottedPointCount) plotted"
+                        )
                         LabeledContent("Composition") {
                             Text(record.request.composition.map {
                                 "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%"
@@ -479,12 +475,22 @@ private struct PhaseBoundaryChart: View {
             .padding(IFESpacing.medium)
         }
         .accessibilityIdentifier("phase-diagram-available")
+        .onChange(of: record.id) { _, _ in
+            removePreparedExportIfIdle()
+        }
+        .onDisappear {
+            removePreparedExportIfIdle()
+        }
     }
 
     private func prepareDiagramExport() {
         guard !isPreparingExport else { return }
         isPreparingExport = true
         exportErrorMessage = nil
+        if !isSharingPreparedExport {
+            exportStore.remove(exportArtifacts)
+            exportArtifacts = nil
+        }
 
         Task { @MainActor in
             await Task.yield()
@@ -499,6 +505,20 @@ private struct PhaseBoundaryChart: View {
             }
             isPreparingExport = false
         }
+    }
+
+    private var canExportCompleteDiagram: Bool {
+        response.isAvailable
+            && response.boundaryKind == .pureFluidSaturation
+            && response.solver?.converged != false
+            && plotData.validPointCount == response.points.count
+            && plotData.plottedPointCount > 0
+    }
+
+    private func removePreparedExportIfIdle() {
+        guard !isSharingPreparedExport else { return }
+        exportStore.remove(exportArtifacts)
+        exportArtifacts = nil
     }
 
     private func paddedDomain(values: [Double]) -> ClosedRange<Double> {

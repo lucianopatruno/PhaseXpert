@@ -542,19 +542,18 @@ struct CalculatorView: View {
             selection: selection,
             keyboardType: keyboardType,
             isFocused: focusedField == field,
-            unitLabel: unit.wrappedValue.rawValue
+            unitLabel: unit.wrappedValue.rawValue,
+            unitOptions: PressureDisplayUnit.allCases.map(\.rawValue),
+            selectedUnit: unit.wrappedValue.rawValue,
+            accessibilityIdentifier: title.lowercased(),
+            unitAction: { selectedUnit in
+                guard let selected = PressureDisplayUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                unit.wrappedValue = selected
+            }
         )
         .focused($focusedField, equals: field)
-        .overlay(alignment: .trailing) {
-            Picker("\(title) unit", selection: unit) {
-                ForEach(PressureDisplayUnit.allCases) { option in
-                    Text(option.rawValue).tag(option)
-                }
-            }
-            .labelsHidden()
-            .frame(width: 94)
-            .accessibilityIdentifier("\(title.lowercased())-unit-picker")
-        }
     }
 
     private func operatingPointRow(
@@ -571,19 +570,18 @@ struct CalculatorView: View {
             selection: selection,
             keyboardType: keyboardType,
             isFocused: focusedField == field,
-            unitLabel: unit.wrappedValue.rawValue
+            unitLabel: unit.wrappedValue.rawValue,
+            unitOptions: TemperatureDisplayUnit.allCases.map(\.rawValue),
+            selectedUnit: unit.wrappedValue.rawValue,
+            accessibilityIdentifier: title.lowercased(),
+            unitAction: { selectedUnit in
+                guard let selected = TemperatureDisplayUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                unit.wrappedValue = selected
+            }
         )
         .focused($focusedField, equals: field)
-        .overlay(alignment: .trailing) {
-            Picker("\(title) unit", selection: unit) {
-                ForEach(TemperatureDisplayUnit.allCases) { option in
-                    Text(option.rawValue).tag(option)
-                }
-            }
-            .labelsHidden()
-            .frame(width: 94)
-            .accessibilityIdentifier("\(title.lowercased())-unit-picker")
-        }
     }
 
     private var compositionFooterText: String {
@@ -696,6 +694,7 @@ private struct ModelSelectionRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(displayName), \(descriptor.availability.rawValue)")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .accessibilityHint(
             descriptor.availability == .unavailable
                 ? "This model is unavailable and cannot be selected."
@@ -755,49 +754,114 @@ private struct UnitAwareNumericField: View {
     let keyboardType: UIKeyboardType
     let isFocused: Bool
     let unitLabel: String
+    let unitOptions: [String]
+    let selectedUnit: String
+    let accessibilityIdentifier: String
+    let unitAction: (String) -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: IFESpacing.regular) {
-            VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
-                Text(title)
-                    .font(.body.weight(.medium))
-                if title == "Pressure" {
-                    Text("absolute")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
+                titleView
+                    .layoutPriority(2)
+                Spacer(minLength: IFESpacing.small)
+                inputView
+                    .layoutPriority(1)
+                unitMenu
+                    .layoutPriority(1)
+            }
+
+            VStack(alignment: .leading, spacing: IFESpacing.small) {
+                titleView
+                HStack(spacing: IFESpacing.regular) {
+                    inputView
+                    unitMenu
                 }
             }
-            Spacer(minLength: IFESpacing.small)
-            TextField("Value", text: $text, selection: $selection)
-                .keyboardType(keyboardType)
-                .multilineTextAlignment(.trailing)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .font(.body.monospacedDigit())
-                .frame(minWidth: 86, idealWidth: 112, maxWidth: 130)
-                .padding(.horizontal, IFESpacing.small)
-                .padding(.vertical, 7)
-                .padding(.trailing, 76)
-                .background(
-                    RoundedRectangle(cornerRadius: IFECornerRadius.field)
-                        .fill(Color.secondary.opacity(0.08))
-                )
-                .overlay {
-                    RoundedRectangle(cornerRadius: IFECornerRadius.field)
-                        .stroke(
-                            isFocused ? Color.ifePrimary : Color.secondary.opacity(0.22),
-                            lineWidth: isFocused ? IFELine.focus : IFELine.hairline
-                        )
-                }
-                .contentShape(Rectangle())
-                .accessibilityLabel("\(title) value")
-                .accessibilityValue("\(text) \(unitLabel)")
-            Text(unitLabel)
-                .foregroundStyle(.secondary)
-                .frame(width: 50, alignment: .leading)
-                .accessibilityHidden(true)
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private var titleView: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            Text(title)
+                .font(.body.weight(.medium))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .accessibilityIdentifier("\(accessibilityIdentifier)-label")
+            if title == "Pressure" {
+                Text("absolute")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    private var inputView: some View {
+        TextField("Value", text: $text, selection: $selection)
+            .keyboardType(keyboardType)
+            .multilineTextAlignment(.trailing)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .font(.body.monospacedDigit())
+            .frame(minWidth: 96, idealWidth: 116, maxWidth: 150)
+            .padding(.horizontal, IFESpacing.small)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                    .fill(Color.secondary.opacity(0.08))
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                    .stroke(
+                        isFocused ? Color.ifePrimary : Color.secondary.opacity(0.22),
+                        lineWidth: isFocused ? IFELine.focus : IFELine.hairline
+                    )
+            }
+            .contentShape(Rectangle())
+            .accessibilityLabel("\(title) value")
+            .accessibilityValue("\(text) \(unitLabel)")
+            .accessibilityIdentifier("\(accessibilityIdentifier)-value-field")
+    }
+
+    private var unitMenu: some View {
+        Menu {
+            ForEach(unitOptions, id: \.self) { option in
+                Button {
+                    unitAction(option)
+                } label: {
+                    if option == selectedUnit {
+                        Label(option, systemImage: "checkmark")
+                    } else {
+                        Text(option)
+                    }
+                }
+                .accessibilityIdentifier("\(accessibilityIdentifier)-unit-option-\(option)")
+            }
+        } label: {
+            HStack(spacing: IFESpacing.xSmall) {
+                Text(selectedUnit)
+                    .font(.body.weight(.medium).monospacedDigit())
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, IFESpacing.regular)
+            .padding(.vertical, 8)
+            .frame(minWidth: 72)
+            .background(Color.pxSurface, in: RoundedRectangle(cornerRadius: IFECornerRadius.field))
+            .overlay {
+                RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                    .stroke(Color.pxSeparator.opacity(0.7), lineWidth: IFELine.hairline)
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityLabel("\(title) unit")
+        .accessibilityValue(selectedUnit)
+        .accessibilityIdentifier("\(accessibilityIdentifier)-unit-menu")
     }
 }
 
@@ -869,13 +933,13 @@ struct CalculationResultSections: View {
                 IFEValueRow(
                     title: "Pressure",
                     value: number(record.input.pressureValue),
-                    unit: "bar(a)",
+                    unit: record.input.pressureDisplayUnitLabel,
                     copyValue: "\(record.input.pressureValue)"
                 )
                 IFEValueRow(
                     title: "Temperature",
                     value: number(record.input.temperatureValue),
-                    unit: "°C",
+                    unit: record.input.temperatureUnit.rawValue,
                     copyValue: "\(record.input.temperatureValue)"
                 )
 
@@ -969,9 +1033,9 @@ struct CalculationResultSections: View {
                 .textSelection(.enabled)
         }
 
-        LabeledContent("Pressure — displayed", value: "\(number(record.input.pressureValue)) bar(a)")
+        LabeledContent("Pressure — entered", value: "\(number(record.input.pressureValue)) \(record.input.pressureDisplayUnitLabel)")
         LabeledContent("Pressure — SI", value: "\(number(record.input.pressurePa)) Pa")
-        LabeledContent("Temperature — displayed", value: "\(number(record.input.temperatureValue)) °C")
+        LabeledContent("Temperature — entered", value: "\(number(record.input.temperatureValue)) \(record.input.temperatureUnit.rawValue)")
         LabeledContent("Temperature — SI", value: "\(number(record.input.temperatureK)) K")
 
         LabeledContent("Original composition") {
@@ -1025,14 +1089,11 @@ struct CalculationResultSections: View {
                 .font(.subheadline.weight(.semibold))
 
             ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { index, reference in
-                if
-                    let address = reference.doiOrURL,
-                    let url = URL(string: address)
-                {
+                if let url = ReferenceLinkResolver.url(for: reference.doiOrURL) {
                     Link(destination: url) {
-                        scientificReferenceLabel(reference, address: address)
+                        scientificReferenceLabel(reference, address: reference.doiOrURL)
                     }
-                    .id("scientific-reference-\(index)-\(address)")
+                    .id("scientific-reference-\(index)-\(url.absoluteString)")
                     .accessibilityLabel(
                         "\(reference.authors), \(reference.title), open reference"
                     )

@@ -359,7 +359,7 @@ private struct CSVCalculationExportRenderer: CalculationExportRendering {
             "display_input",
             "pressure",
             value: number(input.pressureValue),
-            unit: input.pressureUnit.rawValue
+            unit: input.pressureDisplayUnitLabel
         )
         append("si_input", "pressure", value: number(input.pressurePa), unit: "Pa")
         append(

@@ -200,6 +200,17 @@ public struct CalculationInputSnapshot: Codable, Equatable, Sendable {
         self.originalComposition = originalComposition
         self.normalizedComposition = normalizedComposition
     }
+
+    public var pressureDisplayUnitLabel: String {
+        switch pressureUnit {
+        case .bara, .bar:
+            "bar(a)"
+        case .megapascal:
+            "MPa(a)"
+        default:
+            pressureUnit.rawValue
+        }
+    }
 }
 
 /// App identity captured at calculation time rather than read back later.

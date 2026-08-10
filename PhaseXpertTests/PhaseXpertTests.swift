@@ -342,6 +342,120 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testPhaseBoundarySegmentsTerminateAtInvalidPointsBranchChangesAndCriticalPoints() {
+        let response = PhaseEnvelopeResponse(
+            requestID: UUID(),
+            points: [
+                .init(temperatureK: 230, pressurePa: 1_000_000, branch: .bubble),
+                .init(temperatureK: 240, pressurePa: 1_500_000, branch: .bubble),
+                .init(temperatureK: .nan, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 250, pressurePa: 2_000_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: -1, branch: .bubble),
+                .init(temperatureK: 270, pressurePa: 2_500_000, branch: .bubble),
+                .init(temperatureK: 280, pressurePa: 2_800_000, branch: .dew),
+                .init(temperatureK: 290, pressurePa: 3_000_000, branch: .dew),
+                .init(temperatureK: 304.1282, pressurePa: 7_377_300, branch: .critical),
+                .init(temperatureK: 300, pressurePa: 6_000_000, branch: .bubble),
+                .init(temperatureK: 301, pressurePa: 6_100_000, branch: .bubble)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation
+        )
+
+        let plotData = PhaseBoundarySeriesBuilder.plotData(for: response)
+
+        XCTAssertEqual(plotData.receivedPointCount, 11)
+        XCTAssertEqual(plotData.validPointCount, 9)
+        XCTAssertEqual(plotData.plottedPointCount, 8)
+        XCTAssertEqual(plotData.criticalPoints.map(\.originalIndex), [8])
+        XCTAssertEqual(plotData.segments.map { $0.points.map(\.originalIndex) }, [
+            [0, 1],
+            [6, 7],
+            [9, 10]
+        ])
+        XCTAssertTrue(plotData.segments.allSatisfy { segment in
+            Set(segment.points.map(\.branch)) == [segment.branch]
+        })
+    }
+
+    @MainActor
+    func testPhaseDiagramExportRejectsNonConvergedResponse() async throws {
+        let record = try await makeRecord()
+        let response = PhaseEnvelopeResponse(
+            requestID: record.request.requestID,
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 2_100_000, branch: .bubble)
+            ],
+            warnings: ["Synthetic non-converged response."],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: record.response.model,
+            solver: .init(method: "test", converged: false, durationMilliseconds: 1)
+        )
+
+        XCTAssertThrowsError(
+            try PhaseDiagramImageExporter().writeTemporaryReportFiles(
+                for: record,
+                response: response
+            )
+        )
+    }
+
+    @MainActor
+    func testPhaseDiagramTemporaryStoreCleansOnlyOwnedArtifacts() throws {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let store = PhaseDiagramTemporaryExportStore(baseDirectory: base)
+        try FileManager.default.createDirectory(
+            at: store.directory,
+            withIntermediateDirectories: true
+        )
+        let owned = store.directory.appendingPathComponent("PhaseXpert-Phase-Diagram-test.pdf")
+        let unrelated = store.directory.appendingPathComponent("Other.txt")
+        try Data("owned".utf8).write(to: owned)
+        try Data("other".utf8).write(to: unrelated)
+
+        try store.cleanStaleArtifacts()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: owned.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: unrelated.path))
+        try? FileManager.default.removeItem(at: base)
+    }
+
+    @MainActor
+    func testPhaseDiagramExportRemovesPDFWhenCSVWriteFails() async throws {
+        let record = try await makeRecord()
+        let response = PhaseEnvelopeResponse(
+            requestID: record.request.requestID,
+            points: [
+                .init(temperatureK: 250, pressurePa: 1_800_000, branch: .bubble),
+                .init(temperatureK: 260, pressurePa: 2_100_000, branch: .bubble)
+            ],
+            warnings: [],
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
+            model: record.response.model,
+            solver: .init(method: "test", converged: true, durationMilliseconds: 1)
+        )
+
+        XCTAssertThrowsError(
+            try PhaseDiagramImageExporter().writeTemporaryReportFiles(
+                for: record,
+                response: response,
+                csvWriter: { _, _ in throw CalculationExportError.textEncodingFailed }
+            )
+        )
+
+        let store = PhaseDiagramTemporaryExportStore()
+        let pdfURL = store.directory.appendingPathComponent(
+            "PhaseXpert-Phase-Diagram-\(record.response.calculationID.uuidString.prefix(8)).pdf"
+        )
+        XCTAssertFalse(FileManager.default.fileExists(atPath: pdfURL.path))
+    }
+
+    @MainActor
     func testCalculatorStartsWithCoolPropSelected() {
         let viewModel = CalculatorViewModel()
         XCTAssertEqual(viewModel.selectedModelID, "coolprop-heos")
@@ -472,6 +586,49 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testCalculationSnapshotPreservesMegapascalAndKelvinEntryUnits() async throws {
+        let record = try await makeRecord(
+            pressureValue: 15,
+            pressureUnit: .megapascal,
+            pressurePa: 15_000_000,
+            temperatureValue: 293.15,
+            temperatureUnit: .kelvin,
+            temperatureK: 293.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+
+        XCTAssertEqual(record.input.pressureValue, 15, accuracy: 1e-12)
+        XCTAssertEqual(record.input.pressureUnit, .megapascal)
+        XCTAssertEqual(record.input.pressureDisplayUnitLabel, "MPa(a)")
+        XCTAssertEqual(record.input.pressurePa, 15_000_000, accuracy: 1e-12)
+        XCTAssertEqual(record.input.temperatureValue, 293.15, accuracy: 1e-12)
+        XCTAssertEqual(record.input.temperatureUnit, .kelvin)
+        XCTAssertEqual(record.input.temperatureK, 293.15, accuracy: 1e-12)
+    }
+
+    @MainActor
+    func testHistoricalBarCelsiusRecordDecodesWithoutReinterpretingUnits() async throws {
+        let historical = try await makeRecord(
+            pressureValue: 150,
+            pressureUnit: .bara,
+            pressurePa: 15_000_000,
+            temperatureValue: 20,
+            temperatureUnit: .celsius,
+            temperatureK: 293.15,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+        let data = try JSONEncoder().encode(historical)
+
+        let decoded = try JSONDecoder().decode(CalculationRecord.self, from: data)
+
+        XCTAssertEqual(decoded.input.pressureValue, 150, accuracy: 1e-12)
+        XCTAssertEqual(decoded.input.pressureUnit, .bara)
+        XCTAssertEqual(decoded.input.pressureDisplayUnitLabel, "bar(a)")
+        XCTAssertEqual(decoded.input.temperatureValue, 20, accuracy: 1e-12)
+        XCTAssertEqual(decoded.input.temperatureUnit, .celsius)
+    }
+
+    @MainActor
     func testTemperatureUnitChangePreservesPhysicalSIValue() {
         let viewModel = CalculatorViewModel()
         viewModel.temperatureText = "20"
@@ -554,6 +711,26 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertEqual(EngineeringPropertyFormatter.text(for: property), "Unavailable")
         XCTAssertEqual(EngineeringPropertyFormatter.effectiveStatus(for: property), .unavailable)
+    }
+
+    @MainActor
+    func testReferenceLinkResolverAcceptsOnlyHTTPSAndDOIIdentifiers() {
+        XCTAssertEqual(
+            ReferenceLinkResolver.url(for: "10.1016/j.fluid.2020.112"),
+            URL(string: "https://doi.org/10.1016/j.fluid.2020.112")
+        )
+        XCTAssertEqual(
+            ReferenceLinkResolver.url(for: "doi:10.1021/acs.jced.1c00123"),
+            URL(string: "https://doi.org/10.1021/acs.jced.1c00123")
+        )
+        XCTAssertEqual(
+            ReferenceLinkResolver.url(for: "https://example.org/reference"),
+            URL(string: "https://example.org/reference")
+        )
+        XCTAssertNil(ReferenceLinkResolver.url(for: "http://example.org/reference"))
+        XCTAssertNil(ReferenceLinkResolver.url(for: "10/not-a-doi"))
+        XCTAssertNil(ReferenceLinkResolver.url(for: "   "))
+        XCTAssertNil(ReferenceLinkResolver.url(for: "ftp://example.org/reference"))
     }
 
     private var expectedDefaultCoolPropAvailability: ModelAvailability {
@@ -678,12 +855,18 @@ final class PhaseXpertTests: XCTestCase {
     private func makeRecord(
         modelID: String = PhaseXpertTests.testDescriptor.id,
         modelDescriptor: ModelDescriptor = PhaseXpertTests.testDescriptor,
+        pressureValue: Double = 150,
+        pressureUnit: PressureUnit = .bara,
+        pressurePa: Double = 15_000_000,
+        temperatureValue: Double = 20,
+        temperatureUnit: TemperatureUnit = .celsius,
+        temperatureK: Double = 293.15,
         composition: [MixtureComponent]
     ) async throws -> CalculationRecord {
         let request = CalculationRequest(
             modelID: modelID,
-            pressurePa: 15_000_000,
-            temperatureK: 293.15,
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
             composition: composition,
             requestedProperties: [.density],
             clientVersion: "test"
@@ -712,12 +895,12 @@ final class PhaseXpertTests: XCTestCase {
         return CalculationRecord(
             request: request,
             input: CalculationInputSnapshot(
-                pressureValue: 150,
-                pressureUnit: .bara,
-                pressurePa: 15_000_000,
-                temperatureValue: 20,
-                temperatureUnit: .celsius,
-                temperatureK: 293.15,
+                pressureValue: pressureValue,
+                pressureUnit: pressureUnit,
+                pressurePa: pressurePa,
+                temperatureValue: temperatureValue,
+                temperatureUnit: temperatureUnit,
+                temperatureK: temperatureK,
                 originalComposition: composition.map {
                     .init(
                         component: $0.component,

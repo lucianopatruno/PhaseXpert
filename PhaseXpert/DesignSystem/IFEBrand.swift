@@ -145,6 +145,7 @@ struct IFEValueRow: View {
                     .font(IFETypography.value)
                     .multilineTextAlignment(.trailing)
                     .textSelection(.enabled)
+                    .accessibilityLabel(accessibilityValueText)
                 if let copyValue {
                     Button("Copy", systemImage: "doc.on.doc") {
                         UIPasteboard.general.string = copyValue
@@ -155,7 +156,11 @@ struct IFEValueRow: View {
                 }
             }
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+    }
+
+    private var accessibilityValueText: String {
+        [value, unit].compactMap { $0 }.joined(separator: " ")
     }
 }
 
