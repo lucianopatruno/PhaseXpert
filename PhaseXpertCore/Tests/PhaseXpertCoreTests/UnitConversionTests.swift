@@ -38,4 +38,57 @@ final class UnitConversionTests: XCTestCase {
             accuracy: 1e-12
         )
     }
+
+    func testStreamMassFlowConversions() throws {
+        XCTAssertEqual(
+            try XCTUnwrap(StreamFlowUnit.kilogramsPerSecond.kilogramsPerSecond(from: 2)),
+            2,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            try XCTUnwrap(StreamFlowUnit.kilogramsPerHour.kilogramsPerSecond(from: 7_200)),
+            2,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            try XCTUnwrap(StreamFlowUnit.tonnesPerHour.kilogramsPerSecond(from: 7.2)),
+            2,
+            accuracy: 1e-12
+        )
+        XCTAssertNil(StreamFlowUnit.molesPerSecond.kilogramsPerSecond(from: 2))
+    }
+
+    func testStreamMolarFlowConversions() throws {
+        XCTAssertEqual(
+            try XCTUnwrap(StreamFlowUnit.molesPerSecond.molesPerSecond(from: 2)),
+            2,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            try XCTUnwrap(StreamFlowUnit.kilomolesPerHour.molesPerSecond(from: 7.2)),
+            2,
+            accuracy: 1e-12
+        )
+        XCTAssertNil(StreamFlowUnit.kilogramsPerSecond.molesPerSecond(from: 2))
+    }
+
+    func testStreamFlowRoundTrips() throws {
+        let mass = 0.123_456_789
+        for unit in [
+            StreamFlowUnit.kilogramsPerSecond,
+            .kilogramsPerHour,
+            .tonnesPerHour
+        ] {
+            let displayed = try XCTUnwrap(unit.displayMassFlow(fromKilogramsPerSecond: mass))
+            let roundTrip = try XCTUnwrap(unit.kilogramsPerSecond(from: displayed))
+            XCTAssertEqual(roundTrip, mass, accuracy: 1e-12)
+        }
+
+        let molar = 987.654_321
+        for unit in [StreamFlowUnit.molesPerSecond, .kilomolesPerHour] {
+            let displayed = try XCTUnwrap(unit.displayMolarFlow(fromMolesPerSecond: molar))
+            let roundTrip = try XCTUnwrap(unit.molesPerSecond(from: displayed))
+            XCTAssertEqual(roundTrip, molar, accuracy: 1e-9)
+        }
+    }
 }
