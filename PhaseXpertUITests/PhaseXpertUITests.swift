@@ -299,7 +299,7 @@ final class PhaseXpertUITests: XCTestCase {
         )
     }
 
-    func testThreePercentNitrogenShowsPureCO2PhaseDiagramScope() {
+    func testThreePercentNitrogenShowsPhaseMap() {
         let app = XCUIApplication()
         app.launch()
 
@@ -330,15 +330,11 @@ final class PhaseXpertUITests: XCTestCase {
         )
         viewPhaseDiagramButton.tap()
 
-        let pureCO2ScopeMessage = app.staticTexts[
-            "Phase diagrams are available for pure CO₂. Remove all impurities to view the CO₂ phase diagram."
-        ]
         XCTAssertTrue(
-            app.otherElements["phase-diagram-pure-co2-scope"].waitForExistence(timeout: 10)
-                || pureCO2ScopeMessage.waitForExistence(timeout: 3),
-            "The phase-diagram screen did not show the pure-CO₂ scope state for 3 mol% N₂."
+            app.buttons["calculate-phase-map"].waitForExistence(timeout: 10),
+            "The phase-diagram screen did not expose Phase Map for 3 mol% N₂."
         )
-        XCTAssertTrue(pureCO2ScopeMessage.exists)
+        XCTAssertTrue(app.staticTexts["Preliminary multicomponent Phase Map"].exists)
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
     }
 

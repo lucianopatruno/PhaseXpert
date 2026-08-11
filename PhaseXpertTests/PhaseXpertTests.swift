@@ -65,6 +65,19 @@ final class PhaseXpertTests: XCTestCase {
         }
     }
 
+    private final class PhaseMapCallCounter: @unchecked Sendable {
+        private(set) var calculationCount = 0
+        private(set) var envelopeCount = 0
+
+        func recordCalculation() {
+            calculationCount += 1
+        }
+
+        func recordEnvelope() {
+            envelopeCount += 1
+        }
+    }
+
     private struct CountingPhaseEnvelopeProvider: ThermodynamicModelProvider {
         let descriptor = PhaseXpertTests.testDescriptor
         let counter: PhaseEnvelopeCallCounter
@@ -117,6 +130,50 @@ final class PhaseXpertTests: XCTestCase {
                 requestID: request.requestID,
                 points: [],
                 warnings: ["Delayed test provider completed."],
+                isAvailable: false
+            )
+        }
+    }
+
+    private struct CountingPhaseMapProvider: ThermodynamicModelProvider {
+        let descriptor = PhaseXpertTests.testDescriptor
+        let counter: PhaseMapCallCounter
+        var delayNanoseconds: UInt64 = 0
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            counter.recordCalculation()
+            if delayNanoseconds > 0 {
+                try await Task.sleep(nanoseconds: delayNanoseconds)
+            }
+            return CalculationResponse(
+                requestID: request.requestID,
+                model: descriptor,
+                phase: request.pressurePa > 15_000_000 ? .liquid : .gas,
+                properties: [
+                    PropertyValue(
+                        property: .density,
+                        value: 100,
+                        unit: "kg/m³",
+                        status: .calculated,
+                        message: "Test density."
+                    )
+                ],
+                solver: SolverMetadata(
+                    method: "Test flash",
+                    converged: true,
+                    durationMilliseconds: 1
+                ),
+                warnings: [],
+                isScientificResult: false
+            )
+        }
+
+        func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse {
+            counter.recordEnvelope()
+            return PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [],
+                warnings: [],
                 isAvailable: false
             )
         }
@@ -197,11 +254,11 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
-    func testMixturePhaseDiagramShowsScopeMessageWithoutProviderCall() async throws {
-        let counter = PhaseEnvelopeCallCounter()
+    func testMixturePhaseDiagramExposesPhaseMapWithoutProviderCall() async throws {
+        let counter = PhaseMapCallCounter()
         let viewModel = PhaseDiagramViewModel(
             registry: ProviderRegistry(providers: [
-                CountingPhaseEnvelopeProvider(counter: counter)
+                CountingPhaseMapProvider(counter: counter)
             ])
         )
 
@@ -213,15 +270,36 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertNil(viewModel.response)
         XCTAssertNil(viewModel.errorMessage)
-        XCTAssertEqual(
-            viewModel.scopeMessage,
-            PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+        XCTAssertNil(viewModel.scopeMessage)
+        XCTAssertNotNil(viewModel.phaseMapRecord)
+        XCTAssertEqual(viewModel.phaseMapResolution, .five)
+        XCTAssertEqual(viewModel.phaseMapProgress.totalCount, 25)
+        XCTAssertEqual(counter.calculationCount, 0)
+        XCTAssertEqual(counter.envelopeCount, 0)
+    }
+
+    @MainActor
+    func testMulticomponentPhaseMapCalculatesDiscreteFlashPoints() async throws {
+        let counter = PhaseMapCallCounter()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseMapProvider(counter: counter)
+            ])
         )
-        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("failed") == true)
-        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("error") == true)
-        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("provider") == true)
-        XCTAssertFalse(viewModel.scopeMessage?.localizedCaseInsensitiveContains("CoolProp") == true)
-        XCTAssertEqual(counter.callCount, 0)
+        viewModel.load(for: try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.97),
+            .init(component: .nitrogen, moleFraction: 0.03)
+        ]))
+
+        viewModel.calculatePhaseMap()
+        try await waitUntil { viewModel.phaseMapResult != nil }
+
+        XCTAssertEqual(viewModel.phaseMapResult?.evaluations.count, 25)
+        XCTAssertEqual(viewModel.phaseMapResult?.operatingPoint?.point.pressurePa, 15_000_000)
+        XCTAssertEqual(viewModel.phaseMapResult?.operatingPoint?.point.temperatureK, 293.15)
+        XCTAssertEqual(counter.calculationCount, 25)
+        XCTAssertEqual(counter.envelopeCount, 0)
+        XCTAssertEqual(viewModel.phaseMapResult?.warnings.count, 2)
     }
 
     @MainActor
@@ -246,10 +324,8 @@ final class PhaseXpertTests: XCTestCase {
 
         viewModel.load(for: mixture)
         XCTAssertFalse(viewModel.isLoading)
-        XCTAssertEqual(
-            viewModel.scopeMessage,
-            PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
-        )
+        XCTAssertNotNil(viewModel.phaseMapRecord)
+        XCTAssertNil(viewModel.scopeMessage)
         XCTAssertNil(viewModel.response)
 
         try await Task.sleep(nanoseconds: 120_000_000)
@@ -272,15 +348,85 @@ final class PhaseXpertTests: XCTestCase {
 
         viewModel.load(for: mixture)
         XCTAssertEqual(counter.callCount, 0)
-        XCTAssertNotNil(viewModel.scopeMessage)
+        XCTAssertNotNil(viewModel.phaseMapRecord)
+        XCTAssertNil(viewModel.scopeMessage)
 
         viewModel.load(for: try await makeRecord())
         try await Task.sleep(nanoseconds: 20_000_000)
 
         XCTAssertNil(viewModel.scopeMessage)
+        XCTAssertNil(viewModel.phaseMapRecord)
         XCTAssertNil(viewModel.errorMessage)
         XCTAssertNotNil(viewModel.response)
         XCTAssertEqual(counter.callCount, 1)
+    }
+
+    @MainActor
+    func testPhaseMapInputChangesMarkResultStaleAndPreservePhysicalUnits() async throws {
+        let counter = PhaseMapCallCounter()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseMapProvider(counter: counter)
+            ])
+        )
+        viewModel.load(for: try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.97),
+            .init(component: .nitrogen, moleFraction: 0.03)
+        ]))
+        viewModel.calculatePhaseMap()
+        try await waitUntil { viewModel.phaseMapResult != nil }
+
+        viewModel.changePhaseMapPressureUnit(to: .megapascalAbsolute)
+        XCTAssertEqual(try numericValue(viewModel.pressureMinimumText), 7.5, accuracy: 0.000_001)
+        XCTAssertEqual(try numericValue(viewModel.pressureMaximumText), 22.5, accuracy: 0.000_001)
+        XCTAssertTrue(viewModel.isPhaseMapResultStale)
+
+        viewModel.changePhaseMapTemperatureUnit(to: .kelvin)
+        XCTAssertEqual(try numericValue(viewModel.temperatureMinimumText), 268.15, accuracy: 0.000_001)
+        XCTAssertEqual(try numericValue(viewModel.temperatureMaximumText), 318.15, accuracy: 0.000_001)
+    }
+
+    @MainActor
+    func testPhaseMapInvalidUnitChangePreservesEnteredValuesAndUnit() async throws {
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseMapProvider(counter: PhaseMapCallCounter())
+            ])
+        )
+        viewModel.load(for: try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.97),
+            .init(component: .nitrogen, moleFraction: 0.03)
+        ]))
+        viewModel.pressureMinimumText = "not numeric"
+        viewModel.changePhaseMapPressureUnit(to: .psiAbsolute)
+
+        XCTAssertEqual(viewModel.phaseMapPressureUnit, .barAbsolute)
+        XCTAssertEqual(viewModel.pressureMinimumText, "not numeric")
+        XCTAssertTrue(viewModel.phaseMapIssues.contains { $0.code == .invalidPressureRange })
+    }
+
+    @MainActor
+    func testPhaseMapSupersedesLateResultsAfterInputChange() async throws {
+        let counter = PhaseMapCallCounter()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                CountingPhaseMapProvider(counter: counter, delayNanoseconds: 20_000_000)
+            ])
+        )
+        viewModel.load(for: try await makeRecord(composition: [
+            .init(component: .carbonDioxide, moleFraction: 0.97),
+            .init(component: .nitrogen, moleFraction: 0.03)
+        ]))
+
+        viewModel.calculatePhaseMap()
+        viewModel.phaseMapResolution = .ten
+        viewModel.calculatePhaseMap()
+        try await waitUntil(timeoutNanoseconds: 5_000_000_000) {
+            viewModel.phaseMapResult?.evaluations.count == 101
+        }
+
+        XCTAssertEqual(viewModel.phaseMapResult?.request.resolution, .ten)
+        XCTAssertEqual(counter.envelopeCount, 0)
     }
 
     @MainActor
@@ -1242,6 +1388,31 @@ final class PhaseXpertTests: XCTestCase {
     @MainActor
     private func makeRecord() async throws -> CalculationRecord {
         try await makeRecord(composition: [.init(component: .carbonDioxide, moleFraction: 1)])
+    }
+
+    @MainActor
+    private func waitUntil(
+        timeoutNanoseconds: UInt64 = 2_000_000_000,
+        condition: @escaping @MainActor () -> Bool
+    ) async throws {
+        let deadline = ContinuousClock.now + .nanoseconds(Int(timeoutNanoseconds))
+        while !condition() {
+            if ContinuousClock.now >= deadline {
+                XCTFail("Timed out waiting for condition.")
+                return
+            }
+            try await Task.sleep(nanoseconds: 10_000_000)
+        }
+    }
+
+    private func numericValue(_ text: String) throws -> Double {
+        let formatter = NumberFormatter()
+        formatter.locale = .current
+        formatter.numberStyle = .decimal
+        if let number = formatter.number(from: text) {
+            return number.doubleValue
+        }
+        return try XCTUnwrap(Double(text.replacingOccurrences(of: ",", with: ".")))
     }
 
     @MainActor
