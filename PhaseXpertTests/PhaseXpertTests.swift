@@ -1437,6 +1437,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(secondReference.streams.first?.temperatureText, "-12.5")
     }
 
+    @MainActor
     func testPhaseMapMarkerStylesKeepDenseSupercriticalAndFailedDistinct() {
         let dense = PhaseMapMarkerStyle.style(for: .dense)
         let supercritical = PhaseMapMarkerStyle.style(for: .supercritical)
@@ -1452,6 +1453,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertTrue(failed.accessibilityDescription.contains("unknown"))
     }
 
+    @MainActor
     func testPhaseMapOperatingPointRenderingKeepsUnderlyingMarkerAndRedRing() {
         let plan = PhaseMapOperatingPointRenderingPlan.standard
 
