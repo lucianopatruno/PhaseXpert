@@ -11,6 +11,30 @@ final class PhaseDiagramViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private(set) var scopeMessage: String?
+    private(set) var phaseMapRecord: CalculationRecord?
+    private(set) var phaseMapResult: PhaseMapResult?
+    private(set) var phaseMapIssues: [PhaseMapValidationIssue] = []
+    private(set) var phaseMapProgress = PhaseMapProgress(completedCount: 0, totalCount: 0)
+    private(set) var isPhaseMapLoading = false
+    private(set) var isPhaseMapResultStale = false
+    private(set) var phaseMapStatusMessage = "Run a multicomponent calculation to create a Phase Map."
+    var phaseMapResolution: PhaseMapResolution = .five {
+        didSet { phaseMapInputsChanged() }
+    }
+    var pressureMinimumText = "" {
+        didSet { phaseMapInputsChanged() }
+    }
+    var pressureMaximumText = "" {
+        didSet { phaseMapInputsChanged() }
+    }
+    var temperatureMinimumText = "" {
+        didSet { phaseMapInputsChanged() }
+    }
+    var temperatureMaximumText = "" {
+        didSet { phaseMapInputsChanged() }
+    }
+    var phaseMapPressureUnit: PressureDisplayUnit = .barAbsolute
+    var phaseMapTemperatureUnit: TemperatureDisplayUnit = .celsius
 
     private let registry: ProviderRegistry
     private let timeoutNanoseconds: UInt64
@@ -18,6 +42,8 @@ final class PhaseDiagramViewModel {
     private var calculationTask: Task<PhaseEnvelopeResponse, Error>?
     private var monitorTask: Task<Void, Never>?
     private var timeoutTask: Task<Void, Never>?
+    private var phaseMapTask: Task<Void, Never>?
+    private var phaseMapRunID: UUID?
 
     init(
         registry: ProviderRegistry = ProviderRegistry(),
@@ -35,22 +61,25 @@ final class PhaseDiagramViewModel {
             errorMessage = nil
             scopeMessage = nil
             isLoading = false
+            resetPhaseMap()
             return
         }
         guard loadingRecordID != record.id else { return }
 
         cancelLoading()
+        cancelPhaseMapCalculation()
         loadingRecordID = record.id
         response = nil
         errorMessage = nil
         scopeMessage = nil
         isLoading = false
+        resetPhaseMap(keepingRecord: false)
 
         switch PhaseDiagramEligibility.evaluate(composition: record.request.composition) {
         case .pureCarbonDioxide:
             break
         case .multicomponent:
-            scopeMessage = PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            configurePhaseMap(for: record)
             return
         case .invalidComposition:
             errorMessage = "The CO₂ phase diagram cannot be shown for this calculation."
@@ -119,6 +148,223 @@ final class PhaseDiagramViewModel {
         calculationTask = nil
     }
 
+    func calculatePhaseMap() {
+        cancelPhaseMapCalculation()
+        guard let record = phaseMapRecord else { return }
+        guard let provider = registry.provider(id: record.request.modelID) else {
+            phaseMapIssues = [
+                PhaseMapValidationIssue(
+                    code: .providerUnavailable,
+                    message: "The selected provider is not available for Phase Map calculation."
+                )
+            ]
+            phaseMapStatusMessage = "Review blocking validation issues before calculating."
+            return
+        }
+        guard let request = phaseMapRequest(for: record) else {
+            phaseMapStatusMessage = "Review blocking validation issues before calculating."
+            return
+        }
+        let issues = PhaseMapGridBuilder.validationIssues(for: request)
+        phaseMapIssues = issues
+        guard issues.isEmpty else {
+            phaseMapStatusMessage = "Review blocking validation issues before calculating."
+            return
+        }
+
+        let runID = UUID()
+        phaseMapRunID = runID
+        phaseMapProgress = PhaseMapProgress(
+            completedCount: 0,
+            totalCount: request.resolution.expectedEvaluationCount
+        )
+        phaseMapStatusMessage = "Calculating Phase Map…"
+        isPhaseMapLoading = true
+        isPhaseMapResultStale = false
+        let runner = PhaseMapRunner(provider: provider)
+        phaseMapTask = Task { [weak self] in
+            do {
+                let result = try await runner.run(request) { progress in
+                    await MainActor.run {
+                        guard self?.phaseMapRunID == runID else { return }
+                        self?.phaseMapProgress = progress
+                    }
+                }
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    guard self?.phaseMapRunID == runID else { return }
+                    self?.phaseMapResult = result
+                    self?.phaseMapStatusMessage = "Phase Map complete: \(result.successfulCount) successful, \(result.failedCount) failed, \(result.nonConvergedCount) non-converged."
+                    self?.isPhaseMapLoading = false
+                    self?.isPhaseMapResultStale = false
+                }
+            } catch is CancellationError {
+                await MainActor.run {
+                    guard self?.phaseMapRunID == runID else { return }
+                    self?.isPhaseMapLoading = false
+                    self?.phaseMapStatusMessage = "Phase Map calculation cancelled."
+                }
+            } catch {
+                await MainActor.run {
+                    guard self?.phaseMapRunID == runID else { return }
+                    self?.isPhaseMapLoading = false
+                    self?.phaseMapStatusMessage = self?.userMessage(for: error)
+                        ?? "Phase Map calculation failed."
+                }
+            }
+        }
+    }
+
+    func cancelPhaseMapCalculation() {
+        phaseMapTask?.cancel()
+        phaseMapTask = nil
+        phaseMapRunID = nil
+        isPhaseMapLoading = false
+    }
+
+    func changePhaseMapPressureUnit(to newUnit: PressureDisplayUnit) {
+        guard newUnit != phaseMapPressureUnit else { return }
+        guard
+            let minimum = parseDouble(pressureMinimumText),
+            let maximum = parseDouble(pressureMaximumText)
+        else {
+            phaseMapIssues = [
+                PhaseMapValidationIssue(
+                    code: .invalidPressureRange,
+                    message: "Pressure unit was not changed because the range values could not be parsed."
+                )
+            ]
+            return
+        }
+        let minPa = phaseMapPressureUnit.pascal(from: minimum)
+        let maxPa = phaseMapPressureUnit.pascal(from: maximum)
+        phaseMapPressureUnit = newUnit
+        pressureMinimumText = formatted(newUnit.displayValue(from: minPa))
+        pressureMaximumText = formatted(newUnit.displayValue(from: maxPa))
+        phaseMapInputsChanged()
+    }
+
+    func changePhaseMapTemperatureUnit(to newUnit: TemperatureDisplayUnit) {
+        guard newUnit != phaseMapTemperatureUnit else { return }
+        guard
+            let minimum = parseDouble(temperatureMinimumText),
+            let maximum = parseDouble(temperatureMaximumText)
+        else {
+            phaseMapIssues = [
+                PhaseMapValidationIssue(
+                    code: .invalidTemperatureRange,
+                    message: "Temperature unit was not changed because the range values could not be parsed."
+                )
+            ]
+            return
+        }
+        let minK = phaseMapTemperatureUnit.kelvin(from: minimum)
+        let maxK = phaseMapTemperatureUnit.kelvin(from: maximum)
+        phaseMapTemperatureUnit = newUnit
+        temperatureMinimumText = formatted(newUnit.displayValue(from: minK))
+        temperatureMaximumText = formatted(newUnit.displayValue(from: maxK))
+        phaseMapInputsChanged()
+    }
+
+    var canCalculatePhaseMap: Bool {
+        phaseMapRecord != nil && !isPhaseMapLoading && phaseMapRequest(for: phaseMapRecord!) != nil
+    }
+
+    private func configurePhaseMap(for record: CalculationRecord) {
+        phaseMapRecord = record
+        let automaticRange = PhaseMapRange.automatic(
+            pressurePa: record.request.pressurePa,
+            temperatureK: record.request.temperatureK
+        )
+        phaseMapPressureUnit = .barAbsolute
+        phaseMapTemperatureUnit = .celsius
+        pressureMinimumText = formatted(phaseMapPressureUnit.displayValue(from: automaticRange.pressureMinimumPa))
+        pressureMaximumText = formatted(phaseMapPressureUnit.displayValue(from: automaticRange.pressureMaximumPa))
+        temperatureMinimumText = formatted(phaseMapTemperatureUnit.displayValue(from: automaticRange.temperatureMinimumK))
+        temperatureMaximumText = formatted(phaseMapTemperatureUnit.displayValue(from: automaticRange.temperatureMaximumK))
+        phaseMapResolution = .five
+        phaseMapResult = nil
+        phaseMapIssues = []
+        phaseMapProgress = PhaseMapProgress(completedCount: 0, totalCount: phaseMapResolution.expectedEvaluationCount)
+        phaseMapStatusMessage = "Ready to classify 25 discrete flash points."
+        isPhaseMapResultStale = false
+    }
+
+    private func phaseMapInputsChanged() {
+        guard phaseMapRecord != nil else { return }
+        if isPhaseMapLoading {
+            cancelPhaseMapCalculation()
+            phaseMapStatusMessage = "Inputs changed. Phase Map calculation was cancelled."
+        } else if phaseMapResult != nil {
+            isPhaseMapResultStale = true
+            phaseMapStatusMessage = "Inputs changed. Calculate Phase Map again to refresh results."
+        }
+        validatePhaseMapInputs()
+    }
+
+    private func validatePhaseMapInputs() {
+        guard let record = phaseMapRecord else { return }
+        guard let request = phaseMapRequest(for: record) else { return }
+        phaseMapIssues = PhaseMapGridBuilder.validationIssues(for: request)
+    }
+
+    private func phaseMapRequest(for record: CalculationRecord) -> PhaseMapRequest? {
+        guard
+            let pressureMinimum = parseDouble(pressureMinimumText),
+            let pressureMaximum = parseDouble(pressureMaximumText),
+            let temperatureMinimum = parseDouble(temperatureMinimumText),
+            let temperatureMaximum = parseDouble(temperatureMaximumText)
+        else {
+            phaseMapIssues = [
+                PhaseMapValidationIssue(
+                    code: .invalidPressureRange,
+                    message: "Pressure and temperature ranges must contain numeric values."
+                )
+            ]
+            return nil
+        }
+        return PhaseMapRequest(
+            modelID: record.request.modelID,
+            pressurePa: record.request.pressurePa,
+            temperatureK: record.request.temperatureK,
+            composition: record.request.composition,
+            range: PhaseMapRange(
+                pressureMinimumPa: phaseMapPressureUnit.pascal(from: pressureMinimum),
+                pressureMaximumPa: phaseMapPressureUnit.pascal(from: pressureMaximum),
+                temperatureMinimumK: phaseMapTemperatureUnit.kelvin(from: temperatureMinimum),
+                temperatureMaximumK: phaseMapTemperatureUnit.kelvin(from: temperatureMaximum)
+            ),
+            resolution: phaseMapResolution,
+            clientVersion: record.request.clientVersion
+        )
+    }
+
+    private func resetPhaseMap(keepingRecord: Bool = false) {
+        if !keepingRecord {
+            phaseMapRecord = nil
+        }
+        phaseMapResult = nil
+        phaseMapIssues = []
+        phaseMapProgress = PhaseMapProgress(completedCount: 0, totalCount: 0)
+        phaseMapStatusMessage = "Run a multicomponent calculation to create a Phase Map."
+        isPhaseMapLoading = false
+        isPhaseMapResultStale = false
+    }
+
+    private func parseDouble(_ text: String) -> Double? {
+        let formatter = NumberFormatter()
+        formatter.locale = .current
+        formatter.numberStyle = .decimal
+        if let number = formatter.number(from: text) {
+            return number.doubleValue
+        }
+        return Double(text.replacingOccurrences(of: ",", with: "."))
+    }
+
+    private func formatted(_ value: Double) -> String {
+        value.formatted(.number.precision(.significantDigits(1...7)))
+    }
+
     private func userMessage(for error: Error) -> String {
         guard let providerError = error as? ProviderError else {
             return "The CO₂ phase diagram cannot be shown for this calculation."
@@ -167,7 +413,9 @@ struct PhaseDiagramView: View {
 
     @ViewBuilder
     private func diagramContent(for record: CalculationRecord) -> some View {
-        if let scopeMessage = viewModel.scopeMessage {
+        if viewModel.phaseMapRecord != nil {
+            PhaseMapContent(record: record, viewModel: viewModel)
+        } else if let scopeMessage = viewModel.scopeMessage {
             ContentUnavailableView {
                 Label(PhaseDiagramEligibility.title, systemImage: "chart.xyaxis.line")
             } description: {
@@ -206,6 +454,474 @@ struct PhaseDiagramView: View {
             .accessibilityIdentifier("phase-diagram-empty")
         }
     }
+}
+
+private struct PhaseMapContent: View {
+    let record: CalculationRecord
+    let viewModel: PhaseDiagramViewModel
+
+    @State private var selectedPointID: String?
+
+    private var result: PhaseMapResult? {
+        viewModel.phaseMapResult
+    }
+
+    private var selectedEvaluation: PhaseMapEvaluation? {
+        guard let selectedPointID, let result else {
+            return result?.operatingPoint ?? result?.evaluations.first
+        }
+        return result.evaluations.first { $0.id == selectedPointID }
+            ?? result.operatingPoint
+            ?? result.evaluations.first
+    }
+
+    var body: some View {
+        @Bindable var viewModel = viewModel
+
+        ScrollView {
+            VStack(alignment: .leading, spacing: IFESpacing.medium) {
+                ScientificStatusBanner(
+                    title: "Preliminary multicomponent Phase Map",
+                    message: "Classifies discrete provider flash points. This is not a thermodynamic phase envelope, does not trace bubble or dew boundaries, and narrow phase regions can be missed."
+                )
+
+                IFECard {
+                    VStack(alignment: .leading, spacing: IFESpacing.small) {
+                        Text("Phase Map")
+                            .font(.title2.bold())
+                        Text("Multicomponent composition at user-selected pressure and temperature ranges.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        LabeledContent("Operating pressure", value: "\(number(record.request.pressurePa / 100_000)) bar(a)")
+                        LabeledContent("Operating temperature", value: "\(number(record.request.temperatureK - 273.15)) °C")
+                        LabeledContent("Composition") {
+                            Text(compositionSummary(record.request.composition))
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                }
+
+                IFECard {
+                    VStack(alignment: .leading, spacing: IFESpacing.regular) {
+                        Text("Grid setup")
+                            .font(.headline)
+
+                        Picker("Resolution", selection: $viewModel.phaseMapResolution) {
+                            ForEach(PhaseMapResolution.allCases) { resolution in
+                                Text("\(resolution.rawValue)×\(resolution.rawValue)")
+                                    .tag(resolution)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .accessibilityIdentifier("phase-map-resolution-picker")
+
+                        PhaseMapRangeEditor(
+                            title: "Pressure range",
+                            minimumText: $viewModel.pressureMinimumText,
+                            maximumText: $viewModel.pressureMaximumText,
+                            unitLabel: viewModel.phaseMapPressureUnit.rawValue,
+                            unitMenu: {
+                                ForEach(PressureDisplayUnit.allCases) { unit in
+                                    Button(unit.rawValue) {
+                                        viewModel.changePhaseMapPressureUnit(to: unit)
+                                    }
+                                }
+                            }
+                        )
+
+                        PhaseMapRangeEditor(
+                            title: "Temperature range",
+                            minimumText: $viewModel.temperatureMinimumText,
+                            maximumText: $viewModel.temperatureMaximumText,
+                            unitLabel: viewModel.phaseMapTemperatureUnit.rawValue,
+                            unitMenu: {
+                                ForEach(TemperatureDisplayUnit.allCases) { unit in
+                                    Button(unit.rawValue) {
+                                        viewModel.changePhaseMapTemperatureUnit(to: unit)
+                                    }
+                                }
+                            }
+                        )
+
+                        Text("The 5×5 grid includes the operating point as the central point. Even grids evaluate the operating point separately.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Button {
+                    viewModel.calculatePhaseMap()
+                } label: {
+                    Label("Calculate Phase Map", systemImage: "play.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!viewModel.canCalculatePhaseMap)
+                .controlSize(.large)
+                .accessibilityIdentifier("calculate-phase-map")
+
+                PhaseMapStatusSection(viewModel: viewModel)
+
+                if let result {
+                    PhaseMapResultsSection(
+                        result: result,
+                        pressureUnit: viewModel.phaseMapPressureUnit,
+                        temperatureUnit: viewModel.phaseMapTemperatureUnit,
+                        selectedPointID: $selectedPointID,
+                        selectedEvaluation: selectedEvaluation,
+                        isStale: viewModel.isPhaseMapResultStale
+                    )
+                }
+            }
+            .padding(IFESpacing.medium)
+        }
+        .accessibilityIdentifier("phase-map-available")
+        .onDisappear {
+            viewModel.cancelPhaseMapCalculation()
+        }
+    }
+
+    private func compositionSummary(_ composition: [MixtureComponent]) -> String {
+        composition
+            .filter { $0.moleFraction > 0 }
+            .map { "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%" }
+            .joined(separator: ", ")
+    }
+}
+
+private struct PhaseMapRangeEditor<UnitMenu: View>: View {
+    let title: String
+    @Binding var minimumText: String
+    @Binding var maximumText: String
+    let unitLabel: String
+    @ViewBuilder let unitMenu: () -> UnitMenu
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            HStack {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Menu(unitLabel) {
+                    unitMenu()
+                }
+                .accessibilityIdentifier("\(title)-unit-menu")
+            }
+            VStack(spacing: IFESpacing.small) {
+                TextField("Minimum", text: $minimumText)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.decimalPad)
+                    .accessibilityIdentifier("\(title)-minimum")
+                TextField("Maximum", text: $maximumText)
+                    .textFieldStyle(.roundedBorder)
+                    .keyboardType(.decimalPad)
+                    .accessibilityIdentifier("\(title)-maximum")
+            }
+        }
+    }
+}
+
+private struct PhaseMapStatusSection: View {
+    let viewModel: PhaseDiagramViewModel
+
+    var body: some View {
+        IFECard {
+            VStack(alignment: .leading, spacing: IFESpacing.small) {
+                if viewModel.isPhaseMapLoading {
+                    ProgressView(
+                        value: Double(viewModel.phaseMapProgress.completedCount),
+                        total: Double(max(viewModel.phaseMapProgress.totalCount, 1))
+                    )
+                    Text("\(viewModel.phaseMapProgress.completedCount) of \(viewModel.phaseMapProgress.totalCount) flash points evaluated")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text(viewModel.phaseMapStatusMessage)
+                    .font(.subheadline)
+                if viewModel.isPhaseMapResultStale {
+                    Label("Displayed Phase Map is stale after input changes.", systemImage: "clock.badge.exclamationmark")
+                        .font(.caption)
+                        .foregroundStyle(Color.pxWarning)
+                        .accessibilityIdentifier("phase-map-stale")
+                }
+                ForEach(viewModel.phaseMapIssues) { issue in
+                    Label(issue.message, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(Color.pxError)
+                }
+            }
+        }
+        .accessibilityIdentifier("phase-map-status")
+    }
+}
+
+private struct PhaseMapResultsSection: View {
+    let result: PhaseMapResult
+    let pressureUnit: PressureDisplayUnit
+    let temperatureUnit: TemperatureDisplayUnit
+    @Binding var selectedPointID: String?
+    let selectedEvaluation: PhaseMapEvaluation?
+    let isStale: Bool
+
+    private var xDomain: ClosedRange<Double> {
+        paddedDomain(values: result.evaluations.map { temperatureUnit.displayValue(from: $0.point.temperatureK) })
+    }
+
+    private var yDomain: ClosedRange<Double> {
+        paddedDomain(values: result.evaluations.map { pressureUnit.displayValue(from: $0.point.pressurePa) })
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.medium) {
+            IFECard {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    Text("Completion summary")
+                        .font(.headline)
+                    LabeledContent("Resolution", value: "\(result.request.resolution.rawValue)×\(result.request.resolution.rawValue)")
+                    LabeledContent("Evaluations", value: "\(result.evaluations.count)")
+                    LabeledContent("Successful", value: "\(result.successfulCount)")
+                    LabeledContent("Failed", value: "\(result.failedCount)")
+                    LabeledContent("Non-converged", value: "\(result.nonConvergedCount)")
+                }
+            }
+
+            IFECard {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    Text("Pressure-temperature classification")
+                        .font(.headline)
+                    Text("Markers use both color and shape; gray points are failed, non-converged, unknown or unsupported.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Chart {
+                        ForEach(result.evaluations) { evaluation in
+                            PointMark(
+                                x: .value(
+                                    "Temperature (\(temperatureUnit.rawValue))",
+                                    temperatureUnit.displayValue(from: evaluation.point.temperatureK)
+                                ),
+                                y: .value(
+                                    "Pressure (\(pressureUnit.rawValue))",
+                                    pressureUnit.displayValue(from: evaluation.point.pressurePa)
+                                )
+                            )
+                            .foregroundStyle(color(for: evaluation))
+                            .symbol(symbol(for: evaluation))
+                            .symbolSize(evaluation.point.isOperatingPoint ? 110 : 70)
+                        }
+                        if let operatingPoint = result.operatingPoint {
+                            PointMark(
+                                x: .value(
+                                    "Temperature (\(temperatureUnit.rawValue))",
+                                    temperatureUnit.displayValue(from: operatingPoint.point.temperatureK)
+                                ),
+                                y: .value(
+                                    "Pressure (\(pressureUnit.rawValue))",
+                                    pressureUnit.displayValue(from: operatingPoint.point.pressurePa)
+                                )
+                            )
+                            .foregroundStyle(Color.red)
+                            .symbolSize(220)
+                            .symbol {
+                                Circle()
+                                    .stroke(Color.red, lineWidth: 2.5)
+                                    .frame(width: 20, height: 20)
+                            }
+                        }
+                    }
+                    .chartXScale(domain: xDomain)
+                    .chartYScale(domain: yDomain)
+                    .chartXAxisLabel("Temperature (\(temperatureUnit.rawValue))")
+                    .chartYAxisLabel("Pressure (\(pressureUnit.rawValue))")
+                    .frame(minHeight: 360)
+                    .accessibilityIdentifier("phase-map-chart")
+                    .accessibilityLabel("Multicomponent Phase Map with operating point highlighted by a red ring")
+
+                    PhaseMapLegend()
+
+                    Picker("Point", selection: Binding(
+                        get: { selectedPointID ?? result.operatingPoint?.id ?? result.evaluations.first?.id },
+                        set: { selectedPointID = $0 }
+                    )) {
+                        ForEach(result.evaluations) { evaluation in
+                            Text(pointLabel(evaluation))
+                                .tag(Optional(evaluation.id))
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .accessibilityIdentifier("phase-map-point-picker")
+
+                    if let selectedEvaluation {
+                        Divider()
+                        PhaseMapPointExplanation(
+                            evaluation: selectedEvaluation,
+                            pressureUnit: pressureUnit,
+                            temperatureUnit: temperatureUnit
+                        )
+                    }
+                }
+            }
+
+            IFECard {
+                IFEExpandableRow("Phase Map assumptions and traceability") {
+                    VStack(alignment: .leading, spacing: IFESpacing.small) {
+                        ForEach(result.warnings, id: \.self) { warning in
+                            Text(warning)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Text("Provider metadata does not declare solid, dense or supercritical classification support. Those markers appear only when the active provider explicitly returns the corresponding classification.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        LabeledContent("Request ID", value: result.request.requestID.uuidString)
+                        LabeledContent("Model", value: result.model.name)
+                        LabeledContent("Provider version", value: result.model.providerVersion)
+                        LabeledContent("Pressure range") {
+                            Text("\(number(pressureUnit.displayValue(from: result.request.range.pressureMinimumPa))) to \(number(pressureUnit.displayValue(from: result.request.range.pressureMaximumPa))) \(pressureUnit.rawValue)")
+                                .multilineTextAlignment(.trailing)
+                        }
+                        LabeledContent("Temperature range") {
+                            Text("\(number(temperatureUnit.displayValue(from: result.request.range.temperatureMinimumK))) to \(number(temperatureUnit.displayValue(from: result.request.range.temperatureMaximumK))) \(temperatureUnit.rawValue)")
+                                .multilineTextAlignment(.trailing)
+                        }
+                        LabeledContent("Calculated at") {
+                            Text(result.calculatedAt.formatted(.dateTime.year().month().day().hour().minute().second()))
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                }
+            }
+        }
+        .opacity(isStale ? 0.72 : 1)
+        .accessibilityIdentifier("phase-map-results")
+    }
+
+    private func pointLabel(_ evaluation: PhaseMapEvaluation) -> String {
+        let prefix = evaluation.point.isOperatingPoint ? "Operating point" : evaluation.classification.displayName
+        return "\(prefix): \(number(temperatureUnit.displayValue(from: evaluation.point.temperatureK))) \(temperatureUnit.rawValue), \(number(pressureUnit.displayValue(from: evaluation.point.pressurePa))) \(pressureUnit.rawValue)"
+    }
+
+    private func paddedDomain(values: [Double]) -> ClosedRange<Double> {
+        let finite = values.filter(\.isFinite)
+        guard let minimum = finite.min(), let maximum = finite.max() else { return 0...1 }
+        let span = max(maximum - minimum, 1)
+        let padding = span * 0.08
+        return (minimum - padding)...(maximum + padding)
+    }
+}
+
+private struct PhaseMapLegend: View {
+    private let items: [(String, PhaseMapClassification)] = [
+        ("Solid", .solid),
+        ("Gas", .gas),
+        ("Liquid", .liquid),
+        ("Multiphase", .multiphase),
+        ("Dense", .dense),
+        ("Supercritical", .supercritical),
+        ("Failed/unknown", .failed)
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), alignment: .leading)], alignment: .leading) {
+            ForEach(items, id: \.0) { item in
+                Label {
+                    Text(item.0)
+                } icon: {
+                    Image(systemName: systemImage(for: item.1))
+                        .foregroundStyle(color(for: item.1))
+                }
+                .font(.caption)
+            }
+        }
+        .accessibilityIdentifier("phase-map-legend")
+    }
+}
+
+private struct PhaseMapPointExplanation: View {
+    let evaluation: PhaseMapEvaluation
+    let pressureUnit: PressureDisplayUnit
+    let temperatureUnit: TemperatureDisplayUnit
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            Text(evaluation.point.isOperatingPoint ? "Operating-point flash" : "Selected flash point")
+                .font(.subheadline.weight(.semibold))
+            LabeledContent("Classification", value: evaluation.classification.displayName)
+            LabeledContent("Pressure", value: "\(number(pressureUnit.displayValue(from: evaluation.point.pressurePa))) \(pressureUnit.rawValue)")
+            LabeledContent("Temperature", value: "\(number(temperatureUnit.displayValue(from: evaluation.point.temperatureK))) \(temperatureUnit.rawValue)")
+            if let failureReason = evaluation.failureReason ?? evaluation.classification.detail {
+                Label(failureReason, systemImage: "exclamationmark.triangle")
+                    .font(.caption)
+                    .foregroundStyle(Color.pxUnavailable)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private func color(for evaluation: PhaseMapEvaluation) -> Color {
+    if evaluation.failureReason != nil || !evaluation.classification.isSupported {
+        return Color.pxUnavailable
+    }
+    return color(for: evaluation.classification.classification)
+}
+
+private func color(for classification: PhaseMapClassification) -> Color {
+    switch classification {
+    case .solid:
+        Color.pxSuccess
+    case .gas:
+        Color.blue
+    case .liquid:
+        Color.cyan
+    case .multiphase:
+        Color.pink
+    case .dense, .supercritical:
+        Color.orange
+    case .unknown, .failed:
+        Color.pxUnavailable
+    }
+}
+
+private func symbol(for evaluation: PhaseMapEvaluation) -> BasicChartSymbolShape {
+    if evaluation.failureReason != nil || !evaluation.classification.isSupported {
+        return .circle
+    }
+    switch evaluation.classification.classification {
+    case .solid:
+        return .cross
+    case .gas:
+        return .circle
+    case .liquid:
+        return .square
+    case .multiphase:
+        return .plus
+    case .dense, .supercritical:
+        return .diamond
+    case .unknown, .failed:
+        return .circle
+    }
+}
+
+private func systemImage(for classification: PhaseMapClassification) -> String {
+    switch classification {
+    case .solid:
+        "xmark"
+    case .gas:
+        "circle.fill"
+    case .liquid:
+        "square.fill"
+    case .multiphase:
+        "plus"
+    case .dense, .supercritical:
+        "diamond.fill"
+    case .unknown, .failed:
+        "circle"
+    }
+}
+
+private func number(_ value: Double) -> String {
+    value.formatted(.number.precision(.significantDigits(1...7)))
 }
 
 private struct PhaseBoundaryChart: View {
