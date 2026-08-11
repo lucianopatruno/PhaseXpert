@@ -3,9 +3,24 @@ import SwiftUI
 
 struct ModelInformationView: View {
     private let descriptors = ProviderRegistry().descriptors
+    private let wrapsInNavigationStack: Bool
+
+    init(wrapsInNavigationStack: Bool = true) {
+        self.wrapsInNavigationStack = wrapsInNavigationStack
+    }
 
     var body: some View {
-        NavigationStack {
+        if wrapsInNavigationStack {
+            NavigationStack {
+                content
+            }
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
+        Group {
             List(descriptors) { descriptor in
                 NavigationLink {
                     ModelDetailView(descriptor: descriptor)

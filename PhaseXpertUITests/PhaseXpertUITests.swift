@@ -17,6 +17,9 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["°C"].exists)
         XCTAssertEqual(app.buttons["pressure-unit-menu"].value as? String, "bar(a)")
         XCTAssertEqual(app.buttons["temperature-unit-menu"].value as? String, "°C")
+        XCTAssertFalse(app.staticTexts["Absolute"].exists)
+        XCTAssertFalse(app.staticTexts["absolute"].exists)
+        XCTAssertFalse(app.staticTexts["Pressure inputs are absolute."].exists)
 
         let runCalculationButton = app.buttons["run-calculation"]
         for _ in 0..<5 where !runCalculationButton.waitForExistence(timeout: 0.5) {
@@ -27,8 +30,22 @@ final class PhaseXpertUITests: XCTestCase {
             "Run calculation button should be reachable by scrolling the calculator form."
         )
 
-        app.tabBars.buttons["Models"].tap()
+        openMoreRow("Models", in: app)
         XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
+    }
+
+    func testBottomTabBarHasThreePrimaryTabsInOrder() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let tabBar = app.tabBars.element
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 2))
+        XCTAssertTrue(tabBar.buttons["Calculator"].exists)
+        XCTAssertTrue(tabBar.buttons["Saved Cases"].exists)
+        XCTAssertTrue(tabBar.buttons["Phase Diagram"].exists)
+        XCTAssertFalse(tabBar.buttons["Stream Mixing"].exists)
+        XCTAssertLessThan(tabBar.buttons["Calculator"].frame.minX, tabBar.buttons["Saved Cases"].frame.minX)
+        XCTAssertLessThan(tabBar.buttons["Saved Cases"].frame.minX, tabBar.buttons["Phase Diagram"].frame.minX)
     }
 
     func testNumericKeyboardDoesNotShowCustomOKControl() {
@@ -54,7 +71,12 @@ final class PhaseXpertUITests: XCTestCase {
         let temperature = app.textFields["Temperature value"]
         XCTAssertTrue(temperature.waitForExistence(timeout: 2))
         temperature.tap()
-        temperature.typeText("-10")
+        if app.buttons["keyboard-minus"].waitForExistence(timeout: 2) {
+            app.buttons["keyboard-minus"].tap()
+            temperature.typeText("10")
+        } else {
+            temperature.typeText("-10")
+        }
         XCTAssertEqual(temperature.value as? String, "-10 °C")
     }
 
@@ -359,6 +381,41 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(calculate.exists)
     }
 
+    func testStreamMixingRetainsEditedStateAfterReturningToMoreAndReopening() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        let streamName = app.textFields.matching(NSPredicate(format: "label == %@", "Stream name")).element(boundBy: 0)
+        XCTAssertTrue(streamName.waitForExistence(timeout: 3))
+        streamName.tap()
+        streamName.typeText(" retained")
+        let retainedName = streamName.value as? String
+
+        let flowField = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
+        XCTAssertTrue(flowField.waitForExistence(timeout: 3))
+        flowField.tap()
+        flowField.typeText("9")
+        let retainedFlow = flowField.value as? String
+        if app.buttons["stream-mixing-keyboard-done"].waitForExistence(timeout: 1) {
+            app.buttons["stream-mixing-keyboard-done"].tap()
+        }
+
+        let backToMore = app.navigationBars["Stream Mixing"].buttons["More"]
+        XCTAssertTrue(backToMore.waitForExistence(timeout: 2))
+        backToMore.tap()
+        XCTAssertTrue(app.navigationBars["More"].waitForExistence(timeout: 2))
+
+        openStreamMixing(in: app)
+
+        let reopenedName = app.textFields.matching(NSPredicate(format: "label == %@", "Stream name")).element(boundBy: 0)
+        XCTAssertTrue(reopenedName.waitForExistence(timeout: 3))
+        XCTAssertEqual(reopenedName.value as? String, retainedName)
+        let reopenedFlow = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
+        XCTAssertTrue(reopenedFlow.waitForExistence(timeout: 3))
+        XCTAssertEqual(reopenedFlow.value as? String, retainedFlow)
+    }
+
     func testStreamMixingAddDuplicateAndMaximumStreamBehavior() {
         let app = XCUIApplication()
         app.launch()
@@ -534,19 +591,18 @@ final class PhaseXpertUITests: XCTestCase {
     }
 
     private func openStreamMixing(in app: XCUIApplication) {
-        if app.tabBars.buttons["Stream Mixing"].waitForExistence(timeout: 2) {
-            app.tabBars.buttons["Stream Mixing"].tap()
-            return
-        }
+        openMoreRow("Stream Mixing", in: app)
+    }
 
+    private func openMoreRow(_ label: String, in app: XCUIApplication) {
         let more = app.tabBars.buttons["More"]
         XCTAssertTrue(more.waitForExistence(timeout: 2))
         more.tap()
-        let streamMixing = app.cells["Stream Mixing"].exists
-            ? app.cells["Stream Mixing"]
-            : app.buttons["Stream Mixing"]
-        XCTAssertTrue(streamMixing.waitForExistence(timeout: 2))
-        streamMixing.tap()
+        let row = app.cells[label].exists
+            ? app.cells[label]
+            : app.buttons[label]
+        XCTAssertTrue(row.waitForExistence(timeout: 2))
+        row.tap()
     }
 
     private func streamMixingAddStreamButton(in app: XCUIApplication) -> XCUIElement {

@@ -2,9 +2,24 @@ import SwiftUI
 
 struct AboutView: View {
     @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
+    private let wrapsInNavigationStack: Bool
+
+    init(wrapsInNavigationStack: Bool = true) {
+        self.wrapsInNavigationStack = wrapsInNavigationStack
+    }
 
     var body: some View {
-        NavigationStack {
+        if wrapsInNavigationStack {
+            NavigationStack {
+                content
+            }
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
+        Group {
             ScrollView {
                 VStack(alignment: .leading, spacing: IFESpacing.large) {
                     Image("IFELogoEnglish")

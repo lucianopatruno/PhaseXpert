@@ -101,6 +101,60 @@ final class PhaseMapTests: XCTestCase {
         try assertValidGrid(twentyPoints, request: twenty)
     }
 
+    func testTenByTenBaseGridUsesUniformInclusiveAxesAndAddsOffGridOperatingPointOnce() throws {
+        let request = request(resolution: .ten)
+        let points = try PhaseMapGridBuilder.points(for: request)
+        let basePoints = points.filter { !$0.isOperatingPoint }
+        let pressureAxis = uniqueSorted(basePoints.map(\.pressurePa))
+        let temperatureAxis = uniqueSorted(basePoints.map(\.temperatureK))
+
+        XCTAssertEqual(basePoints.count, 100)
+        XCTAssertEqual(points.count, 101)
+        XCTAssertEqual(pressureAxis.count, 10)
+        XCTAssertEqual(temperatureAxis.count, 10)
+        assertUniformAxis(
+            pressureAxis,
+            minimum: request.range.pressureMinimumPa,
+            maximum: request.range.pressureMaximumPa,
+            operatingValue: request.pressurePa
+        )
+        assertUniformAxis(
+            temperatureAxis,
+            minimum: request.range.temperatureMinimumK,
+            maximum: request.range.temperatureMaximumK,
+            operatingValue: request.temperatureK
+        )
+        XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1)
+        try assertValidGrid(points, request: request)
+    }
+
+    func testTwentyByTwentyBaseGridUsesUniformInclusiveAxesAndAddsOffGridOperatingPointOnce() throws {
+        let request = request(resolution: .twenty)
+        let points = try PhaseMapGridBuilder.points(for: request)
+        let basePoints = points.filter { !$0.isOperatingPoint }
+        let pressureAxis = uniqueSorted(basePoints.map(\.pressurePa))
+        let temperatureAxis = uniqueSorted(basePoints.map(\.temperatureK))
+
+        XCTAssertEqual(basePoints.count, 400)
+        XCTAssertEqual(points.count, 401)
+        XCTAssertEqual(pressureAxis.count, 20)
+        XCTAssertEqual(temperatureAxis.count, 20)
+        assertUniformAxis(
+            pressureAxis,
+            minimum: request.range.pressureMinimumPa,
+            maximum: request.range.pressureMaximumPa,
+            operatingValue: request.pressurePa
+        )
+        assertUniformAxis(
+            temperatureAxis,
+            minimum: request.range.temperatureMinimumK,
+            maximum: request.range.temperatureMaximumK,
+            operatingValue: request.temperatureK
+        )
+        XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1)
+        try assertValidGrid(points, request: request)
+    }
+
     func testGridConstructionSupportsAsymmetricRanges() throws {
         let asymmetricRange = PhaseMapRange(
             pressureMinimumPa: 10_000_000,
@@ -112,9 +166,10 @@ final class PhaseMapTests: XCTestCase {
 
         let points = try PhaseMapGridBuilder.points(for: request)
 
-        XCTAssertEqual(points.count, 25)
-        XCTAssertEqual(points[12].pressurePa, request.pressurePa)
-        XCTAssertEqual(points[12].temperatureK, request.temperatureK)
+        XCTAssertEqual(points.count, 26)
+        XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1)
+        XCTAssertEqual(points.first(where: \.isOperatingPoint)?.pressurePa, request.pressurePa)
+        XCTAssertEqual(points.first(where: \.isOperatingPoint)?.temperatureK, request.temperatureK)
         try assertValidGrid(points, request: request)
     }
 
@@ -131,7 +186,7 @@ final class PhaseMapTests: XCTestCase {
         let fivePoints = try PhaseMapGridBuilder.points(for: fiveRequest)
         let tenPoints = try PhaseMapGridBuilder.points(for: tenRequest)
 
-        XCTAssertEqual(fivePoints.count, 25)
+        XCTAssertEqual(fivePoints.count, 26)
         XCTAssertEqual(tenPoints.count, 101)
         try assertValidGrid(fivePoints, request: fiveRequest)
         try assertValidGrid(tenPoints, request: tenRequest)
@@ -200,29 +255,56 @@ final class PhaseMapTests: XCTestCase {
         }
     }
 
-    func testEvenGridAxesExcludeOperatingCoordinatesAndRetainEndpoints() throws {
-        let request = request(resolution: .ten)
+    func testEvenGridReusesNaturallyCoincidentOperatingPointWithoutDuplicate() throws {
+        let request = request(
+            resolution: .ten,
+            range: PhaseMapRange(
+                pressureMinimumPa: 8_000_000,
+                pressureMaximumPa: 17_000_000,
+                temperatureMinimumK: 296,
+                temperatureMaximumK: 305
+            )
+        )
         let points = try PhaseMapGridBuilder.points(for: request)
-        let gridPoints = points.filter { !$0.isOperatingPoint }
         let operatingPoints = points.filter(\.isOperatingPoint)
-        let pressureValues = Set(gridPoints.map(\.pressurePa))
-        let temperatureValues = Set(gridPoints.map(\.temperatureK))
+        let pressureAxis = uniqueSorted(points.map(\.pressurePa))
+        let temperatureAxis = uniqueSorted(points.map(\.temperatureK))
 
-        XCTAssertEqual(points.count, 101)
-        XCTAssertEqual(gridPoints.count, 100)
+        XCTAssertEqual(points.count, 100)
         XCTAssertEqual(operatingPoints.count, 1)
         XCTAssertEqual(operatingPoints.first?.pressurePa, request.pressurePa)
         XCTAssertEqual(operatingPoints.first?.temperatureK, request.temperatureK)
-        XCTAssertFalse(pressureValues.contains(request.pressurePa))
-        XCTAssertFalse(temperatureValues.contains(request.temperatureK))
-        XCTAssertTrue(pressureValues.contains(request.range.pressureMinimumPa))
-        XCTAssertTrue(pressureValues.contains(request.range.pressureMaximumPa))
-        XCTAssertTrue(temperatureValues.contains(request.range.temperatureMinimumK))
-        XCTAssertTrue(temperatureValues.contains(request.range.temperatureMaximumK))
-        XCTAssertTrue(pressureValues.contains { $0 < request.pressurePa })
-        XCTAssertTrue(pressureValues.contains { $0 > request.pressurePa })
-        XCTAssertTrue(temperatureValues.contains { $0 < request.temperatureK })
-        XCTAssertTrue(temperatureValues.contains { $0 > request.temperatureK })
+        XCTAssertEqual(pressureAxis.count, 10)
+        XCTAssertEqual(temperatureAxis.count, 10)
+        assertUniformAxis(
+            pressureAxis,
+            minimum: request.range.pressureMinimumPa,
+            maximum: request.range.pressureMaximumPa,
+            operatingValue: request.pressurePa
+        )
+        assertUniformAxis(
+            temperatureAxis,
+            minimum: request.range.temperatureMinimumK,
+            maximum: request.range.temperatureMaximumK,
+            operatingValue: request.temperatureK
+        )
+        try assertValidGrid(points, request: request)
+    }
+
+    func testTwentyByTwentyReusesNaturallyCoincidentOperatingPointWithoutDuplicate() throws {
+        let request = request(
+            resolution: .twenty,
+            range: PhaseMapRange(
+                pressureMinimumPa: 3_000_000,
+                pressureMaximumPa: 22_000_000,
+                temperatureMinimumK: 291,
+                temperatureMaximumK: 310
+            )
+        )
+        let points = try PhaseMapGridBuilder.points(for: request)
+
+        XCTAssertEqual(points.count, 400)
+        XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1)
         try assertValidGrid(points, request: request)
     }
 
@@ -307,8 +389,9 @@ final class PhaseMapTests: XCTestCase {
 
             let result = try await PhaseMapRunner(provider: provider).run(request(resolution: resolution))
 
-            XCTAssertEqual(result.evaluations.count, resolution.expectedEvaluationCount)
-            XCTAssertEqual(recorder.requests.count, resolution.expectedEvaluationCount)
+            let expectedCount = try PhaseMapGridBuilder.points(for: request(resolution: resolution)).count
+            XCTAssertEqual(result.evaluations.count, expectedCount)
+            XCTAssertEqual(recorder.requests.count, expectedCount)
             XCTAssertEqual(result.operatingPoint?.classification.displayName, "Supercritical")
         }
     }
@@ -364,11 +447,10 @@ final class PhaseMapTests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) throws {
-        XCTAssertEqual(points.count, request.resolution.expectedEvaluationCount, file: file, line: line)
         let coordinateKeys = Set(points.map { "\($0.pressurePa),\($0.temperatureK)" })
         XCTAssertEqual(coordinateKeys.count, points.count, file: file, line: line)
         XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1, file: file, line: line)
-        if request.resolution.rawValue == 5 {
+        if request.resolution.rawValue == 5 && points.count == request.resolution.gridPointCount {
             XCTAssertEqual(points[12].pressurePa, request.pressurePa, file: file, line: line)
             XCTAssertEqual(points[12].temperatureK, request.temperatureK, file: file, line: line)
         }
@@ -377,6 +459,41 @@ final class PhaseMapTests: XCTestCase {
             XCTAssertLessThanOrEqual(point.pressurePa, request.range.pressureMaximumPa, file: file, line: line)
             XCTAssertGreaterThanOrEqual(point.temperatureK, request.range.temperatureMinimumK, file: file, line: line)
             XCTAssertLessThanOrEqual(point.temperatureK, request.range.temperatureMaximumK, file: file, line: line)
+        }
+    }
+
+    private func uniqueSorted(_ values: [Double]) -> [Double] {
+        Array(Set(values)).sorted()
+    }
+
+    private func assertUniformAxis(
+        _ axis: [Double],
+        minimum: Double,
+        maximum: Double,
+        operatingValue: Double,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        guard axis.count > 1 else {
+            XCTFail("Axis must contain at least two points", file: file, line: line)
+            return
+        }
+        XCTAssertEqual(axis[0], minimum, accuracy: 1e-8, file: file, line: line)
+        XCTAssertEqual(axis[axis.count - 1], maximum, accuracy: 1e-8, file: file, line: line)
+        let intervals = zip(axis, axis.dropFirst()).map { $1 - $0 }
+        let expectedInterval = (maximum - minimum) / Double(axis.count - 1)
+        for interval in intervals {
+            XCTAssertEqual(interval, expectedInterval, accuracy: max(abs(expectedInterval), 1) * 1e-12, file: file, line: line)
+        }
+        if let lowerIndex = axis.lastIndex(where: { $0 < operatingValue }),
+           axis.indices.contains(lowerIndex + 1) {
+            XCTAssertEqual(
+                axis[lowerIndex + 1] - axis[lowerIndex],
+                expectedInterval,
+                accuracy: max(abs(expectedInterval), 1) * 1e-12,
+                file: file,
+                line: line
+            )
         }
     }
 

@@ -87,14 +87,13 @@ struct CalculatorView: View {
                                 viewModel.changeTemperatureDisplayUnit(to: unit)
                             }
                         ),
-                        keyboardType: .numbersAndPunctuation,
+                        keyboardType: .decimalPad,
                         field: .temperature
                     )
                 } header: {
                     IFESectionHeader(
                         step: 2,
-                        title: "Pressure and temperature",
-                        subtitle: "Pressure inputs are absolute."
+                        title: "Pressure and temperature"
                     )
                 }
 
@@ -347,10 +346,13 @@ struct CalculatorView: View {
             .navigationTitle("PhaseXpert")
             .onAppear {
                 viewModel.validate()
-                loadPendingSavedCase()
+                loadPendingInputs()
             }
             .onChange(of: navigationState.pendingCalculationRecord?.id) { _, _ in
-                loadPendingSavedCase()
+                loadPendingInputs()
+            }
+            .onChange(of: navigationState.pendingBuiltInCase?.id) { _, _ in
+                loadPendingInputs()
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
             .onChange(of: viewModel.pressureText) { _, _ in viewModel.validate() }
@@ -398,6 +400,14 @@ struct CalculatorView: View {
                     .accessibilityLabel("Next input field")
 
                     Spacer()
+
+                    if focusedField == .temperature {
+                        Button("Minus") {
+                            insertMinusSign()
+                        }
+                        .accessibilityIdentifier("keyboard-minus")
+                        .accessibilityLabel("Insert minus sign")
+                    }
 
                     if focusedField != nil {
                         Button("Done") {
@@ -620,10 +630,26 @@ struct CalculatorView: View {
         self.focusedField = orderedInputFields[index + offset]
     }
 
-    private func loadPendingSavedCase() {
-        guard let record = navigationState.pendingCalculationRecord else { return }
-        viewModel.loadInputs(from: record)
-        navigationState.pendingCalculationRecord = nil
+    private func loadPendingInputs() {
+        if let record = navigationState.pendingCalculationRecord {
+            viewModel.loadInputs(from: record)
+            navigationState.pendingCalculationRecord = nil
+        }
+        if let builtInCase = navigationState.pendingBuiltInCase {
+            viewModel.loadInputs(from: builtInCase)
+            navigationState.pendingBuiltInCase = nil
+        }
+    }
+
+    private func insertMinusSign() {
+        guard focusedField == .temperature else { return }
+        if viewModel.temperatureText.hasPrefix("-") {
+            viewModel.temperatureText.removeFirst()
+        } else if viewModel.temperatureText.hasPrefix("−") {
+            viewModel.temperatureText.removeFirst()
+        } else {
+            viewModel.temperatureText.insert("-", at: viewModel.temperatureText.startIndex)
+        }
     }
 
     private func save(record: CalculationRecord, name: String, notes: String) {
@@ -670,192 +696,217 @@ private enum StreamMixingInputField: Hashable {
 }
 
 struct StreamMixingView: View {
-    @State private var viewModel = StreamMixingViewModel()
+    private let wrapsInNavigationStack: Bool
+    @State private var viewModel: StreamMixingViewModel
     @FocusState private var focusedField: StreamMixingInputField?
     @State private var textSelections: [String: TextSelection] = [:]
 
+    init(
+        viewModel: StreamMixingViewModel = StreamMixingViewModel(),
+        wrapsInNavigationStack: Bool = true
+    ) {
+        _viewModel = State(initialValue: viewModel)
+        self.wrapsInNavigationStack = wrapsInNavigationStack
+    }
+
     var body: some View {
+        if wrapsInNavigationStack {
+            NavigationStack {
+                content
+            }
+        } else {
+            content
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         @Bindable var viewModel = viewModel
 
-        NavigationStack {
-            Form {
-                Section {
-                    ScientificStatusBanner(
-                        title: "Stream Mixing v1",
-                        message: "Aggregates inlet component molar flows into a mixed composition at user-defined outlet pressure and temperature."
-                    )
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                } footer: {
-                    Text("V1 does not calculate pressure equalization, heat transfer, phase separation, outlet temperature or thermodynamic properties.")
+        Form {
+            Section {
+                ScientificStatusBanner(
+                    title: "Stream Mixing v1",
+                    message: "Aggregates inlet component molar flows into a mixed composition at user-defined outlet pressure and temperature."
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            } footer: {
+                Text("V1 does not calculate pressure equalization, heat transfer, phase separation, outlet temperature or thermodynamic properties.")
+            }
+
+            Section {
+                HStack {
+                    Button("Add stream", systemImage: "plus") {
+                        focusedField = nil
+                        _ = viewModel.addStream()
+                    }
+                    .disabled(!viewModel.canAddStream)
+                    .accessibilityIdentifier("stream-mixing-add-stream")
+
+                    Spacer()
+
+                    Text("\(viewModel.streams.count)/6")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("\(viewModel.streams.count) of 6 streams")
+                        .accessibilityIdentifier("stream-mixing-stream-count")
                 }
 
-                Section {
-                    HStack {
-                        Button("Add stream", systemImage: "plus") {
+                ForEach($viewModel.streams) { $stream in
+                    StreamInputCard(
+                        stream: $stream,
+                        viewModel: viewModel,
+                        focusedField: $focusedField,
+                        textSelections: $textSelections
+                    )
+                    .accessibilityIdentifier("stream-card-\(stream.id.uuidString)")
+                }
+                .onMove { source, destination in
+                    focusedField = nil
+                    viewModel.moveStreams(from: source, to: destination)
+                }
+            } header: {
+                IFESectionHeader(
+                    step: 1,
+                    title: "Inlet streams",
+                    subtitle: "Two to six streams. Drag to reorder without changing the result."
+                )
+            } footer: {
+                if viewModel.streams.count >= StreamMixingRequest.maximumStreamCount {
+                    Text("Maximum of six inlet streams reached.")
+                }
+            }
+
+            Section {
+                operatingPointRow(
+                    title: "Outlet pressure",
+                    value: Binding(
+                        get: { viewModel.outletPressureText },
+                        set: { viewModel.updateOutletPressureText($0) }
+                    ),
+                    unit: Binding(
+                        get: { viewModel.outletPressureDisplayUnit },
+                        set: { unit in
                             focusedField = nil
-                            _ = viewModel.addStream()
+                            viewModel.changeOutletPressureUnit(to: unit)
                         }
-                        .disabled(!viewModel.canAddStream)
-                        .accessibilityIdentifier("stream-mixing-add-stream")
+                    ),
+                    field: .outletPressure,
+                    accessibilityIdentifier: "stream-mixing-outlet-pressure"
+                )
 
-                        Spacer()
+                operatingPointRow(
+                    title: "Outlet temperature",
+                    value: Binding(
+                        get: { viewModel.outletTemperatureText },
+                        set: { viewModel.updateOutletTemperatureText($0) }
+                    ),
+                    unit: Binding(
+                        get: { viewModel.outletTemperatureDisplayUnit },
+                        set: { unit in
+                            focusedField = nil
+                            viewModel.changeOutletTemperatureUnit(to: unit)
+                        }
+                    ),
+                    field: .outletTemperature,
+                    accessibilityIdentifier: "stream-mixing-outlet-temperature"
+                )
 
-                        Text("\(viewModel.streams.count)/6")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .accessibilityLabel("\(viewModel.streams.count) of 6 streams")
-                            .accessibilityIdentifier("stream-mixing-stream-count")
-                    }
+                ForEach(viewModel.outletIssues()) { issue in
+                    ValidationIssueLabel(issue: issue)
+                }
+            } header: {
+                IFESectionHeader(
+                    step: 2,
+                    title: "Outlet conditions",
+                    subtitle: "Defined by the user for later property evaluation."
+                )
+            } footer: {
+                Text("Stream Mixing v1 does not infer outlet pressure or temperature from inlet streams.")
+            }
 
-                    ForEach($viewModel.streams) { $stream in
-                        StreamInputCard(
-                            stream: $stream,
-                            viewModel: viewModel,
-                            focusedField: $focusedField,
-                            textSelections: $textSelections
-                        )
-                        .accessibilityIdentifier("stream-card-\(stream.id.uuidString)")
-                    }
-                    .onMove { source, destination in
-                        focusedField = nil
-                        viewModel.moveStreams(from: source, to: destination)
-                    }
-                } header: {
-                    IFESectionHeader(
-                        step: 1,
-                        title: "Inlet streams",
-                        subtitle: "Two to six streams. Drag to reorder without changing the result."
-                    )
-                } footer: {
-                    if viewModel.streams.count >= StreamMixingRequest.maximumStreamCount {
-                        Text("Maximum of six inlet streams reached.")
-                    }
+            Section {
+                Button {
+                    focusedField = nil
+                    viewModel.calculate()
+                } label: {
+                    Text("Calculate mixture")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!viewModel.canCalculate)
+                .accessibilityIdentifier("stream-mixing-calculate")
+            } header: {
+                IFESectionHeader(step: 3, title: "Calculate mixture")
+            }
+
+            Section {
+                Label(
+                    viewModel.statusMessage,
+                    systemImage: viewModel.validationReport.canCalculate
+                        ? "checkmark.circle.fill"
+                        : "xmark.octagon.fill"
+                )
+                .foregroundStyle(viewModel.validationReport.canCalculate ? Color.pxSuccess : Color.pxError)
+                .accessibilityIdentifier("stream-mixing-status")
+
+                let globalIssues = viewModel.validationReport.issues.filter { $0.streamID == nil }
+                ForEach(globalIssues) { issue in
+                    ValidationIssueLabel(issue: issue)
                 }
 
-                Section {
-                    operatingPointRow(
-                        title: "Outlet pressure",
-                        value: Binding(
-                            get: { viewModel.outletPressureText },
-                            set: { viewModel.updateOutletPressureText($0) }
-                        ),
-                        unit: Binding(
-                            get: { viewModel.outletPressureDisplayUnit },
-                            set: { unit in
-                                focusedField = nil
-                                viewModel.changeOutletPressureUnit(to: unit)
-                            }
-                        ),
-                        field: .outletPressure,
-                        accessibilityIdentifier: "stream-mixing-outlet-pressure"
-                    )
-
-                    operatingPointRow(
-                        title: "Outlet temperature",
-                        value: Binding(
-                            get: { viewModel.outletTemperatureText },
-                            set: { viewModel.updateOutletTemperatureText($0) }
-                        ),
-                        unit: Binding(
-                            get: { viewModel.outletTemperatureDisplayUnit },
-                            set: { unit in
-                                focusedField = nil
-                                viewModel.changeOutletTemperatureUnit(to: unit)
-                            }
-                        ),
-                        field: .outletTemperature,
-                        accessibilityIdentifier: "stream-mixing-outlet-temperature"
-                    )
-
-                    ForEach(viewModel.outletIssues()) { issue in
-                        ValidationIssueLabel(issue: issue)
-                    }
-                } header: {
-                    IFESectionHeader(
-                        step: 2,
-                        title: "Outlet conditions",
-                        subtitle: "Defined by the user for later property evaluation."
-                    )
-                } footer: {
-                    Text("Stream Mixing v1 does not infer outlet pressure or temperature from inlet streams.")
-                }
-
-                Section {
-                    Button {
-                        focusedField = nil
-                        viewModel.calculate()
-                    } label: {
-                        Text("Calculate mixture")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!viewModel.canCalculate)
-                    .accessibilityIdentifier("stream-mixing-calculate")
-                } header: {
-                    IFESectionHeader(step: 3, title: "Calculate mixture")
-                }
-
-                Section {
+                if viewModel.result != nil, viewModel.isResultStale {
                     Label(
-                        viewModel.statusMessage,
-                        systemImage: viewModel.validationReport.canCalculate
-                            ? "checkmark.circle.fill"
-                            : "xmark.octagon.fill"
+                        "Displayed result is stale because inputs changed.",
+                        systemImage: "clock.badge.exclamationmark"
                     )
-                    .foregroundStyle(viewModel.validationReport.canCalculate ? Color.pxSuccess : Color.pxError)
-                    .accessibilityIdentifier("stream-mixing-status")
-
-                    let globalIssues = viewModel.validationReport.issues.filter { $0.streamID == nil }
-                    ForEach(globalIssues) { issue in
-                        ValidationIssueLabel(issue: issue)
-                    }
-
-                    if viewModel.result != nil, viewModel.isResultStale {
-                        Label(
-                            "Displayed result is stale because inputs changed.",
-                            systemImage: "clock.badge.exclamationmark"
-                        )
-                        .foregroundStyle(Color.pxWarning)
-                        .accessibilityIdentifier("stream-mixing-stale-result")
-                    }
-
-                    if let result = viewModel.result {
-                        ForEach(result.warnings) { warning in
-                            Label(warning.message, systemImage: "exclamationmark.triangle.fill")
-                                .foregroundStyle(Color.pxWarning)
-                                .accessibilityIdentifier("stream-mixing-warning")
-                        }
-                    }
-                } header: {
-                    IFESectionHeader(step: 4, title: "Validation and status")
+                    .foregroundStyle(Color.pxWarning)
+                    .accessibilityIdentifier("stream-mixing-stale-result")
                 }
 
                 if let result = viewModel.result {
-                    StreamMixingResultSections(
-                        result: result,
-                        displayCompositionBasis: $viewModel.displayCompositionBasis,
-                        isStale: viewModel.isResultStale
-                    )
-                }
-            }
-            .scrollContentBackground(.hidden)
-            .scrollDismissesKeyboard(.interactively)
-            .background(Color.ifeBackground)
-            .navigationTitle("Stream Mixing")
-            .accessibilityIdentifier("stream-mixing-screen")
-            .onAppear { viewModel.validate() }
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    if focusedField != nil {
-                        Button("Done") {
-                            focusedField = nil
-                        }
-                        .font(.body.weight(.semibold))
-                        .accessibilityIdentifier("stream-mixing-keyboard-done")
+                    ForEach(result.warnings) { warning in
+                        Label(warning.message, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(Color.pxWarning)
+                            .accessibilityIdentifier("stream-mixing-warning")
                     }
+                }
+            } header: {
+                IFESectionHeader(step: 4, title: "Validation and status")
+            }
+
+            if let result = viewModel.result {
+                StreamMixingResultSections(
+                    result: result,
+                    displayCompositionBasis: $viewModel.displayCompositionBasis,
+                    isStale: viewModel.isResultStale
+                )
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.interactively)
+        .background(Color.ifeBackground)
+        .navigationTitle("Stream Mixing")
+        .accessibilityIdentifier("stream-mixing-screen")
+        .onAppear { viewModel.validate() }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                if isTemperatureField(focusedField) {
+                    Button("Minus") {
+                        insertMinusSign()
+                    }
+                    .accessibilityIdentifier("stream-mixing-keyboard-minus")
+                    .accessibilityLabel("Insert minus sign")
+                }
+                if focusedField != nil {
+                    Button("Done") {
+                        focusedField = nil
+                    }
+                    .font(.body.weight(.semibold))
+                    .accessibilityIdentifier("stream-mixing-keyboard-done")
                 }
             }
         }
@@ -899,7 +950,7 @@ struct StreamMixingView: View {
             title: title,
             text: value,
             selection: textSelectionBinding(for: accessibilityIdentifier),
-            keyboardType: .numbersAndPunctuation,
+            keyboardType: .decimalPad,
             isFocused: focusedField == field,
             unitLabel: unit.wrappedValue.rawValue,
             unitOptions: TemperatureDisplayUnit.allCases.map(\.rawValue),
@@ -913,6 +964,36 @@ struct StreamMixingView: View {
             }
         )
         .focused($focusedField, equals: field)
+    }
+
+    private func isTemperatureField(_ field: StreamMixingInputField?) -> Bool {
+        switch field {
+        case .outletTemperature, .streamTemperature:
+            true
+        default:
+            false
+        }
+    }
+
+    private func insertMinusSign() {
+        switch focusedField {
+        case .outletTemperature:
+            toggleMinus(in: &viewModel.outletTemperatureText)
+        case let .streamTemperature(id):
+            guard let index = viewModel.streams.firstIndex(where: { $0.id == id }) else { return }
+            toggleMinus(in: &viewModel.streams[index].temperatureText)
+            viewModel.markInputsChanged()
+        default:
+            break
+        }
+    }
+
+    private func toggleMinus(in text: inout String) {
+        if text.hasPrefix("-") || text.hasPrefix("−") {
+            text.removeFirst()
+        } else {
+            text.insert("-", at: text.startIndex)
+        }
     }
 
     private func textSelectionBinding(for id: String) -> Binding<TextSelection?> {
@@ -1011,7 +1092,7 @@ private struct StreamInputCard: View {
                     set: { viewModel.updateTemperatureText(streamID: stream.id, value: $0) }
                 ),
                 selection: textSelectionBinding(for: "stream-temperature-\(stream.id.uuidString)"),
-                keyboardType: .numbersAndPunctuation,
+                keyboardType: .decimalPad,
                 isFocused: focusedField.wrappedValue == .streamTemperature(stream.id),
                 unitLabel: stream.temperatureDisplayUnit.rawValue,
                 unitOptions: TemperatureDisplayUnit.allCases.map(\.rawValue),
@@ -1025,6 +1106,16 @@ private struct StreamInputCard: View {
                 }
             )
             .focused(focusedField, equals: .streamTemperature(stream.id))
+
+            Menu("Load built-in case", systemImage: "tray.and.arrow.down") {
+                ForEach(BuiltInCaseCatalog.cases) { builtInCase in
+                    Button(builtInCase.name) {
+                        viewModel.loadBuiltInCase(builtInCase, into: stream.id)
+                    }
+                    .accessibilityIdentifier("load-\(builtInCase.id)-into-\(stream.id.uuidString)")
+                }
+            }
+            .accessibilityIdentifier("load-built-in-case-\(stream.id.uuidString)")
 
             StreamCompositionEditor(
                 stream: $stream,
@@ -1599,13 +1690,6 @@ private struct UnitAwareNumericField: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .multilineTextAlignment(.leading)
                 .accessibilityIdentifier("\(accessibilityIdentifier)-label")
-            if title == "Pressure" {
-                Text("absolute")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .multilineTextAlignment(.leading)
-            }
         }
     }
 
