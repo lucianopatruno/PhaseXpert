@@ -552,6 +552,766 @@ final class CalculatorViewModel {
     }
 }
 
+@MainActor
+@Observable
+final class StreamMixingViewModel {
+    var streams: [StreamInputState] = [
+        StreamInputState(
+            name: "Stream 1",
+            flowText: "10",
+            composition: [
+                CompositionInput(component: .carbonDioxide, value: "95"),
+                CompositionInput(component: .nitrogen, value: "5")
+            ]
+        ),
+        StreamInputState(
+            name: "Stream 2",
+            flowText: "5",
+            pressureText: "125",
+            composition: [
+                CompositionInput(component: .carbonDioxide, value: "100")
+            ]
+        )
+    ]
+    var outletPressureText = "120"
+    var outletPressureDisplayUnit: PressureDisplayUnit = .barAbsolute
+    var outletTemperatureText = "25"
+    var outletTemperatureDisplayUnit: TemperatureDisplayUnit = .celsius
+    var result: MixedCompositionResult?
+    var validationReport = StreamMixingValidationReport(issues: [])
+    var statusMessage = "Ready for 2 to 6 inlet streams."
+    var isResultStale = false
+    var displayCompositionBasis: CompositionUnit = .molePercent
+
+    private let engine: StreamMixingEngine
+    private let compositionConverter = StreamCompositionConverter()
+    private let flowConverter = StreamFlowConverter()
+    private var conversionIssue: StreamMixingValidationIssue?
+
+    init(engine: StreamMixingEngine = StreamMixingEngine()) {
+        self.engine = engine
+        validate()
+    }
+
+    var canAddStream: Bool {
+        streams.count < StreamMixingRequest.maximumStreamCount
+    }
+
+    var canRemoveStream: Bool {
+        streams.count > StreamMixingRequest.minimumStreamCount
+    }
+
+    var canCalculate: Bool {
+        validationReport.canCalculate
+    }
+
+    func markInputsChanged() {
+        if result != nil {
+            isResultStale = true
+            statusMessage = "Inputs changed. Calculate mixture again to refresh results."
+        }
+        validate()
+    }
+
+    func updateStreamName(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].name = value
+        markInputsChanged()
+    }
+
+    func updateFlowText(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].flowText = value
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func updatePressureText(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].pressureText = value
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func updateTemperatureText(streamID: UUID, value: String) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].temperatureText = value
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func updateOutletPressureText(_ value: String) {
+        outletPressureText = value
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func updateOutletTemperatureText(_ value: String) {
+        outletTemperatureText = value
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    @discardableResult
+    func addStream() -> UUID? {
+        guard canAddStream else { return nil }
+        let stream = StreamInputState(name: "Stream \(streams.count + 1)")
+        streams.append(stream)
+        markInputsChanged()
+        return stream.id
+    }
+
+    @discardableResult
+    func duplicateStream(id: UUID) -> UUID? {
+        guard canAddStream,
+              let index = streams.firstIndex(where: { $0.id == id })
+        else { return nil }
+        let copy = streams[index].duplicated(name: distinctDuplicateName(for: streams[index].name))
+        streams.insert(copy, at: index + 1)
+        markInputsChanged()
+        return copy.id
+    }
+
+    func removeStream(id: UUID) {
+        guard canRemoveStream,
+              let index = streams.firstIndex(where: { $0.id == id })
+        else { return }
+        streams.remove(at: index)
+        markInputsChanged()
+    }
+
+    func moveStreams(from source: IndexSet, to destination: Int) {
+        streams.move(fromOffsets: source, toOffset: destination)
+        markInputsChanged()
+    }
+
+    func canMoveStreamUp(id: UUID) -> Bool {
+        guard let index = streams.firstIndex(where: { $0.id == id }) else { return false }
+        return index > 0
+    }
+
+    func canMoveStreamDown(id: UUID) -> Bool {
+        guard let index = streams.firstIndex(where: { $0.id == id }) else { return false }
+        return index < streams.count - 1
+    }
+
+    func moveStreamUp(id: UUID) {
+        guard let index = streams.firstIndex(where: { $0.id == id }), index > 0 else { return }
+        streams.swapAt(index, index - 1)
+        markInputsChanged()
+    }
+
+    func moveStreamDown(id: UUID) {
+        guard let index = streams.firstIndex(where: { $0.id == id }), index < streams.count - 1 else { return }
+        streams.swapAt(index, index + 1)
+        markInputsChanged()
+    }
+
+    func addImpurity(to streamID: UUID) -> UUID? {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return nil }
+        let selected = Set(streams[index].composition.map(\.component))
+        guard let component = ComponentID.allCases.first(where: {
+            $0 != .carbonDioxide && !selected.contains($0)
+        }) else { return nil }
+        let input = CompositionInput(component: component, value: "")
+        streams[index].composition.append(input)
+        clearAcceptedNormalization(for: index)
+        markInputsChanged()
+        return input.id
+    }
+
+    func updateCompositionValue(streamID: UUID, entryID: UUID, value: String) {
+        guard let streamIndex = streams.firstIndex(where: { $0.id == streamID }),
+              let entryIndex = streams[streamIndex].composition.firstIndex(where: { $0.id == entryID })
+        else { return }
+        streams[streamIndex].composition[entryIndex].value = value
+        clearAcceptedNormalization(for: streamIndex)
+        markInputsChanged()
+    }
+
+    func replaceComposition(
+        streamID: UUID,
+        basis: CompositionUnit,
+        composition: [CompositionInput]
+    ) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[index].compositionBasis = basis
+        streams[index].composition = composition
+        clearAcceptedNormalization(for: index)
+        markInputsChanged()
+    }
+
+    func updateImpurity(streamID: UUID, entryID: UUID, component: ComponentID) {
+        guard component != .carbonDioxide,
+              let streamIndex = streams.firstIndex(where: { $0.id == streamID }),
+              let entryIndex = streams[streamIndex].composition.firstIndex(where: { $0.id == entryID }),
+              streams[streamIndex].composition[entryIndex].component != .carbonDioxide,
+              !streams[streamIndex].composition.contains(where: {
+                  $0.id != entryID && $0.component == component
+              })
+        else { return }
+        streams[streamIndex].composition[entryIndex].component = component
+        clearAcceptedNormalization(for: streamIndex)
+        markInputsChanged()
+    }
+
+    func removeImpurity(streamID: UUID, entryID: UUID) {
+        guard let streamIndex = streams.firstIndex(where: { $0.id == streamID }),
+              let entryIndex = streams[streamIndex].composition.firstIndex(where: { $0.id == entryID }),
+              streams[streamIndex].composition[entryIndex].component != .carbonDioxide
+        else { return }
+        streams[streamIndex].composition.remove(at: entryIndex)
+        clearAcceptedNormalization(for: streamIndex)
+        markInputsChanged()
+    }
+
+    func moveImpurities(streamID: UUID, from source: IndexSet, to destination: Int) {
+        guard let streamIndex = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        streams[streamIndex].composition.move(fromOffsets: source, toOffset: destination)
+        if let co2Index = streams[streamIndex].composition.firstIndex(where: {
+            $0.component == .carbonDioxide
+        }), co2Index != 0 {
+            let co2 = streams[streamIndex].composition.remove(at: co2Index)
+            streams[streamIndex].composition.insert(co2, at: 0)
+        }
+        clearAcceptedNormalization(for: streamIndex)
+        markInputsChanged()
+    }
+
+    func changeCompositionBasis(streamID: UUID, to newBasis: CompositionUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].compositionBasis != newBasis
+        else { return }
+        let stream = streams[index]
+        let oldSnapshots = originalComposition(for: stream)
+        let moleFractions: [MixtureComponent]
+        if let normalizedComposition = stream.normalizedComposition {
+            moleFractions = normalizedComposition
+        } else {
+            do {
+                let candidate = try compositionConverter.conversionCandidate(from: oldSnapshots)
+                guard candidate.requirement == .validAsEntered else {
+                    conversionIssue = issueForConversionFailure(
+                        stream: stream,
+                        field: .composition,
+                        code: .normalizationRequired,
+                        message: "Composition basis could not be changed until the available normalization is explicitly accepted."
+                    )
+                    validate()
+                    return
+                }
+                moleFractions = candidate.convertedComposition
+            } catch {
+                conversionIssue = issueForConversionFailure(
+                    stream: stream,
+                    field: .composition,
+                    message: "Composition basis could not be changed because the current composition is incomplete, invalid or lacks a reviewed molar mass."
+                )
+                validate()
+                return
+            }
+        }
+        guard let newSnapshots = try? compositionConverter.compositionSnapshots(
+            from: moleFractions,
+            basis: newBasis
+        ) else {
+            conversionIssue = issueForConversionFailure(
+                stream: stream,
+                field: .composition,
+                message: "Composition basis could not be changed because the current composition is incomplete, invalid or lacks a reviewed molar mass."
+            )
+            validate()
+            return
+        }
+        streams[index].compositionBasis = newBasis
+        streams[index].composition = newSnapshots.map { snapshot in
+            let existingID = streams[index].composition.first {
+                $0.component == snapshot.component
+            }?.id ?? UUID()
+            return CompositionInput(
+                id: existingID,
+                component: snapshot.component,
+                value: Self.formatCompositionValue(snapshot.value, basis: newBasis)
+            )
+        }
+        clearAcceptedNormalization(for: index)
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func applyExplicitNormalization(for streamID: UUID) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        let snapshots = originalComposition(for: streams[index])
+        guard let normalized = try? compositionConverter.normalizedMoleFractions(from: snapshots) else { return }
+        streams[index].compositionBeforeNormalization = snapshots
+        streams[index].normalizedComposition = normalized
+        streams[index].composition = displayComposition(from: normalized, basis: streams[index].compositionBasis)
+        markInputsChanged()
+    }
+
+    func calculate() {
+        guard let request = request() else {
+            validate()
+            statusMessage = "Review blocking validation issues before calculating."
+            return
+        }
+        let report = engine.validate(request)
+        validationReport = report
+        guard report.canCalculate else {
+            result = nil
+            isResultStale = false
+            statusMessage = "Review blocking validation issues before calculating."
+            return
+        }
+        let mixedResult = engine.mix(request)
+        result = mixedResult
+        isResultStale = false
+        statusMessage = mixedResult.status == .calculated
+            ? "Mixture calculated. Composition and flow aggregation only."
+            : "Review blocking validation issues before calculating."
+        validationReport = StreamMixingValidationReport(issues: mixedResult.validationIssues)
+    }
+
+    func validate() {
+        guard let request = request() else {
+            validationReport = StreamMixingValidationReport(issues: localValidationIssues())
+            return
+        }
+        var issues = engine.validate(request).issues
+        if let conversionIssue {
+            issues.insert(conversionIssue, at: 0)
+        }
+        validationReport = StreamMixingValidationReport(issues: issues)
+    }
+
+    func issues(for streamID: UUID) -> [StreamMixingValidationIssue] {
+        validationReport.issues.filter { $0.streamID == streamID }
+    }
+
+    func outletIssues() -> [StreamMixingValidationIssue] {
+        validationReport.issues.filter {
+            $0.field == .outletPressure || $0.field == .outletTemperature
+        }
+    }
+
+    func canNormalize(streamID: UUID) -> Bool {
+        validationReport.issues.contains {
+            $0.streamID == streamID && $0.code == .normalizationRequired
+        }
+    }
+
+    func carbonDioxideDisplayValue(for stream: StreamInputState) -> String {
+        stream.composition.first { $0.component == .carbonDioxide }?.value ?? ""
+    }
+
+    func impurityOptions(streamID: UUID, including current: ComponentID) -> [ComponentID] {
+        let selected = streams.first(where: { $0.id == streamID })?.composition.map(\.component) ?? []
+        return ComponentID.allCases.filter {
+            $0 != .carbonDioxide && ($0 == current || !selected.contains($0))
+        }
+    }
+
+    func formattedCompositionValue(_ moleFraction: Double, basis: CompositionUnit) -> String {
+        guard let snapshot = try? compositionConverter.compositionSnapshots(
+            from: [MixtureComponent(component: .carbonDioxide, moleFraction: moleFraction)],
+            basis: basis
+        ).first else { return Self.formatCompositionValue(moleFraction, basis: basis) }
+        return Self.formatCompositionValue(snapshot.value, basis: basis)
+    }
+
+    func changeStreamPressureUnit(streamID: UUID, to newUnit: PressureDisplayUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].pressureDisplayUnit != newUnit
+        else { return }
+        guard let value = parse(streams[index].pressureText) else {
+            conversionIssue = issueForConversionFailure(
+                stream: streams[index],
+                field: .pressure,
+                code: .invalidPressure,
+                message: "Pressure unit could not be changed because the current pressure value is not numeric."
+            )
+            validate()
+            return
+        }
+        let pressurePa = streams[index].pressureDisplayUnit.pascal(from: value)
+        streams[index].pressureDisplayUnit = newUnit
+        streams[index].pressureText = Self.formatPressure(newUnit.displayValue(from: pressurePa), for: newUnit)
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func changeStreamTemperatureUnit(streamID: UUID, to newUnit: TemperatureDisplayUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].temperatureDisplayUnit != newUnit
+        else { return }
+        guard let value = parse(streams[index].temperatureText) else {
+            conversionIssue = issueForConversionFailure(
+                stream: streams[index],
+                field: .temperature,
+                code: .invalidTemperature,
+                message: "Temperature unit could not be changed because the current temperature value is not numeric."
+            )
+            validate()
+            return
+        }
+        let temperatureK = streams[index].temperatureDisplayUnit.kelvin(from: value)
+        streams[index].temperatureDisplayUnit = newUnit
+        streams[index].temperatureText = Self.formatTemperature(
+            newUnit.displayValue(from: temperatureK),
+            for: newUnit
+        )
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func changeOutletPressureUnit(to newUnit: PressureDisplayUnit) {
+        guard outletPressureDisplayUnit != newUnit else { return }
+        guard let value = parse(outletPressureText) else {
+            conversionIssue = StreamMixingValidationIssue(
+                code: .invalidPressure,
+                field: .outletPressure,
+                message: "Outlet pressure unit could not be changed because the current pressure value is not numeric."
+            )
+            validate()
+            return
+        }
+        let pressurePa = outletPressureDisplayUnit.pascal(from: value)
+        outletPressureDisplayUnit = newUnit
+        outletPressureText = Self.formatPressure(newUnit.displayValue(from: pressurePa), for: newUnit)
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func changeOutletTemperatureUnit(to newUnit: TemperatureDisplayUnit) {
+        guard outletTemperatureDisplayUnit != newUnit else { return }
+        guard let value = parse(outletTemperatureText) else {
+            conversionIssue = StreamMixingValidationIssue(
+                code: .invalidTemperature,
+                field: .outletTemperature,
+                message: "Outlet temperature unit could not be changed because the current temperature value is not numeric."
+            )
+            validate()
+            return
+        }
+        let temperatureK = outletTemperatureDisplayUnit.kelvin(from: value)
+        outletTemperatureDisplayUnit = newUnit
+        outletTemperatureText = Self.formatTemperature(
+            newUnit.displayValue(from: temperatureK),
+            for: newUnit
+        )
+        conversionIssue = nil
+        markInputsChanged()
+    }
+
+    func changeStreamFlowUnit(streamID: UUID, to newUnit: StreamFlowUnit) {
+        guard let index = streams.firstIndex(where: { $0.id == streamID }),
+              streams[index].flowUnit != newUnit
+        else { return }
+        let stream = streams[index]
+        guard let value = parse(stream.flowText) else {
+            conversionIssue = issueForConversionFailure(
+                stream: stream,
+                field: .flow,
+                code: .invalidFlow,
+                message: "Flow unit could not be changed because the current flow value is not numeric."
+            )
+            validate()
+            return
+        }
+        let composition = canonicalComposition(for: stream)
+        do {
+            let converted = try flowConverter.convertedFlowValue(
+                value,
+                from: stream.flowUnit,
+                to: newUnit,
+                composition: composition
+            )
+            streams[index].flowUnit = newUnit
+            streams[index].flowText = Self.formatFlow(converted, for: newUnit)
+            conversionIssue = nil
+            markInputsChanged()
+        } catch {
+            conversionIssue = issueForConversionFailure(
+                stream: stream,
+                field: .flow,
+                code: .invalidFlow,
+                message: "Flow unit could not be changed because the current composition cannot support a mass-molar flow conversion."
+            )
+            validate()
+        }
+    }
+
+    func request() -> StreamMixingRequest? {
+        guard let outletPressureValue = parse(outletPressureText),
+              let outletTemperatureValue = parse(outletTemperatureText)
+        else { return nil }
+        let inletStreams = streams.map { stream in
+            InletStreamInput(
+                id: stream.id,
+                name: stream.name,
+                flowValue: parse(stream.flowText) ?? .nan,
+                flowUnit: stream.flowUnit,
+                pressureValue: parse(stream.pressureText) ?? .nan,
+                pressureUnit: stream.pressureDisplayUnit.streamMixingPressureUnit,
+                temperatureValue: parse(stream.temperatureText) ?? .nan,
+                temperatureUnit: stream.temperatureDisplayUnit.streamMixingTemperatureUnit,
+                originalComposition: stream.compositionBeforeNormalization
+                    ?? originalComposition(for: stream),
+                composition: canonicalComposition(for: stream),
+                normalizedComposition: stream.normalizedComposition
+            )
+        }
+        return StreamMixingRequest(
+            streams: inletStreams,
+            outlet: StreamMixingOutletConditionInput(
+                pressureValue: outletPressureValue,
+                pressureUnit: outletPressureDisplayUnit.streamMixingPressureUnit,
+                temperatureValue: outletTemperatureValue,
+                temperatureUnit: outletTemperatureDisplayUnit.streamMixingTemperatureUnit
+            ),
+            clientVersion: Bundle.main.releaseVersion
+        )
+    }
+
+    private func localValidationIssues() -> [StreamMixingValidationIssue] {
+        var issues: [StreamMixingValidationIssue] = []
+        if let conversionIssue {
+            issues.append(conversionIssue)
+        }
+        if parse(outletPressureText) == nil {
+            issues.append(StreamMixingValidationIssue(
+                code: .invalidPressure,
+                field: .outletPressure,
+                message: "Outlet pressure must be numeric."
+            ))
+        }
+        if parse(outletTemperatureText) == nil {
+            issues.append(StreamMixingValidationIssue(
+                code: .invalidTemperature,
+                field: .outletTemperature,
+                message: "Outlet temperature must be numeric."
+            ))
+        }
+        return issues
+    }
+
+    private func originalComposition(for stream: StreamInputState) -> [CompositionInputSnapshot] {
+        stream.composition.map { entry in
+            CompositionInputSnapshot(
+                component: entry.component,
+                value: parse(entry.value) ?? .nan,
+                unit: stream.compositionBasis
+            )
+        }
+    }
+
+    private func canonicalComposition(for stream: StreamInputState) -> [MixtureComponent] {
+        if let normalized = stream.normalizedComposition {
+            return normalized
+        }
+        return (try? compositionConverter.conversionCandidate(
+            from: originalComposition(for: stream)
+        ).convertedComposition) ?? []
+    }
+
+    private func displayComposition(
+        from composition: [MixtureComponent],
+        basis: CompositionUnit
+    ) -> [CompositionInput] {
+        let snapshots = (try? compositionConverter.compositionSnapshots(
+            from: composition,
+            basis: basis
+        )) ?? []
+        return snapshots.map {
+            CompositionInput(
+                component: $0.component,
+                value: Self.formatCompositionValue($0.value, basis: basis)
+            )
+        }
+    }
+
+    private func clearAcceptedNormalization(for index: Int) {
+        streams[index].compositionBeforeNormalization = nil
+        streams[index].normalizedComposition = nil
+    }
+
+    private func issueForConversionFailure(
+        stream: StreamInputState,
+        field: StreamMixingField,
+        code: StreamMixingValidationCode = .invalidComposition,
+        message: String
+    ) -> StreamMixingValidationIssue {
+        StreamMixingValidationIssue(
+            code: code,
+            field: field,
+            streamID: stream.id,
+            streamName: stream.name,
+            message: message
+        )
+    }
+
+    private func distinctDuplicateName(for name: String) -> String {
+        let base = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "Stream"
+            : name
+        var candidate = "\(base) copy"
+        var suffix = 2
+        let names = Set(streams.map(\.name))
+        while names.contains(candidate) {
+            candidate = "\(base) copy \(suffix)"
+            suffix += 1
+        }
+        return candidate
+    }
+
+    private func parse(_ value: String) -> Double? {
+        Double(value.replacingOccurrences(of: ",", with: "."))
+    }
+
+    private static func compositionScale(for basis: CompositionUnit) -> Double {
+        switch basis {
+        case .moleFraction, .massFraction:
+            1
+        case .molePercent:
+            100
+        case .partsPerMillion:
+            1_000_000
+        }
+    }
+
+    private static func formatCompositionValue(
+        _ value: Double,
+        basis: CompositionUnit
+    ) -> String {
+        switch basis {
+        case .moleFraction, .massFraction:
+            String(format: "%.12g", value)
+        case .molePercent:
+            String(format: "%.8g", value)
+        case .partsPerMillion:
+            String(format: "%.12g", value)
+        }
+    }
+
+    private static func formatPressure(_ value: Double, for unit: PressureDisplayUnit) -> String {
+        switch unit {
+        case .barAbsolute:
+            String(format: "%.8g", value)
+        case .megapascalAbsolute, .psiAbsolute:
+            String(format: "%.10g", value)
+        }
+    }
+
+    private static func formatTemperature(_ value: Double, for unit: TemperatureDisplayUnit) -> String {
+        switch unit {
+        case .celsius:
+            String(format: "%.8g", value)
+        case .kelvin, .fahrenheit:
+            String(format: "%.10g", value)
+        }
+    }
+
+    private static func formatFlow(_ value: Double, for unit: StreamFlowUnit) -> String {
+        switch unit {
+        case .kilogramsPerSecond, .molesPerSecond:
+            String(format: "%.12g", value)
+        case .kilogramsPerHour, .kilomolesPerHour:
+            String(format: "%.10g", value)
+        case .tonnesPerHour:
+            String(format: "%.12g", value)
+        }
+    }
+}
+
+struct StreamInputState: Identifiable, Equatable {
+    let id: UUID
+    var name: String
+    var flowText: String
+    var flowUnit: StreamFlowUnit
+    var pressureText: String
+    var pressureDisplayUnit: PressureDisplayUnit
+    var temperatureText: String
+    var temperatureDisplayUnit: TemperatureDisplayUnit
+    var compositionBasis: CompositionUnit
+    var composition: [CompositionInput]
+    var compositionBeforeNormalization: [CompositionInputSnapshot]?
+    var normalizedComposition: [MixtureComponent]?
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        flowText: String = "1",
+        flowUnit: StreamFlowUnit = .molesPerSecond,
+        pressureText: String = "120",
+        pressureDisplayUnit: PressureDisplayUnit = .barAbsolute,
+        temperatureText: String = "25",
+        temperatureDisplayUnit: TemperatureDisplayUnit = .celsius,
+        compositionBasis: CompositionUnit = .molePercent,
+        composition: [CompositionInput] = [
+            CompositionInput(component: .carbonDioxide, value: "100")
+        ],
+        compositionBeforeNormalization: [CompositionInputSnapshot]? = nil,
+        normalizedComposition: [MixtureComponent]? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.flowText = flowText
+        self.flowUnit = flowUnit
+        self.pressureText = pressureText
+        self.pressureDisplayUnit = pressureDisplayUnit
+        self.temperatureText = temperatureText
+        self.temperatureDisplayUnit = temperatureDisplayUnit
+        self.compositionBasis = compositionBasis
+        self.composition = composition
+        self.compositionBeforeNormalization = compositionBeforeNormalization
+        self.normalizedComposition = normalizedComposition
+    }
+
+    func duplicated(name: String) -> StreamInputState {
+        StreamInputState(
+            name: name,
+            flowText: flowText,
+            flowUnit: flowUnit,
+            pressureText: pressureText,
+            pressureDisplayUnit: pressureDisplayUnit,
+            temperatureText: temperatureText,
+            temperatureDisplayUnit: temperatureDisplayUnit,
+            compositionBasis: compositionBasis,
+            composition: composition.map {
+                CompositionInput(component: $0.component, value: $0.value)
+            },
+            compositionBeforeNormalization: compositionBeforeNormalization,
+            normalizedComposition: normalizedComposition
+        )
+    }
+}
+
+extension PressureDisplayUnit {
+    var streamMixingPressureUnit: PressureUnit {
+        switch self {
+        case .barAbsolute:
+            .bara
+        case .megapascalAbsolute:
+            .megapascal
+        case .psiAbsolute:
+            .psia
+        }
+    }
+}
+
+extension TemperatureDisplayUnit {
+    var streamMixingTemperatureUnit: TemperatureUnit {
+        switch self {
+        case .celsius:
+            .celsius
+        case .kelvin:
+            .kelvin
+        case .fahrenheit:
+            .fahrenheit
+        }
+    }
+}
+
 extension Bundle {
     var applicationIdentity: ApplicationIdentity {
         ApplicationIdentity(

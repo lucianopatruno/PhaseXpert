@@ -4,6 +4,7 @@ import SwiftUI
 
 enum AppTab: Hashable {
     case calculator
+    case streamMixing
     case savedCases
     case phaseDiagram
     case models
@@ -37,6 +38,10 @@ struct RootView: View {
         TabView(selection: $navigationState.selectedTab) {
             Tab("Calculator", systemImage: "function", value: .calculator) {
                 CalculatorView()
+            }
+
+            Tab("Stream Mixing", systemImage: "arrow.triangle.merge", value: .streamMixing) {
+                StreamMixingView()
             }
 
             Tab("Saved Cases", systemImage: "tray.full", value: .savedCases) {

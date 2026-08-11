@@ -101,6 +101,327 @@ public struct StreamMixingOutletConditionInput: Codable, Equatable, Sendable {
     }
 }
 
+public enum StreamMixingConversionError: Error, Equatable, Sendable {
+    case emptyComposition
+    case inconsistentCompositionBasis
+    case duplicateComponent(ComponentID)
+    case nonFiniteCompositionValue(ComponentID)
+    case negativeCompositionValue(ComponentID)
+    case missingMolarMass(ComponentID)
+    case invalidCompositionTotal
+    case invalidMolarMass
+    case invalidFlow
+    case incompatibleFlowBasis
+}
+
+public enum StreamCompositionConversionRequirement: String, Codable, Equatable, Sendable {
+    case validAsEntered
+    case explicitNormalizationRequired
+}
+
+public struct StreamCompositionConversionCandidate: Codable, Equatable, Sendable {
+    public let originalComposition: [CompositionInputSnapshot]
+    public let convertedComposition: [MixtureComponent]
+    public let normalizedComposition: [MixtureComponent]?
+    public let requirement: StreamCompositionConversionRequirement
+
+    public init(
+        originalComposition: [CompositionInputSnapshot],
+        convertedComposition: [MixtureComponent],
+        normalizedComposition: [MixtureComponent]?,
+        requirement: StreamCompositionConversionRequirement
+    ) {
+        self.originalComposition = originalComposition
+        self.convertedComposition = convertedComposition
+        self.normalizedComposition = normalizedComposition
+        self.requirement = requirement
+    }
+}
+
+public struct StreamCompositionConverter: Sendable {
+    public init() {}
+
+    public func conversionCandidate(
+        from original: [CompositionInputSnapshot]
+    ) throws -> StreamCompositionConversionCandidate {
+        let unit = try validatedUnitAndValues(for: original)
+        let total = original.reduce(0) { $0 + $1.value }
+        let scale = compositionScale(for: unit)
+        let fractionalDeviation = abs(total / scale - 1)
+        guard total.isFinite,
+              total > 0,
+              fractionalDeviation <= CalculationValidator.normalizationTolerance
+        else {
+            throw StreamMixingConversionError.invalidCompositionTotal
+        }
+
+        let converted = try moleFractions(from: original)
+        if fractionalDeviation > CalculationValidator.compositionTolerance {
+            return StreamCompositionConversionCandidate(
+                originalComposition: original,
+                convertedComposition: converted,
+                normalizedComposition: try normalizedMoleFractions(from: original),
+                requirement: .explicitNormalizationRequired
+            )
+        }
+
+        return StreamCompositionConversionCandidate(
+            originalComposition: original,
+            convertedComposition: converted,
+            normalizedComposition: nil,
+            requirement: .validAsEntered
+        )
+    }
+
+    public func moleFractions(
+        from original: [CompositionInputSnapshot]
+    ) throws -> [MixtureComponent] {
+        let unit = try validatedUnitAndValues(for: original)
+        switch unit {
+        case .moleFraction, .molePercent, .partsPerMillion:
+            let scale = compositionScale(for: unit)
+            return original
+                .map {
+                    MixtureComponent(
+                        component: $0.component,
+                        moleFraction: $0.value / scale
+                    )
+                }
+                .sorted { $0.component.rawValue < $1.component.rawValue }
+        case .massFraction:
+            return try moleFractionsFromMassFractions(original)
+        }
+    }
+
+    public func normalizedMoleFractions(
+        from original: [CompositionInputSnapshot]
+    ) throws -> [MixtureComponent] {
+        let unit = try validatedUnitAndValues(for: original)
+        let total = original.reduce(0) { $0 + $1.value }
+        guard total.isFinite, total > 0 else {
+            throw StreamMixingConversionError.invalidCompositionTotal
+        }
+        let scale = compositionScale(for: unit)
+        let normalizedOriginal = original.map {
+            CompositionInputSnapshot(
+                component: $0.component,
+                value: $0.value / total * scale,
+                unit: $0.unit
+            )
+        }
+        return try moleFractions(from: normalizedOriginal)
+    }
+
+    public func compositionSnapshots(
+        from moleFractions: [MixtureComponent],
+        basis: CompositionUnit
+    ) throws -> [CompositionInputSnapshot] {
+        try validateMoleFractions(moleFractions)
+        switch basis {
+        case .moleFraction:
+            return ordered(moleFractions).map {
+                CompositionInputSnapshot(component: $0.component, value: $0.moleFraction, unit: basis)
+            }
+        case .molePercent:
+            return ordered(moleFractions).map {
+                CompositionInputSnapshot(component: $0.component, value: $0.moleFraction * 100, unit: basis)
+            }
+        case .partsPerMillion:
+            return ordered(moleFractions).map {
+                CompositionInputSnapshot(component: $0.component, value: $0.moleFraction * 1_000_000, unit: basis)
+            }
+        case .massFraction:
+            let molarMass = try mixtureMolarMassKilogramsPerMole(moleFractions)
+            return try ordered(moleFractions).map {
+                guard let componentMass = $0.component.molarMassKilogramsPerMole else {
+                    throw StreamMixingConversionError.missingMolarMass($0.component)
+                }
+                return CompositionInputSnapshot(
+                    component: $0.component,
+                    value: $0.moleFraction * componentMass / molarMass,
+                    unit: basis
+                )
+            }
+        }
+    }
+
+    public func mixtureMolarMassKilogramsPerMole(
+        _ moleFractions: [MixtureComponent]
+    ) throws -> Double {
+        try validateMoleFractions(moleFractions)
+        var molarMass = 0.0
+        for item in moleFractions where item.moleFraction > 0 {
+            guard let componentMass = item.component.molarMassKilogramsPerMole,
+                  componentMass.isFinite,
+                  componentMass > 0
+            else {
+                throw StreamMixingConversionError.missingMolarMass(item.component)
+            }
+            molarMass += item.moleFraction * componentMass
+        }
+        guard molarMass.isFinite, molarMass > 0 else {
+            throw StreamMixingConversionError.invalidMolarMass
+        }
+        return molarMass
+    }
+
+    private func validatedUnitAndValues(
+        for original: [CompositionInputSnapshot]
+    ) throws -> CompositionUnit {
+        guard !original.isEmpty else {
+            throw StreamMixingConversionError.emptyComposition
+        }
+        let units = Set(original.map(\.unit))
+        guard units.count == 1, let unit = units.first else {
+            throw StreamMixingConversionError.inconsistentCompositionBasis
+        }
+        var seen: Set<ComponentID> = []
+        for entry in original {
+            guard entry.value.isFinite else {
+                throw StreamMixingConversionError.nonFiniteCompositionValue(entry.component)
+            }
+            guard entry.value >= 0 else {
+                throw StreamMixingConversionError.negativeCompositionValue(entry.component)
+            }
+            guard seen.insert(entry.component).inserted else {
+                throw StreamMixingConversionError.duplicateComponent(entry.component)
+            }
+            if unit == .massFraction,
+               entry.value > 0,
+               entry.component.molarMassKilogramsPerMole == nil {
+                throw StreamMixingConversionError.missingMolarMass(entry.component)
+            }
+        }
+        return unit
+    }
+
+    private func moleFractionsFromMassFractions(
+        _ original: [CompositionInputSnapshot]
+    ) throws -> [MixtureComponent] {
+        var moleAmounts: [(component: ComponentID, amount: Double)] = []
+        for entry in original {
+            guard let molarMass = entry.component.molarMassKilogramsPerMole,
+                  molarMass.isFinite,
+                  molarMass > 0
+            else {
+                throw StreamMixingConversionError.missingMolarMass(entry.component)
+            }
+            moleAmounts.append((entry.component, entry.value / molarMass))
+        }
+        let total = moleAmounts.reduce(0) { $0 + $1.amount }
+        guard total.isFinite, total > 0 else {
+            throw StreamMixingConversionError.invalidCompositionTotal
+        }
+        return moleAmounts
+            .map {
+                MixtureComponent(
+                    component: $0.component,
+                    moleFraction: $0.amount / total
+                )
+            }
+            .sorted { $0.component.rawValue < $1.component.rawValue }
+    }
+
+    private func validateMoleFractions(_ moleFractions: [MixtureComponent]) throws {
+        guard !moleFractions.isEmpty else {
+            throw StreamMixingConversionError.emptyComposition
+        }
+        var seen: Set<ComponentID> = []
+        for item in moleFractions {
+            guard item.moleFraction.isFinite else {
+                throw StreamMixingConversionError.nonFiniteCompositionValue(item.component)
+            }
+            guard item.moleFraction >= 0 else {
+                throw StreamMixingConversionError.negativeCompositionValue(item.component)
+            }
+            guard seen.insert(item.component).inserted else {
+                throw StreamMixingConversionError.duplicateComponent(item.component)
+            }
+        }
+        let total = moleFractions.reduce(0) { $0 + $1.moleFraction }
+        guard total.isFinite,
+              abs(total - 1) <= CalculationValidator.normalizationTolerance
+        else {
+            throw StreamMixingConversionError.invalidCompositionTotal
+        }
+    }
+
+    private func ordered(_ composition: [MixtureComponent]) -> [MixtureComponent] {
+        composition.sorted { $0.component.rawValue < $1.component.rawValue }
+    }
+
+    private func compositionScale(for unit: CompositionUnit) -> Double {
+        switch unit {
+        case .moleFraction, .massFraction:
+            1
+        case .molePercent:
+            100
+        case .partsPerMillion:
+            1_000_000
+        }
+    }
+}
+
+public struct StreamFlowConverter: Sendable {
+    private let compositionConverter: StreamCompositionConverter
+
+    public init(compositionConverter: StreamCompositionConverter = StreamCompositionConverter()) {
+        self.compositionConverter = compositionConverter
+    }
+
+    public func convertedFlowValue(
+        _ value: Double,
+        from oldUnit: StreamFlowUnit,
+        to newUnit: StreamFlowUnit,
+        composition: [MixtureComponent]
+    ) throws -> Double {
+        guard value.isFinite, value > 0 else {
+            throw StreamMixingConversionError.invalidFlow
+        }
+        if oldUnit.basis == newUnit.basis {
+            switch oldUnit.basis {
+            case .mass:
+                guard let kilogramsPerSecond = oldUnit.kilogramsPerSecond(from: value),
+                      let converted = newUnit.displayMassFlow(
+                        fromKilogramsPerSecond: kilogramsPerSecond
+                      )
+                else {
+                    throw StreamMixingConversionError.incompatibleFlowBasis
+                }
+                return converted
+            case .molar:
+                guard let molesPerSecond = oldUnit.molesPerSecond(from: value),
+                      let converted = newUnit.displayMolarFlow(fromMolesPerSecond: molesPerSecond)
+                else {
+                    throw StreamMixingConversionError.incompatibleFlowBasis
+                }
+                return converted
+            }
+        }
+
+        let molarMass = try compositionConverter.mixtureMolarMassKilogramsPerMole(composition)
+        if oldUnit.basis == .mass {
+            guard let kilogramsPerSecond = oldUnit.kilogramsPerSecond(from: value),
+                  let converted = newUnit.displayMolarFlow(
+                    fromMolesPerSecond: kilogramsPerSecond / molarMass
+                  )
+            else {
+                throw StreamMixingConversionError.incompatibleFlowBasis
+            }
+            return converted
+        } else {
+            guard let molesPerSecond = oldUnit.molesPerSecond(from: value),
+                  let converted = newUnit.displayMassFlow(
+                    fromKilogramsPerSecond: molesPerSecond * molarMass
+                  )
+            else {
+                throw StreamMixingConversionError.incompatibleFlowBasis
+            }
+            return converted
+        }
+    }
+}
+
 public struct InletStreamInput: Codable, Equatable, Sendable, Identifiable {
     public let id: UUID
     public let name: String
@@ -570,6 +891,7 @@ public struct StreamMixingEngine: Sendable {
     private let domain: ScientificDomain
     private let supportedComponents: Set<ComponentID>
     private let tolerances: StreamMixingTolerances
+    private let compositionConverter: StreamCompositionConverter
 
     private struct CompositionConversionOutcome {
         let provenance: StreamCompositionProvenance?
@@ -580,12 +902,14 @@ public struct StreamMixingEngine: Sendable {
         validator: CalculationValidator = CalculationValidator(),
         domain: ScientificDomain = .initialCO2Transport,
         supportedComponents: Set<ComponentID> = Set(ComponentID.allCases),
-        tolerances: StreamMixingTolerances = StreamMixingTolerances()
+        tolerances: StreamMixingTolerances = StreamMixingTolerances(),
+        compositionConverter: StreamCompositionConverter = StreamCompositionConverter()
     ) {
         self.validator = validator
         self.domain = domain
         self.supportedComponents = supportedComponents
         self.tolerances = tolerances
+        self.compositionConverter = compositionConverter
     }
 
     public func validate(_ request: StreamMixingRequest) -> StreamMixingValidationReport {
@@ -1011,7 +1335,10 @@ public struct StreamMixingEngine: Sendable {
             return CompositionConversionOutcome(provenance: nil, issues: issues)
         }
 
-        guard let converted = convertedComposition(from: original, unit: unit) else {
+        let converted: [MixtureComponent]
+        do {
+            converted = try compositionConverter.moleFractions(from: original)
+        } catch {
             return CompositionConversionOutcome(
                 provenance: nil,
                 issues: [issue(
@@ -1067,7 +1394,7 @@ public struct StreamMixingEngine: Sendable {
         )
         let normalizedProposal: [MixtureComponent]?
         if fractionalDeviation > CalculationValidator.compositionTolerance {
-            normalizedProposal = normalizedComposition(from: original, unit: unit)
+            normalizedProposal = try? compositionConverter.normalizedMoleFractions(from: original)
         } else {
             normalizedProposal = convertedValidation.normalizedComposition
         }
@@ -1147,65 +1474,6 @@ public struct StreamMixingEngine: Sendable {
             ),
             issues: []
         )
-    }
-
-    private func convertedComposition(
-        from original: [CompositionInputSnapshot],
-        unit: CompositionUnit
-    ) -> [MixtureComponent]? {
-        switch unit {
-        case .moleFraction, .molePercent, .partsPerMillion:
-            let scale = compositionScale(for: unit)
-            return original
-                .map {
-                    MixtureComponent(
-                        component: $0.component,
-                        moleFraction: $0.value / scale
-                    )
-                }
-                .sorted { $0.component.rawValue < $1.component.rawValue }
-        case .massFraction:
-            return moleFractionsFromMassFractions(original)
-        }
-    }
-
-    private func normalizedComposition(
-        from original: [CompositionInputSnapshot],
-        unit: CompositionUnit
-    ) -> [MixtureComponent]? {
-        let total = original.reduce(0) { $0 + $1.value }
-        guard total.isFinite, total > 0 else { return nil }
-        let normalizedOriginal = original.map {
-            CompositionInputSnapshot(
-                component: $0.component,
-                value: $0.value / total * compositionScale(for: unit),
-                unit: $0.unit
-            )
-        }
-        return convertedComposition(from: normalizedOriginal, unit: unit)
-    }
-
-    private func moleFractionsFromMassFractions(
-        _ original: [CompositionInputSnapshot]
-    ) -> [MixtureComponent]? {
-        var moleAmounts: [(component: ComponentID, amount: Double)] = []
-        for entry in original {
-            guard let molarMass = entry.component.molarMassKilogramsPerMole,
-                  molarMass.isFinite,
-                  molarMass > 0
-            else { return nil }
-            moleAmounts.append((entry.component, entry.value / molarMass))
-        }
-        let total = moleAmounts.reduce(0) { $0 + $1.amount }
-        guard total.isFinite, total > 0 else { return nil }
-        return moleAmounts
-            .map {
-                MixtureComponent(
-                    component: $0.component,
-                    moleFraction: $0.amount / total
-                )
-            }
-            .sorted { $0.component.rawValue < $1.component.rawValue }
     }
 
     private func compositionScale(for unit: CompositionUnit) -> Double {

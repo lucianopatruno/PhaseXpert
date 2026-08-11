@@ -659,6 +659,815 @@ struct CalculatorView: View {
     }
 }
 
+private enum StreamMixingInputField: Hashable {
+    case outletPressure
+    case outletTemperature
+    case streamName(UUID)
+    case streamFlow(UUID)
+    case streamPressure(UUID)
+    case streamTemperature(UUID)
+    case composition(UUID, UUID)
+}
+
+struct StreamMixingView: View {
+    @State private var viewModel = StreamMixingViewModel()
+    @FocusState private var focusedField: StreamMixingInputField?
+    @State private var textSelections: [String: TextSelection] = [:]
+
+    var body: some View {
+        @Bindable var viewModel = viewModel
+
+        NavigationStack {
+            Form {
+                Section {
+                    ScientificStatusBanner(
+                        title: "Stream Mixing v1",
+                        message: "Aggregates inlet component molar flows into a mixed composition at user-defined outlet pressure and temperature."
+                    )
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                } footer: {
+                    Text("V1 does not calculate pressure equalization, heat transfer, phase separation, outlet temperature or thermodynamic properties.")
+                }
+
+                Section {
+                    HStack {
+                        Button("Add stream", systemImage: "plus") {
+                            focusedField = nil
+                            _ = viewModel.addStream()
+                        }
+                        .disabled(!viewModel.canAddStream)
+                        .accessibilityIdentifier("stream-mixing-add-stream")
+
+                        Spacer()
+
+                        Text("\(viewModel.streams.count)/6")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel("\(viewModel.streams.count) of 6 streams")
+                            .accessibilityIdentifier("stream-mixing-stream-count")
+                    }
+
+                    ForEach($viewModel.streams) { $stream in
+                        StreamInputCard(
+                            stream: $stream,
+                            viewModel: viewModel,
+                            focusedField: $focusedField,
+                            textSelections: $textSelections
+                        )
+                        .accessibilityIdentifier("stream-card-\(stream.id.uuidString)")
+                    }
+                    .onMove { source, destination in
+                        focusedField = nil
+                        viewModel.moveStreams(from: source, to: destination)
+                    }
+                } header: {
+                    IFESectionHeader(
+                        step: 1,
+                        title: "Inlet streams",
+                        subtitle: "Two to six streams. Drag to reorder without changing the result."
+                    )
+                } footer: {
+                    if viewModel.streams.count >= StreamMixingRequest.maximumStreamCount {
+                        Text("Maximum of six inlet streams reached.")
+                    }
+                }
+
+                Section {
+                    operatingPointRow(
+                        title: "Outlet pressure",
+                        value: Binding(
+                            get: { viewModel.outletPressureText },
+                            set: { viewModel.updateOutletPressureText($0) }
+                        ),
+                        unit: Binding(
+                            get: { viewModel.outletPressureDisplayUnit },
+                            set: { unit in
+                                focusedField = nil
+                                viewModel.changeOutletPressureUnit(to: unit)
+                            }
+                        ),
+                        field: .outletPressure,
+                        accessibilityIdentifier: "stream-mixing-outlet-pressure"
+                    )
+
+                    operatingPointRow(
+                        title: "Outlet temperature",
+                        value: Binding(
+                            get: { viewModel.outletTemperatureText },
+                            set: { viewModel.updateOutletTemperatureText($0) }
+                        ),
+                        unit: Binding(
+                            get: { viewModel.outletTemperatureDisplayUnit },
+                            set: { unit in
+                                focusedField = nil
+                                viewModel.changeOutletTemperatureUnit(to: unit)
+                            }
+                        ),
+                        field: .outletTemperature,
+                        accessibilityIdentifier: "stream-mixing-outlet-temperature"
+                    )
+
+                    ForEach(viewModel.outletIssues()) { issue in
+                        ValidationIssueLabel(issue: issue)
+                    }
+                } header: {
+                    IFESectionHeader(
+                        step: 2,
+                        title: "Outlet conditions",
+                        subtitle: "Defined by the user for later property evaluation."
+                    )
+                } footer: {
+                    Text("Stream Mixing v1 does not infer outlet pressure or temperature from inlet streams.")
+                }
+
+                Section {
+                    Button {
+                        focusedField = nil
+                        viewModel.calculate()
+                    } label: {
+                        Text("Calculate mixture")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!viewModel.canCalculate)
+                    .accessibilityIdentifier("stream-mixing-calculate")
+                } header: {
+                    IFESectionHeader(step: 3, title: "Calculate mixture")
+                }
+
+                Section {
+                    Label(
+                        viewModel.statusMessage,
+                        systemImage: viewModel.validationReport.canCalculate
+                            ? "checkmark.circle.fill"
+                            : "xmark.octagon.fill"
+                    )
+                    .foregroundStyle(viewModel.validationReport.canCalculate ? Color.pxSuccess : Color.pxError)
+                    .accessibilityIdentifier("stream-mixing-status")
+
+                    let globalIssues = viewModel.validationReport.issues.filter { $0.streamID == nil }
+                    ForEach(globalIssues) { issue in
+                        ValidationIssueLabel(issue: issue)
+                    }
+
+                    if viewModel.result != nil, viewModel.isResultStale {
+                        Label(
+                            "Displayed result is stale because inputs changed.",
+                            systemImage: "clock.badge.exclamationmark"
+                        )
+                        .foregroundStyle(Color.pxWarning)
+                        .accessibilityIdentifier("stream-mixing-stale-result")
+                    }
+
+                    if let result = viewModel.result {
+                        ForEach(result.warnings) { warning in
+                            Label(warning.message, systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(Color.pxWarning)
+                                .accessibilityIdentifier("stream-mixing-warning")
+                        }
+                    }
+                } header: {
+                    IFESectionHeader(step: 4, title: "Validation and status")
+                }
+
+                if let result = viewModel.result {
+                    StreamMixingResultSections(
+                        result: result,
+                        displayCompositionBasis: $viewModel.displayCompositionBasis,
+                        isStale: viewModel.isResultStale
+                    )
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color.ifeBackground)
+            .navigationTitle("Stream Mixing")
+            .accessibilityIdentifier("stream-mixing-screen")
+            .onAppear { viewModel.validate() }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    if focusedField != nil {
+                        Button("Done") {
+                            focusedField = nil
+                        }
+                        .font(.body.weight(.semibold))
+                        .accessibilityIdentifier("stream-mixing-keyboard-done")
+                    }
+                }
+            }
+        }
+    }
+
+    private func operatingPointRow(
+        title: String,
+        value: Binding<String>,
+        unit: Binding<PressureDisplayUnit>,
+        field: StreamMixingInputField,
+        accessibilityIdentifier: String
+    ) -> some View {
+        UnitAwareNumericField(
+            title: title,
+            text: value,
+            selection: textSelectionBinding(for: accessibilityIdentifier),
+            keyboardType: .decimalPad,
+            isFocused: focusedField == field,
+            unitLabel: unit.wrappedValue.rawValue,
+            unitOptions: PressureDisplayUnit.allCases.map(\.rawValue),
+            selectedUnit: unit.wrappedValue.rawValue,
+            accessibilityIdentifier: accessibilityIdentifier,
+            unitAction: { selectedUnit in
+                guard let selected = PressureDisplayUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                unit.wrappedValue = selected
+            }
+        )
+        .focused($focusedField, equals: field)
+    }
+
+    private func operatingPointRow(
+        title: String,
+        value: Binding<String>,
+        unit: Binding<TemperatureDisplayUnit>,
+        field: StreamMixingInputField,
+        accessibilityIdentifier: String
+    ) -> some View {
+        UnitAwareNumericField(
+            title: title,
+            text: value,
+            selection: textSelectionBinding(for: accessibilityIdentifier),
+            keyboardType: .numbersAndPunctuation,
+            isFocused: focusedField == field,
+            unitLabel: unit.wrappedValue.rawValue,
+            unitOptions: TemperatureDisplayUnit.allCases.map(\.rawValue),
+            selectedUnit: unit.wrappedValue.rawValue,
+            accessibilityIdentifier: accessibilityIdentifier,
+            unitAction: { selectedUnit in
+                guard let selected = TemperatureDisplayUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                unit.wrappedValue = selected
+            }
+        )
+        .focused($focusedField, equals: field)
+    }
+
+    private func textSelectionBinding(for id: String) -> Binding<TextSelection?> {
+        Binding(
+            get: { textSelections[id] },
+            set: { selection in
+                if let selection {
+                    textSelections[id] = selection
+                } else {
+                    textSelections.removeValue(forKey: id)
+                }
+            }
+        )
+    }
+}
+
+private struct StreamInputCard: View {
+    @Binding var stream: StreamInputState
+    let viewModel: StreamMixingViewModel
+    var focusedField: FocusState<StreamMixingInputField?>.Binding
+    @Binding var textSelections: [String: TextSelection]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.medium) {
+            HStack(alignment: .firstTextBaseline) {
+                TextField(
+                    "Stream name",
+                    text: Binding(
+                        get: { stream.name },
+                        set: { viewModel.updateStreamName(streamID: stream.id, value: $0) }
+                    )
+                )
+                    .font(.headline)
+                    .textInputAutocapitalization(.words)
+                    .focused(focusedField, equals: .streamName(stream.id))
+                    .accessibilityLabel("Stream name")
+                    .accessibilityIdentifier("stream-name-\(stream.id.uuidString)")
+
+                Menu {
+                    Button("Duplicate stream", systemImage: "plus.square.on.square") {
+                        _ = viewModel.duplicateStream(id: stream.id)
+                    }
+                    .disabled(!viewModel.canAddStream)
+
+                    Button("Move up", systemImage: "chevron.up") {
+                        viewModel.moveStreamUp(id: stream.id)
+                    }
+                    .disabled(!viewModel.canMoveStreamUp(id: stream.id))
+
+                    Button("Move down", systemImage: "chevron.down") {
+                        viewModel.moveStreamDown(id: stream.id)
+                    }
+                    .disabled(!viewModel.canMoveStreamDown(id: stream.id))
+
+                    Button("Remove stream", systemImage: "trash", role: .destructive) {
+                        viewModel.removeStream(id: stream.id)
+                    }
+                    .disabled(!viewModel.canRemoveStream)
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.title3)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel("Stream actions")
+                .accessibilityIdentifier("stream-actions-\(stream.id.uuidString)")
+            }
+
+            flowRow
+
+            UnitAwareNumericField(
+                title: "Pressure",
+                text: Binding(
+                    get: { stream.pressureText },
+                    set: { viewModel.updatePressureText(streamID: stream.id, value: $0) }
+                ),
+                selection: textSelectionBinding(for: "stream-pressure-\(stream.id.uuidString)"),
+                keyboardType: .decimalPad,
+                isFocused: focusedField.wrappedValue == .streamPressure(stream.id),
+                unitLabel: stream.pressureDisplayUnit.rawValue,
+                unitOptions: PressureDisplayUnit.allCases.map(\.rawValue),
+                selectedUnit: stream.pressureDisplayUnit.rawValue,
+                accessibilityIdentifier: "stream-pressure-\(stream.id.uuidString)",
+                unitAction: { selectedUnit in
+                    guard let selected = PressureDisplayUnit.allCases.first(where: {
+                        $0.rawValue == selectedUnit
+                    }) else { return }
+                    viewModel.changeStreamPressureUnit(streamID: stream.id, to: selected)
+                }
+            )
+            .focused(focusedField, equals: .streamPressure(stream.id))
+
+            UnitAwareNumericField(
+                title: "Temperature",
+                text: Binding(
+                    get: { stream.temperatureText },
+                    set: { viewModel.updateTemperatureText(streamID: stream.id, value: $0) }
+                ),
+                selection: textSelectionBinding(for: "stream-temperature-\(stream.id.uuidString)"),
+                keyboardType: .numbersAndPunctuation,
+                isFocused: focusedField.wrappedValue == .streamTemperature(stream.id),
+                unitLabel: stream.temperatureDisplayUnit.rawValue,
+                unitOptions: TemperatureDisplayUnit.allCases.map(\.rawValue),
+                selectedUnit: stream.temperatureDisplayUnit.rawValue,
+                accessibilityIdentifier: "stream-temperature-\(stream.id.uuidString)",
+                unitAction: { selectedUnit in
+                    guard let selected = TemperatureDisplayUnit.allCases.first(where: {
+                        $0.rawValue == selectedUnit
+                    }) else { return }
+                    viewModel.changeStreamTemperatureUnit(streamID: stream.id, to: selected)
+                }
+            )
+            .focused(focusedField, equals: .streamTemperature(stream.id))
+
+            StreamCompositionEditor(
+                stream: $stream,
+                viewModel: viewModel,
+                focusedField: focusedField,
+                textSelections: $textSelections
+            )
+
+            let issues = viewModel.issues(for: stream.id)
+            if !issues.isEmpty {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    ForEach(issues) { issue in
+                        ValidationIssueLabel(issue: issue)
+                    }
+
+                    if viewModel.canNormalize(streamID: stream.id) {
+                        Button("Review and apply normalization") {
+                            viewModel.applyExplicitNormalization(for: stream.id)
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("stream-normalize-\(stream.id.uuidString)")
+                    }
+                }
+            }
+        }
+        .padding(.vertical, IFESpacing.small)
+    }
+
+    private var flowRow: some View {
+        UnitAwareNumericField(
+            title: "Flow rate",
+            text: Binding(
+                get: { stream.flowText },
+                set: { viewModel.updateFlowText(streamID: stream.id, value: $0) }
+            ),
+            selection: textSelectionBinding(for: "stream-flow-\(stream.id.uuidString)"),
+            keyboardType: .decimalPad,
+            isFocused: focusedField.wrappedValue == .streamFlow(stream.id),
+            unitLabel: stream.flowUnit.rawValue,
+            unitOptions: StreamFlowUnit.allCases.map(\.rawValue),
+            selectedUnit: stream.flowUnit.rawValue,
+            accessibilityIdentifier: "stream-flow-\(stream.id.uuidString)",
+            unitAction: { selectedUnit in
+                guard let selected = StreamFlowUnit.allCases.first(where: {
+                    $0.rawValue == selectedUnit
+                }) else { return }
+                viewModel.changeStreamFlowUnit(streamID: stream.id, to: selected)
+            }
+        )
+        .focused(focusedField, equals: .streamFlow(stream.id))
+    }
+
+    private func textSelectionBinding(for id: String) -> Binding<TextSelection?> {
+        Binding(
+            get: { textSelections[id] },
+            set: { selection in
+                if let selection {
+                    textSelections[id] = selection
+                } else {
+                    textSelections.removeValue(forKey: id)
+                }
+            }
+        )
+    }
+}
+
+private struct StreamCompositionEditor: View {
+    @Binding var stream: StreamInputState
+    let viewModel: StreamMixingViewModel
+    var focusedField: FocusState<StreamMixingInputField?>.Binding
+    @Binding var textSelections: [String: TextSelection]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            Picker(
+                "Composition basis",
+                selection: Binding(
+                    get: { stream.compositionBasis },
+                    set: { basis in
+                        viewModel.changeCompositionBasis(streamID: stream.id, to: basis)
+                    }
+                )
+            ) {
+                ForEach(CompositionUnit.allCases) { basis in
+                    Text(compositionBasisLabel(basis)).tag(basis)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("stream-composition-basis-\(stream.id.uuidString)")
+
+            ForEach($stream.composition) { $entry in
+                HStack(spacing: IFESpacing.small) {
+                    if entry.component == .carbonDioxide {
+                        Text(entry.component.symbol)
+                            .font(.body.weight(.medium))
+                            .accessibilityLabel("Carbon dioxide")
+                    } else {
+                        Menu {
+                            ForEach(viewModel.impurityOptions(
+                                streamID: stream.id,
+                                including: entry.component
+                            )) { component in
+                                Button {
+                                    viewModel.updateImpurity(
+                                        streamID: stream.id,
+                                        entryID: entry.id,
+                                        component: component
+                                    )
+                                } label: {
+                                    if component == entry.component {
+                                        Label(component.symbol, systemImage: "checkmark")
+                                    } else {
+                                        Text(component.symbol)
+                                    }
+                                }
+                            }
+
+                            Divider()
+
+                            Button("Remove impurity", systemImage: "trash", role: .destructive) {
+                                viewModel.removeImpurity(streamID: stream.id, entryID: entry.id)
+                            }
+                        } label: {
+                            HStack(spacing: IFESpacing.xSmall) {
+                                Text(entry.component.symbol)
+                                Image(systemName: "chevron.down")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(.primary)
+                        }
+                        .accessibilityLabel("\(entry.component.symbol) impurity menu")
+                        .accessibilityIdentifier("stream-\(stream.id.uuidString)-\(entry.component.rawValue)-menu")
+                    }
+
+                    Spacer(minLength: IFESpacing.small)
+
+                    TextField(
+                        "Value",
+                        text: Binding(
+                            get: { entry.value },
+                            set: {
+                                viewModel.updateCompositionValue(
+                                    streamID: stream.id,
+                                    entryID: entry.id,
+                                    value: $0
+                                )
+                            }
+                        ),
+                        selection: textSelectionBinding(for: "stream-composition-\(stream.id.uuidString)-\(entry.id.uuidString)")
+                    )
+                    .keyboardType(.decimalPad)
+                    .focused(focusedField, equals: .composition(stream.id, entry.id))
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 104)
+                    .padding(.horizontal, IFESpacing.small)
+                    .padding(.vertical, 7)
+                    .background(
+                        RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                            .fill(Color.secondary.opacity(0.08))
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: IFECornerRadius.field)
+                            .stroke(Color.secondary.opacity(0.22), lineWidth: IFELine.hairline)
+                    }
+                    .accessibilityLabel("\(entry.component.symbol) \(compositionBasisLabel(stream.compositionBasis))")
+                    .accessibilityIdentifier("stream-\(stream.id.uuidString)-\(entry.component.rawValue)-composition")
+
+                    Text(compositionBasisLabel(stream.compositionBasis))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 84, alignment: .leading)
+                        .accessibilityHidden(true)
+                }
+            }
+            .onMove { source, destination in
+                viewModel.moveImpurities(streamID: stream.id, from: source, to: destination)
+            }
+
+            Button("Add impurity", systemImage: "plus") {
+                _ = viewModel.addImpurity(to: stream.id)
+            }
+            .disabled(stream.composition.count >= ComponentID.allCases.count)
+            .accessibilityIdentifier("stream-add-impurity-\(stream.id.uuidString)")
+        }
+    }
+
+    private func compositionBasisLabel(_ basis: CompositionUnit) -> String {
+        switch basis {
+        case .moleFraction:
+            "mole frac"
+        case .molePercent:
+            "mol%"
+        case .partsPerMillion:
+            "ppm"
+        case .massFraction:
+            "mass frac"
+        }
+    }
+
+    private func textSelectionBinding(for id: String) -> Binding<TextSelection?> {
+        Binding(
+            get: { textSelections[id] },
+            set: { selection in
+                if let selection {
+                    textSelections[id] = selection
+                } else {
+                    textSelections.removeValue(forKey: id)
+                }
+            }
+        )
+    }
+}
+
+private struct ValidationIssueLabel: View {
+    let issue: StreamMixingValidationIssue
+
+    var body: some View {
+        Label(issue.message, systemImage: "xmark.octagon.fill")
+            .foregroundStyle(Color.pxError)
+            .font(.subheadline)
+            .accessibilityIdentifier("stream-mixing-validation-issue")
+    }
+}
+
+private struct StreamMixingResultSections: View {
+    let result: MixedCompositionResult
+    @Binding var displayCompositionBasis: CompositionUnit
+    let isStale: Bool
+
+    var body: some View {
+        Section {
+            ScientificStatusBanner(
+                title: isStale ? "Stale stream-mixing result" : "Preliminary V1 aggregation",
+                message: "Composition and flow totals are conserved at user-defined outlet conditions. No thermodynamic outlet state was evaluated."
+            )
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+
+            IFEValueRow(
+                title: "Total molar flow",
+                value: number(result.totalMolarFlowMolesPerSecond),
+                unit: "mol/s"
+            )
+            .accessibilityIdentifier("stream-mixing-total-molar-flow")
+
+            IFEValueRow(
+                title: "Total mass flow",
+                value: number(result.totalMassFlowKilogramsPerSecond),
+                unit: "kg/s"
+            )
+            .accessibilityIdentifier("stream-mixing-total-mass-flow")
+        } header: {
+            IFESectionHeader(step: 5, title: "Mixed-stream results")
+        }
+
+        Section {
+            Picker("Display basis", selection: $displayCompositionBasis) {
+                Text("Mole fraction").tag(CompositionUnit.moleFraction)
+                Text("mol%").tag(CompositionUnit.molePercent)
+                Text("ppm").tag(CompositionUnit.partsPerMillion)
+            }
+            .pickerStyle(.segmented)
+
+            ForEach(result.composition) { component in
+                IFEValueRow(
+                    title: component.component.symbol,
+                    value: displayCompositionValue(component.moleFraction),
+                    unit: displayCompositionUnit,
+                    status: "Canonical \(number(component.moleFraction)) mole fraction"
+                )
+            }
+        } header: {
+            IFESectionHeader(step: nil, title: "Mixed composition")
+        }
+
+        Section {
+            ForEach(result.streamContributions) { contribution in
+                IFEExpandableRow(contribution.streamName) {
+                    IFEValueRow(
+                        title: "Stable identifier",
+                        value: contribution.streamID.uuidString
+                    )
+                    IFEValueRow(
+                        title: "Molar flow",
+                        value: number(contribution.molarFlowMolesPerSecond),
+                        unit: "mol/s"
+                    )
+                    IFEValueRow(
+                        title: "Mass flow",
+                        value: number(contribution.massFlowKilogramsPerSecond),
+                        unit: "kg/s"
+                    )
+                    ForEach(contribution.componentMolarFlows) { flow in
+                        IFEValueRow(
+                            title: "\(flow.component.symbol) molar flow",
+                            value: number(flow.molarFlowMolesPerSecond),
+                            unit: "mol/s",
+                            status: "\(number(flow.massFlowKilogramsPerSecond)) kg/s"
+                        )
+                    }
+                }
+            }
+        } header: {
+            IFESectionHeader(step: nil, title: "Per-stream contributions")
+        }
+
+        Section {
+            IFEExpandableRow("Assumptions and traceability") {
+                traceabilityContent
+            }
+            .accessibilityIdentifier("stream-mixing-traceability")
+        } header: {
+            IFESectionHeader(step: 6, title: "Assumptions and traceability")
+        }
+    }
+
+    @ViewBuilder
+    private var traceabilityContent: some View {
+        LabeledContent("Calculation status", value: result.status.rawValue.capitalized)
+        LabeledContent("Request ID") {
+            Text(result.requestID.uuidString)
+                .font(.caption.monospaced())
+                .textSelection(.enabled)
+        }
+        LabeledContent(
+            "Outlet pressure — entered",
+            value: "\(number(result.outlet.pressureValue)) \(result.outlet.pressureUnit.rawValue)"
+        )
+        LabeledContent("Outlet pressure — SI", value: "\(number(result.outlet.pressurePa)) Pa")
+        LabeledContent(
+            "Outlet temperature — entered",
+            value: "\(number(result.outlet.temperatureValue)) \(result.outlet.temperatureUnit.rawValue)"
+        )
+        LabeledContent("Outlet temperature — SI", value: "\(number(result.outlet.temperatureK)) K")
+
+        ForEach(result.assumptions) { assumption in
+            LabeledContent("Assumption") {
+                Text(assumption.message)
+                    .multilineTextAlignment(.trailing)
+            }
+        }
+
+        if !result.warnings.isEmpty {
+            LabeledContent("Warnings recorded", value: "\(result.warnings.count)")
+        }
+
+        LabeledContent(
+            "Molar-flow residual",
+            value: "\(number(result.conservation.totalMolarFlowResidual)) mol/s"
+        )
+        LabeledContent(
+            "Mass-flow residual",
+            value: "\(number(result.conservation.totalMassFlowResidual)) kg/s"
+        )
+        LabeledContent(
+            "Molar tolerance",
+            value: "\(number(result.conservation.molarFlowAbsoluteTolerance)) abs, \(number(result.conservation.molarFlowRelativeTolerance)) rel"
+        )
+        LabeledContent(
+            "Mass tolerance",
+            value: "\(number(result.conservation.massFlowAbsoluteTolerance)) abs, \(number(result.conservation.massFlowRelativeTolerance)) rel"
+        )
+
+        ForEach(result.streamContributions) { contribution in
+            IFEExpandableRow("Input provenance — \(contribution.streamName)") {
+                LabeledContent("Stable identifier", value: contribution.streamID.uuidString)
+                LabeledContent(
+                    "Entered flow",
+                    value: "\(number(contribution.input.flowValue)) \(contribution.input.flowUnit.rawValue)"
+                )
+                LabeledContent("Flow basis", value: contribution.input.flowBasis.rawValue)
+                LabeledContent("Canonical molar flow", value: "\(number(contribution.molarFlowMolesPerSecond)) mol/s")
+                LabeledContent("Canonical mass flow", value: "\(number(contribution.massFlowKilogramsPerSecond)) kg/s")
+                LabeledContent(
+                    "Entered pressure",
+                    value: "\(number(contribution.input.pressureValue)) \(contribution.input.pressureUnit.rawValue)"
+                )
+                LabeledContent("Pressure SI", value: "\(number(contribution.input.pressurePa)) Pa")
+                LabeledContent(
+                    "Entered temperature",
+                    value: "\(number(contribution.input.temperatureValue)) \(contribution.input.temperatureUnit.rawValue)"
+                )
+                LabeledContent("Temperature SI", value: "\(number(contribution.input.temperatureK)) K")
+                LabeledContent("Original composition") {
+                    Text(originalCompositionText(contribution.input.originalComposition))
+                        .multilineTextAlignment(.trailing)
+                }
+                LabeledContent("Converted composition") {
+                    Text(moleFractionText(contribution.input.convertedComposition))
+                        .multilineTextAlignment(.trailing)
+                }
+                if let normalized = contribution.input.normalizedComposition {
+                    LabeledContent("Explicitly normalized composition") {
+                        Text(moleFractionText(normalized))
+                            .multilineTextAlignment(.trailing)
+                    }
+                }
+            }
+        }
+    }
+
+    private var displayCompositionUnit: String {
+        switch displayCompositionBasis {
+        case .moleFraction:
+            "mole frac"
+        case .molePercent:
+            "mol%"
+        case .partsPerMillion:
+            "ppm"
+        case .massFraction:
+            "mole frac"
+        }
+    }
+
+    private func displayCompositionValue(_ moleFraction: Double) -> String {
+        switch displayCompositionBasis {
+        case .moleFraction, .massFraction:
+            number(moleFraction)
+        case .molePercent:
+            number(moleFraction * 100)
+        case .partsPerMillion:
+            number(moleFraction * 1_000_000)
+        }
+    }
+
+    private func originalCompositionText(_ composition: [CompositionInputSnapshot]) -> String {
+        composition.map {
+            "\($0.component.symbol) \(number($0.value)) \($0.unit.rawValue)"
+        }.joined(separator: ", ")
+    }
+
+    private func moleFractionText(_ composition: [MixtureComponent]) -> String {
+        composition.map {
+            "\($0.component.symbol) \(number($0.moleFraction))"
+        }.joined(separator: ", ")
+    }
+
+    private func number(_ value: Double) -> String {
+        guard value.isFinite else { return "Unavailable" }
+        return String(format: "%.8g", value)
+    }
+}
+
 private struct ModelSelectionRow: View {
     let descriptor: ModelDescriptor
     let isSelected: Bool
