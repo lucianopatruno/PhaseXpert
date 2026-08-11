@@ -273,13 +273,13 @@ public enum PhaseMapGridBuilder {
             || !request.temperatureK.isFinite
             || request.pressurePa <= 0
             || request.temperatureK <= 0
-            || request.pressurePa < request.range.pressureMinimumPa
-            || request.pressurePa > request.range.pressureMaximumPa
-            || request.temperatureK < request.range.temperatureMinimumK
-            || request.temperatureK > request.range.temperatureMaximumK {
+            || request.pressurePa <= request.range.pressureMinimumPa
+            || request.pressurePa >= request.range.pressureMaximumPa
+            || request.temperatureK <= request.range.temperatureMinimumK
+            || request.temperatureK >= request.range.temperatureMaximumK {
             issues.append(.init(
                 code: .operatingPointOutsideRange,
-                message: "The operating point must lie inside the selected pressure and temperature ranges."
+                message: "The operating point must lie strictly inside the selected pressure and temperature ranges."
             ))
         }
         if PhaseDiagramEligibility.evaluate(composition: request.composition) != .multicomponent {
@@ -330,9 +330,36 @@ public enum PhaseMapGridBuilder {
             ))
         }
 
-        var seen: Set<String> = []
-        return points.filter { point in
-            seen.insert(point.id).inserted
+        try validateConstructedPoints(points, expectedCount: request.resolution.expectedEvaluationCount)
+        return points
+    }
+
+    private static func validateConstructedPoints(
+        _ points: [PhaseMapGridPoint],
+        expectedCount: Int
+    ) throws {
+        guard points.count == expectedCount else {
+            throw ProviderError.invalidRequest(
+                "Phase Map grid construction produced \(points.count) points instead of \(expectedCount)."
+            )
+        }
+        var seenCoordinates: Set<CoordinateKey> = []
+        var operatingPointCount = 0
+        for point in points {
+            if point.isOperatingPoint {
+                operatingPointCount += 1
+            }
+            let key = CoordinateKey(pressurePa: point.pressurePa, temperatureK: point.temperatureK)
+            guard seenCoordinates.insert(key).inserted else {
+                throw ProviderError.invalidRequest(
+                    "Phase Map grid construction produced duplicate pressure-temperature coordinates."
+                )
+            }
+        }
+        guard operatingPointCount == 1 else {
+            throw ProviderError.invalidRequest(
+                "Phase Map grid construction must include exactly one operating point."
+            )
         }
     }
 
@@ -345,18 +372,27 @@ public enum PhaseMapGridBuilder {
         if count == 5 {
             return [
                 minimum,
-                (minimum + operatingValue) / 2,
+                minimum + (operatingValue - minimum) / 2,
                 operatingValue,
-                (operatingValue + maximum) / 2,
+                operatingValue + (maximum - operatingValue) / 2,
                 maximum
             ]
         }
-        let step = (maximum - minimum) / Double(count - 1)
-        return (0..<count).map { index in
-            let value = minimum + Double(index) * step
-            return value == operatingValue ? value.nextUp : value
+        let lowerCount = count / 2
+        let upperCount = count / 2
+        let lowerValues = (0..<lowerCount).map { index in
+            minimum + Double(index) * (operatingValue - minimum) / Double(lowerCount)
         }
+        let upperValues = (0..<upperCount).map { index in
+            operatingValue + Double(index + 1) * (maximum - operatingValue) / Double(upperCount)
+        }
+        return lowerValues + upperValues
     }
+}
+
+private struct CoordinateKey: Hashable {
+    let pressurePa: Double
+    let temperatureK: Double
 }
 
 public struct PhaseMapRunner: Sendable {

@@ -770,7 +770,7 @@ private struct PhaseMapResultsSection: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-                        Text("Solid and dense or supercritical classifications are shown only when the active provider explicitly returns those classifications.")
+                        Text("Provider metadata does not declare solid, dense or supercritical classification support. Those markers appear only when the active provider explicitly returns the corresponding classification.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         LabeledContent("Request ID", value: result.request.requestID.uuidString)

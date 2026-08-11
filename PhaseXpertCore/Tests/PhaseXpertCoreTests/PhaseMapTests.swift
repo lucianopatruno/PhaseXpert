@@ -96,6 +96,45 @@ final class PhaseMapTests: XCTestCase {
             }.count,
             1
         )
+        try assertValidGrid(fivePoints, request: five)
+        try assertValidGrid(tenPoints, request: ten)
+        try assertValidGrid(twentyPoints, request: twenty)
+    }
+
+    func testGridConstructionSupportsAsymmetricRanges() throws {
+        let asymmetricRange = PhaseMapRange(
+            pressureMinimumPa: 10_000_000,
+            pressureMaximumPa: 21_000_000,
+            temperatureMinimumK: 291,
+            temperatureMaximumK: 341
+        )
+        let request = request(range: asymmetricRange)
+
+        let points = try PhaseMapGridBuilder.points(for: request)
+
+        XCTAssertEqual(points.count, 25)
+        XCTAssertEqual(points[12].pressurePa, request.pressurePa)
+        XCTAssertEqual(points[12].temperatureK, request.temperatureK)
+        try assertValidGrid(points, request: request)
+    }
+
+    func testGridConstructionAcceptsOperatingPointsCloseToBoundaries() throws {
+        let closeRange = PhaseMapRange(
+            pressureMinimumPa: 11_999_999.999,
+            pressureMaximumPa: 12_000_100,
+            temperatureMinimumK: 299.999,
+            temperatureMaximumK: 301
+        )
+        let fiveRequest = request(range: closeRange)
+        let tenRequest = request(resolution: .ten, range: closeRange)
+
+        let fivePoints = try PhaseMapGridBuilder.points(for: fiveRequest)
+        let tenPoints = try PhaseMapGridBuilder.points(for: tenRequest)
+
+        XCTAssertEqual(fivePoints.count, 25)
+        XCTAssertEqual(tenPoints.count, 101)
+        try assertValidGrid(fivePoints, request: fiveRequest)
+        try assertValidGrid(tenPoints, request: tenRequest)
     }
 
     func testInvalidRangesBlockGridConstruction() {
@@ -119,6 +158,91 @@ final class PhaseMapTests: XCTestCase {
             $0.code == .operatingPointOutsideRange
         })
         XCTAssertThrowsError(try PhaseMapGridBuilder.points(for: negativePressure))
+    }
+
+    func testOperatingPointEqualToBoundaryIsBlocked() {
+        let pressureAtMinimum = request(range: PhaseMapRange(
+            pressureMinimumPa: 12_000_000,
+            pressureMaximumPa: 16_000_000,
+            temperatureMinimumK: 275,
+            temperatureMaximumK: 325
+        ))
+        let pressureAtMaximum = request(range: PhaseMapRange(
+            pressureMinimumPa: 8_000_000,
+            pressureMaximumPa: 12_000_000,
+            temperatureMinimumK: 275,
+            temperatureMaximumK: 325
+        ))
+        let temperatureAtMinimum = request(range: PhaseMapRange(
+            pressureMinimumPa: 8_000_000,
+            pressureMaximumPa: 16_000_000,
+            temperatureMinimumK: 300,
+            temperatureMaximumK: 325
+        ))
+        let temperatureAtMaximum = request(range: PhaseMapRange(
+            pressureMinimumPa: 8_000_000,
+            pressureMaximumPa: 16_000_000,
+            temperatureMinimumK: 275,
+            temperatureMaximumK: 300
+        ))
+
+        for candidate in [
+            pressureAtMinimum,
+            pressureAtMaximum,
+            temperatureAtMinimum,
+            temperatureAtMaximum
+        ] {
+            XCTAssertTrue(PhaseMapGridBuilder.validationIssues(for: candidate).contains {
+                $0.code == .operatingPointOutsideRange
+                    && $0.message.contains("strictly inside")
+            })
+            XCTAssertThrowsError(try PhaseMapGridBuilder.points(for: candidate))
+        }
+    }
+
+    func testEvenGridAxesExcludeOperatingCoordinatesAndRetainEndpoints() throws {
+        let request = request(resolution: .ten)
+        let points = try PhaseMapGridBuilder.points(for: request)
+        let gridPoints = points.filter { !$0.isOperatingPoint }
+        let operatingPoints = points.filter(\.isOperatingPoint)
+        let pressureValues = Set(gridPoints.map(\.pressurePa))
+        let temperatureValues = Set(gridPoints.map(\.temperatureK))
+
+        XCTAssertEqual(points.count, 101)
+        XCTAssertEqual(gridPoints.count, 100)
+        XCTAssertEqual(operatingPoints.count, 1)
+        XCTAssertEqual(operatingPoints.first?.pressurePa, request.pressurePa)
+        XCTAssertEqual(operatingPoints.first?.temperatureK, request.temperatureK)
+        XCTAssertFalse(pressureValues.contains(request.pressurePa))
+        XCTAssertFalse(temperatureValues.contains(request.temperatureK))
+        XCTAssertTrue(pressureValues.contains(request.range.pressureMinimumPa))
+        XCTAssertTrue(pressureValues.contains(request.range.pressureMaximumPa))
+        XCTAssertTrue(temperatureValues.contains(request.range.temperatureMinimumK))
+        XCTAssertTrue(temperatureValues.contains(request.range.temperatureMaximumK))
+        XCTAssertTrue(pressureValues.contains { $0 < request.pressurePa })
+        XCTAssertTrue(pressureValues.contains { $0 > request.pressurePa })
+        XCTAssertTrue(temperatureValues.contains { $0 < request.temperatureK })
+        XCTAssertTrue(temperatureValues.contains { $0 > request.temperatureK })
+        try assertValidGrid(points, request: request)
+    }
+
+    func testGridConstructionIsStableAcrossRepeatedCalls() throws {
+        let request = request(
+            resolution: .twenty,
+            range: PhaseMapRange(
+                pressureMinimumPa: 9_500_000,
+                pressureMaximumPa: 21_000_000,
+                temperatureMinimumK: 280,
+                temperatureMaximumK: 333
+            )
+        )
+
+        let first = try PhaseMapGridBuilder.points(for: request)
+        let second = try PhaseMapGridBuilder.points(for: request)
+
+        XCTAssertEqual(first, second)
+        XCTAssertEqual(first.count, 401)
+        try assertValidGrid(first, request: request)
     }
 
     func testPureCompositionRejectedForPhaseMap() {
@@ -174,17 +298,19 @@ final class PhaseMapTests: XCTestCase {
         XCTAssertNotNil(result.evaluations.first { $0.failureReason == "Fixture failure." })
     }
 
-    func testRunnerUsesExpectedProviderCallCountForEvenGrid() async throws {
-        let recorder = CallRecorder()
-        let provider = FixtureProvider(recorder: recorder) {
-            Self.response(request: $0, phase: .supercritical)
+    func testRunnerUsesExpectedProviderCallCountsForEveryResolution() async throws {
+        for resolution in PhaseMapResolution.allCases {
+            let recorder = CallRecorder()
+            let provider = FixtureProvider(recorder: recorder) {
+                Self.response(request: $0, phase: .supercritical)
+            }
+
+            let result = try await PhaseMapRunner(provider: provider).run(request(resolution: resolution))
+
+            XCTAssertEqual(result.evaluations.count, resolution.expectedEvaluationCount)
+            XCTAssertEqual(recorder.requests.count, resolution.expectedEvaluationCount)
+            XCTAssertEqual(result.operatingPoint?.classification.displayName, "Supercritical")
         }
-
-        let result = try await PhaseMapRunner(provider: provider).run(request(resolution: .ten))
-
-        XCTAssertEqual(result.evaluations.count, 101)
-        XCTAssertEqual(recorder.requests.count, 101)
-        XCTAssertEqual(result.operatingPoint?.classification.displayName, "Supercritical")
     }
 
     func testPhaseMapCodableRoundTrip() throws {
@@ -230,6 +356,28 @@ final class PhaseMapTests: XCTestCase {
             resolution: resolution,
             clientVersion: "test"
         )
+    }
+
+    private func assertValidGrid(
+        _ points: [PhaseMapGridPoint],
+        request: PhaseMapRequest,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        XCTAssertEqual(points.count, request.resolution.expectedEvaluationCount, file: file, line: line)
+        let coordinateKeys = Set(points.map { "\($0.pressurePa),\($0.temperatureK)" })
+        XCTAssertEqual(coordinateKeys.count, points.count, file: file, line: line)
+        XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1, file: file, line: line)
+        if request.resolution.rawValue == 5 {
+            XCTAssertEqual(points[12].pressurePa, request.pressurePa, file: file, line: line)
+            XCTAssertEqual(points[12].temperatureK, request.temperatureK, file: file, line: line)
+        }
+        for point in points {
+            XCTAssertGreaterThanOrEqual(point.pressurePa, request.range.pressureMinimumPa, file: file, line: line)
+            XCTAssertLessThanOrEqual(point.pressurePa, request.range.pressureMaximumPa, file: file, line: line)
+            XCTAssertGreaterThanOrEqual(point.temperatureK, request.range.temperatureMinimumK, file: file, line: line)
+            XCTAssertLessThanOrEqual(point.temperatureK, request.range.temperatureMaximumK, file: file, line: line)
+        }
     }
 
     private static func response(
