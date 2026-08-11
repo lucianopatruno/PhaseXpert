@@ -1325,6 +1325,112 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testBuiltInCasesLoadIntoCalculatorWithDefaultsAndComposition() throws {
+        let viewModel = CalculatorViewModel()
+        let porthos = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("porthos-pipeline-specification-example"))
+
+        viewModel.loadInputs(from: porthos)
+
+        XCTAssertEqual(viewModel.pressureText, "31")
+        XCTAssertEqual(viewModel.temperatureText, "20")
+        XCTAssertEqual(viewModel.compositionBasis, .molePercent)
+        XCTAssertEqual(
+            Dictionary(uniqueKeysWithValues: viewModel.composition.map { ($0.component, $0.value) }),
+            [
+                .carbonDioxide: "96",
+                .nitrogen: "2.4",
+                .methane: "1",
+                .argon: "0.4",
+                .hydrogen: "0.2"
+            ]
+        )
+
+        viewModel.changePressureDisplayUnit(to: .megapascalAbsolute)
+        viewModel.changeTemperatureDisplayUnit(to: .kelvin)
+
+        XCTAssertEqual(try numericValue(viewModel.pressureText), 3.1, accuracy: 1e-12)
+        XCTAssertEqual(try numericValue(viewModel.temperatureText), 293.15, accuracy: 1e-12)
+    }
+
+    @MainActor
+    func testBuiltInCasesRemainSeparateFromUserPersistenceAndDuplicateToMyCases() throws {
+        let schema = Schema(versionedSchema: PhaseXpertSchemaV1.self)
+        let configuration = ModelConfiguration(
+            "PhaseXpertBuiltInCasesTests",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(
+            for: schema,
+            migrationPlan: PhaseXpertMigrationPlan.self,
+            configurations: [configuration]
+        )
+        let context = ModelContext(container)
+
+        XCTAssertEqual(try context.fetch(FetchDescriptor<SavedCalculation>()).count, 0)
+
+        let builtInCase = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("aramis-ship-specification-example"))
+        let savedCase = try SavedCalculation(
+            name: "\(builtInCase.name) — Copy",
+            notes: builtInCase.modelingBasis,
+            record: builtInCase.inputSnapshotRecord()
+        )
+        context.insert(savedCase)
+        try context.save()
+
+        let fetched = try context.fetch(FetchDescriptor<SavedCalculation>())
+        XCTAssertEqual(fetched.count, 1)
+        XCTAssertEqual(fetched[0].name, "Aramis ship specification example — Copy")
+        XCTAssertEqual(fetched[0].pressureBarAbsolute, 16)
+        XCTAssertEqual(fetched[0].temperatureCelsius, -25, accuracy: 1e-12)
+        XCTAssertEqual(BuiltInCaseCatalog.cases.count, 4)
+    }
+
+    @MainActor
+    func testBuiltInCasesLoadIndependentlyIntoStreamAAndStreamBAndRemainEditable() throws {
+        let viewModel = StreamMixingViewModel()
+        let streamA = try XCTUnwrap(viewModel.streams.first?.id)
+        let streamB = try XCTUnwrap(viewModel.streams.dropFirst().first?.id)
+        let porthos = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("porthos-pipeline-specification-example"))
+        let aramis = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("aramis-ship-specification-example"))
+
+        viewModel.changeStreamPressureUnit(streamID: streamA, to: .megapascalAbsolute)
+        viewModel.changeStreamTemperatureUnit(streamID: streamA, to: .kelvin)
+        viewModel.loadBuiltInCase(porthos, into: streamA)
+
+        XCTAssertEqual(try numericValue(viewModel.streams[0].pressureText), 3.1, accuracy: 1e-12)
+        XCTAssertEqual(try numericValue(viewModel.streams[0].temperatureText), 293.15, accuracy: 1e-12)
+        XCTAssertEqual(viewModel.streams[1].name, "Stream 2")
+
+        viewModel.loadBuiltInCase(aramis, into: streamB)
+
+        XCTAssertEqual(viewModel.streams[0].name, "Porthos pipeline specification example")
+        XCTAssertEqual(viewModel.streams[1].name, "Aramis ship specification example")
+        XCTAssertEqual(try numericValue(viewModel.streams[1].pressureText), 16, accuracy: 1e-12)
+        XCTAssertEqual(try numericValue(viewModel.streams[1].temperatureText), -25, accuracy: 1e-12)
+
+        viewModel.updateTemperatureText(streamID: streamA, value: "300")
+        XCTAssertEqual(viewModel.streams[0].temperatureText, "300")
+        XCTAssertEqual(try numericValue(viewModel.streams[1].temperatureText), -25, accuracy: 1e-12)
+    }
+
+    func testPhaseMapMarkerStylesKeepDenseSupercriticalAndFailedDistinct() {
+        let dense = PhaseMapMarkerStyle.style(for: .dense)
+        let supercritical = PhaseMapMarkerStyle.style(for: .supercritical)
+        let failed = PhaseMapMarkerStyle.failed
+
+        XCTAssertEqual(dense.systemImage, "diamond.fill")
+        XCTAssertEqual(supercritical.systemImage, "triangle.fill")
+        XCTAssertNotEqual(dense.systemImage, supercritical.systemImage)
+        XCTAssertTrue(dense.accessibilityDescription.contains("Dense"))
+        XCTAssertTrue(supercritical.accessibilityDescription.contains("Supercritical"))
+        XCTAssertEqual(failed.systemImage, "circle.fill")
+        XCTAssertTrue(failed.accessibilityDescription.contains("failed"))
+        XCTAssertTrue(failed.accessibilityDescription.contains("unknown"))
+    }
+
+    @MainActor
     func testComparisonComputesDifferencesInDisplayedEngineeringUnits() async throws {
         let reference = try await makeComparisonRecord(
             pressureBar: 150,

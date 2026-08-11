@@ -293,34 +293,56 @@ struct SavedCasesView: View {
         }
     }
 
+    private var visibleBuiltInCases: [BuiltInCase] {
+        BuiltInCaseCatalog.cases.filter { builtInCase in
+            guard !searchText.isEmpty else { return true }
+            return builtInCase.name.localizedCaseInsensitiveContains(searchText)
+                || builtInCase.shortDescription.localizedCaseInsensitiveContains(searchText)
+                || builtInCase.modelingBasis.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
-                if savedCases.isEmpty {
-                    ContentUnavailableView(
-                        "No Saved Cases",
-                        systemImage: "tray.full",
-                        description: Text("Run a calculation, then choose Save case.")
-                    )
-                } else if visibleCases.isEmpty {
+                if visibleCases.isEmpty && visibleBuiltInCases.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                 } else {
                     List {
-                        ForEach(visibleCases) { savedCase in
-                            NavigationLink {
-                                SavedCaseDetailView(savedCase: savedCase)
-                            } label: {
-                                SavedCaseRow(savedCase: savedCase)
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button("Duplicate", systemImage: "plus.square.on.square") {
-                                    duplicate(savedCase)
+                        Section("My Cases") {
+                            if visibleCases.isEmpty {
+                                Text("Run a calculation, then choose Save case.")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(visibleCases) { savedCase in
+                                    NavigationLink {
+                                        SavedCaseDetailView(savedCase: savedCase)
+                                    } label: {
+                                        SavedCaseRow(savedCase: savedCase)
+                                    }
+                                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                        Button("Duplicate", systemImage: "plus.square.on.square") {
+                                            duplicate(savedCase)
+                                        }
+                                        .tint(.ifePrimary)
+                                    }
+                                    .swipeActions {
+                                        Button("Delete", systemImage: "trash", role: .destructive) {
+                                            pendingDeletion = savedCase
+                                        }
+                                    }
                                 }
-                                .tint(.ifePrimary)
                             }
-                            .swipeActions {
-                                Button("Delete", systemImage: "trash", role: .destructive) {
-                                    pendingDeletion = savedCase
+                        }
+
+                        Section("Built-in Cases") {
+                            ForEach(visibleBuiltInCases) { builtInCase in
+                                NavigationLink {
+                                    BuiltInCaseDetailView(builtInCase: builtInCase) {
+                                        duplicate(builtInCase)
+                                    }
+                                } label: {
+                                    BuiltInCaseRow(builtInCase: builtInCase)
                                 }
                             }
                         }
@@ -389,6 +411,21 @@ struct SavedCasesView: View {
         saveContext()
     }
 
+    private func duplicate(_ builtInCase: BuiltInCase) {
+        do {
+            let savedCase = try SavedCalculation(
+                name: "\(builtInCase.name) — Copy",
+                notes: builtInCaseDuplicationNotes(for: builtInCase),
+                record: builtInCase.inputSnapshotRecord()
+            )
+            modelContext.insert(savedCase)
+            saveContext()
+        } catch {
+            modelContext.rollback()
+            persistenceError = error.localizedDescription
+        }
+    }
+
     private func delete(_ savedCase: SavedCalculation) {
         modelContext.delete(savedCase)
         pendingDeletion = nil
@@ -402,6 +439,200 @@ struct SavedCasesView: View {
             modelContext.rollback()
             persistenceError = error.localizedDescription
         }
+    }
+}
+
+private struct BuiltInCaseRow: View {
+    let builtInCase: BuiltInCase
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(builtInCase.name)
+                    .font(.headline)
+                    .lineLimit(2)
+                Spacer(minLength: IFESpacing.small)
+                Label(builtInCase.label, systemImage: "lock")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .labelStyle(.titleAndIcon)
+            }
+            Text("\(number(builtInCase.defaultPressurePa / 100_000)) bar(a) · \(number(builtInCase.defaultTemperatureK - 273.15)) °C")
+                .font(.subheadline.monospacedDigit())
+            Text(compositionLabel(builtInCase.composition))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            Text(builtInCase.shortDescription)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(3)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("built-in-case-\(builtInCase.id)")
+    }
+}
+
+private struct BuiltInCaseDetailView: View {
+    @Environment(AppNavigationState.self) private var navigationState
+    let builtInCase: BuiltInCase
+    let duplicateAction: () -> Void
+
+    var body: some View {
+        Form {
+            Section("Built-in case") {
+                LabeledContent("Name", value: builtInCase.name)
+                LabeledContent("Label", value: builtInCase.label)
+                Text(builtInCase.shortDescription)
+                Text("Published specifications are limits or design conditions and do not define a continuously fixed project stream.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Default inputs") {
+                LabeledContent("Pressure", value: "\(number(builtInCase.defaultPressurePa / 100_000)) bar(a)")
+                LabeledContent("Temperature", value: "\(number(builtInCase.defaultTemperatureK - 273.15)) °C")
+                LabeledContent("Composition") {
+                    Text(compositionLabel(builtInCase.composition))
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+
+            Section {
+                Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
+                    navigationState.openBuiltInCaseInCalculator(builtInCase)
+                }
+                .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
+
+                Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
+                    duplicateAction()
+                }
+                .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
+            } footer: {
+                Text("Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes.")
+            }
+
+            Section("Modeling basis") {
+                Text(builtInCase.modelingBasis)
+                ForEach(builtInCase.assumptions, id: \.self) { assumption in
+                    Label(assumption, systemImage: "info.circle")
+                }
+                ForEach(builtInCase.limitations, id: \.self) { limitation in
+                    Label(limitation, systemImage: "lock")
+                }
+            }
+
+            Section("Sources") {
+                ForEach(builtInCase.sources, id: \.url) { source in
+                    Link(destination: source.url) {
+                        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+                            Text(source.title)
+                                .font(.headline)
+                            if let dateOrVersion = source.dateOrVersion {
+                                Text(dateOrVersion)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Text(source.url.absoluteString)
+                                .font(.caption)
+                                .foregroundStyle(Color.ifePrimary)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(builtInCase.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private func builtInCaseDuplicationNotes(for builtInCase: BuiltInCase) -> String {
+    ([builtInCase.label, builtInCase.modelingBasis] + builtInCase.assumptions + builtInCase.limitations)
+        .joined(separator: "\n\n")
+}
+
+private func compositionLabel(_ composition: [MixtureComponent]) -> String {
+    composition.map {
+        "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%"
+    }.joined(separator: ", ")
+}
+
+private func number(_ value: Double) -> String {
+    value.formatted(.number.precision(.significantDigits(1...8)))
+}
+
+extension BuiltInCase {
+    func inputSnapshotRecord() -> CalculationRecord {
+        let request = CalculationRequest(
+            modelID: "phase-xpert-built-in-case-input",
+            pressurePa: defaultPressurePa,
+            temperatureK: defaultTemperatureK,
+            composition: composition,
+            requestedProperties: [],
+            clientVersion: Bundle.main.releaseVersion
+        )
+        let descriptor = ModelDescriptor(
+            id: "phase-xpert-built-in-case-input",
+            name: "Built-in source-based input preset",
+            modelVersion: "input-only",
+            providerVersion: "PhaseXpert catalog",
+            availability: .unavailable,
+            calculationMode: .local,
+            supportedComponents: Set(ComponentID.allCases),
+            supportedProperties: [],
+            domain: .initialCO2Transport,
+            scientificBasis: "Provider-neutral built-in input preset. It is not a thermodynamic calculation result.",
+            equationOrMethod: "No equation of state evaluated",
+            limitations: ["Not a provider calculation.", label],
+            references: sources.map {
+                SourceReference(
+                    authors: "Source publication",
+                    title: $0.title,
+                    year: $0.referenceYear,
+                    doiOrURL: $0.url.absoluteString
+                )
+            }
+        )
+        return CalculationRecord(
+            request: request,
+            input: CalculationInputSnapshot(
+                pressureValue: defaultPressurePa / 100_000,
+                pressureUnit: .bara,
+                pressurePa: defaultPressurePa,
+                temperatureValue: defaultTemperatureK - 273.15,
+                temperatureUnit: .celsius,
+                temperatureK: defaultTemperatureK,
+                originalComposition: composition.map {
+                    CompositionInputSnapshot(
+                        component: $0.component,
+                        value: $0.moleFraction * 100,
+                        unit: .molePercent
+                    )
+                },
+                normalizedComposition: nil
+            ),
+            response: CalculationResponse(
+                requestID: request.requestID,
+                model: descriptor,
+                phase: .unknown,
+                properties: [],
+                solver: SolverMetadata(
+                    method: "No provider calculation",
+                    converged: false,
+                    durationMilliseconds: 0
+                ),
+                warnings: [label, "This duplicated case is an editable input snapshot, not a validated thermodynamic result."],
+                isScientificResult: false
+            ),
+            application: Bundle.main.applicationIdentity
+        )
+    }
+}
+
+private extension BuiltInCaseSource {
+    var referenceYear: Int {
+        guard let dateOrVersion else { return 2026 }
+        return Int(dateOrVersion.prefix(4)) ?? 2026
     }
 }
 

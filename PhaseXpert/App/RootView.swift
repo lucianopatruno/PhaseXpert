@@ -7,6 +7,7 @@ enum AppTab: Hashable {
     case streamMixing
     case savedCases
     case phaseDiagram
+    case more
     case models
     case about
 }
@@ -16,10 +17,16 @@ enum AppTab: Hashable {
 final class AppNavigationState {
     var selectedTab: AppTab = .calculator
     var pendingCalculationRecord: CalculationRecord?
+    var pendingBuiltInCase: BuiltInCase?
     var latestCalculationRecord: CalculationRecord?
 
     func editAndRerun(_ record: CalculationRecord) {
         pendingCalculationRecord = record
+        selectedTab = .calculator
+    }
+
+    func openBuiltInCaseInCalculator(_ builtInCase: BuiltInCase) {
+        pendingBuiltInCase = builtInCase
         selectedTab = .calculator
     }
 
@@ -40,10 +47,6 @@ struct RootView: View {
                 CalculatorView()
             }
 
-            Tab("Stream Mixing", systemImage: "arrow.triangle.merge", value: .streamMixing) {
-                StreamMixingView()
-            }
-
             Tab("Saved Cases", systemImage: "tray.full", value: .savedCases) {
                 SavedCasesView()
             }
@@ -52,16 +55,42 @@ struct RootView: View {
                 PhaseDiagramView()
             }
 
-            Tab("Models", systemImage: "books.vertical", value: .models) {
-                ModelInformationView()
-            }
-
-            Tab("About", systemImage: "info.circle", value: .about) {
-                AboutView()
+            Tab("More", systemImage: "ellipsis", value: .more) {
+                MoreView()
             }
         }
         .environment(navigationState)
         .accessibilityIdentifier("main-tab-view")
+    }
+}
+
+private struct MoreView: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                NavigationLink {
+                    StreamMixingView(wrapsInNavigationStack: false)
+                } label: {
+                    Label("Stream Mixing", systemImage: "arrow.triangle.merge")
+                }
+                .accessibilityIdentifier("more-stream-mixing")
+
+                NavigationLink {
+                    ModelInformationView(wrapsInNavigationStack: false)
+                } label: {
+                    Label("Models", systemImage: "books.vertical")
+                }
+                .accessibilityIdentifier("more-models")
+
+                NavigationLink {
+                    AboutView()
+                } label: {
+                    Label("About", systemImage: "info.circle")
+                }
+                .accessibilityIdentifier("more-about")
+            }
+            .navigationTitle("More")
+        }
     }
 }
 

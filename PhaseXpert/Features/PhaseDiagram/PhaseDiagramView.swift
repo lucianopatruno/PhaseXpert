@@ -705,9 +705,10 @@ private struct PhaseMapResultsSection: View {
                                     pressureUnit.displayValue(from: evaluation.point.pressurePa)
                                 )
                             )
-                            .foregroundStyle(color(for: evaluation))
-                            .symbol(symbol(for: evaluation))
+                            .foregroundStyle(PhaseMapMarkerStyle.style(for: evaluation).color)
+                            .symbol(PhaseMapMarkerStyle.style(for: evaluation).chartSymbol)
                             .symbolSize(evaluation.point.isOperatingPoint ? 110 : 70)
+                            .accessibilityLabel(PhaseMapMarkerStyle.style(for: evaluation).accessibilityDescription)
                         }
                         if let operatingPoint = result.operatingPoint {
                             PointMark(
@@ -811,14 +812,14 @@ private struct PhaseMapResultsSection: View {
 }
 
 private struct PhaseMapLegend: View {
-    private let items: [(String, PhaseMapClassification)] = [
-        ("Solid", .solid),
-        ("Gas", .gas),
-        ("Liquid", .liquid),
-        ("Multiphase", .multiphase),
-        ("Dense", .dense),
-        ("Supercritical", .supercritical),
-        ("Failed/unknown", .failed)
+    private let items: [(String, PhaseMapMarkerStyle)] = [
+        ("Solid", .style(for: .solid)),
+        ("Gas", .style(for: .gas)),
+        ("Liquid", .style(for: .liquid)),
+        ("Multiphase", .style(for: .multiphase)),
+        ("Dense", .style(for: .dense)),
+        ("Supercritical", .style(for: .supercritical)),
+        ("Failed/non-converged/unknown/unsupported", .failed)
     ]
 
     var body: some View {
@@ -827,10 +828,11 @@ private struct PhaseMapLegend: View {
                 Label {
                     Text(item.0)
                 } icon: {
-                    Image(systemName: systemImage(for: item.1))
-                        .foregroundStyle(color(for: item.1))
+                    Image(systemName: item.1.systemImage)
+                        .foregroundStyle(item.1.color)
                 }
                 .font(.caption)
+                .accessibilityLabel(item.1.accessibilityDescription)
             }
         }
         .accessibilityIdentifier("phase-map-legend")
@@ -859,64 +861,73 @@ private struct PhaseMapPointExplanation: View {
     }
 }
 
-private func color(for evaluation: PhaseMapEvaluation) -> Color {
-    if evaluation.failureReason != nil || !evaluation.classification.isSupported {
-        return Color.pxUnavailable
-    }
-    return color(for: evaluation.classification.classification)
-}
+struct PhaseMapMarkerStyle {
+    let chartSymbol: BasicChartSymbolShape
+    let systemImage: String
+    let color: Color
+    let accessibilityDescription: String
 
-private func color(for classification: PhaseMapClassification) -> Color {
-    switch classification {
-    case .solid:
-        Color.pxSuccess
-    case .gas:
-        Color.blue
-    case .liquid:
-        Color.cyan
-    case .multiphase:
-        Color.pink
-    case .dense, .supercritical:
-        Color.orange
-    case .unknown, .failed:
-        Color.pxUnavailable
-    }
-}
+    static let failed = PhaseMapMarkerStyle(
+        chartSymbol: .circle,
+        systemImage: "circle.fill",
+        color: .pxUnavailable,
+        accessibilityDescription: "Solid gray circle for failed, non-converged, unknown or unsupported flash points"
+    )
 
-private func symbol(for evaluation: PhaseMapEvaluation) -> BasicChartSymbolShape {
-    if evaluation.failureReason != nil || !evaluation.classification.isSupported {
-        return .circle
+    static func style(for evaluation: PhaseMapEvaluation) -> PhaseMapMarkerStyle {
+        if evaluation.failureReason != nil || !evaluation.classification.isSupported {
+            return failed
+        }
+        return style(for: evaluation.classification.classification)
     }
-    switch evaluation.classification.classification {
-    case .solid:
-        return .cross
-    case .gas:
-        return .circle
-    case .liquid:
-        return .square
-    case .multiphase:
-        return .plus
-    case .dense, .supercritical:
-        return .diamond
-    case .unknown, .failed:
-        return .circle
-    }
-}
 
-private func systemImage(for classification: PhaseMapClassification) -> String {
-    switch classification {
-    case .solid:
-        "xmark"
-    case .gas:
-        "circle.fill"
-    case .liquid:
-        "square.fill"
-    case .multiphase:
-        "plus"
-    case .dense, .supercritical:
-        "diamond.fill"
-    case .unknown, .failed:
-        "circle"
+    static func style(for classification: PhaseMapClassification) -> PhaseMapMarkerStyle {
+        switch classification {
+        case .solid:
+            PhaseMapMarkerStyle(
+                chartSymbol: .cross,
+                systemImage: "xmark",
+                color: .pxSuccess,
+                accessibilityDescription: "Green cross for Solid"
+            )
+        case .gas:
+            PhaseMapMarkerStyle(
+                chartSymbol: .circle,
+                systemImage: "circle.fill",
+                color: .blue,
+                accessibilityDescription: "Blue circle for Gas"
+            )
+        case .liquid:
+            PhaseMapMarkerStyle(
+                chartSymbol: .square,
+                systemImage: "square.fill",
+                color: .cyan,
+                accessibilityDescription: "Cyan square for Liquid"
+            )
+        case .multiphase:
+            PhaseMapMarkerStyle(
+                chartSymbol: .plus,
+                systemImage: "plus",
+                color: .pink,
+                accessibilityDescription: "Pink plus for Multiphase"
+            )
+        case .dense:
+            PhaseMapMarkerStyle(
+                chartSymbol: .diamond,
+                systemImage: "diamond.fill",
+                color: .orange,
+                accessibilityDescription: "Orange diamond for Dense"
+            )
+        case .supercritical:
+            PhaseMapMarkerStyle(
+                chartSymbol: .triangle,
+                systemImage: "triangle.fill",
+                color: .purple,
+                accessibilityDescription: "Purple triangle for Supercritical"
+            )
+        case .unknown, .failed:
+            failed
+        }
     }
 }
 
