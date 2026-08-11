@@ -65,11 +65,16 @@ struct RootView: View {
 }
 
 private struct MoreView: View {
+    @State private var state = MoreTabState()
+
     var body: some View {
         NavigationStack {
             List {
                 NavigationLink {
-                    StreamMixingView(wrapsInNavigationStack: false)
+                    StreamMixingView(
+                        viewModel: state.streamMixingViewModel,
+                        wrapsInNavigationStack: false
+                    )
                 } label: {
                     Label("Stream Mixing", systemImage: "arrow.triangle.merge")
                 }
@@ -83,7 +88,7 @@ private struct MoreView: View {
                 .accessibilityIdentifier("more-models")
 
                 NavigationLink {
-                    AboutView()
+                    AboutView(wrapsInNavigationStack: false)
                 } label: {
                     Label("About", systemImage: "info.circle")
                 }
@@ -91,6 +96,16 @@ private struct MoreView: View {
             }
             .navigationTitle("More")
         }
+    }
+}
+
+@MainActor
+@Observable
+final class MoreTabState {
+    let streamMixingViewModel: StreamMixingViewModel
+
+    init(streamMixingViewModel: StreamMixingViewModel = StreamMixingViewModel()) {
+        self.streamMixingViewModel = streamMixingViewModel
     }
 }
 

@@ -12,7 +12,7 @@ public enum PhaseMapResolution: Int, CaseIterable, Codable, Equatable, Sendable,
     }
 
     public var expectedEvaluationCount: Int {
-        rawValue.isMultiple(of: 2) ? gridPointCount + 1 : gridPointCount
+        gridPointCount
     }
 }
 
@@ -311,18 +311,26 @@ public enum PhaseMapGridBuilder {
         )
 
         var points: [PhaseMapGridPoint] = []
-        points.reserveCapacity(request.resolution.expectedEvaluationCount)
+        points.reserveCapacity(request.resolution.gridPointCount + 1)
         for temperature in temperatureAxis {
             for pressure in pressureAxis {
+                let isOperatingPoint = coordinatesMatch(
+                    pressure,
+                    request.pressurePa,
+                    scale: max(abs(request.range.pressureMinimumPa), abs(request.range.pressureMaximumPa))
+                ) && coordinatesMatch(
+                    temperature,
+                    request.temperatureK,
+                    scale: max(abs(request.range.temperatureMinimumK), abs(request.range.temperatureMaximumK))
+                )
                 points.append(.init(
-                    pressurePa: pressure,
-                    temperatureK: temperature,
-                    isOperatingPoint: pressure == request.pressurePa
-                        && temperature == request.temperatureK
+                    pressurePa: isOperatingPoint ? request.pressurePa : pressure,
+                    temperatureK: isOperatingPoint ? request.temperatureK : temperature,
+                    isOperatingPoint: isOperatingPoint
                 ))
             }
         }
-        if request.resolution.rawValue.isMultiple(of: 2) {
+        if !points.contains(where: \.isOperatingPoint) {
             points.append(.init(
                 pressurePa: request.pressurePa,
                 temperatureK: request.temperatureK,
@@ -330,19 +338,13 @@ public enum PhaseMapGridBuilder {
             ))
         }
 
-        try validateConstructedPoints(points, expectedCount: request.resolution.expectedEvaluationCount)
+        try validateConstructedPoints(points)
         return points
     }
 
     private static func validateConstructedPoints(
-        _ points: [PhaseMapGridPoint],
-        expectedCount: Int
+        _ points: [PhaseMapGridPoint]
     ) throws {
-        guard points.count == expectedCount else {
-            throw ProviderError.invalidRequest(
-                "Phase Map grid construction produced \(points.count) points instead of \(expectedCount)."
-            )
-        }
         var seenCoordinates: Set<CoordinateKey> = []
         var operatingPointCount = 0
         for point in points {
@@ -369,24 +371,17 @@ public enum PhaseMapGridBuilder {
         count: Int,
         operatingValue: Double
     ) -> [Double] {
-        if count == 5 {
-            return [
-                minimum,
-                minimum + (operatingValue - minimum) / 2,
-                operatingValue,
-                operatingValue + (maximum - operatingValue) / 2,
-                maximum
-            ]
+        guard count > 1 else { return [operatingValue] }
+        let step = (maximum - minimum) / Double(count - 1)
+        return (0..<count).map { index in
+            if index == 0 { return minimum }
+            if index == count - 1 { return maximum }
+            return minimum + Double(index) * step
         }
-        let lowerCount = count / 2
-        let upperCount = count / 2
-        let lowerValues = (0..<lowerCount).map { index in
-            minimum + Double(index) * (operatingValue - minimum) / Double(lowerCount)
-        }
-        let upperValues = (0..<upperCount).map { index in
-            operatingValue + Double(index + 1) * (maximum - operatingValue) / Double(upperCount)
-        }
-        return lowerValues + upperValues
+    }
+
+    private static func coordinatesMatch(_ lhs: Double, _ rhs: Double, scale: Double) -> Bool {
+        abs(lhs - rhs) <= max(scale, 1) * 1e-12
     }
 }
 

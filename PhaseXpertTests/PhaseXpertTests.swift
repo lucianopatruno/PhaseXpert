@@ -1415,6 +1415,28 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(try numericValue(viewModel.streams[1].temperatureText), -25, accuracy: 1e-12)
     }
 
+    @MainActor
+    func testMoreTabStateKeepsStableStreamMixingViewModelIdentityAndValues() throws {
+        let state = MoreTabState()
+        let firstReference = state.streamMixingViewModel
+        let streamID = try XCTUnwrap(firstReference.streams.first?.id)
+
+        firstReference.updateStreamName(streamID: streamID, value: "Retained Stream A")
+        firstReference.updateFlowText(streamID: streamID, value: "123.45")
+        firstReference.changeStreamPressureUnit(streamID: streamID, to: .megapascalAbsolute)
+        firstReference.updatePressureText(streamID: streamID, value: "1.75")
+        firstReference.updateTemperatureText(streamID: streamID, value: "-12.5")
+
+        let secondReference = state.streamMixingViewModel
+
+        XCTAssertTrue(firstReference === secondReference)
+        XCTAssertEqual(secondReference.streams.first?.name, "Retained Stream A")
+        XCTAssertEqual(secondReference.streams.first?.flowText, "123.45")
+        XCTAssertEqual(secondReference.streams.first?.pressureDisplayUnit, .megapascalAbsolute)
+        XCTAssertEqual(secondReference.streams.first?.pressureText, "1.75")
+        XCTAssertEqual(secondReference.streams.first?.temperatureText, "-12.5")
+    }
+
     func testPhaseMapMarkerStylesKeepDenseSupercriticalAndFailedDistinct() {
         let dense = PhaseMapMarkerStyle.style(for: .dense)
         let supercritical = PhaseMapMarkerStyle.style(for: .supercritical)
@@ -1428,6 +1450,14 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(failed.systemImage, "circle.fill")
         XCTAssertTrue(failed.accessibilityDescription.contains("failed"))
         XCTAssertTrue(failed.accessibilityDescription.contains("unknown"))
+    }
+
+    func testPhaseMapOperatingPointRenderingKeepsUnderlyingMarkerAndRedRing() {
+        let plan = PhaseMapOperatingPointRenderingPlan.standard
+
+        XCTAssertTrue(plan.drawsUnderlyingClassificationMarker)
+        XCTAssertTrue(plan.drawsRedRingOverlay)
+        XCTAssertTrue(plan.ringDrawsAfterClassificationMarker)
     }
 
     @MainActor

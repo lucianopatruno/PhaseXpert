@@ -381,6 +381,41 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(calculate.exists)
     }
 
+    func testStreamMixingRetainsEditedStateAfterReturningToMoreAndReopening() {
+        let app = XCUIApplication()
+        app.launch()
+        openStreamMixing(in: app)
+
+        let streamName = app.textFields.matching(NSPredicate(format: "label == %@", "Stream name")).element(boundBy: 0)
+        XCTAssertTrue(streamName.waitForExistence(timeout: 3))
+        streamName.tap()
+        streamName.typeText(" retained")
+        let retainedName = streamName.value as? String
+
+        let flowField = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
+        XCTAssertTrue(flowField.waitForExistence(timeout: 3))
+        flowField.tap()
+        flowField.typeText("9")
+        let retainedFlow = flowField.value as? String
+        if app.buttons["stream-mixing-keyboard-done"].waitForExistence(timeout: 1) {
+            app.buttons["stream-mixing-keyboard-done"].tap()
+        }
+
+        let backToMore = app.navigationBars["Stream Mixing"].buttons["More"]
+        XCTAssertTrue(backToMore.waitForExistence(timeout: 2))
+        backToMore.tap()
+        XCTAssertTrue(app.navigationBars["More"].waitForExistence(timeout: 2))
+
+        openStreamMixing(in: app)
+
+        let reopenedName = app.textFields.matching(NSPredicate(format: "label == %@", "Stream name")).element(boundBy: 0)
+        XCTAssertTrue(reopenedName.waitForExistence(timeout: 3))
+        XCTAssertEqual(reopenedName.value as? String, retainedName)
+        let reopenedFlow = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
+        XCTAssertTrue(reopenedFlow.waitForExistence(timeout: 3))
+        XCTAssertEqual(reopenedFlow.value as? String, retainedFlow)
+    }
+
     func testStreamMixingAddDuplicateAndMaximumStreamBehavior() {
         let app = XCUIApplication()
         app.launch()

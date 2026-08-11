@@ -697,11 +697,15 @@ private enum StreamMixingInputField: Hashable {
 
 struct StreamMixingView: View {
     private let wrapsInNavigationStack: Bool
-    @State private var viewModel = StreamMixingViewModel()
+    @State private var viewModel: StreamMixingViewModel
     @FocusState private var focusedField: StreamMixingInputField?
     @State private var textSelections: [String: TextSelection] = [:]
 
-    init(wrapsInNavigationStack: Bool = true) {
+    init(
+        viewModel: StreamMixingViewModel = StreamMixingViewModel(),
+        wrapsInNavigationStack: Bool = true
+    ) {
+        _viewModel = State(initialValue: viewModel)
         self.wrapsInNavigationStack = wrapsInNavigationStack
     }
 

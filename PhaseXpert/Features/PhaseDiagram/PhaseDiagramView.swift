@@ -174,9 +174,11 @@ final class PhaseDiagramViewModel {
 
         let runID = UUID()
         phaseMapRunID = runID
+        let evaluationCount = (try? PhaseMapGridBuilder.points(for: request).count)
+            ?? request.resolution.gridPointCount
         phaseMapProgress = PhaseMapProgress(
             completedCount: 0,
-            totalCount: request.resolution.expectedEvaluationCount
+            totalCount: evaluationCount
         )
         phaseMapStatusMessage = "Calculating Phase Map…"
         isPhaseMapLoading = true
@@ -285,7 +287,7 @@ final class PhaseDiagramViewModel {
         phaseMapResolution = .five
         phaseMapResult = nil
         phaseMapIssues = []
-        phaseMapProgress = PhaseMapProgress(completedCount: 0, totalCount: phaseMapResolution.expectedEvaluationCount)
+        phaseMapProgress = PhaseMapProgress(completedCount: 0, totalCount: phaseMapResolution.gridPointCount)
         phaseMapStatusMessage = "Ready to classify 25 discrete flash points."
         isPhaseMapResultStale = false
     }
@@ -929,6 +931,18 @@ struct PhaseMapMarkerStyle {
             failed
         }
     }
+}
+
+struct PhaseMapOperatingPointRenderingPlan: Equatable {
+    let drawsUnderlyingClassificationMarker: Bool
+    let drawsRedRingOverlay: Bool
+    let ringDrawsAfterClassificationMarker: Bool
+
+    static let standard = PhaseMapOperatingPointRenderingPlan(
+        drawsUnderlyingClassificationMarker: true,
+        drawsRedRingOverlay: true,
+        ringDrawsAfterClassificationMarker: true
+    )
 }
 
 private func number(_ value: Double) -> String {
