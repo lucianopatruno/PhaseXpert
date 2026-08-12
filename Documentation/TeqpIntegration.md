@@ -87,8 +87,35 @@ device and simulator object architectures. Provider tests verify explicit
 provider selection, pure-CO₂ result mapping, unsupported-mixture rejection,
 viscosity-unavailable behavior and the absence of CoolProp fallback.
 
-Numeric agreement with independent pure-CO₂ reference data remains validation
-pending. A successful teqp execution is not a production accuracy claim.
+Direct native bridge probing against the retained Mantilla et al. (2010)
+experimental density references in `Documentation/PureCO2Validation.md`
+produced the following results. The acceptance tolerance is the pre-existing
+PhaseXpert rule for this source: reported expanded uncertainty plus 0.1% of
+experimental density.
+
+| Region | T / K | P / Pa | Reference density / kg/m³ | teqp density / kg/m³ | Absolute deviation / kg/m³ | Relative deviation | Tolerance / kg/m³ | Result |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| gas-like | 310.00 | 1,998,000 | 37.614000 | 37.603006 | 0.010994 | 0.000292272 | 0.246614 | pass |
+| near-critical dense | 310.00 | 10,014,000 | 686.160000 | 686.431111 | 0.271111 | 0.000395114 | 1.047160 | pass |
+| dense liquid-like | 310.00 | 29,966,000 | 921.817000 | 921.860028 | 0.043028 | 0.000046677 | 0.987817 | pass |
+| supercritical | 350.00 | 19,981,000 | 613.586000 | 613.738164 | 0.152164 | 0.000247992 | 0.828586 | pass |
+| high-temperature supercritical | 400.00 | 29,994,000 | 561.435000 | 561.411573 | 0.023427 | 0.000041727 | 0.679435 | pass |
+
+The probe also verified that the known two-phase state 280 K and 6 MPa returns
+the explicit multiple-root error instead of selecting an arbitrary density.
+
+`PhaseXpertTests/TeqpNativeBridgeValidationTests.swift` adds the corresponding
+iOS XCTest coverage for `NativeTeqpEngine`. In the current agent environment,
+the iOS Simulator test runner executed those tests but skipped them because
+Xcode's cached package graph did not import the optional
+`PhaseXpertTeqpBridge` binary target even though the ignored XCFramework was
+present and the app build succeeded. That is treated as infrastructure/package
+resolution status, not scientific validation failure.
+
+These checks validate only the narrow pure-CO₂ density path at the listed
+single-phase points and one conservative two-phase rejection behavior. They do
+not establish production accuracy, phase-boundary accuracy, transport
+properties, mixtures or physical-iPhone manual acceptance.
 
 ## Next milestone
 

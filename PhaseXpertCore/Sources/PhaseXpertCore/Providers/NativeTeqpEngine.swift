@@ -2,15 +2,26 @@ import Foundation
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)
 import PhaseXpertTeqpBridge
+#endif
 
 public struct NativeTeqpEngine: TeqpEngine {
-    public var isAvailable: Bool { true }
+    public var isAvailable: Bool {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        true
+        #else
+        false
+        #endif
+    }
 
     public var libraryVersion: String {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         var buffer = [CChar](repeating: 0, count: 160)
         let status = px_teqp_copy_version(&buffer, buffer.count)
         guard status == 0 else { return "teqp linked" }
         return String(cString: buffer)
+        #else
+        return "Not linked"
+        #endif
     }
 
     public init() {}
@@ -19,6 +30,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         pressurePa: Double,
         temperatureK: Double
     ) async throws -> TeqpEngineResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         try Task.checkCancellation()
         let result = try await Task.detached(priority: .userInitiated) {
             var nativeResult = PXTeqpResult()
@@ -44,9 +56,15 @@ public struct NativeTeqpEngine: TeqpEngine {
         }.value
         try Task.checkCancellation()
         return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
     }
 }
 
+#if os(iOS) && canImport(PhaseXpertTeqpBridge)
 private func phaseIdentifier(for phase: PXTeqpPhase) -> String {
     switch phase {
     case PXTeqpPhaseSupercritical:

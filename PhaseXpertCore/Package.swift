@@ -17,6 +17,7 @@ let hasLocalTeqpXCFramework = FileManager.default.fileExists(
 var phaseXpertCoreDependencies: [Target.Dependency] = []
 var phaseXpertCoreLinkerSettings: [LinkerSetting] = []
 var packageTargets: [Target] = []
+var requiresCXXRuntimeForIOS = false
 
 if hasLocalCoolPropXCFramework {
     phaseXpertCoreDependencies.append(
@@ -25,9 +26,7 @@ if hasLocalCoolPropXCFramework {
             condition: .when(platforms: [.iOS])
         )
     )
-    phaseXpertCoreLinkerSettings.append(
-        .linkedLibrary("c++", .when(platforms: [.iOS]))
-    )
+    requiresCXXRuntimeForIOS = true
     packageTargets.append(
         .binaryTarget(
             name: "PhaseXpertCoolPropBridge",
@@ -43,14 +42,18 @@ if hasLocalTeqpXCFramework {
             condition: .when(platforms: [.iOS])
         )
     )
-    phaseXpertCoreLinkerSettings.append(
-        .linkedLibrary("c++", .when(platforms: [.iOS]))
-    )
+    requiresCXXRuntimeForIOS = true
     packageTargets.append(
         .binaryTarget(
             name: "PhaseXpertTeqpBridge",
             path: teqpXCFrameworkPath
         )
+    )
+}
+
+if requiresCXXRuntimeForIOS {
+    phaseXpertCoreLinkerSettings.append(
+        .linkedLibrary("c++", .when(platforms: [.iOS]))
     )
 }
 

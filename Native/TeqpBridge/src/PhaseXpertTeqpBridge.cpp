@@ -6,6 +6,7 @@
 #include "teqp/models/multifluid.hpp"
 
 #include <Eigen/Dense>
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <exception>
@@ -79,6 +80,30 @@ struct Root {
     double molar_density_mol_m3;
 };
 
+bool brackets_root(double left_residual, double right_residual) {
+    if (!std::isfinite(left_residual) || !std::isfinite(right_residual)) {
+        return false;
+    }
+    return left_residual == 0.0 || right_residual == 0.0
+        || std::signbit(left_residual) != std::signbit(right_residual);
+}
+
+bool is_duplicate_root(const std::vector<Root> &roots, double candidate) {
+    constexpr double kRelativeRootMergeTolerance = 1e-10;
+    for (const auto &root : roots) {
+        const double scale = std::max({
+            1.0,
+            std::abs(root.molar_density_mol_m3),
+            std::abs(candidate)
+        });
+        if (std::abs(candidate - root.molar_density_mol_m3)
+            <= kRelativeRootMergeTolerance * scale) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<Root> density_roots(
     const CarbonDioxideModel &model,
     double pressure_pa,
@@ -104,7 +129,7 @@ std::vector<Root> density_roots(
             previous_f = f;
             continue;
         }
-        if (std::isfinite(previous_f) && previous_f * f <= 0) {
+        if (brackets_root(previous_f, f)) {
             double lo = previous_rho;
             double hi = rho;
             double flo = previous_f;
@@ -114,7 +139,7 @@ std::vector<Root> density_roots(
                 if (!std::isfinite(fmid)) {
                     break;
                 }
-                if (flo * fmid <= 0) {
+                if (brackets_root(flo, fmid)) {
                     hi = mid;
                 } else {
                     lo = mid;
@@ -122,7 +147,7 @@ std::vector<Root> density_roots(
                 }
             }
             const double root = 0.5 * (lo + hi);
-            if (roots.empty() || std::abs(root - roots.back().molar_density_mol_m3) > 1e-6) {
+            if (!is_duplicate_root(roots, root)) {
                 roots.push_back({root});
             }
         }
