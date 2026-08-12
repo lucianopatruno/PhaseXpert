@@ -20,14 +20,17 @@
   provider-calculated but have not completed independent PhaseXpert validation.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
-- The experimental teqp provider supports only exactly 100 mol% CO₂ and only
+- The experimental teqp provider is displayed as Advanced Phase & Mixture Model
+  (teqp). It supports only exactly 100 mol% CO₂ and only
   density plus the existing transparent derived properties. Viscosity,
   transport properties, expanded thermodynamic properties, phase envelopes and
   all mixtures are unavailable. Subcritical multiple-root density states use
   teqp pure-fluid saturation equilibrium to select a stable vapor or liquid
   branch when the state is clearly away from saturation. States on or too close
   to saturation remain explicitly unavailable because a unique homogeneous
-  bulk density is not reported.
+  bulk density is not reported. Pinned teqp v0.23.1 contains traceable upstream
+  CO₂+N₂ multifluid data, but PhaseXpert has not enabled it because the native
+  mixture stability/flash and phase-equilibrium bridge has not passed Gate B.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

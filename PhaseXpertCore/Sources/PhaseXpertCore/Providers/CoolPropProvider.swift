@@ -283,7 +283,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     public var descriptor: ModelDescriptor {
         ModelDescriptor(
             id: "coolprop-heos",
-            name: "CoolProp HEOS — Preliminary",
+            name: "General Properties (CoolProp)",
             modelVersion: engine.libraryVersion,
             providerVersion: "0.8.2",
             availability: engine.isAvailable ? .preliminary : .unavailable,

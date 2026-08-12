@@ -23,6 +23,7 @@ final class TeqpProviderTests: XCTestCase {
         let provider = TeqpProvider(engine: UnavailableTeqpEngine())
 
         XCTAssertEqual(provider.descriptor.id, "teqp-pure-co2-experimental")
+        XCTAssertEqual(provider.descriptor.name, "Advanced Phase & Mixture Model (teqp)")
         XCTAssertEqual(provider.descriptor.availability, .unavailable)
         XCTAssertTrue(provider.descriptor.supportedComponents.isEmpty)
         XCTAssertTrue(provider.descriptor.supportedProperties.isEmpty)

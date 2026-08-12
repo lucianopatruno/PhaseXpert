@@ -5,7 +5,48 @@
 This is a deliberately narrow experimental native-provider milestone. It adds
 an optional local teqp bridge for exactly 100 mol% CO₂. CoolProp remains the
 default provider, and no existing calculation is routed to teqp unless the user
-explicitly selects `teqp Pure CO₂ — Experimental`.
+explicitly selects `Advanced Phase & Mixture Model (teqp)`.
+
+## CO₂+N₂ Gate A finding
+
+Pinned teqp v0.23.1 contains traceable upstream data for a CO₂+N₂ multifluid
+model, but PhaseXpert has not enabled it. The relevant records in the pinned
+upstream tree are:
+
+- `CarbonDioxide.json`: CO₂ fluid model, CAS `124-38-9`,
+  `BibTeX_EOS = Span-JPCRD-1996`, molar mass `0.0440098 kg/mol`,
+  critical state `T = 304.1282 K`, `p = 7,377,300 Pa`, and EOS limits
+  `T_max = 2000 K`, `p_max = 800,000,000 Pa`;
+- `Nitrogen.json`: N₂ fluid model, CAS `7727-37-9`,
+  `BibTeX_EOS = Span-JPCRD-2000`, molar mass `0.02801348 kg/mol`,
+  critical state `T = 126.192 K`, `p = 3,395,800 Pa`, and EOS limits
+  `T_max = 2000 K`, `p_max = 2,200,000,000 Pa`;
+- `mixture_binary_pairs.json`: CO₂/N₂ pair record with
+  `Name1 = CarbonDioxide`, `Name2 = Nitrogen`,
+  `function = Nitrogen-CarbonDioxide`, `F = 1.0`,
+  `betaT = 0.994140013`, `gammaT = 1.107654104`,
+  `betaV = 1.022709642`, `gammaV = 1.047578256`, and
+  `BibTeX = Gernert-Thesis-2013`;
+- `mixture_departure_functions.json`: departure function
+  `Name = Nitrogen-CarbonDioxide`, alias `KW5`, `type = GERG-2008`,
+  `Npower = 2`, and `BibTeX = Kunz-JCED-2012`.
+
+The teqp repository licence remains the NIST disclaimer of copyright and
+warranty. These data are upstream teqp model data; PhaseXpert does not tune
+binary interaction parameters, does not substitute CoolProp parameters and does
+not claim an independently validated CO₂+N₂ operating range from these records.
+
+## CO₂+N₂ Gate B blocker
+
+The current native bridge embeds only the pure-CO₂ JSON and exposes only a
+pure-fluid density ABI. Although the pinned upstream data are traceable, this
+repository does not yet contain a native mixture P,T flash, stability analysis,
+VLE solver or phase-envelope continuation that can distinguish stable vapor,
+dense/liquid, supercritical fluid, two-phase, unavailable and non-converged
+mixture states without returning metastable density roots. Enabling CO₂+N₂
+point calculations before that native mixture stability gate is implemented
+would violate PhaseXpert's scientific safeguards. CO₂+N₂ therefore remains
+explicitly unsupported by teqp in this branch.
 
 The generated teqp XCFramework is intentionally ignored by Git. A clean clone
 therefore remains buildable without teqp and shows the provider as unavailable

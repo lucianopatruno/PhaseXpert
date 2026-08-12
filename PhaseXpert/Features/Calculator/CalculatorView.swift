@@ -1609,7 +1609,7 @@ private struct ModelSelectionRow: View {
     private var displayName: String {
         switch descriptor.id {
         case "coolprop-heos":
-            "CoolProp HEOS — Preliminary"
+            "General Properties (CoolProp)"
         case "ife-model":
             "IFE Model — Unavailable"
         default:

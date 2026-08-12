@@ -155,3 +155,8 @@
 - Added the first deliberately narrow experimental teqp milestone: optional
   native pure-CO₂ density support through a local C++ bridge, with mixtures and
   viscosity explicitly unavailable and CoolProp remaining the default provider.
+- Renamed the user-facing provider labels to General Properties (CoolProp) and
+  Advanced Phase & Mixture Model (teqp) while preserving stable provider IDs.
+- Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and the Gate
+  B blocker that keeps teqp CO₂+N₂ calculations disabled until native mixture
+  stability/flash and validation work is complete.

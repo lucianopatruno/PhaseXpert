@@ -68,6 +68,10 @@ final class ProviderAndAPITests: XCTestCase {
         let registry = ProviderRegistry()
         XCTAssertEqual(registry.provider(id: "coolprop-heos")?.descriptor.id, "coolprop-heos")
         XCTAssertEqual(
+            registry.provider(id: "coolprop-heos")?.descriptor.name,
+            "General Properties (CoolProp)"
+        )
+        XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
             expectedDefaultCoolPropAvailability
         )

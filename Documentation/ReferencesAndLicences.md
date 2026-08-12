@@ -16,11 +16,18 @@ thermodynamic software are not included.
 An optional teqp bridge can be generated locally from `usnistgov/teqp`
 `v0.23.1`, commit `a68eb9cabf47af2c4aba0d272ac10fbca4c10eca`. teqp is made
 available under the NIST disclaimer of copyright and warranty in its
-`LICENSE.md`. The narrow PhaseXpert build uses the upstream
+`LICENSE.md`. The narrow PhaseXpert build currently uses only the upstream
 `CarbonDioxide.json` model data, whose CO₂ EOS provenance is recorded as
-`Span-JPCRD-1996`. The generated XCFramework, recorded revision, submodule list
-and licence are ignored under `Vendor/teqp/` and must be reviewed before
-distribution.
+`Span-JPCRD-1996`. The pinned upstream tree also contains CO₂+N₂ multifluid
+data: `Nitrogen.json` records `Span-JPCRD-2000`, the CO₂/N₂ reducing-parameter
+record in `mixture_binary_pairs.json` cites `Gernert-Thesis-2013`, and the
+`Nitrogen-CarbonDioxide` GERG-2008 departure function in
+`mixture_departure_functions.json` cites `Kunz-JCED-2012`
+([DOI 10.1021/je300655b](https://doi.org/10.1021/je300655b)). Those mixture
+data are documented for provenance only; they are not enabled until native
+mixture stability, flash and independent validation gates pass. The generated
+XCFramework, recorded revision, submodule list and licence are ignored under
+`Vendor/teqp/` and must be reviewed before distribution.
 
 Potential CoolProp reference:
 
