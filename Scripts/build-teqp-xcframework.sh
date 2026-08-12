@@ -102,11 +102,60 @@ device_object="${build_root}/PhaseXpertTeqpBridge-iphoneos.o"
 simulator_object="${build_root}/PhaseXpertTeqpBridge-iphonesimulator.o"
 device_library="${build_root}/libPhaseXpertTeqpBridge-iphoneos.a"
 simulator_library="${build_root}/libPhaseXpertTeqpBridge-iphonesimulator.a"
+device_framework="${build_root}/iphoneos/PhaseXpertTeqpBridge.framework"
+simulator_framework="${build_root}/iphonesimulator/PhaseXpertTeqpBridge.framework"
 
 compile_bridge iphoneos "${device_object}" -arch arm64
 compile_bridge iphonesimulator "${simulator_object}" -arch arm64 -arch x86_64
 xcrun libtool -static -o "${device_library}" "${device_object}"
 xcrun libtool -static -o "${simulator_library}" "${simulator_object}"
+
+create_static_framework() {
+    local framework_path="$1"
+    local library_path="$2"
+    local minimum_os_version="$3"
+    rm -rf "${framework_path}"
+    mkdir -p "${framework_path}/Headers" "${framework_path}/Modules"
+    cp "${library_path}" "${framework_path}/PhaseXpertTeqpBridge"
+    cp "${bridge_headers}/PhaseXpertTeqpBridge.h" "${framework_path}/Headers/"
+    cat > "${framework_path}/Modules/module.modulemap" <<'MODULEMAP'
+framework module PhaseXpertTeqpBridge {
+    umbrella header "PhaseXpertTeqpBridge.h"
+    export *
+    module * { export * }
+}
+MODULEMAP
+    cat > "${framework_path}/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>PhaseXpertTeqpBridge</string>
+    <key>CFBundleIdentifier</key>
+    <string>no.ife.phasexpert.teqpbridge</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>PhaseXpertTeqpBridge</string>
+    <key>CFBundlePackageType</key>
+    <string>FMWK</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.23.1</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>MinimumOSVersion</key>
+    <string>${minimum_os_version}</string>
+</dict>
+</plist>
+PLIST
+}
+
+create_static_framework "${device_framework}" "${device_library}" "${deployment_target}"
+create_static_framework "${simulator_framework}" "${simulator_library}" "${deployment_target}"
 
 framework_path="${output_root}/PhaseXpertTeqpBridge.xcframework"
 if [[ -e "${framework_path}" ]]; then
@@ -115,10 +164,8 @@ if [[ -e "${framework_path}" ]]; then
 fi
 
 xcodebuild -create-xcframework \
-    -library "${device_library}" \
-    -headers "${bridge_headers}" \
-    -library "${simulator_library}" \
-    -headers "${bridge_headers}" \
+    -framework "${device_framework}" \
+    -framework "${simulator_framework}" \
     -output "${framework_path}"
 
 cp "${source_root}/LICENSE.md" "${output_root}/TEQP-LICENSE.txt"

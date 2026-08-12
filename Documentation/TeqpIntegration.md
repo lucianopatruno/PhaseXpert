@@ -7,11 +7,10 @@ an optional local teqp bridge for exactly 100 mol% CO₂. CoolProp remains the
 default provider, and no existing calculation is routed to teqp unless the user
 explicitly selects `teqp Pure CO₂ — Experimental`.
 
-The generated teqp XCFramework is intentionally ignored by Git. Normal app
-builds do not link it automatically, even when a local generated copy exists.
-Set `PHASEXPERT_ENABLE_TEQP_NATIVE=1` during package resolution/builds that are
-intended to exercise the native teqp bridge. Without that explicit opt-in the
-app remains buildable and shows the provider as unavailable.
+The generated teqp XCFramework is intentionally ignored by Git. A clean clone
+therefore remains buildable without teqp and shows the provider as unavailable
+until the local binary is built. When the generated teqp XCFramework is present,
+ordinary Xcode app builds include it and show the provider as available.
 
 ## Pinned upstream
 
@@ -40,20 +39,29 @@ directly into static libraries for:
 - iOS Simulator `arm64`;
 - iOS Simulator `x86_64`.
 
+The script packages those static libraries as static framework slices inside
+`PhaseXpertTeqpBridge.xcframework`:
+
+- `ios-arm64/PhaseXpertTeqpBridge.framework`;
+- `ios-arm64_x86_64-simulator/PhaseXpertTeqpBridge.framework`;
+- each framework contains the static binary `PhaseXpertTeqpBridge`,
+  `Headers/PhaseXpertTeqpBridge.h` and `Modules/module.modulemap`.
+
+This framework-style layout is deliberate. The first static-library
+XCFramework package used `HeadersPath = Headers` with a top-level
+`Headers/module.modulemap`, matching the existing CoolProp static-library
+XCFramework layout. When both binary targets were present, Xcode processed both
+XCFrameworks into the same product include directory and both commands claimed
+`include/module.modulemap`. Packaging teqp as a framework-style XCFramework
+keeps its module map inside `PhaseXpertTeqpBridge.framework/Modules/`, so it no
+longer collides with CoolProp's existing `include/module.modulemap` output.
+
 The bridge uses teqp's header-level multifluid model and does not link the
 broader `teqpcpp` wrapper. During feasibility testing, the upstream
 `teqpcpp` target did not compile with AppleClang 21 because
 `critical_pure.hpp` contains two `tdx::template get_Ar11/get_Ar12` calls that
 AppleClang rejects. The narrow bridge avoids that wrapper path and compiled for
 the required iOS object architectures.
-
-SwiftPM includes the `PhaseXpertTeqpBridge` binary target only when both the
-ignored XCFramework exists and `PHASEXPERT_ENABLE_TEQP_NATIVE=1` is present in
-the package-resolution environment. This prevents a generated local artifact
-from changing the normal Xcode app package graph implicitly. The explicit
-opt-in also avoids Xcode's duplicate `include/module.modulemap` output
-collision between the CoolProp and teqp static XCFrameworks during ordinary app
-builds.
 
 ## Runtime contract
 
@@ -115,10 +123,10 @@ The probe also verified that the known two-phase state 280 K and 6 MPa returns
 the explicit multiple-root error instead of selecting an arbitrary density.
 
 `PhaseXpertTests/TeqpNativeBridgeValidationTests.swift` adds the corresponding
-iOS XCTest coverage for `NativeTeqpEngine`. These tests require a build/package
-resolution environment that opts into the generated native bridge with
-`PHASEXPERT_ENABLE_TEQP_NATIVE=1`; normal app builds intentionally leave teqp
-unlinked and the provider unavailable.
+iOS XCTest coverage for `NativeTeqpEngine`. With the generated
+framework-style teqp XCFramework present, those tests run in ordinary Xcode app
+test builds and exercise Swift calling through `NativeTeqpEngine` into the C
+bridge and compiled teqp EOS.
 
 These checks validate only the narrow pure-CO₂ density path at the listed
 single-phase points and one conservative two-phase rejection behavior. They do

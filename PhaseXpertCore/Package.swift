@@ -13,9 +13,6 @@ let hasLocalCoolPropXCFramework = FileManager.default.fileExists(
 let hasLocalTeqpXCFramework = FileManager.default.fileExists(
     atPath: teqpXCFrameworkURL.path
 )
-let enablesLocalTeqpXCFramework = ProcessInfo.processInfo.environment[
-    "PHASEXPERT_ENABLE_TEQP_NATIVE"
-] == "1"
 
 var phaseXpertCoreDependencies: [Target.Dependency] = []
 var phaseXpertCoreLinkerSettings: [LinkerSetting] = []
@@ -38,7 +35,7 @@ if hasLocalCoolPropXCFramework {
     )
 }
 
-if enablesLocalTeqpXCFramework && hasLocalTeqpXCFramework {
+if hasLocalTeqpXCFramework {
     phaseXpertCoreDependencies.append(
         .target(
             name: "PhaseXpertTeqpBridge",
