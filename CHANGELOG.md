@@ -157,6 +157,10 @@
   viscosity explicitly unavailable and CoolProp remaining the default provider.
 - Renamed the user-facing provider labels to General Properties (CoolProp) and
   Advanced Phase & Mixture Model (teqp) while preserving stable provider IDs.
-- Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and the Gate
-  B blocker that keeps teqp CO₂+N₂ calculations disabled until native mixture
-  stability/flash and validation work is complete.
+- Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and added a
+  validation-gated native binary VLE/point-classification bridge layer; teqp
+  CO₂+N₂ remains unavailable to users until independent Gate C validation
+  establishes a supported domain.
+- Recorded the Gate C stop for native teqp CO₂+N₂: Westman 2016 VLE checks
+  show a material vapor-composition deviation near 5 mol% liquid N₂, and
+  Mantovani et al. CO₂+N₂ density checks fail the required validation basis.

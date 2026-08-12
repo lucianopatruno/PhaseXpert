@@ -1,17 +1,17 @@
-# teqp pure-CO₂ integration
+# teqp native integration
 
 ## Status
 
 This is a deliberately narrow experimental native-provider milestone. It adds
-an optional local teqp bridge for exactly 100 mol% CO₂. CoolProp remains the
-default provider, and no existing calculation is routed to teqp unless the user
-explicitly selects `Advanced Phase & Mixture Model (teqp)`.
+an optional local teqp bridge for exactly 100 mol% CO₂, plus validation-gated
+native CO₂+N₂ equilibrium primitives. CoolProp remains the default provider,
+and no existing calculation is routed to teqp unless the user explicitly
+selects `Advanced Phase & Mixture Model (teqp)`.
 
 ## CO₂+N₂ Gate A finding
 
 Pinned teqp v0.23.1 contains traceable upstream data for a CO₂+N₂ multifluid
-model, but PhaseXpert has not enabled it. The relevant records in the pinned
-upstream tree are:
+model. The relevant records in the pinned upstream tree are:
 
 - `CarbonDioxide.json`: CO₂ fluid model, CAS `124-38-9`,
   `BibTeX_EOS = Span-JPCRD-1996`, molar mass `0.0440098 kg/mol`,
@@ -36,17 +36,38 @@ warranty. These data are upstream teqp model data; PhaseXpert does not tune
 binary interaction parameters, does not substitute CoolProp parameters and does
 not claim an independently validated CO₂+N₂ operating range from these records.
 
-## CO₂+N₂ Gate B blocker
+## CO₂+N₂ Gate B native layer
 
-The current native bridge embeds only the pure-CO₂ JSON and exposes only a
-pure-fluid density ABI. Although the pinned upstream data are traceable, this
-repository does not yet contain a native mixture P,T flash, stability analysis,
-VLE solver or phase-envelope continuation that can distinguish stable vapor,
-dense/liquid, supercritical fluid, two-phase, unavailable and non-converged
-mixture states without returning metastable density roots. Enabling CO₂+N₂
-point calculations before that native mixture stability gate is implemented
-would violate PhaseXpert's scientific safeguards. CO₂+N₂ therefore remains
-explicitly unsupported by teqp in this branch.
+The native build now embeds the pinned CO₂, N₂, CO₂/N₂ binary-pair and
+CO₂/N₂ GERG-2008 departure-function JSON directly in the XCFramework. The app
+does not load model JSON from the filesystem at runtime and does not require
+Python, network access or external services on device.
+
+The bridge adds a narrow binary VLE implementation equivalent to teqp
+v0.23.1's documented `mix_VLE_Tx` residual system for the concrete
+CarbonDioxide + Nitrogen multifluid model. It enforces equality of pressure,
+CO₂ chemical potential and N₂ chemical potential between equilibrium phases,
+with the Jacobian assembled from teqp's automatic-differentiation Helmholtz
+derivatives. The implementation deliberately avoids the broader `teqpcpp`
+wrapper path because that path still encounters the AppleClang issue described
+below.
+
+For CO₂-rich subcritical initialization, the bridge starts from teqp's pure-CO₂
+saturation state and continues through intermediate liquid-phase N₂
+compositions before solving the requested `T, x_liquid` point. A companion dew
+solve uses the same VLE primitive and brackets liquid composition until the
+vapor-phase N₂ composition matches the requested bulk composition.
+
+The current native point classifier is intentionally minimal. For a requested
+subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at
+`x_liquid = z`, dew pressure at `y_vapor = z`, and uses those converged
+boundaries only to classify clearly vapor-side, clearly dense/liquid-side or
+inside/on-envelope two-phase states. Clearly single-phase states then solve
+the homogeneous multifluid EOS for density at the specified overall
+composition. Two-phase states return explicit two-phase status and do not
+invent a unique homogeneous bulk density or phase fraction. This is not yet a
+general T-p-z flash solver and is not exposed as a validated user-facing
+CO₂/N₂ teqp domain until independent Gate C data are ingested and passed.
 
 The generated teqp XCFramework is intentionally ignored by Git. A clean clone
 therefore remains buildable without teqp and shows the provider as unavailable
@@ -72,8 +93,9 @@ ignored like the generated binary and must be inspected before distribution.
 
 `Scripts/build-teqp-xcframework.sh` clones the pinned tag with submodules into a
 temporary build directory, configures teqp only far enough to unpack its bundled
-headers/schema support, generates a traceable C++ header containing the pinned
-CO₂ JSON data, and compiles `Native/TeqpBridge/src/PhaseXpertTeqpBridge.cpp`
+headers/schema support, generates traceable C++ headers containing the pinned
+CO₂, N₂, CO₂/N₂ binary-pair and CO₂/N₂ departure-function JSON data, and
+compiles `Native/TeqpBridge/src/PhaseXpertTeqpBridge.cpp`
 directly into static libraries for:
 
 - `ios-arm64`;
@@ -110,6 +132,9 @@ The C ABI exposes:
 
 - linked teqp version/provenance text;
 - pure-CO₂ density from pressure in Pa and temperature in K;
+- CO₂/N₂ binary `mix_VLE_Tx` diagnostics for bridge validation;
+- CO₂/N₂ subcritical point classification for validation-gated vapor,
+  dense/liquid and two-phase states;
 - molar density and root count for bridge diagnostics;
 - limited phase state: stable vapor, stable liquid, and supercritical when
   those states are established by the bridge; otherwise `unknown`.
@@ -147,13 +172,22 @@ Supported:
 - transparently derived molar mass, specific volume and compressibility factor
   through the existing PhaseXpert derived-property layer.
 
+Validation-gated and not yet user-facing:
+
+- CO₂+N₂ binary VLE at subcritical CO₂-rich conditions;
+- CO₂+N₂ homogeneous single-phase density when the state is clearly outside
+  the two-phase pressure interval established by the native VLE primitive;
+- explicit CO₂+N₂ two-phase state classification without bulk density or phase
+  fraction.
+
 Unavailable:
 
 - viscosity and all transport properties;
 - enthalpy, entropy, internal energy, heat capacities, acoustic properties,
   thermal conductivity and Joule-Thomson coefficient;
 - phase envelopes;
-- CO₂+N₂ and all other mixtures.
+- user-facing CO₂+N₂ calculations and all other mixtures through teqp until
+  Gate C independent validation establishes a supported domain.
 
 Unsupported compositions return provider-domain errors and are not silently
 sent to CoolProp.
@@ -205,8 +239,76 @@ They do not establish production accuracy, phase-boundary accuracy, transport
 properties, mixtures, spinodal/metastable behavior, near-critical equilibrium
 robustness or physical-iPhone manual acceptance.
 
+Native CO₂+N₂ bridge tests cover binary model provenance, exact CO₂/N₂ binary
+parameter traceability in the version string, one converged 293.15 K
+`mix_VLE_Tx` solve at 3 mol% liquid N₂, equality of the bridge's pressure and
+chemical-potential residuals, deterministic repeated VLE solves, invalid
+composition and P/T handling, one clear homogeneous gas state, one clear
+homogeneous dense state, one supercritical homogeneous state and one explicit
+two-phase classification. These tests exercise the algorithmic bridge only;
+they are not independent experimental validation and therefore do not open a
+supported user-facing CO₂/N₂ range.
+
+## CO₂+N₂ Gate C validation stop
+
+Independent CO₂+N₂ validation was started against tabulated literature data
+without enabling any user-facing N₂ support.
+
+The VLE probe used Westman, Stang, Løvseth, Austegard, Snustad, Størset and
+Ertesvåg (2016), "Vapor-liquid equilibrium data for the carbon dioxide and
+nitrogen (CO₂ + N₂) system at the temperatures 223, 270, 298 and 303 K and
+pressures up to 18 MPa", `Fluid Phase Equilibria 409, 207-241`,
+DOI `10.1016/j.fluid.2015.09.034`. The checked 298 K liquid/vapor pair rows
+were taken from the published numerical tables, not digitized from plots.
+
+| Reference pair | T / K | xN₂ reference | yN₂ reference | P reference / Pa | P teqp / Pa | ΔP / Pa | Relative ΔP | yN₂ teqp | ΔyN₂ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| L18/V20 | 298.158 | 0.00641000 | 0.01826000 | 6,709,000 | 6,710,001.2 | 1,001.2 | 0.00014924 | 0.01834897 | 0.00008897 |
+| L20/V22 | 298.161 | 0.01616000 | 0.04048000 | 7,100,300 | 7,101,178.1 | 878.1 | 0.00012367 | 0.04073288 | 0.00025288 |
+| L21/V23 | 298.162 | 0.02475000 | 0.05565000 | 7,419,100 | 7,416,718.5 | -2,381.5 | -0.00032099 | 0.05568633 | 0.00003633 |
+| L22/V25 | 298.175 | 0.03950000 | 0.07208000 | 7,894,600 | 7,886,844.3 | -7,755.7 | -0.00098241 | 0.07234970 | 0.00026970 |
+| L24/V27 | 298.171 | 0.04971000 | 0.07539000 | 8,147,900 | 8,147,186.4 | -713.6 | -0.00008758 | 0.07816210 | 0.00277210 |
+
+The same probe reported native equilibrium residuals at or near zero for all
+five Westman points, with worst internal pressure residual `0.00169 Pa`,
+worst CO₂ chemical-potential residual `3.2e-7` and worst N₂
+chemical-potential residual `3.68e-7`. That confirms the bridge solves its
+equilibrium equations, but it does not by itself validate the model for
+PhaseXpert use. The fifth Westman comparison has a material vapor-composition
+deviation of `0.00277210` mole fraction N₂ near 5 mol% liquid N₂, so no 5 mol%
+or broader VLE range is enabled from this evidence.
+
+The single-phase density probe used the CO₂+N₂ tables from Mantovani et al.,
+"Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂
+and CO₂-Ar binary mixtures" / "Densities of Carbon Dioxide + Nitrogen from
+225 K to 450 K at Pressures up to 70 MPa", `Journal of Chemical &
+Engineering Data`, DOI `10.1021/je300590v`. The encoded smoke-validation
+points intentionally covered gas-like, supercritical and dense states at
+4.15 mol% and 9.79 mol% N₂.
+
+| Reference point | T / K | P / Pa | zN₂ | Reference density / kg/m³ | teqp status | teqp density / kg/m³ | Absolute deviation / kg/m³ | Relative deviation |
+|---|---:|---:|---:|---:|---|---:|---:|---:|
+| N1 gas | 383.14 | 1,002,000 | 0.0415 | 13.08 | converged | 13.9129 | 0.8329 | 0.06368054 |
+| N1 supercritical | 343.15 | 12,000,000 | 0.0415 | 305.25 | converged | 311.0174 | 5.7674 | 0.01889417 |
+| N1 dense | 303.22 | 12,001,000 | 0.0415 | 715.67 | failed | unavailable | unavailable | unavailable |
+| N2 gas | 383.14 | 1,000,000 | 0.0979 | 12.48 | converged | 13.5721 | 1.0921 | 0.08750514 |
+| N2 supercritical | 343.15 | 12,002,000 | 0.0979 | 275.24 | converged | 277.7393 | 2.4993 | 0.00908058 |
+| N2 dense | 303.22 | 12,003,000 | 0.0979 | 599.42 | failed | unavailable | unavailable | unavailable |
+
+The density comparison fails Gate C. The converged gas-like and
+supercritical-density deviations are too large for a defensible validation
+claim, and both dense reference states fail because the current subcritical
+point classifier cannot converge the required CO₂/N₂ VLE continuation near
+the requested conditions. Therefore the validated teqp N₂ range is empty,
+PhaseXpert must not expose CO₂+N₂ calculations through teqp, and Gates D and E
+must not proceed from this implementation without additional scientific and
+numerical investigation.
+
 ## Next milestone
 
-CO₂+N₂ must remain a separate milestone after this pure-CO₂ implementation is
-reviewed and accepted. That future work needs its own model/data provenance,
-mixture root/phase-selection strategy and independent validation plan.
+CO₂+N₂ Gate C must ingest authoritative independent PVT/VLE data before any
+user-facing teqp mixture domain is enabled. Gate D phase-envelope UI integration
+must use native teqp binary VLE continuation rather than relabeling CoolProp
+output. Gate E property expansion must establish complete definitions, units,
+basis and reference-state conventions before exposing any caloric or acoustic
+properties.

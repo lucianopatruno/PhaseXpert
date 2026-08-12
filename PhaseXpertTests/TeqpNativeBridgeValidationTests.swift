@@ -110,6 +110,179 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
+    func testNativeTeqpVersionReportsCO2N2ProvenanceWhenLinked() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var buffer = [CChar](repeating: 0, count: 256)
+        XCTAssertEqual(px_teqp_copy_version(&buffer, buffer.count), 0)
+        let version = nullTerminatedString(buffer)
+        XCTAssertTrue(version.contains("teqp 0.23.1"))
+        XCTAssertTrue(version.contains("Span-JPCRD-1996"))
+        XCTAssertTrue(version.contains("Span-JPCRD-2000"))
+        XCTAssertTrue(version.contains("Gernert-Thesis-2013"))
+        XCTAssertTrue(version.contains("Kunz-JCED-2012"))
+        XCTAssertTrue(version.contains("betaT=0.994140013"))
+        XCTAssertTrue(version.contains("gammaT=1.107654104"))
+        XCTAssertTrue(version.contains("betaV=1.022709642"))
+        XCTAssertTrue(version.contains("gammaV=1.047578256"))
+        #endif
+    }
+
+    func testNativeTeqpCO2N2MixVLETxConvergesAndSatisfiesEquilibrium() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let result = try requireNativeBinaryVLE(
+            temperatureK: 293.15,
+            liquidNitrogenMoleFraction: 0.03
+        )
+
+        XCTAssertEqual(result.converged, 1)
+        XCTAssertGreaterThan(result.pressure_pa, 0)
+        XCTAssertEqual(result.pressure_pa, 7_040_930, accuracy: 1_000)
+        XCTAssertEqual(result.liquid_n2_mole_fraction, 0.03, accuracy: 1e-8)
+        XCTAssertEqual(result.vapor_n2_mole_fraction, 0.0909, accuracy: 5e-4)
+        XCTAssertEqual(result.pressure_residual_pa, 0, accuracy: 1e-3)
+        XCTAssertEqual(result.co2_chemical_potential_residual, 0, accuracy: 1e-4)
+        XCTAssertEqual(result.n2_chemical_potential_residual, 0, accuracy: 1e-4)
+        XCTAssertGreaterThan(
+            result.liquid_molar_density_mol_m3,
+            result.vapor_molar_density_mol_m3
+        )
+        #endif
+    }
+
+    func testNativeTeqpCO2N2MixVLETxIsDeterministic() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let first = try requireNativeBinaryVLE(
+            temperatureK: 293.15,
+            liquidNitrogenMoleFraction: 0.05
+        )
+        for _ in 0..<5 {
+            let repeated = try requireNativeBinaryVLE(
+                temperatureK: 293.15,
+                liquidNitrogenMoleFraction: 0.05
+            )
+            XCTAssertEqual(repeated.pressure_pa, first.pressure_pa)
+            XCTAssertEqual(repeated.liquid_n2_mole_fraction, first.liquid_n2_mole_fraction)
+            XCTAssertEqual(repeated.vapor_n2_mole_fraction, first.vapor_n2_mole_fraction)
+        }
+        #endif
+    }
+
+    func testNativeTeqpCO2N2PointClassifiesClearGasDenseAndTwoPhaseStates() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let gas = try requireNativeBinaryPoint(
+            pressurePa: 1_000_000,
+            temperatureK: 293.15,
+            nitrogenMoleFraction: 0.03
+        )
+        XCTAssertEqual(gas.phase, PXTeqpPhaseGas)
+        XCTAssertGreaterThan(gas.density_kg_m3, 0)
+        XCTAssertLessThan(1_000_000, gas.dew_pressure_pa)
+
+        let twoPhase = try requireNativeBinaryPoint(
+            pressurePa: 6_500_000,
+            temperatureK: 293.15,
+            nitrogenMoleFraction: 0.03
+        )
+        XCTAssertEqual(twoPhase.phase, PXTeqpPhaseTwoPhase)
+        XCTAssertTrue(twoPhase.density_kg_m3.isNaN)
+        XCTAssertGreaterThan(twoPhase.bubble_pressure_pa, twoPhase.dew_pressure_pa)
+
+        let dense = try requireNativeBinaryPoint(
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            nitrogenMoleFraction: 0.03
+        )
+        XCTAssertEqual(dense.phase, PXTeqpPhaseLiquid)
+        XCTAssertGreaterThan(dense.density_kg_m3, 0)
+        XCTAssertGreaterThan(15_000_000, dense.bubble_pressure_pa)
+        #endif
+    }
+
+    func testNativeTeqpCO2N2PointClassifiesSupercriticalHomogeneousState() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let result = try requireNativeBinaryPoint(
+            pressurePa: 12_000_000,
+            temperatureK: 320.0,
+            nitrogenMoleFraction: 0.03
+        )
+
+        XCTAssertEqual(result.phase, PXTeqpPhaseSupercritical)
+        XCTAssertGreaterThan(result.density_kg_m3, 0)
+        XCTAssertTrue(result.dew_pressure_pa.isNaN)
+        XCTAssertTrue(result.bubble_pressure_pa.isNaN)
+        XCTAssertEqual(result.dew_converged, 0)
+        XCTAssertEqual(result.bubble_converged, 0)
+        #endif
+    }
+
+    func testNativeTeqpCO2N2RejectsInvalidComposition() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        for nitrogenMoleFraction in [Double.nan, -0.01, 0.0, 1.0, 1.01] {
+            var result = PXTeqpBinaryPointResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_co2_n2_point(
+                1_000_000,
+                293.15,
+                nitrogenMoleFraction,
+                &result,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            XCTAssertNotEqual(status, 0)
+            XCTAssertTrue(
+                nullTerminatedString(errorBuffer)
+                    .contains("Nitrogen mole fraction")
+            )
+        }
+        #endif
+    }
+
+    func testNativeTeqpCO2N2RejectsInvalidPressureAndTemperature() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let invalidStates = [
+            (Double.nan, 293.15),
+            (Double.infinity, 293.15),
+            (0.0, 293.15),
+            (-1.0, 293.15),
+            (1_000_000.0, Double.nan),
+            (1_000_000.0, Double.infinity),
+            (1_000_000.0, 0.0),
+            (1_000_000.0, -1.0)
+        ]
+        for (pressurePa, temperatureK) in invalidStates {
+            var result = PXTeqpBinaryPointResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_co2_n2_point(
+                pressurePa,
+                temperatureK,
+                0.03,
+                &result,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            XCTAssertNotEqual(status, 0)
+            XCTAssertTrue(
+                nullTerminatedString(errorBuffer)
+                    .contains("finite and positive")
+            )
+        }
+        #endif
+    }
+
     func testNativeTeqpSelectsStableLiquidForReportedCompressedState() async throws {
         let engine = try requireNativeTeqpEngine()
         let saturation = try requireNativeSaturation(temperatureK: 293.15)
@@ -263,7 +436,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             errorBuffer.count
         )
         guard status == 0 else {
-            XCTFail(String(cString: errorBuffer))
+            XCTFail(nullTerminatedString(errorBuffer))
             throw XCTSkip("teqp saturation result was unavailable.")
         }
         return SaturationState(
@@ -278,8 +451,61 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
+    #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+    private func requireNativeBinaryVLE(
+        temperatureK: Double,
+        liquidNitrogenMoleFraction: Double
+    ) throws -> PXTeqpBinaryVLEResult {
+        var nativeResult = PXTeqpBinaryVLEResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status = px_teqp_calculate_co2_n2_vle_tx(
+            temperatureK,
+            liquidNitrogenMoleFraction,
+            &nativeResult,
+            &errorBuffer,
+            errorBuffer.count
+        )
+        guard status == 0 else {
+            throw XCTSkip(
+                "Native CO₂/N₂ VLE solve failed: "
+                    + nullTerminatedString(errorBuffer)
+            )
+        }
+        return nativeResult
+    }
+
+    private func requireNativeBinaryPoint(
+        pressurePa: Double,
+        temperatureK: Double,
+        nitrogenMoleFraction: Double
+    ) throws -> PXTeqpBinaryPointResult {
+        var nativeResult = PXTeqpBinaryPointResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status = px_teqp_calculate_co2_n2_point(
+            pressurePa,
+            temperatureK,
+            nitrogenMoleFraction,
+            &nativeResult,
+            &errorBuffer,
+            errorBuffer.count
+        )
+        guard status == 0 else {
+            throw XCTSkip(
+                "Native CO₂/N₂ point solve failed: "
+                    + nullTerminatedString(errorBuffer)
+            )
+        }
+        return nativeResult
+    }
+    #endif
+
     private func saturationPressureTolerance(_ pressurePa: Double) -> Double {
         max(1.0, 1e-8 * abs(pressurePa))
+    }
+
+    private func nullTerminatedString(_ buffer: [CChar]) -> String {
+        let end = buffer.firstIndex(of: 0) ?? buffer.endIndex
+        return String(decoding: buffer[..<end].map(UInt8.init(bitPattern:)), as: UTF8.self)
     }
 
     private var densityReferences: [DensityReferenceCase] {

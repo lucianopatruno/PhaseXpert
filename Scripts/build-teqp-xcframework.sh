@@ -47,19 +47,45 @@ cmake -S "${source_root}" -B "${build_root}" \
     -DCMAKE_BUILD_TYPE=Release
 
 generated_header="${build_root}/generated_headers/PhaseXpertTeqpCarbonDioxideData.hpp"
+generated_model_header="${build_root}/generated_headers/PhaseXpertTeqpModelData.hpp"
 mkdir -p "$(dirname "${generated_header}")"
-python3 - "${source_root}/teqp/fluiddata/dev/fluids/CarbonDioxide.json" "${generated_header}" <<'PY'
+python3 - \
+    "${source_root}/teqp/fluiddata/dev/fluids/CarbonDioxide.json" \
+    "${source_root}/teqp/fluiddata/dev/fluids/Nitrogen.json" \
+    "${source_root}/teqp/fluiddata/dev/mixtures/mixture_binary_pairs.json" \
+    "${source_root}/teqp/fluiddata/dev/mixtures/mixture_departure_functions.json" \
+    "${generated_header}" \
+    "${generated_model_header}" <<'PY'
 import pathlib
 import sys
 
 source = pathlib.Path(sys.argv[1])
-target = pathlib.Path(sys.argv[2])
+nitrogen = pathlib.Path(sys.argv[2])
+binary_pairs = pathlib.Path(sys.argv[3])
+departures = pathlib.Path(sys.argv[4])
+target = pathlib.Path(sys.argv[5])
+model_target = pathlib.Path(sys.argv[6])
 text = source.read_text()
 target.write_text(
     "#pragma once\n"
     "inline constexpr const char *kPhaseXpertTeqpCarbonDioxideJson = R\"PXTEQPJSON("
     + text +
     ")PXTEQPJSON\";\n"
+)
+
+def constant(name, path):
+    return (
+        f"inline constexpr const char *{name} = R\"PXTEQPJSON("
+        + path.read_text()
+        + ")PXTEQPJSON\";\n"
+    )
+
+model_target.write_text(
+    "#pragma once\n"
+    + constant("kPhaseXpertTeqpCarbonDioxideJson", source)
+    + constant("kPhaseXpertTeqpNitrogenJson", nitrogen)
+    + constant("kPhaseXpertTeqpBinaryPairsJson", binary_pairs)
+    + constant("kPhaseXpertTeqpDepartureFunctionsJson", departures)
 )
 PY
 

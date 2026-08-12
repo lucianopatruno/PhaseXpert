@@ -26,14 +26,17 @@ for iOS.
 An experimental native teqp provider is also scaffolded for exactly 100 mol%
 CO₂. It is not the default provider. It solves density locally through teqp's
 pinned pure-CO₂ multifluid model and reports viscosity and broader properties
-as unavailable rather than borrowing them from CoolProp.
+as unavailable rather than borrowing them from CoolProp. The native bridge also
+contains validation-gated CO₂+N₂ binary VLE and subcritical point-classification
+primitives built from pinned upstream teqp data; these are not yet a
+user-facing supported mixture domain.
 
 ## Alternatives considered
 
 | Option | Strengths | Principal limitations for this app |
 |---|---|---|
 | CoolProp HEOS | Offline, open source, broad property API, C++ core | Mixture-pair/transport coverage varies; iOS build and validation work required |
-| teqp | Offline C++ equation-of-state framework with a native pure-CO₂ bridge in PhaseXpert | Experimental in PhaseXpert; current scope is only pure-CO₂ density, with viscosity and mixtures unavailable |
+| teqp | Offline C++ equation-of-state framework with native pure-CO₂ and validation-gated CO₂+N₂ bridge code in PhaseXpert | Experimental in PhaseXpert; user-facing scope is only pure-CO₂ density, with viscosity, phase envelopes and mixtures unavailable until independent validation passes |
 | REFPROP | Strong reference implementation and broad property coverage | Proprietary licence; redistribution and iOS embedding require explicit NIST permission/terms |
 | GERG-2008 implementation | Strong basis for natural-gas-like mixtures and phase behaviour | Component set and CO₂-rich impurity coverage are limited; implementation/data licensing and edge-domain validation required |
 | Cubic EOS such as Peng–Robinson | Compact, offline and phase-equilibrium capable | Needs sourced pure-component data and binary interaction parameters; density and transport accuracy may be inadequate without validated corrections |

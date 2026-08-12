@@ -73,6 +73,8 @@ private func phaseIdentifier(for phase: PXTeqpPhase) -> String {
         "gas"
     case PXTeqpPhaseLiquid:
         "liquid"
+    case PXTeqpPhaseTwoPhase:
+        "twoPhase"
     default:
         "unknown"
     }
