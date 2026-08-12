@@ -20,6 +20,29 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
+    func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
+        let engine = try requireNativeTeqpEngine()
+        XCTAssertTrue(engine.isAvailable)
+
+        let registry = ProviderRegistry()
+        XCTAssertEqual(registry.providers.first?.descriptor.id, "coolprop-heos")
+
+        let provider = try XCTUnwrap(
+            registry.provider(id: "teqp-pure-co2-experimental")
+        )
+        XCTAssertEqual(provider.descriptor.id, "teqp-pure-co2-experimental")
+        XCTAssertEqual(provider.descriptor.availability, .preliminary)
+        XCTAssertNotEqual(provider.descriptor.availability, .unavailable)
+
+        let descriptor = try XCTUnwrap(
+            registry.descriptors.first {
+                $0.id == "teqp-pure-co2-experimental"
+            }
+        )
+        XCTAssertEqual(descriptor.availability, .preliminary)
+        XCTAssertTrue(descriptor.availability != .unavailable)
+    }
+
     func testNativeTeqpDensityAgainstMantillaExperimentalData() async throws {
         let engine = try requireNativeTeqpEngine()
         XCTAssertTrue(engine.libraryVersion.contains("teqp 0.23.1"))

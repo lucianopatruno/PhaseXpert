@@ -36,11 +36,7 @@ public struct ProviderRegistry: Sendable {
     }
 
     private static var defaultTeqpProvider: any ThermodynamicModelProvider {
-        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         TeqpProvider(engine: NativeTeqpEngine())
-        #else
-        TeqpProvider(engine: UnavailableTeqpEngine())
-        #endif
     }
 
     public static let ifeModelDescriptor = ModelDescriptor(

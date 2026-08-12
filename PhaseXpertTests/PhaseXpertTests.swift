@@ -808,6 +808,27 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testCalculatorExposesNativeTeqpAsSelectableWhenLinked() throws {
+        let viewModel = CalculatorViewModel()
+        guard NativeTeqpEngine().isAvailable else {
+            throw XCTSkip("The generated teqp XCFramework is not linked to this build.")
+        }
+
+        let descriptor = viewModel.descriptors.first {
+            $0.id == "teqp-pure-co2-experimental"
+        }
+        XCTAssertEqual(descriptor?.availability, .preliminary)
+        XCTAssertTrue(
+            viewModel.selectableDescriptors.contains {
+                $0.id == "teqp-pure-co2-experimental"
+            }
+        )
+
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        XCTAssertEqual(viewModel.selectedDescriptor?.availability, .preliminary)
+    }
+
+    @MainActor
     func testSavedCaseDefaultNameIncludesActiveMixtureComposition() {
         XCTAssertEqual(
             SavedCaseNameFormatter.compositionLabel(for: [
