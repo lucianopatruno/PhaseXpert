@@ -165,8 +165,8 @@
   high-temperature 303-383 K diagnostic rows are Mantovani et al. 2012
   (`10.1016/j.supflu.2011.09.001`), not Mazzoccoli et al. 2012
   (`10.1021/je300590v`); added Brugge et al. 1997
-  (`10.1021/je970044w`) as the audited primary PVT source. Gate C remains not
-  passed, with no user-facing N₂ range enabled, because the corrected Brugge
-  density matrix has failed 300 K points and a worst converged density
-  deviation above the source accuracy basis, and the Westman 2016 VLE probe
-  still shows an unexplained vapor-composition deviation near 5 mol% liquid N₂.
+  (`10.1021/je970044w`) as the audited primary PVT source, and fixed the
+  binary point classifier so it no longer uses pure-CO₂ critical temperature as
+  the CO₂/N₂ phase-topology switch. Gate C remains not passed, with no
+  user-facing N₂ range enabled, because the corrected density/VLE evidence does
+  not yet establish a defensible sub-domain.

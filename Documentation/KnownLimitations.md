@@ -30,7 +30,8 @@
   on or too close to saturation remain explicitly unavailable because a unique
   homogeneous bulk density is not reported. The native bridge now embeds pinned
   teqp v0.23.1 CO₂+N₂ multifluid data and exposes validation-gated binary VLE
-  and subcritical point-classification primitives, but the corrected
+  and point-classification primitives using fixed-composition mixture critical
+  conditions rather than pure-CO₂ critical temperature, but the corrected
   independent Gate C density and VLE audit has not established a supported
   CO₂+N₂ teqp operating range.
 - The broad input envelope is a test-planning domain, not a validated range.

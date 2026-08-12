@@ -13,6 +13,7 @@
 #include <exception>
 #include <limits>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -171,11 +172,15 @@ public:
           ancillaries_(json_.at("ANCILLARIES")),
           molar_mass_kg_mol_(json_.at("EOS").at(0).at("molar_mass")),
           critical_temperature_k_(json_.at("STATES").at("critical").at("T")),
-          critical_pressure_pa_(json_.at("STATES").at("critical").at("p")) {}
+          critical_pressure_pa_(json_.at("STATES").at("critical").at("p")),
+          critical_molar_density_mol_m3_(
+              json_.at("STATES").at("critical").at("rhomolar")
+          ) {}
 
     double molarMassKilogramsPerMole() const { return molar_mass_kg_mol_; }
     double criticalTemperatureK() const { return critical_temperature_k_; }
     double criticalPressurePa() const { return critical_pressure_pa_; }
+    double criticalMolarDensityMolM3() const { return critical_molar_density_mol_m3_; }
 
     double pressurePa(double temperature_k, double molar_density_mol_m3) const {
         Eigen::Array<double, 1, 1> rhovec;
@@ -240,6 +245,7 @@ private:
     double molar_mass_kg_mol_;
     double critical_temperature_k_;
     double critical_pressure_pa_;
+    double critical_molar_density_mol_m3_;
 };
 
 CarbonDioxideModel &co2_model() {
@@ -286,6 +292,179 @@ public:
 
     double gasConstant(const Eigen::ArrayXd &molefractions) const {
         return model_.R(molefractions);
+    }
+
+    Eigen::MatrixXd totalPsiHessian(
+        double temperature_k,
+        const Eigen::ArrayXd &rhovec
+    ) const {
+        const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+        auto derivatives = psirDerivatives(temperature_k, rhovec);
+        Eigen::MatrixXd hessian = std::get<2>(derivatives);
+        const double gas_constant_temperature =
+            model_.R(molefractions) * temperature_k;
+        for (Eigen::Index index = 0; index < rhovec.size(); ++index) {
+            if (rhovec[index] <= 0 || !std::isfinite(rhovec[index])) {
+                throw std::runtime_error("teqp mixture Hessian requires positive molar concentrations.");
+            }
+            hessian(index, index) += gas_constant_temperature / rhovec[index];
+        }
+        return hessian;
+    }
+
+    bool isLocallyStable(double temperature_k, const Eigen::ArrayXd &rhovec) const {
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen(
+            totalPsiHessian(temperature_k, rhovec)
+        );
+        if (eigen.info() != Eigen::Success || eigen.eigenvalues().size() == 0) {
+            return false;
+        }
+        const double minimum_eigenvalue = eigen.eigenvalues()[0];
+        return std::isfinite(minimum_eigenvalue) && minimum_eigenvalue > 0.0;
+    }
+
+    Eigen::Array<double, 2, 1> criticalityConditions(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        double nitrogen_mole_fraction
+    ) const {
+        Eigen::ArrayXd rhovec(2);
+        rhovec << (1.0 - nitrogen_mole_fraction) * total_molar_density_mol_m3,
+            nitrogen_mole_fraction * total_molar_density_mol_m3;
+        const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+        const double gas_constant_temperature =
+            model_.R(molefractions) * temperature_k;
+
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen(
+            totalPsiHessian(temperature_k, rhovec)
+        );
+        if (eigen.info() != Eigen::Success || eigen.eigenvalues().size() < 2) {
+            throw std::runtime_error("teqp mixture critical Hessian eigenproblem failed.");
+        }
+        const Eigen::ArrayXd critical_direction = eigen.eigenvectors().col(0).array();
+
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        const Eigen::ArrayXd residual_sigma_derivatives =
+            Derivatives::get_Psir_sigma_derivs(
+                model_,
+                temperature_k,
+                rhovec,
+                critical_direction
+            );
+        double ideal_third_derivative = 0.0;
+        for (Eigen::Index index = 0; index < rhovec.size(); ++index) {
+            ideal_third_derivative += -gas_constant_temperature
+                * std::pow(critical_direction[index], 3)
+                / std::pow(rhovec[index], 2);
+        }
+        return (Eigen::Array<double, 2, 1>()
+            << eigen.eigenvalues()[0],
+            residual_sigma_derivatives[3] + ideal_third_derivative
+        ).finished();
+    }
+
+    std::optional<double> criticalTemperatureForComposition(
+        double nitrogen_mole_fraction
+    ) const {
+        const double critical_temperature_seed = co2_model().criticalTemperatureK();
+        const double critical_density_seed = co2_model().criticalMolarDensityMolM3();
+        std::vector<Eigen::Array<double, 2, 1>> seeds;
+        for (double temperature_offset : {0.0, -2.0, -5.0, -10.0, -20.0}) {
+            for (double density_factor : {0.75, 1.0, 1.25}) {
+                seeds.push_back(
+                    (Eigen::Array<double, 2, 1>()
+                        << critical_temperature_seed + temperature_offset,
+                        critical_density_seed * density_factor
+                    ).finished()
+                );
+            }
+        }
+
+        for (auto state : seeds) {
+            for (int iteration = 0; iteration < 25; ++iteration) {
+                if (!std::isfinite(state[0]) || !std::isfinite(state[1])
+                    || state[0] <= 0 || state[1] <= 0) {
+                    break;
+                }
+                Eigen::Array<double, 2, 1> residual;
+                try {
+                    residual = criticalityConditions(
+                        state[0],
+                        state[1],
+                        nitrogen_mole_fraction
+                    );
+                } catch (...) {
+                    break;
+                }
+                if (!std::isfinite(residual[0]) || !std::isfinite(residual[1])) {
+                    break;
+                }
+                const double temperature_step = std::max(1e-4, 1e-6 * state[0]);
+                const double density_step = std::max(1e-3, 1e-6 * state[1]);
+                Eigen::Matrix2d jacobian;
+                try {
+                    const auto plus_temperature = criticalityConditions(
+                        state[0] + temperature_step,
+                        state[1],
+                        nitrogen_mole_fraction
+                    );
+                    const auto minus_temperature = criticalityConditions(
+                        state[0] - temperature_step,
+                        state[1],
+                        nitrogen_mole_fraction
+                    );
+                    const auto plus_density = criticalityConditions(
+                        state[0],
+                        state[1] + density_step,
+                        nitrogen_mole_fraction
+                    );
+                    const auto minus_density = criticalityConditions(
+                        state[0],
+                        state[1] - density_step,
+                        nitrogen_mole_fraction
+                    );
+                    jacobian.col(0) =
+                        ((plus_temperature - minus_temperature)
+                            / (2.0 * temperature_step)).matrix();
+                    jacobian.col(1) =
+                        ((plus_density - minus_density)
+                            / (2.0 * density_step)).matrix();
+                } catch (...) {
+                    break;
+                }
+                const Eigen::Vector2d update =
+                    jacobian.colPivHouseholderQr().solve(-residual.matrix());
+                if (!std::isfinite(update[0]) || !std::isfinite(update[1])) {
+                    break;
+                }
+                state[0] += update[0];
+                state[1] += update[1];
+                if (std::abs(update[0]) < 1e-6
+                    && std::abs(update[1]) < 1e-6 * std::max(1.0, state[1])) {
+                    break;
+                }
+            }
+            if (!std::isfinite(state[0]) || !std::isfinite(state[1])
+                || state[0] <= 0 || state[1] <= 0) {
+                continue;
+            }
+            try {
+                const auto residual = criticalityConditions(
+                    state[0],
+                    state[1],
+                    nitrogen_mole_fraction
+                );
+                if (std::abs(residual[0]) < 1e-5
+                    && std::abs(residual[1]) < 1e-7
+                    && state[0] > 150.0
+                    && state[0] < 500.0) {
+                    return state[0];
+                }
+            } catch (...) {
+                continue;
+            }
+        }
+        return std::nullopt;
     }
 
     double mixtureMolarMassKgMol(double nitrogen_mole_fraction) const {
@@ -1002,62 +1181,6 @@ int px_teqp_calculate_co2_n2_point(
 
     try {
         const auto &model = co2_n2_model();
-        if (temperature_k >= co2_model().criticalTemperatureK()) {
-            const auto roots = binary_density_roots(
-                model,
-                pressure_pa,
-                temperature_k,
-                nitrogen_mole_fraction
-            );
-            if (roots.empty()) {
-                copy_text("teqp did not find a finite CO2/N2 density root.", error_buffer, error_buffer_size);
-                return 6;
-            }
-            result->dew_pressure_pa = std::numeric_limits<double>::quiet_NaN();
-            result->bubble_pressure_pa = std::numeric_limits<double>::quiet_NaN();
-            result->dew_converged = 0;
-            result->bubble_converged = 0;
-            return fill_homogeneous_binary_density_result(
-                model,
-                roots,
-                nitrogen_mole_fraction,
-                PXTeqpPhaseSupercritical,
-                lowest_density_root(roots),
-                result,
-                error_buffer,
-                error_buffer_size
-            );
-        }
-
-        const auto bubble = solve_binary_vle_tx(
-            temperature_k,
-            nitrogen_mole_fraction
-        );
-        const auto dew = solve_binary_dew_for_vapor_composition(
-            temperature_k,
-            nitrogen_mole_fraction
-        );
-        const double lower_boundary = std::min(dew.pressure_pa, bubble.pressure_pa);
-        const double upper_boundary = std::max(dew.pressure_pa, bubble.pressure_pa);
-        const double boundary_scale = std::max({1.0, lower_boundary, upper_boundary});
-        const double boundary_tolerance =
-            std::max(1.0, 1e-7 * boundary_scale);
-
-        result->dew_pressure_pa = dew.pressure_pa;
-        result->bubble_pressure_pa = bubble.pressure_pa;
-        result->dew_converged = dew.converged ? 1 : 0;
-        result->bubble_converged = bubble.converged ? 1 : 0;
-
-        if (pressure_pa >= lower_boundary - boundary_tolerance
-            && pressure_pa <= upper_boundary + boundary_tolerance) {
-            result->density_kg_m3 = std::numeric_limits<double>::quiet_NaN();
-            result->molar_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
-            result->density_root_count = 0;
-            result->phase = PXTeqpPhaseTwoPhase;
-            copy_text("", error_buffer, error_buffer_size);
-            return 0;
-        }
-
         const auto roots = binary_density_roots(
             model,
             pressure_pa,
@@ -1069,17 +1192,116 @@ int px_teqp_calculate_co2_n2_point(
             return 6;
         }
 
-        const bool vapor_side = pressure_pa < lower_boundary - boundary_tolerance;
-        return fill_homogeneous_binary_density_result(
-            model,
-            roots,
-            nitrogen_mole_fraction,
-            vapor_side ? PXTeqpPhaseGas : PXTeqpPhaseLiquid,
-            vapor_side ? lowest_density_root(roots) : highest_density_root(roots),
-            result,
-            error_buffer,
-            error_buffer_size
-        );
+        if (roots.size() == 1) {
+            Eigen::ArrayXd rhovec(2);
+            rhovec << (1.0 - nitrogen_mole_fraction)
+                    * roots[0].molar_density_mol_m3,
+                nitrogen_mole_fraction * roots[0].molar_density_mol_m3;
+            const bool locally_stable =
+                model.isLocallyStable(temperature_k, rhovec);
+            const auto critical_temperature =
+                model.criticalTemperatureForComposition(nitrogen_mole_fraction);
+            if (locally_stable && critical_temperature
+                && temperature_k > critical_temperature.value() + 1e-5) {
+                result->dew_pressure_pa = std::numeric_limits<double>::quiet_NaN();
+                result->bubble_pressure_pa = std::numeric_limits<double>::quiet_NaN();
+                result->dew_converged = 0;
+                result->bubble_converged = 0;
+                return fill_homogeneous_binary_density_result(
+                    model,
+                    roots,
+                    nitrogen_mole_fraction,
+                    PXTeqpPhaseSupercritical,
+                    roots[0],
+                    result,
+                    error_buffer,
+                    error_buffer_size
+                );
+            }
+            if (locally_stable && !critical_temperature) {
+                result->dew_pressure_pa = std::numeric_limits<double>::quiet_NaN();
+                result->bubble_pressure_pa = std::numeric_limits<double>::quiet_NaN();
+                result->dew_converged = 0;
+                result->bubble_converged = 0;
+                return fill_homogeneous_binary_density_result(
+                    model,
+                    roots,
+                    nitrogen_mole_fraction,
+                    PXTeqpPhaseUnknown,
+                    roots[0],
+                    result,
+                    error_buffer,
+                    error_buffer_size
+                );
+            }
+        }
+
+        try {
+            const auto bubble = solve_binary_vle_tx(
+                temperature_k,
+                nitrogen_mole_fraction
+            );
+            const auto dew = solve_binary_dew_for_vapor_composition(
+                temperature_k,
+                nitrogen_mole_fraction
+            );
+            const double lower_boundary = std::min(dew.pressure_pa, bubble.pressure_pa);
+            const double upper_boundary = std::max(dew.pressure_pa, bubble.pressure_pa);
+            const double boundary_scale = std::max({1.0, lower_boundary, upper_boundary});
+            const double boundary_tolerance =
+                std::max(1.0, 1e-7 * boundary_scale);
+
+            result->dew_pressure_pa = dew.pressure_pa;
+            result->bubble_pressure_pa = bubble.pressure_pa;
+            result->dew_converged = dew.converged ? 1 : 0;
+            result->bubble_converged = bubble.converged ? 1 : 0;
+
+            if (pressure_pa >= lower_boundary - boundary_tolerance
+                && pressure_pa <= upper_boundary + boundary_tolerance) {
+                result->density_kg_m3 = std::numeric_limits<double>::quiet_NaN();
+                result->molar_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+                result->density_root_count = 0;
+                result->phase = PXTeqpPhaseTwoPhase;
+                copy_text("", error_buffer, error_buffer_size);
+                return 0;
+            }
+
+            const bool vapor_side = pressure_pa < lower_boundary - boundary_tolerance;
+            return fill_homogeneous_binary_density_result(
+                model,
+                roots,
+                nitrogen_mole_fraction,
+                vapor_side ? PXTeqpPhaseGas : PXTeqpPhaseLiquid,
+                vapor_side ? lowest_density_root(roots) : highest_density_root(roots),
+                result,
+                error_buffer,
+                error_buffer_size
+            );
+        } catch (const std::exception &) {
+            if (roots.size() == 1) {
+                Eigen::ArrayXd rhovec(2);
+                rhovec << (1.0 - nitrogen_mole_fraction)
+                        * roots[0].molar_density_mol_m3,
+                    nitrogen_mole_fraction * roots[0].molar_density_mol_m3;
+                if (model.isLocallyStable(temperature_k, rhovec)) {
+                    result->dew_pressure_pa = std::numeric_limits<double>::quiet_NaN();
+                    result->bubble_pressure_pa = std::numeric_limits<double>::quiet_NaN();
+                    result->dew_converged = 0;
+                    result->bubble_converged = 0;
+                    return fill_homogeneous_binary_density_result(
+                        model,
+                        roots,
+                        nitrogen_mole_fraction,
+                        PXTeqpPhaseUnknown,
+                        roots[0],
+                        result,
+                        error_buffer,
+                        error_buffer_size
+                    );
+                }
+            }
+            throw;
+        }
     } catch (const std::exception &error) {
         copy_text(error.what(), error_buffer, error_buffer_size);
         return 6;

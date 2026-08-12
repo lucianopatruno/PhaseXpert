@@ -173,36 +173,35 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2PointClassifiesClearGasDenseAndTwoPhaseStates() throws {
+    func testNativeTeqpCO2N2PointReturnsHomogeneousDensityWithoutPureCO2CriticalShortcut() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        let gas = try requireNativeBinaryPoint(
-            pressurePa: 1_000_000,
-            temperatureK: 293.15,
-            nitrogenMoleFraction: 0.03
+        let homogeneous = try requireNativeBinaryPoint(
+            pressurePa: 1_031_000,
+            temperatureK: 300.0,
+            nitrogenMoleFraction: 0.09079
         )
-        XCTAssertEqual(gas.phase, PXTeqpPhaseGas)
-        XCTAssertGreaterThan(gas.density_kg_m3, 0)
-        XCTAssertLessThan(1_000_000, gas.dew_pressure_pa)
+        XCTAssertEqual(homogeneous.phase, PXTeqpPhaseSupercritical)
+        XCTAssertEqual(homogeneous.density_root_count, 1)
+        XCTAssertEqual(homogeneous.density_kg_m3, 18.4416249412, accuracy: 0.001)
+        XCTAssertTrue(homogeneous.dew_pressure_pa.isNaN)
+        XCTAssertTrue(homogeneous.bubble_pressure_pa.isNaN)
+        #endif
+    }
 
-        let twoPhase = try requireNativeBinaryPoint(
-            pressurePa: 6_500_000,
-            temperatureK: 293.15,
-            nitrogenMoleFraction: 0.03
-        )
-        XCTAssertEqual(twoPhase.phase, PXTeqpPhaseTwoPhase)
-        XCTAssertTrue(twoPhase.density_kg_m3.isNaN)
-        XCTAssertGreaterThan(twoPhase.bubble_pressure_pa, twoPhase.dew_pressure_pa)
+    func testNativeTeqpCO2N2PointPreservesExplicitTwoPhaseClassification() throws {
+        _ = try requireNativeTeqpEngine()
 
-        let dense = try requireNativeBinaryPoint(
-            pressurePa: 15_000_000,
-            temperatureK: 293.15,
-            nitrogenMoleFraction: 0.03
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let result = try requireNativeBinaryPoint(
+            pressurePa: 6_000_000,
+            temperatureK: 290.0,
+            nitrogenMoleFraction: 0.02
         )
-        XCTAssertEqual(dense.phase, PXTeqpPhaseLiquid)
-        XCTAssertGreaterThan(dense.density_kg_m3, 0)
-        XCTAssertGreaterThan(15_000_000, dense.bubble_pressure_pa)
+        XCTAssertEqual(result.phase, PXTeqpPhaseTwoPhase)
+        XCTAssertTrue(result.density_kg_m3.isNaN)
+        XCTAssertGreaterThan(result.bubble_pressure_pa, result.dew_pressure_pa)
         #endif
     }
 
