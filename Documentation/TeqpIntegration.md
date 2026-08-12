@@ -249,17 +249,62 @@ two-phase classification. These tests exercise the algorithmic bridge only;
 they are not independent experimental validation and therefore do not open a
 supported user-facing CO₂/N₂ range.
 
-## CO₂+N₂ Gate C validation stop
+## CO₂+N₂ Gate C validation audit
 
 Independent CO₂+N₂ validation was started against tabulated literature data
-without enabling any user-facing N₂ support.
+without enabling any user-facing N₂ support. The first density handoff contained
+a provenance error: the 303.22 K, 343.15 K and 383.14 K rows at 4.15 mol% and
+9.79 mol% N₂ were incorrectly associated with Mazzoccoli, Bosio and Arato
+(2012), DOI `10.1021/je300590v`. That paper covers 273.15 K to 293.15 K,
+1 MPa to 20 MPa and CO₂-rich mixtures above 85 mol% CO₂; it does not contain
+the high-temperature rows used in that probe.
+
+Those high-temperature rows are from Mantovani, Chiesa, Valenti, Gatti and
+Consonni (2012), "Supercritical pressure-density-temperature measurements on
+CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures", `Journal of Supercritical Fluids`
+61, 34-43, DOI `10.1016/j.supflu.2011.09.001`. Table 2 gives molar
+compositions N1 = 0.9585 CO₂ + 0.0415 N₂ and N2 = 0.9021 CO₂ + 0.0979 N₂.
+Tables 4 and 5 report density in kg/m³ with stated density uncertainty
+`±0.2 kg/m³`. Those rows are valid primary-source records for a diagnostic,
+but they are not Mazzoccoli data and should not be used as evidence about
+Mazzoccoli agreement.
+
+The corrected primary-source density probe added Brugge, Holste, Hall, Gammon
+and Marsh (1997), "Densities of Carbon Dioxide + Nitrogen from 225 K to 450 K
+at Pressures up to 70 MPa", `Journal of Chemical & Engineering Data` 42,
+903-907, DOI `10.1021/je970044w`. The audited rows are from Table 1, mixture
+`xA = 0.90921`. Although the OCR header is ambiguous, the table molar mass
+`Mr = 42.5575 g/mol` confirms `xA` is the CO₂ mole fraction, so
+`zN₂ = 0.09079`. Table 1 reports molar density in mol/m³; PhaseXpert converts
+to kg/m³ with the tabulated mixture molar mass. The paper reports density
+accuracy better than `±0.1%`.
+
+| Reference point | Source table | T / K | P / MPa | zN₂ | Reference density | Reference density / kg/m³ | teqp status | teqp density / kg/m³ | Absolute deviation / kg/m³ | Relative deviation |
+|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|
+| Brugge low 300 K | Table 1, xCO₂ = 0.90921 | 300.00 | 1.031 | 0.09079 | 433 mol/m³ | 18.427397 | failed | unavailable | unavailable | unavailable |
+| Brugge intermediate 300 K | Table 1, xCO₂ = 0.90921 | 300.00 | 7.677 | 0.09079 | 5,940 mol/m³ | 252.791550 | failed | unavailable | unavailable | unavailable |
+| Brugge dense 300 K | Table 1, xCO₂ = 0.90921 | 300.00 | 26.591 | 0.09079 | 20,089 mol/m³ | 854.937617 | failed | unavailable | unavailable | unavailable |
+| Brugge low 320 K | Table 1, xCO₂ = 0.90921 | 320.00 | 1.111 | 0.09079 | 435 mol/m³ | 18.512512 | converged | 18.504236 | -0.008277 | -0.00044709 |
+| Brugge intermediate 350 K | Table 1, xCO₂ = 0.90921 | 350.00 | 18.865 | 0.09079 | 11,265 mol/m³ | 479.410237 | converged | 478.009731 | -1.400506 | -0.00292131 |
+| Brugge dense 400 K | Table 1, xCO₂ = 0.90921 | 400.00 | 68.626 | 0.09079 | 18,399 mol/m³ | 783.015442 | converged | 782.416388 | -0.599054 | -0.00076506 |
+
+Low-density diagnostics at 400 K and 1 MPa showed the native binary density
+approaches the ideal-gas limit using the expected mixture molar mass, recovers
+the pure-CO₂ limit smoothly as N₂ tends to zero and decreases continuously as
+N₂ increases from 1 mol% to 10 mol%. That supports the CO₂/N₂ component order
+and mass-density conversion path but is not independent validation.
 
 The VLE probe used Westman, Stang, Løvseth, Austegard, Snustad, Størset and
 Ertesvåg (2016), "Vapor-liquid equilibrium data for the carbon dioxide and
 nitrogen (CO₂ + N₂) system at the temperatures 223, 270, 298 and 303 K and
-pressures up to 18 MPa", `Fluid Phase Equilibria 409, 207-241`,
-DOI `10.1016/j.fluid.2015.09.034`. The checked 298 K liquid/vapor pair rows
-were taken from the published numerical tables, not digitized from plots.
+pressures up to 18 MPa", `Fluid Phase Equilibria 409`, 207-241,
+DOI `10.1016/j.fluid.2015.09.034`. Appendix B states that liquid and vapor
+composition sample rows with the same experiment identifier correspond to the
+same VLE experiment. The checked 298 K liquid/vapor pair rows therefore remain
+traceable table rows rather than graph-digitized points. The source reports
+maximum standard uncertainties of 0.006 K, 0.003 MPa and 0.0004 mole fraction,
+with the text cautioning that critical-region 298 K and 303 K composition
+uncertainties may be larger than the table values.
 
 | Reference pair | T / K | xN₂ reference | yN₂ reference | P reference / Pa | P teqp / Pa | ΔP / Pa | Relative ΔP | yN₂ teqp | ΔyN₂ |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -274,35 +319,19 @@ five Westman points, with worst internal pressure residual `0.00169 Pa`,
 worst CO₂ chemical-potential residual `3.2e-7` and worst N₂
 chemical-potential residual `3.68e-7`. That confirms the bridge solves its
 equilibrium equations, but it does not by itself validate the model for
-PhaseXpert use. The fifth Westman comparison has a material vapor-composition
-deviation of `0.00277210` mole fraction N₂ near 5 mol% liquid N₂, so no 5 mol%
-or broader VLE range is enabled from this evidence.
+PhaseXpert use. The fifth Westman comparison still has a material
+vapor-composition deviation of `0.00277210` mole fraction N₂ near 5 mol%
+liquid N₂, greater than the nominal mole-fraction uncertainty.
 
-The single-phase density probe used the CO₂+N₂ tables from Mantovani et al.,
-"Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂
-and CO₂-Ar binary mixtures" / "Densities of Carbon Dioxide + Nitrogen from
-225 K to 450 K at Pressures up to 70 MPa", `Journal of Chemical &
-Engineering Data`, DOI `10.1021/je300590v`. The encoded smoke-validation
-points intentionally covered gas-like, supercritical and dense states at
-4.15 mol% and 9.79 mol% N₂.
-
-| Reference point | T / K | P / Pa | zN₂ | Reference density / kg/m³ | teqp status | teqp density / kg/m³ | Absolute deviation / kg/m³ | Relative deviation |
-|---|---:|---:|---:|---:|---|---:|---:|---:|
-| N1 gas | 383.14 | 1,002,000 | 0.0415 | 13.08 | converged | 13.9129 | 0.8329 | 0.06368054 |
-| N1 supercritical | 343.15 | 12,000,000 | 0.0415 | 305.25 | converged | 311.0174 | 5.7674 | 0.01889417 |
-| N1 dense | 303.22 | 12,001,000 | 0.0415 | 715.67 | failed | unavailable | unavailable | unavailable |
-| N2 gas | 383.14 | 1,000,000 | 0.0979 | 12.48 | converged | 13.5721 | 1.0921 | 0.08750514 |
-| N2 supercritical | 343.15 | 12,002,000 | 0.0979 | 275.24 | converged | 277.7393 | 2.4993 | 0.00908058 |
-| N2 dense | 303.22 | 12,003,000 | 0.0979 | 599.42 | failed | unavailable | unavailable | unavailable |
-
-The density comparison fails Gate C. The converged gas-like and
-supercritical-density deviations are too large for a defensible validation
-claim, and both dense reference states fail because the current subcritical
-point classifier cannot converge the required CO₂/N₂ VLE continuation near
-the requested conditions. Therefore the validated teqp N₂ range is empty,
-PhaseXpert must not expose CO₂+N₂ calculations through teqp, and Gates D and E
-must not proceed from this implementation without additional scientific and
-numerical investigation.
+After the provenance correction, Gate C is not a confirmed failure of the
+CO₂/N₂ EOS over all possible domains. It remains not passed for PhaseXpert
+because the corrected Brugge density matrix has three failed 300 K points and
+a worst converged density deviation of `0.292131%`, which is above the
+published `±0.1%` density-accuracy basis, while the Westman VLE matrix still
+shows one unexplained vapor-composition discrepancy. Therefore the validated
+teqp N₂ range is empty, PhaseXpert must not expose CO₂+N₂ calculations through
+teqp, and Gates D and E must not proceed from this implementation without
+additional scientific and numerical investigation.
 
 ## Next milestone
 

@@ -30,8 +30,9 @@
   on or too close to saturation remain explicitly unavailable because a unique
   homogeneous bulk density is not reported. The native bridge now embeds pinned
   teqp v0.23.1 CO₂+N₂ multifluid data and exposes validation-gated binary VLE
-  and subcritical point-classification primitives, but independent Gate C
-  density validation failed and no CO₂+N₂ teqp operating range is enabled.
+  and subcritical point-classification primitives, but the corrected
+  independent Gate C density and VLE audit has not established a supported
+  CO₂+N₂ teqp operating range.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

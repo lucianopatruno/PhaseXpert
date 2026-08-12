@@ -161,6 +161,12 @@
   validation-gated native binary VLE/point-classification bridge layer; teqp
   CO₂+N₂ remains unavailable to users until independent Gate C validation
   establishes a supported domain.
-- Recorded the Gate C stop for native teqp CO₂+N₂: Westman 2016 VLE checks
-  show a material vapor-composition deviation near 5 mol% liquid N₂, and
-  Mantovani et al. CO₂+N₂ density checks fail the required validation basis.
+- Corrected the native teqp CO₂+N₂ Gate C density-validation provenance:
+  high-temperature 303-383 K diagnostic rows are Mantovani et al. 2012
+  (`10.1016/j.supflu.2011.09.001`), not Mazzoccoli et al. 2012
+  (`10.1021/je300590v`); added Brugge et al. 1997
+  (`10.1021/je970044w`) as the audited primary PVT source. Gate C remains not
+  passed, with no user-facing N₂ range enabled, because the corrected Brugge
+  density matrix has failed 300 K points and a worst converged density
+  deviation above the source accuracy basis, and the Westman 2016 VLE probe
+  still shows an unexplained vapor-composition deviation near 5 mol% liquid N₂.

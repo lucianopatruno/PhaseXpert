@@ -225,6 +225,59 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
+    func testNativeTeqpCO2N2ComponentOrderingAndLowDensityLimit() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let temperatureK = 400.0
+        let pressurePa = 1_000_000.0
+        let pureCO2 = try requireNativeBinaryPoint(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            nitrogenMoleFraction: 1e-8
+        )
+        let onePercentN2 = try requireNativeBinaryPoint(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            nitrogenMoleFraction: 0.01
+        )
+        let fivePercentN2 = try requireNativeBinaryPoint(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            nitrogenMoleFraction: 0.05
+        )
+        let tenPercentN2 = try requireNativeBinaryPoint(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            nitrogenMoleFraction: 0.10
+        )
+
+        XCTAssertGreaterThan(pureCO2.density_kg_m3, onePercentN2.density_kg_m3)
+        XCTAssertGreaterThan(onePercentN2.density_kg_m3, fivePercentN2.density_kg_m3)
+        XCTAssertGreaterThan(fivePercentN2.density_kg_m3, tenPercentN2.density_kg_m3)
+
+        let densityPoints = [
+            (nitrogenMoleFraction: 1e-8, result: pureCO2),
+            (nitrogenMoleFraction: 0.01, result: onePercentN2),
+            (nitrogenMoleFraction: 0.05, result: fivePercentN2),
+            (nitrogenMoleFraction: 0.10, result: tenPercentN2)
+        ]
+
+        for densityPoint in densityPoints {
+            let idealDensity = idealGasDensity(
+                pressurePa: pressurePa,
+                temperatureK: temperatureK,
+                nitrogenMoleFraction: densityPoint.nitrogenMoleFraction
+            )
+            XCTAssertEqual(
+                densityPoint.result.density_kg_m3,
+                idealDensity,
+                accuracy: 0.002 * idealDensity
+            )
+        }
+        #endif
+    }
+
     func testNativeTeqpCO2N2RejectsInvalidComposition() throws {
         _ = try requireNativeTeqpEngine()
 
@@ -501,6 +554,19 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
 
     private func saturationPressureTolerance(_ pressurePa: Double) -> Double {
         max(1.0, 1e-8 * abs(pressurePa))
+    }
+
+    private func idealGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        nitrogenMoleFraction: Double
+    ) -> Double {
+        let carbonDioxideMolarMass = 0.0440098
+        let nitrogenMolarMass = 0.02801348
+        let gasConstant = 8.31446261815324
+        let mixtureMolarMass = (1 - nitrogenMoleFraction) * carbonDioxideMolarMass
+            + nitrogenMoleFraction * nitrogenMolarMass
+        return pressurePa * mixtureMolarMass / (gasConstant * temperatureK)
     }
 
     private func nullTerminatedString(_ buffer: [CChar]) -> String {

@@ -73,6 +73,13 @@ Candidate independent experimental sources are:
 - Brugge, Holste, Hall, Gammon and Marsh (1997), *Densities of Carbon Dioxide +
   Nitrogen from 225 K to 450 K at Pressures up to 70 MPa*, DOI
   [10.1021/je970044w](https://doi.org/10.1021/je970044w).
+- Mantovani, Chiesa, Valenti, Gatti and Consonni (2012), *Supercritical
+  pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar
+  binary mixtures*, DOI
+  [10.1016/j.supflu.2011.09.001](https://doi.org/10.1016/j.supflu.2011.09.001).
+  The N1/N2 composition rows are mole fractions and the density tables are
+  high-temperature diagnostic data; they must not be attributed to Mazzoccoli
+  et al. 2012.
 - Westman et al. (2016), *Vapor-liquid equilibrium data for the carbon dioxide
   and nitrogen system at 223, 270, 298 and 303 K and pressures up to 18 MPa*,
   DOI
