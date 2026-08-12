@@ -7,9 +7,11 @@ an optional local teqp bridge for exactly 100 mol% CO₂. CoolProp remains the
 default provider, and no existing calculation is routed to teqp unless the user
 explicitly selects `teqp Pure CO₂ — Experimental`.
 
-The generated teqp XCFramework is intentionally ignored by Git. A clean clone
-therefore remains buildable without teqp and shows the provider as unavailable
-until the local binary is built.
+The generated teqp XCFramework is intentionally ignored by Git. Normal app
+builds do not link it automatically, even when a local generated copy exists.
+Set `PHASEXPERT_ENABLE_TEQP_NATIVE=1` during package resolution/builds that are
+intended to exercise the native teqp bridge. Without that explicit opt-in the
+app remains buildable and shows the provider as unavailable.
 
 ## Pinned upstream
 
@@ -44,6 +46,14 @@ broader `teqpcpp` wrapper. During feasibility testing, the upstream
 `critical_pure.hpp` contains two `tdx::template get_Ar11/get_Ar12` calls that
 AppleClang rejects. The narrow bridge avoids that wrapper path and compiled for
 the required iOS object architectures.
+
+SwiftPM includes the `PhaseXpertTeqpBridge` binary target only when both the
+ignored XCFramework exists and `PHASEXPERT_ENABLE_TEQP_NATIVE=1` is present in
+the package-resolution environment. This prevents a generated local artifact
+from changing the normal Xcode app package graph implicitly. The explicit
+opt-in also avoids Xcode's duplicate `include/module.modulemap` output
+collision between the CoolProp and teqp static XCFrameworks during ordinary app
+builds.
 
 ## Runtime contract
 
@@ -105,12 +115,10 @@ The probe also verified that the known two-phase state 280 K and 6 MPa returns
 the explicit multiple-root error instead of selecting an arbitrary density.
 
 `PhaseXpertTests/TeqpNativeBridgeValidationTests.swift` adds the corresponding
-iOS XCTest coverage for `NativeTeqpEngine`. In the current agent environment,
-the iOS Simulator test runner executed those tests but skipped them because
-Xcode's cached package graph did not import the optional
-`PhaseXpertTeqpBridge` binary target even though the ignored XCFramework was
-present and the app build succeeded. That is treated as infrastructure/package
-resolution status, not scientific validation failure.
+iOS XCTest coverage for `NativeTeqpEngine`. These tests require a build/package
+resolution environment that opts into the generated native bridge with
+`PHASEXPERT_ENABLE_TEQP_NATIVE=1`; normal app builds intentionally leave teqp
+unlinked and the provider unavailable.
 
 These checks validate only the narrow pure-CO₂ density path at the listed
 single-phase points and one conservative two-phase rejection behavior. They do
