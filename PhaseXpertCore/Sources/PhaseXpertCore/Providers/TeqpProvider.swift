@@ -68,7 +68,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "Native teqp multiparameter multifluid model for pure carbon dioxide only.",
-            equationOrMethod: "teqp multifluid pure-CO₂ model loaded from the pinned upstream CarbonDioxide.json data; density is solved from P,T by finding a unique positive density root. Multiple density roots are rejected rather than selected arbitrarily.",
+            equationOrMethod: "teqp multifluid pure-CO₂ model loaded from the pinned upstream CarbonDioxide.json data; density is solved from P,T and subcritical multiple-root states use teqp pure-fluid VLE pressure and chemical-potential equality to select the stable vapor or liquid branch away from saturation.",
             coefficientSetVersion: "usnistgov/teqp v0.23.1 a68eb9cabf47af2c4aba0d272ac10fbca4c10eca; CarbonDioxide.json BibTeX_EOS Span-JPCRD-1996",
             requiredResources: ["PhaseXpertTeqpBridge.xcframework"],
             limitations: [
@@ -76,7 +76,8 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Only exactly 100 mol% CO₂ is supported.",
                 "CO₂ mixtures, including CO₂+N₂, are unsupported and never fall back to CoolProp.",
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
-                "Phase classification is limited to states that the bridge can identify robustly; otherwise the phase remains unknown.",
+                "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
+                "Phase classification is limited to stable vapor, stable liquid, and supercritical states that the bridge can identify robustly; otherwise the phase remains unknown.",
                 "Phase-envelope generation is unavailable in this teqp milestone."
             ],
             references: [
@@ -160,9 +161,9 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "teqp returned a non-finite or non-positive density."
             )
         }
-        guard raw.densityRootCount == 1 else {
+        guard raw.densityRootCount >= 1 else {
             throw ProviderError.malformedResponse(
-                "teqp did not return exactly one defensible density root."
+                "teqp did not return a defensible density root."
             )
         }
 
@@ -191,7 +192,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             phase: phaseRegion(for: raw.phaseIdentifier),
             properties: values,
             solver: SolverMetadata(
-                method: "teqp pure-CO₂ P,T density solve with unique positive density-root requirement\(derivedMethod)",
+                method: "teqp pure-CO₂ P,T density solve with teqp pure-fluid VLE stable-branch selection\(derivedMethod)",
                 converged: true,
                 iterationCount: nil,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
@@ -199,7 +200,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             warnings: [
                 "EXPERIMENTAL teqp provider — validation pending: do not use this result for engineering, safety, commercial, or regulatory decisions.",
                 "Dynamic viscosity and transport properties are unavailable for teqp in this milestone.",
-                "The provider rejects multiple density roots instead of choosing one arbitrarily."
+                "Subcritical multiple-root states use teqp pure-fluid VLE stability selection; states on or too close to saturation remain unavailable."
             ],
             isScientificResult: true
         )
@@ -234,7 +235,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 value: density,
                 unit: "kg/m³",
                 status: .calculated,
-                message: "Native teqp pure-CO₂ density from a unique P,T density root."
+                message: "Native teqp pure-CO₂ density from P,T with stable-root selection where required."
             )
         case .dynamicViscosity:
             PropertyValue(
@@ -259,6 +260,10 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         switch identifier.lowercased() {
         case "supercritical":
             .supercritical
+        case "gas":
+            .gas
+        case "liquid":
+            .liquid
         default:
             .unknown
         }

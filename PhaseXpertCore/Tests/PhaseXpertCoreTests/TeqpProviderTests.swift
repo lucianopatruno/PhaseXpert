@@ -58,7 +58,7 @@ final class TeqpProviderTests: XCTestCase {
             response.properties.first { $0.property == .molarMass }?.status,
             .calculated
         )
-        XCTAssertTrue(response.solver.method.contains("unique positive density-root"))
+        XCTAssertTrue(response.solver.method.contains("stable-branch selection"))
     }
 
     func testViscosityIsExplicitlyUnavailableWithoutFallback() async throws {
@@ -114,18 +114,44 @@ final class TeqpProviderTests: XCTestCase {
         })
     }
 
-    func testMultipleDensityRootsFailExplicitly() async {
+    func testStableSelectedResultWithMultipleMathematicalRootsIsAccepted() async throws {
         let provider = TeqpProvider(
             engine: MockEngine(
                 result: TeqpEngineResult(
                     densityKilogramsPerCubicMetre: 500,
                     densityRootCount: 2,
+                    phaseIdentifier: "liquid"
+                )
+            )
+        )
+
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 6_000_000,
+                temperatureK: 280,
+                composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+                requestedProperties: [.density],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(response.phase, .liquid)
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.value, 500)
+    }
+
+    func testMissingDefensibleDensityRootFailsExplicitly() async {
+        let provider = TeqpProvider(
+            engine: MockEngine(
+                result: TeqpEngineResult(
+                    densityKilogramsPerCubicMetre: 500,
+                    densityRootCount: 0,
                     phaseIdentifier: "unknown"
                 )
             )
         )
 
-        await XCTAssertThrowsErrorAsync {
+        await XCTAssertThrowsErrorAsync({
             try await provider.calculate(
                 CalculationRequest(
                     modelID: provider.descriptor.id,
@@ -136,7 +162,12 @@ final class TeqpProviderTests: XCTestCase {
                     clientVersion: "test"
                 )
             )
-        }
+        }, { error in
+            XCTAssertEqual(
+                error as? ProviderError,
+                .malformedResponse("teqp did not return a defensible density root.")
+            )
+        })
     }
 
     func testProductionRegistryKeepsCoolPropDefaultAndIncludesTeqpDescriptor() {

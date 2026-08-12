@@ -1,12 +1,22 @@
 import PhaseXpertCore
 import XCTest
 
+#if os(iOS) && canImport(PhaseXpertTeqpBridge)
+import PhaseXpertTeqpBridge
+#endif
+
 /// Native teqp checks for the experimental pure-CO₂ provider.
 ///
 /// These tests intentionally run in the iOS XCTest target because the teqp
 /// XCFramework is an iOS-only artifact. They skip when that generated local
 /// artifact is absent rather than substituting a mock engine.
 final class TeqpNativeBridgeValidationTests: XCTestCase {
+    private struct SaturationState {
+        let pressurePa: Double
+        let liquidDensityKilogramsPerCubicMetre: Double
+        let vaporDensityKilogramsPerCubicMetre: Double
+    }
+
     private struct DensityReferenceCase {
         let region: String
         let temperatureK: Double
@@ -100,6 +110,106 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
+    func testNativeTeqpSelectsStableLiquidForReportedCompressedState() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let saturation = try requireNativeSaturation(temperatureK: 293.15)
+        let result = try await engine.calculatePureCarbonDioxide(
+            pressurePa: 15_000_000,
+            temperatureK: 293.15
+        )
+
+        XCTAssertGreaterThan(
+            15_000_000,
+            saturation.pressurePa + saturationPressureTolerance(saturation.pressurePa)
+        )
+        XCTAssertTrue(result.densityKilogramsPerCubicMetre.isFinite)
+        XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
+        XCTAssertEqual(result.phaseIdentifier, "liquid")
+        XCTAssertEqual(result.densityRootCount, 3)
+        XCTAssertGreaterThan(
+            result.densityKilogramsPerCubicMetre,
+            saturation.liquidDensityKilogramsPerCubicMetre
+        )
+        XCTAssertEqual(
+            result.densityKilogramsPerCubicMetre,
+            903.956424708662,
+            accuracy: 0.001
+        )
+    }
+
+    func testNativeTeqpSelectsStableVaporBelowSaturation() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let saturation = try requireNativeSaturation(temperatureK: 293.15)
+        let result = try await engine.calculatePureCarbonDioxide(
+            pressurePa: 1_000_000,
+            temperatureK: 293.15
+        )
+
+        XCTAssertLessThan(
+            1_000_000,
+            saturation.pressurePa - saturationPressureTolerance(saturation.pressurePa)
+        )
+        XCTAssertTrue(result.densityKilogramsPerCubicMetre.isFinite)
+        XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
+        XCTAssertEqual(result.phaseIdentifier, "gas")
+        XCTAssertEqual(result.densityRootCount, 3)
+        XCTAssertLessThan(
+            result.densityKilogramsPerCubicMetre,
+            saturation.vaporDensityKilogramsPerCubicMetre
+        )
+        XCTAssertEqual(
+            result.densityKilogramsPerCubicMetre,
+            19.0985287213064,
+            accuracy: 0.001
+        )
+    }
+
+    func testNativeTeqpSelectsStableLiquidForFormerMultipleRootState() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let saturation = try requireNativeSaturation(temperatureK: 293.15)
+        let result = try await engine.calculatePureCarbonDioxide(
+            pressurePa: 6_000_000,
+            temperatureK: 293.15
+        )
+
+        XCTAssertGreaterThan(
+            6_000_000,
+            saturation.pressurePa + saturationPressureTolerance(saturation.pressurePa)
+        )
+        XCTAssertTrue(result.densityKilogramsPerCubicMetre.isFinite)
+        XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
+        XCTAssertEqual(result.phaseIdentifier, "liquid")
+        XCTAssertEqual(result.densityRootCount, 5)
+        XCTAssertGreaterThan(
+            result.densityKilogramsPerCubicMetre,
+            saturation.liquidDensityKilogramsPerCubicMetre
+        )
+        XCTAssertEqual(
+            result.densityKilogramsPerCubicMetre,
+            782.648269336157,
+            accuracy: 0.001
+        )
+    }
+
+    func testNativeTeqpRejectsSaturationLineAsNonUniqueHomogeneousState() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let saturation = try requireNativeSaturation(temperatureK: 293.15)
+
+        await XCTAssertThrowsErrorAsync {
+            try await engine.calculatePureCarbonDioxide(
+                pressurePa: saturation.pressurePa,
+                temperatureK: 293.15
+            )
+        } errorHandler: { error in
+            guard case let .malformedResponse(message) = error as? ProviderError else {
+                XCTFail("Expected malformedResponse, got \(error).")
+                return
+            }
+            XCTAssertTrue(message.contains("saturation"))
+            XCTAssertTrue(message.contains("unique homogeneous bulk density"))
+        }
+    }
+
     func testNativeTeqpRejectsInvalidStateInputs() async throws {
         let engine = try requireNativeTeqpEngine()
         let invalidStates = [
@@ -129,23 +239,6 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
-    func testNativeTeqpRejectsKnownTwoPhaseStateWithoutChoosingRoot() async throws {
-        let engine = try requireNativeTeqpEngine()
-
-        await XCTAssertThrowsErrorAsync {
-            try await engine.calculatePureCarbonDioxide(
-                pressurePa: 6_000_000,
-                temperatureK: 280
-            )
-        } errorHandler: { error in
-            guard case let .malformedResponse(message) = error as? ProviderError else {
-                XCTFail("Expected malformedResponse, got \(error).")
-                return
-            }
-            XCTAssertTrue(message.contains("multiple pure-CO2 density roots"))
-        }
-    }
-
     private func requireNativeTeqpEngine() throws -> NativeTeqpEngine {
         let engine = NativeTeqpEngine()
         guard engine.isAvailable else {
@@ -155,6 +248,38 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             )
         }
         return engine
+    }
+
+    private func requireNativeSaturation(
+        temperatureK: Double
+    ) throws -> SaturationState {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var nativeResult = PXTeqpSaturationResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status = px_teqp_saturation_pure_co2(
+            temperatureK,
+            &nativeResult,
+            &errorBuffer,
+            errorBuffer.count
+        )
+        guard status == 0 else {
+            XCTFail(String(cString: errorBuffer))
+            throw XCTSkip("teqp saturation result was unavailable.")
+        }
+        return SaturationState(
+            pressurePa: nativeResult.pressure_pa,
+            liquidDensityKilogramsPerCubicMetre: nativeResult.liquid_density_kg_m3,
+            vaporDensityKilogramsPerCubicMetre: nativeResult.vapor_density_kg_m3
+        )
+        #else
+        throw XCTSkip(
+            "The generated teqp XCFramework is not available to this test build."
+        )
+        #endif
+    }
+
+    private func saturationPressureTolerance(_ pressurePa: Double) -> Double {
+        max(1.0, 1e-8 * abs(pressurePa))
     }
 
     private var densityReferences: [DensityReferenceCase] {

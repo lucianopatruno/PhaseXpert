@@ -69,6 +69,10 @@ private func phaseIdentifier(for phase: PXTeqpPhase) -> String {
     switch phase {
     case PXTeqpPhaseSupercritical:
         "supercritical"
+    case PXTeqpPhaseGas:
+        "gas"
+    case PXTeqpPhaseLiquid:
+        "liquid"
     default:
         "unknown"
     }

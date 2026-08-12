@@ -23,8 +23,11 @@
 - The experimental teqp provider supports only exactly 100 mol% CO₂ and only
   density plus the existing transparent derived properties. Viscosity,
   transport properties, expanded thermodynamic properties, phase envelopes and
-  all mixtures are unavailable. Multiple density roots are rejected rather than
-  selected arbitrarily.
+  all mixtures are unavailable. Subcritical multiple-root density states use
+  teqp pure-fluid saturation equilibrium to select a stable vapor or liquid
+  branch when the state is clearly away from saturation. States on or too close
+  to saturation remain explicitly unavailable because a unique homogeneous
+  bulk density is not reported.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

@@ -70,13 +70,32 @@ The C ABI exposes:
 - linked teqp version/provenance text;
 - pure-CO₂ density from pressure in Pa and temperature in K;
 - molar density and root count for bridge diagnostics;
-- limited phase state, currently only `supercritical` when the input state is
-  above the model critical temperature and pressure; otherwise `unknown`.
+- limited phase state: stable vapor, stable liquid, and supercritical when
+  those states are established by the bridge; otherwise `unknown`.
 
 The density solve samples positive molar-density space, brackets sign changes
-of teqp pressure minus requested pressure, and accepts a result only when
-exactly one positive density root is found. Multiple roots are reported as a
-failure; PhaseXpert does not choose one arbitrarily.
+of teqp pressure minus requested pressure, and then selects a stable branch
+only when teqp's pure-fluid stability information can support that choice.
+For `T > Tc`, the bridge keeps the single-phase supercritical behavior. For
+`T < Tc`, it computes the pure-CO₂ saturation state at the requested
+temperature using the pinned teqp CarbonDioxide ancillary saturated liquid and
+vapor densities as initial guesses, then solves the same pressure-equality and
+chemical-potential-equality residuals documented in teqp v0.23.1
+`algorithms/VLE_pure.hpp`. The request pressure is compared with the resulting
+`Psat(T)` using `max(1 Pa, 1e-8 * Psat)` as the saturation tolerance. Pressures
+clearly below `Psat` select the root closest to teqp's stable saturated-vapor
+density; pressures clearly above `Psat` select the root closest to teqp's
+stable saturated-liquid density. States on or too close to saturation return
+an explicit unavailable/error result because a unique homogeneous bulk density
+is not reported there.
+
+The bridge intentionally keeps this VLE solve local and narrow instead of
+including teqp's broader `VLE_pure.hpp` header directly, because that header
+also includes the unrelated `teqpcpp` and critical-tracing path that failed
+the AppleClang feasibility gate. The residual equations and Newton update are
+transcribed from the pinned teqp v0.23.1 header and call teqp's own Helmholtz
+derivative APIs and CO₂ ancillary data; no CoolProp, hand-coded saturation
+correlation or external service is used.
 
 ## Supported scope
 
@@ -119,8 +138,19 @@ experimental density.
 | supercritical | 350.00 | 19,981,000 | 613.586000 | 613.738164 | 0.152164 | 0.000247992 | 0.828586 | pass |
 | high-temperature supercritical | 400.00 | 29,994,000 | 561.435000 | 561.411573 | 0.023427 | 0.000041727 | 0.679435 | pass |
 
-The probe also verified that the known two-phase state 280 K and 6 MPa returns
-the explicit multiple-root error instead of selecting an arbitrary density.
+Stable-root regression checks for subcritical CO₂ use teqp equilibrium
+internally rather than treating CoolProp as a reference. At 293.15 K, the
+bridge calculates `Psat = 5,729,052.58147522 Pa`, saturated liquid density
+`773.386541899471 kg/m³`, and saturated vapor density
+`194.201601224353 kg/m³`. The reported user case, 293.15 K and 15 MPa, has
+three mathematical density roots but is clearly above saturation and returns
+the stable liquid density `903.956424708662 kg/m³`. A 293.15 K and 1 MPa vapor
+case is clearly below saturation and returns stable vapor density
+`19.0985287213064 kg/m³`. A 293.15 K and 6 MPa case that previously failed
+because it had multiple mathematical roots now returns stable compressed-liquid
+density `782.648269336157 kg/m³`. A request exactly at the calculated
+293.15 K saturation pressure still returns the explicit no-unique-homogeneous
+density error.
 
 `PhaseXpertTests/TeqpNativeBridgeValidationTests.swift` adds the corresponding
 iOS XCTest coverage for `NativeTeqpEngine`. With the generated
@@ -129,9 +159,10 @@ test builds and exercise Swift calling through `NativeTeqpEngine` into the C
 bridge and compiled teqp EOS.
 
 These checks validate only the narrow pure-CO₂ density path at the listed
-single-phase points and one conservative two-phase rejection behavior. They do
-not establish production accuracy, phase-boundary accuracy, transport
-properties, mixtures or physical-iPhone manual acceptance.
+single-phase points and the conservative saturation-line rejection behavior.
+They do not establish production accuracy, phase-boundary accuracy, transport
+properties, mixtures, spinodal/metastable behavior, near-critical equilibrium
+robustness or physical-iPhone manual acceptance.
 
 ## Next milestone
 

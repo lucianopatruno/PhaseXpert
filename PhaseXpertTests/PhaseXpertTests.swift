@@ -829,6 +829,38 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testCalculatorCalculatesReportedTeqpCompressedCO2State() async throws {
+        let viewModel = CalculatorViewModel()
+        guard NativeTeqpEngine().isAvailable else {
+            throw XCTSkip("The generated teqp XCFramework is not linked to this build.")
+        }
+
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "150"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "1000000")
+        ]
+
+        await viewModel.calculate()
+
+        XCTAssertNil(viewModel.calculationError)
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertEqual(record.response.model.id, "teqp-pure-co2-experimental")
+        XCTAssertEqual(record.response.phase, .liquid)
+        let density = try XCTUnwrap(
+            record.response.properties.first { $0.property == .density }
+        )
+        XCTAssertEqual(density.status, .calculated)
+        XCTAssertEqual(
+            try XCTUnwrap(density.value),
+            903.956424708662,
+            accuracy: 0.001
+        )
+    }
+
+    @MainActor
     func testSavedCaseDefaultNameIncludesActiveMixtureComposition() {
         XCTAssertEqual(
             SavedCaseNameFormatter.compositionLabel(for: [
