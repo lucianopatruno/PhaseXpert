@@ -86,3 +86,8 @@ The selected data do not establish phase-boundary accuracy or behavior in the
 critical region. They also do not validate impurities. Further review requires
 an IFE-approved comparison against REFPROP under an appropriate licence and
 additional published phase-equilibrium and mixture measurements.
+
+The experimental teqp pure-CO₂ provider reuses the Mantilla density subset for
+its narrow density-only native bridge validation. The teqp-specific values,
+deviations and current iOS XCTest infrastructure status are documented in
+`Documentation/TeqpIntegration.md`.

@@ -23,11 +23,17 @@ build script are included. The generated CoolProp binary is intentionally not
 committed; when built at the documented local path it is linked conditionally
 for iOS.
 
+An experimental native teqp provider is also scaffolded for exactly 100 mol%
+CO₂. It is not the default provider. It solves density locally through teqp's
+pinned pure-CO₂ multifluid model and reports viscosity and broader properties
+as unavailable rather than borrowing them from CoolProp.
+
 ## Alternatives considered
 
 | Option | Strengths | Principal limitations for this app |
 |---|---|---|
 | CoolProp HEOS | Offline, open source, broad property API, C++ core | Mixture-pair/transport coverage varies; iOS build and validation work required |
+| teqp | Offline C++ equation-of-state framework with a native pure-CO₂ bridge in PhaseXpert | Experimental in PhaseXpert; current scope is only pure-CO₂ density, with viscosity and mixtures unavailable |
 | REFPROP | Strong reference implementation and broad property coverage | Proprietary licence; redistribution and iOS embedding require explicit NIST permission/terms |
 | GERG-2008 implementation | Strong basis for natural-gas-like mixtures and phase behaviour | Component set and CO₂-rich impurity coverage are limited; implementation/data licensing and edge-domain validation required |
 | Cubic EOS such as Peng–Robinson | Compact, offline and phase-equilibrium capable | Needs sourced pure-component data and binary interaction parameters; density and transport accuracy may be inadequate without validated corrections |

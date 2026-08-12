@@ -1,0 +1,4 @@
+module PhaseXpertTeqpBridge {
+    header "PhaseXpertTeqpBridge.h"
+    export *
+}

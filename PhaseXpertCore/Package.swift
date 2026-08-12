@@ -3,15 +3,21 @@ import Foundation
 import PackageDescription
 
 let coolPropXCFrameworkPath = "../Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework"
+let teqpXCFrameworkPath = "../Vendor/teqp/PhaseXpertTeqpBridge.xcframework"
 let packageDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
 let coolPropXCFrameworkURL = packageDirectory.appendingPathComponent(coolPropXCFrameworkPath)
+let teqpXCFrameworkURL = packageDirectory.appendingPathComponent(teqpXCFrameworkPath)
 let hasLocalCoolPropXCFramework = FileManager.default.fileExists(
     atPath: coolPropXCFrameworkURL.path
+)
+let hasLocalTeqpXCFramework = FileManager.default.fileExists(
+    atPath: teqpXCFrameworkURL.path
 )
 
 var phaseXpertCoreDependencies: [Target.Dependency] = []
 var phaseXpertCoreLinkerSettings: [LinkerSetting] = []
 var packageTargets: [Target] = []
+var requiresCXXRuntimeForIOS = false
 
 if hasLocalCoolPropXCFramework {
     phaseXpertCoreDependencies.append(
@@ -20,14 +26,34 @@ if hasLocalCoolPropXCFramework {
             condition: .when(platforms: [.iOS])
         )
     )
-    phaseXpertCoreLinkerSettings.append(
-        .linkedLibrary("c++", .when(platforms: [.iOS]))
-    )
+    requiresCXXRuntimeForIOS = true
     packageTargets.append(
         .binaryTarget(
             name: "PhaseXpertCoolPropBridge",
             path: coolPropXCFrameworkPath
         )
+    )
+}
+
+if hasLocalTeqpXCFramework {
+    phaseXpertCoreDependencies.append(
+        .target(
+            name: "PhaseXpertTeqpBridge",
+            condition: .when(platforms: [.iOS])
+        )
+    )
+    requiresCXXRuntimeForIOS = true
+    packageTargets.append(
+        .binaryTarget(
+            name: "PhaseXpertTeqpBridge",
+            path: teqpXCFrameworkPath
+        )
+    )
+}
+
+if requiresCXXRuntimeForIOS {
+    phaseXpertCoreLinkerSettings.append(
+        .linkedLibrary("c++", .when(platforms: [.iOS]))
     )
 }
 

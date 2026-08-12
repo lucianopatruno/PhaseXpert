@@ -13,6 +13,15 @@ The current runtime uses only Apple SDK frameworks. The CoolProp bridge and
 MIT notice are present, but no CoolProp binary is linked. REFPROP and other
 thermodynamic software are not included.
 
+An optional teqp bridge can be generated locally from `usnistgov/teqp`
+`v0.23.1`, commit `a68eb9cabf47af2c4aba0d272ac10fbca4c10eca`. teqp is made
+available under the NIST disclaimer of copyright and warranty in its
+`LICENSE.md`. The narrow PhaseXpert build uses the upstream
+`CarbonDioxide.json` model data, whose CO₂ EOS provenance is recorded as
+`Span-JPCRD-1996`. The generated XCFramework, recorded revision, submodule list
+and licence are ignored under `Vendor/teqp/` and must be reviewed before
+distribution.
+
 Potential CoolProp reference:
 
 I. H. Bell, J. Wronski, S. Quoilin, and V. Lemort, “Pure and Pseudo-pure Fluid

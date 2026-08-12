@@ -16,3 +16,7 @@ Vendor/CoolProp/*.xcframework/
 Vendor/CoolProp/COOLPROP-LICENSE.txt
 Vendor/CoolProp/COOLPROP-REVISION.txt
 Vendor/CoolProp/BRIDGE-SOURCE-SHA256.txt
+Vendor/teqp/*.xcframework/
+Vendor/teqp/TEQP-LICENSE.txt
+Vendor/teqp/TEQP-REVISION.txt
+Vendor/teqp/TEQP-SUBMODULES.txt

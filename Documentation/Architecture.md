@@ -18,7 +18,9 @@ flowchart TD
 ```
 
 The calculator, provider registry, local saved-case store, reporting exports
-and preliminary pure/dry-mixture phase diagrams are implemented.
+and preliminary pure/dry-mixture phase diagrams are implemented. An optional
+experimental teqp pure-CO₂ provider can also be linked through the same local
+provider abstraction without changing SwiftUI or the default CoolProp path.
 
 ## Concurrency
 
