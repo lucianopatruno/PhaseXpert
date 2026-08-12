@@ -17,6 +17,11 @@
 Never change the meaning of an existing provider ID or version after results
 have been saved.
 
+For optional native providers, prefer the CoolProp/teqp pattern: commit the
+small C ABI, Swift adapter, build script and provenance documentation, but keep
+generated XCFrameworks ignored and conditionally linked through
+`PhaseXpertCore/Package.swift`.
+
 ## Add a component
 
 1. Add a stable `ComponentID` case and display symbol/name.
@@ -28,4 +33,3 @@ have been saved.
 5. Add serialization, validation and numerical reference tests.
 6. Add the component to UI selection only when at least one selectable
    scientific provider supports it, or label it as unavailable.
-

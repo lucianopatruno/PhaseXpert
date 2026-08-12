@@ -20,6 +20,11 @@
   provider-calculated but have not completed independent PhaseXpert validation.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
+- The experimental teqp provider supports only exactly 100 mol% CO₂ and only
+  density plus the existing transparent derived properties. Viscosity,
+  transport properties, expanded thermodynamic properties, phase envelopes and
+  all mixtures are unavailable. Multiple density roots are rejected rather than
+  selected arbitrarily.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

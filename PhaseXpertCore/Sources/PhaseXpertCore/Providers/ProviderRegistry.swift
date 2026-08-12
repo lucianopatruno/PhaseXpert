@@ -22,7 +22,8 @@ public struct ProviderRegistry: Sendable {
 
     public static var defaults: [any ThermodynamicModelProvider] {
         [
-            defaultCoolPropProvider
+            defaultCoolPropProvider,
+            defaultTeqpProvider
         ]
     }
 
@@ -31,6 +32,14 @@ public struct ProviderRegistry: Sendable {
         CoolPropProvider(engine: NativeCoolPropEngine())
         #else
         CoolPropProvider(engine: UnavailableCoolPropEngine())
+        #endif
+    }
+
+    private static var defaultTeqpProvider: any ThermodynamicModelProvider {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        TeqpProvider(engine: NativeTeqpEngine())
+        #else
+        TeqpProvider(engine: UnavailableTeqpEngine())
         #endif
     }
 

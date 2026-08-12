@@ -152,3 +152,6 @@
   with live validation and no normalization of impurity values.
 - Added an explicit destructive “Remove impurity” action to each impurity menu
   while retaining swipe-to-delete behavior.
+- Added the first deliberately narrow experimental teqp milestone: optional
+  native pure-CO₂ density support through a local C++ bridge, with mixtures and
+  viscosity explicitly unavailable and CoolProp remaining the default provider.
