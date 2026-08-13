@@ -178,3 +178,7 @@
 - Added a native teqp pure-CO₂ saturation boundary for the existing Phase
   Diagram workflow, using teqp VLE saturation points through the critical point
   while keeping all impurity phase diagrams unavailable until validation passes.
+- Added direct teqp multi-impurity bake-off results for the O₂ and Ar pinned
+  standard multifluid candidates against audited Mantovani 2012 density rows.
+  O₂ and Ar remain unavailable through teqp because the evaluated candidates did
+  not establish a production density+VLE domain.

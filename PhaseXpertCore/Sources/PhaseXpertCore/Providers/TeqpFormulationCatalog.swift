@@ -134,6 +134,54 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2OxygenGernertDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-co2-o2-gernert-diagnostic",
+        name: "CO₂+O₂ Gernert diagnostic model",
+        family: .multifluid,
+        status: .failedValidation,
+        components: [.carbonDioxide, .oxygen],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "CarbonDioxide.json Span-JPCRD-1996; Oxygen.json Schmidt-FPE-1985,Stewart-JPCRD-1991; Gernert-Thesis-2013 reducing parameters with F=0 and no departure function.",
+        limitations: [
+            "Direct teqp density bake-off against Mantovani 2012 CO₂+O₂ PVT rows failed to establish a defensible user-facing domain.",
+            "Retained only for formulation inventory and future model comparison."
+        ],
+        references: [
+            SourceReference(
+                authors: "Mantovani, Chiesa, Valenti, Gatti and Consonni",
+                title: "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1016/j.supflu.2011.09.001"
+            )
+        ]
+    )
+
+    public static let co2ArgonGernertDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-co2-ar-gernert-diagnostic",
+        name: "CO₂+Ar Gernert/GERG diagnostic model",
+        family: .multifluid,
+        status: .failedValidation,
+        components: [.carbonDioxide, .argon],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "CarbonDioxide.json Span-JPCRD-1996; Argon.json Tegeler-JPCRD-1999; Gernert-Thesis-2013 reducing parameters and Argon-CarbonDioxide GERG-2008 departure function.",
+        limitations: [
+            "Direct teqp density bake-off against Mantovani 2012 CO₂+Ar PVT rows showed low-argon density promise but failed at the broader audited composition and has no completed independent VLE gate.",
+            "Retained only for formulation inventory and future model comparison."
+        ],
+        references: [
+            SourceReference(
+                authors: "Mantovani, Chiesa, Valenti, Gatti and Consonni",
+                title: "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1016/j.supflu.2011.09.001"
+            )
+        ]
+    )
+
     public static let surveyedBinaryImpurities: Set<ComponentID> = [
         .nitrogen,
         .oxygen,
@@ -147,7 +195,11 @@ public enum TeqpFormulationCatalog {
     }
 
     public static var researchFormulations: [TeqpFormulation] {
-        [co2NitrogenGernertGergDiagnostic]
+        [
+            co2NitrogenGernertGergDiagnostic,
+            co2OxygenGernertDiagnostic,
+            co2ArgonGernertDiagnostic
+        ]
     }
 
     public static var productionSupportedComponents: Set<ComponentID> {

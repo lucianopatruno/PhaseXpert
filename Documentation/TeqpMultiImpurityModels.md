@@ -83,11 +83,16 @@ The requested target impurities are inventoried but not enabled for teqp:
 | Impurity | Candidate formulation | Independent references | Density result | VLE result | Enabled range | Phase diagram |
 |---|---|---|---|---|---|---|
 | N₂ | Standard multifluid Gernert/GERG | Brugge 1997; Mantovani 2012; Westman 2016 | failed for user-facing support in PR #42 | failed to establish a supported range | none | no |
-| N₂ | Multifluid+Activity Wilson candidate | Lasala et al.; PR #42 references for comparison | not yet probed | not yet probed | none | no |
-| O₂ | Standard multifluid / GERG residual candidates | Mantovani 2012; Westman 2016 CO₂+O₂ | not yet probed | not yet probed | none | no |
-| Ar | Standard multifluid / GERG residual candidates | Mantovani 2012; additional VLE source pending audit | not yet probed | not yet probed | none | no |
-| H₂ | Standard multifluid / GERG residual candidates | CCS-relevant CO₂+H₂ PVT/VLE sources pending audit | not yet probed | not yet probed | none | no |
-| CH₄ | Standard multifluid / GERG residual candidates | CO₂-rich CO₂+CH₄ PVT/VLE sources pending audit | not yet probed | not yet probed | none | no |
+| N₂ | Multifluid+Activity Wilson candidate | Lasala et al.; PR #42 references for comparison | research-only: parameters are from the Lasala VLE example and are not accepted as an independently validated predictive density formulation | research-only: not a production validation set independent of the parameter source | none | no |
+| O₂ | Standard multifluid reducing-function candidate | Mantovani 2012 Tables 2, 6 and 7; Westman 2016 CO₂+O₂ identified | failed: 6 direct teqp PVT points converged, worst relative density deviation `14.803493%` | not pursued for production after density gate failed | none | no |
+| Ar | Standard multifluid Gernert/GERG candidate | Mantovani 2012 Tables 2, 8 and 9; CO₂+Ar VLE sources identified | failed for broad audited range: 6 direct teqp PVT points converged, low-Ar subset worst `0.731526%`, high-Ar subset worst `9.990878%` | not completed; low-Ar density-only promise is insufficient for phase-equilibrium support | none | no |
+| H₂ | Standard multifluid / GERG residual candidates | CO₂+H₂ phase-behavior sources identified | no defensible encoded PVT matrix in this stage | no defensible encoded VLE matrix in this stage | none | no |
+| CH₄ | Standard multifluid / GERG residual candidates | CO₂-rich CO₂+CH₄ VLE sources identified | no defensible encoded PVT matrix in this stage | no defensible encoded VLE matrix in this stage | none | no |
+
+The machine-readable bake-off artifact is
+`Documentation/Validation/TeqpMultiImpurityBakeoffResults.json`. It records the
+representative Mantovani O₂ and Ar density points, direct teqp outputs and the
+non-enabled scientific result for each requested impurity pair.
 
 Pure-CO₂ teqp phase-envelope generation is enabled through the native
 pure-fluid VLE saturation calculation. The generated boundary covers the

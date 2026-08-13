@@ -85,9 +85,22 @@ final class TeqpProviderTests: XCTestCase {
             TeqpFormulationCatalog.co2NitrogenGernertGergDiagnostic.status,
             .failedValidation
         )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2OxygenGernertDiagnostic.status,
+            .failedValidation
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2ArgonGernertDiagnostic.status,
+            .failedValidation
+        )
         XCTAssertFalse(
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components.contains(.nitrogen)
+            }
+        )
+        XCTAssertFalse(
+            TeqpFormulationCatalog.productionFormulations.contains {
+                !$0.components.isSubset(of: [.carbonDioxide])
             }
         )
     }
