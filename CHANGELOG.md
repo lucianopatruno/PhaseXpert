@@ -171,3 +171,7 @@
   transcribed and reproduced by direct upstream teqp and the PhaseXpert bridge,
   and Gate C genuinely failed to establish a defensible user-facing sub-domain
   for the pinned binary model.
+- Added the first teqp internal formulation catalog and multi-impurity model
+  inventory document. The user-facing teqp provider still enables only pure
+  CO₂; N₂, O₂, Ar, H₂ and CH₄ are inventoried for validation-gated future
+  formulations but remain unavailable through teqp until independent gates pass.

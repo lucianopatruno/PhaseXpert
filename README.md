@@ -103,7 +103,8 @@ views.
 
 See [Architecture](Documentation/Architecture.md),
 [Scientific Models](Documentation/ScientificModels.md),
-[teqp integration](Documentation/TeqpIntegration.md), and
+[teqp integration](Documentation/TeqpIntegration.md),
+[teqp multi-impurity model selection](Documentation/TeqpMultiImpurityModels.md), and
 [IFE API Contract](Documentation/IFEModelAPI.md).
 
 ## Dependencies and licences
@@ -162,6 +163,7 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - [Architecture and directory structure](Documentation/Architecture.md)
 - [Scientific models and phase-envelope strategy](Documentation/ScientificModels.md)
 - [CoolProp integration spike](Documentation/CoolPropIntegration.md)
+- [teqp multi-impurity model selection](Documentation/TeqpMultiImpurityModels.md)
 - [IFE Model API contract](Documentation/IFEModelAPI.md)
 - [Validation strategy](Documentation/ValidationStrategy.md)
 - [Adding providers and components](Documentation/ExtendingPhaseXpert.md)

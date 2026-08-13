@@ -57,19 +57,16 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             providerVersion: "0.1.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
-            supportedComponents: engine.isAvailable ? [.carbonDioxide] : [],
+            supportedComponents: engine.isAvailable
+                ? TeqpFormulationCatalog.productionSupportedComponents
+                : [],
             supportedProperties: engine.isAvailable
-                ? [
-                    .density,
-                    .molarMass,
-                    .compressibilityFactor,
-                    .specificVolume
-                ]
+                ? TeqpFormulationCatalog.productionSupportedProperties
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "Native teqp multiparameter multifluid model for pure carbon dioxide only.",
             equationOrMethod: "teqp multifluid pure-CO₂ model loaded from the pinned upstream CarbonDioxide.json data; density is solved from P,T and subcritical multiple-root states use teqp pure-fluid VLE pressure and chemical-potential equality to select the stable vapor or liquid branch away from saturation.",
-            coefficientSetVersion: "usnistgov/teqp v0.23.1 a68eb9cabf47af2c4aba0d272ac10fbca4c10eca; CarbonDioxide.json BibTeX_EOS Span-JPCRD-1996",
+            coefficientSetVersion: TeqpFormulationCatalog.pureCarbonDioxide.provenance,
             requiredResources: ["PhaseXpertTeqpBridge.xcframework"],
             limitations: [
                 "Experimental local provider; no production accuracy claim.",

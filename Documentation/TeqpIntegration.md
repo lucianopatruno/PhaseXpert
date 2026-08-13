@@ -409,3 +409,6 @@ user-facing PhaseXpert N₂ range. Scientifically defensible next options are:
 
 PhaseXpert should not tune coefficients or fit binary interaction parameters
 inside the app without a separate research and validation project.
+
+The active multi-impurity model-selection inventory is maintained in
+`Documentation/TeqpMultiImpurityModels.md`.

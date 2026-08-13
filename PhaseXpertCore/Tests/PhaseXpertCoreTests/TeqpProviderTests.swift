@@ -43,6 +43,35 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertTrue(provider.descriptor.supportedProperties.isEmpty)
     }
 
+    func testFormulationCatalogSeparatesProductionAndResearchModels() {
+        XCTAssertEqual(TeqpFormulationCatalog.teqpVersion, "v0.23.1")
+        XCTAssertEqual(
+            TeqpFormulationCatalog.teqpCommit,
+            "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.surveyedBinaryImpurities,
+            [.nitrogen, .oxygen, .argon, .hydrogen, .methane]
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.productionFormulations.map(\.id),
+            ["teqp-v0.23.1-pure-co2-span-wagner-density"]
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.productionSupportedComponents,
+            [.carbonDioxide]
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2NitrogenGernertGergDiagnostic.status,
+            .failedValidation
+        )
+        XCTAssertFalse(
+            TeqpFormulationCatalog.productionFormulations.contains {
+                $0.components.contains(.nitrogen)
+            }
+        )
+    }
+
     func testPureCO2DensityAndDerivedValuesAreTraceable() async throws {
         let provider = TeqpProvider(engine: MockEngine())
         let response = try await provider.calculate(

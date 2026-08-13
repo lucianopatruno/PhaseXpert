@@ -1,0 +1,105 @@
+# teqp multi-impurity model selection
+
+## Status
+
+This milestone starts the internal model-selection framework for the
+user-facing `Advanced Phase & Mixture Model (teqp)` provider. The provider name
+and stable provider ID remain unchanged. Low-level teqp formulations are
+selected only behind the provider boundary and must be disclosed in scientific
+traceability.
+
+No new impurity is enabled by this document alone. A component becomes
+selectable for teqp only after a formulation passes independent validation for
+a declared composition, temperature and pressure range.
+
+## Gate 0 version review
+
+PhaseXpert retains teqp `v0.23.1`, commit
+`a68eb9cabf47af2c4aba0d272ac10fbca4c10eca`, for this inventory stage. The
+current official upstream release reviewed during this milestone is `v0.23.2`.
+Its release notes describe Python 3.14 wheel publication and macOS x86_64 wheel
+pipeline restoration; no required scientific model-data or native iOS build
+benefit was identified. Upgrading would require rerunning the pure-CO₂
+regression and auditing every embedded model record, so the pinned version is
+unchanged.
+
+## Internal formulation registry
+
+`TeqpFormulationCatalog` records internal teqp formulations separately from the
+user-facing provider. The only production-enabled formulation is currently:
+
+| Formulation ID | Components | Family | Status | Enabled properties | Phase envelope |
+|---|---|---|---|---|---|
+| `teqp-v0.23.1-pure-co2-span-wagner-density` | CO₂ | multifluid | production-enabled | density, molar mass, specific volume, Z | no |
+
+The CO₂+N₂ Gernert/GERG formulation from PR #42 is retained as
+`teqp-v0.23.1-co2-n2-gerg-diagnostic` with `failedValidation` status. It is
+not part of `productionFormulations` and therefore does not make N₂ selectable
+for teqp.
+
+## Gate A model inventory
+
+The following matrix is taken from the pinned upstream teqp v0.23.1 source tree
+under `teqp/fluiddata/dev`. `F = 0` and missing departure function means the
+standard multifluid candidate has no binary departure term in the pinned data.
+
+| Pair | Pure-fluid EOS records | Standard multifluid binary record | Departure function | Candidate teqp families | Current status |
+|---|---|---|---|---|---|
+| CO₂+N₂ | CO₂ `Span-JPCRD-1996`; N₂ `Span-JPCRD-2000` | `Gernert-Thesis-2013`, `F=1`, `betaT=0.994140013`, `gammaT=1.107654104`, `betaV=1.022709642`, `gammaV=1.047578256` | `Nitrogen-CarbonDioxide`, GERG-2008, `Kunz-JCED-2012` | standard multifluid; GERG residual; multifluid+activity Wilson example from teqp docs using Lasala et al. parameters | standard multifluid failed Gate C for user-facing support; alternatives require probe validation |
+| CO₂+O₂ | CO₂ `Span-JPCRD-1996`; O₂ `Schmidt-FPE-1985,Stewart-JPCRD-1991` | `Gernert-Thesis-2013`, `F=0`, `betaT=1.0`, `gammaT=1.031986`, `betaV=1.0`, `gammaV=1.08446` | none | standard multifluid reducing function; GERG residual | inventory only; not enabled |
+| CO₂+Ar | CO₂ `Span-JPCRD-1996`; Ar `Tegeler-JPCRD-1999` | `Gernert-Thesis-2013`, `F=1`, `betaT=1.027147`, `gammaT=0.968781`, `betaV=1.001378`, `gammaV=1.02971` | `Argon-CarbonDioxide`, GERG-2008, `Gernert-Thesis-2013` | standard multifluid; GERG residual | inventory only; not enabled |
+| CO₂+H₂ | CO₂ `Span-JPCRD-1996`; H₂ `Leachman-JPCRD-2009` | `Kunz-JCED-2012`, `F=0`, `betaT=0.942320195`, `gammaT=1.782924792`, `betaV=0.904142159`, `gammaV=1.15279255` | none | standard multifluid reducing function; GERG residual | inventory only; not enabled |
+| CO₂+CH₄ | CO₂ `Span-JPCRD-1996`; CH₄ `Setzmann-JPCRD-1991` | `Kunz-JCED-2012`, `F=1`, `betaT=1.02262449`, `gammaT=0.975665369`, `betaV=0.999518072`, `gammaV=1.002806594` | `Methane-CarbonDioxide`, GERG-2008, `Kunz-JCED-2012` | standard multifluid; GERG residual | inventory only; not enabled |
+
+The teqp documentation states that GERG residual models include components
+needed here, including methane, nitrogen, carbon dioxide, hydrogen, oxygen and
+argon, but that the residual portions alone are sufficient for phase
+equilibria and critical-locus tracing rather than complete caloric properties.
+Therefore GERG residual candidates cannot by themselves justify enthalpy,
+entropy or internal-energy exposure.
+
+The teqp `Multifluid+Activity` documentation demonstrates CO₂+N₂ VLE with a
+Wilson activity model using literature parameters from Lasala et al. and also
+compares it with GERG-2008. Those parameters are an existing teqp-compatible
+published candidate, not a PhaseXpert fit, but they have not yet been validated
+against the PhaseXpert density and VLE matrix.
+
+## Gate B validation survey
+
+Initial independent references identified for the target binaries are:
+
+| Pair | Density/PVT references | VLE references | Notes |
+|---|---|---|---|
+| CO₂+N₂ | Brugge et al. 1997; Mantovani et al. 2012 | Westman et al. 2016; Lasala et al. 2016 data embedded in teqp docs for the activity-model example | Standard Gernert/GERG model failed PR #42 Gate C; alternative formulations must be compared against the same primary data. |
+| CO₂+O₂ | Mantovani et al. 2012; recent CO₂+O₂ PVT datasets require primary-source audit | Westman et al. 2016, DOI `10.1016/j.fluid.2016.04.002` | O₂ is high priority because Mantovani includes CO₂-rich PVT rows and Westman provides VLE. |
+| CO₂+Ar | Mantovani et al. 2012 | published CO₂+Ar VLE sources require primary-source audit | Ar is high priority because Mantovani includes CO₂-rich PVT rows. |
+| CO₂+H₂ | CO₂+H₂ density and phase-behavior papers relevant to CCS require primary-source audit | CO₂+H₂ phase-behavior/VLE sources require primary-source audit | GERG natural-gas coverage must not be assumed accurate in CO₂-rich H₂ service. |
+| CO₂+CH₄ | CO₂+CH₄ density and VLE literature is available and must be audited for CO₂-rich composition relevance | CO₂+CH₄ VLE literature is available, including near-critical-region datasets | Binary validation does not prove multicomponent support. |
+
+## Current product decision
+
+The requested target impurities are inventoried but not enabled for teqp:
+
+| Impurity | Candidate formulation | Independent references | Density result | VLE result | Enabled range | Phase diagram |
+|---|---|---|---|---|---|---|
+| N₂ | Standard multifluid Gernert/GERG | Brugge 1997; Mantovani 2012; Westman 2016 | failed for user-facing support in PR #42 | failed to establish a supported range | none | no |
+| N₂ | Multifluid+Activity Wilson candidate | Lasala et al.; PR #42 references for comparison | not yet probed | not yet probed | none | no |
+| O₂ | Standard multifluid / GERG residual candidates | Mantovani 2012; Westman 2016 CO₂+O₂ | not yet probed | not yet probed | none | no |
+| Ar | Standard multifluid / GERG residual candidates | Mantovani 2012; additional VLE source pending audit | not yet probed | not yet probed | none | no |
+| H₂ | Standard multifluid / GERG residual candidates | CCS-relevant CO₂+H₂ PVT/VLE sources pending audit | not yet probed | not yet probed | none | no |
+| CH₄ | Standard multifluid / GERG residual candidates | CO₂-rich CO₂+CH₄ PVT/VLE sources pending audit | not yet probed | not yet probed | none | no |
+
+Simultaneous multiple-impurity support is not enabled. Binary-pair validation
+would not validate CO₂ plus several impurities because all impurity-impurity
+interactions, multicomponent model assumptions and multicomponent experimental
+evidence would still need to be audited.
+
+## Implementation constraints
+
+- Do not fit, tune or mutate binary interaction parameters inside PhaseXpert.
+- Do not use Lorentz-Berthelot or other generic estimates as production
+  scientific support.
+- Do not expose a component through teqp merely because teqp contains a pure
+  fluid file or GERG component name.
+- Do not route teqp failures to CoolProp.
+- Keep native runtime local/offline and keep generated XCFrameworks ignored.
