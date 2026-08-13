@@ -16,11 +16,19 @@ thermodynamic software are not included.
 An optional teqp bridge can be generated locally from `usnistgov/teqp`
 `v0.23.1`, commit `a68eb9cabf47af2c4aba0d272ac10fbca4c10eca`. teqp is made
 available under the NIST disclaimer of copyright and warranty in its
-`LICENSE.md`. The narrow PhaseXpert build uses the upstream
+`LICENSE.md`. The narrow PhaseXpert build embeds the upstream
 `CarbonDioxide.json` model data, whose CO₂ EOS provenance is recorded as
-`Span-JPCRD-1996`. The generated XCFramework, recorded revision, submodule list
-and licence are ignored under `Vendor/teqp/` and must be reviewed before
-distribution.
+`Span-JPCRD-1996`, and validation-gated CO₂+N₂ multifluid data:
+`Nitrogen.json` records `Span-JPCRD-2000`, the CO₂/N₂ reducing-parameter record
+in `mixture_binary_pairs.json` cites `Gernert-Thesis-2013`, and the
+`Nitrogen-CarbonDioxide` GERG-2008 departure function in
+`mixture_departure_functions.json` cites `Kunz-JCED-2012`
+([DOI 10.1021/je300655b](https://doi.org/10.1021/je300655b)). Those mixture
+data are available only to native bridge validation; they are not user-facing
+because Gate C failed to establish a supported operating range for this pinned
+binary model. The
+generated XCFramework, recorded revision, submodule list and licence are
+ignored under `Vendor/teqp/` and must be reviewed before distribution.
 
 Potential CoolProp reference:
 
@@ -37,6 +45,27 @@ REFPROP is distributed under NIST terms and is not open-source redistribution
 material. A local IFE licence does not automatically authorize embedding its
 code or data in an iPhone application.
 
-Scientific references for the production formulation, binary interaction
-parameters and validation datasets are not selected yet and must not be
-invented.
+Current CO₂+N₂ validation references under audit:
+
+- S. F. Westman, H. G. J. Stang, S. W. Løvseth, A. Austegard, I. Snustad,
+  S. Ø. Størset and I. S. Ertesvåg, "Vapor-liquid equilibrium data for the
+  carbon dioxide and nitrogen (CO₂ + N₂) system at the temperatures 223, 270,
+  298 and 303 K and pressures up to 18 MPa," *Fluid Phase Equilibria* 409,
+  207-241, 2016.
+  [DOI 10.1016/j.fluid.2015.09.034](https://doi.org/10.1016/j.fluid.2015.09.034).
+- H. B. Brugge, J. C. Holste, K. R. Hall, B. E. Gammon and K. N. Marsh,
+  "Densities of Carbon Dioxide + Nitrogen from 225 K to 450 K at Pressures up
+  to 70 MPa," *Journal of Chemical & Engineering Data* 42, 903-907, 1997.
+  [DOI 10.1021/je970044w](https://doi.org/10.1021/je970044w).
+- M. Mantovani, P. Chiesa, G. Valenti, M. Gatti and S. Consonni,
+  "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂
+  and CO₂-Ar binary mixtures," *Journal of Supercritical Fluids* 61, 34-43,
+  2012.
+  [DOI 10.1016/j.supflu.2011.09.001](https://doi.org/10.1016/j.supflu.2011.09.001).
+- A. Mazzoccoli, B. Bosio and E. Arato,
+  "Pressure-Density-Temperature Measurements of Binary Mixtures Rich in CO₂
+  for Pipeline Transportation in the CCS Process," *Journal of Chemical &
+  Engineering Data* 57, 2774-2783, 2012.
+  [DOI 10.1021/je300590v](https://doi.org/10.1021/je300590v).
+
+These references are validation inputs, not production-accuracy claims.

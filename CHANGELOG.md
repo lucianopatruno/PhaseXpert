@@ -155,3 +155,19 @@
 - Added the first deliberately narrow experimental teqp milestone: optional
   native pure-CO₂ density support through a local C++ bridge, with mixtures and
   viscosity explicitly unavailable and CoolProp remaining the default provider.
+- Renamed the user-facing provider labels to General Properties (CoolProp) and
+  Advanced Phase & Mixture Model (teqp) while preserving stable provider IDs.
+- Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and added a
+  validation-gated native binary VLE/point-classification research layer; teqp
+  CO₂+N₂ remains unavailable to users.
+- Corrected the native teqp CO₂+N₂ Gate C density-validation provenance:
+  high-temperature 303-383 K diagnostic rows are Mantovani et al. 2012
+  (`10.1016/j.supflu.2011.09.001`), not Mazzoccoli et al. 2012
+  (`10.1021/je300590v`); added Brugge et al. 1997
+  (`10.1021/je970044w`) as the audited primary PVT source, and fixed the
+  binary point classifier so it no longer uses pure-CO₂ critical temperature as
+  the CO₂/N₂ phase-topology switch. Gate C remains not passed, with no
+  user-facing N₂ range enabled, because the Mantovani low-N₂ rows are correctly
+  transcribed and reproduced by direct upstream teqp and the PhaseXpert bridge,
+  and Gate C genuinely failed to establish a defensible user-facing sub-domain
+  for the pinned binary model.

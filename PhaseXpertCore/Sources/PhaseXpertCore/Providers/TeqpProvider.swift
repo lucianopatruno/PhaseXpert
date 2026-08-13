@@ -52,7 +52,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     public var descriptor: ModelDescriptor {
         ModelDescriptor(
             id: "teqp-pure-co2-experimental",
-            name: "teqp Pure CO₂ — Experimental",
+            name: "Advanced Phase & Mixture Model (teqp)",
             modelVersion: engine.libraryVersion,
             providerVersion: "0.1.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,

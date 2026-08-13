@@ -19,10 +19,25 @@ final class TeqpProviderTests: XCTestCase {
         }
     }
 
+    private struct FailingEngine: TeqpEngine {
+        let isAvailable = true
+        let libraryVersion = "teqp-test"
+
+        func calculatePureCarbonDioxide(
+            pressurePa: Double,
+            temperatureK: Double
+        ) async throws -> TeqpEngineResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for unsupported mixtures."
+            )
+        }
+    }
+
     func testUnavailableEngineDoesNotClaimCapabilities() {
         let provider = TeqpProvider(engine: UnavailableTeqpEngine())
 
         XCTAssertEqual(provider.descriptor.id, "teqp-pure-co2-experimental")
+        XCTAssertEqual(provider.descriptor.name, "Advanced Phase & Mixture Model (teqp)")
         XCTAssertEqual(provider.descriptor.availability, .unavailable)
         XCTAssertTrue(provider.descriptor.supportedComponents.isEmpty)
         XCTAssertTrue(provider.descriptor.supportedProperties.isEmpty)
@@ -100,6 +115,41 @@ final class TeqpProviderTests: XCTestCase {
                     pressurePa: 10_000_000,
                     temperatureK: 293.15,
                     composition: composition,
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                )
+            )
+        }, { error in
+            XCTAssertEqual(
+                error as? ProviderError,
+                .invalidRequest(
+                    "The experimental teqp provider supports only exactly 100 mol% CO₂. No CoolProp fallback is used."
+                )
+            )
+        })
+    }
+
+    func testCO2N2RemainsValidationGatedDespiteNativeDiagnosticBridge() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+        let descriptor = provider.descriptor
+        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide])
+        XCTAssertFalse(descriptor.supportedComponents.contains(.nitrogen))
+        XCTAssertTrue(
+            descriptor.limitations.contains {
+                $0.contains("CO₂ mixtures, including CO₂+N₂, are unsupported")
+            }
+        )
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.calculate(
+                CalculationRequest(
+                    modelID: descriptor.id,
+                    pressurePa: 12_000_000,
+                    temperatureK: 303.15,
+                    composition: [
+                        .init(component: .carbonDioxide, moleFraction: 0.9585),
+                        .init(component: .nitrogen, moleFraction: 0.0415)
+                    ],
                     requestedProperties: [.density],
                     clientVersion: "test"
                 )
