@@ -33,6 +33,13 @@ establish a production domain. Pure-CO₂ teqp Cv, Cp and speed-of-sound
 validation uses NIST Chemistry WebBook fluid-property rows, SRD 69
 ([DOI 10.18434/T4D303](https://doi.org/10.18434/T4D303)), as an independent
 implementation reference for the Span-Wagner property formulation and units.
+EOS-CG-2021 integration work uses Neumann, Herrig, Bell, Beckmüller, Lemmon,
+Thol and Span, "EOS-CG-2021: A Mixture Model for the Calculation of
+Thermodynamic Properties of CCS Mixtures," *International Journal of
+Thermophysics* 44, 178 (2023),
+([DOI 10.1007/s10765-023-03263-6](https://doi.org/10.1007/s10765-023-03263-6)),
+published under CC BY 4.0, as the primary source for the CCS mixture-model
+functional form and parameter tables.
 The
 generated XCFramework, recorded revision, submodule list and licence are
 ignored under `Vendor/teqp/` and must be reviewed before distribution.

@@ -157,6 +157,11 @@
   viscosity explicitly unavailable and CoolProp remaining the default provider.
 - Renamed the user-facing provider labels to General Properties (CoolProp) and
   Advanced Phase & Mixture Model (teqp) while preserving stable provider IDs.
+- Renamed the teqp display label to Advanced CO₂ & Phase Model (teqp) until a
+  production-validated CCS impurity formulation is enabled.
+- Added EOS-CG-2021 integration groundwork that separates the native teqp
+  engine from the published CCS mixture formulation and records extracted
+  Table 4 target-pair reducing parameters for N₂, O₂, Ar, H₂ and CH₄.
 - Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and added a
   validation-gated native binary VLE/point-classification research layer; teqp
   CO₂+N₂ remains unavailable to users.

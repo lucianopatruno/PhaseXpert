@@ -67,8 +67,8 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   transport outputs plus restricted dry CO₂-rich mixture density/phase calculations; molar mass,
   specific volume and Z are
   derived transparently from recorded inputs and calculated density; user-facing
-  provider labels are General Properties (CoolProp) and Advanced Phase &
-  Mixture Model (teqp); an explicit experimental native teqp pure-CO₂ provider
+  provider labels are General Properties (CoolProp) and Advanced CO₂ & Phase
+  Model (teqp); an explicit experimental native teqp pure-CO₂ provider
   for density, Cv, Cp, Cp/Cv, speed of sound and the same derived values when
   its ignored local XCFramework is built; an
   unavailable IFE provider, and a

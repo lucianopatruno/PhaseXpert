@@ -20,7 +20,7 @@
   provider-calculated but have not completed independent PhaseXpert validation.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
-- The experimental teqp provider is displayed as Advanced Phase & Mixture Model
+- The experimental teqp provider is displayed as Advanced CO₂ & Phase Model
   (teqp). Its user-facing supported scope remains exactly 100 mol% CO₂ and only
   density, Cv, Cp, Cp/Cv, speed of sound and the existing transparent derived
   properties. Viscosity, transport properties, enthalpy, entropy, internal

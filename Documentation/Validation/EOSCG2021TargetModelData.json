@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "model": "EOS-CG-2021",
+    "title": "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+    "authors": "Neumann, Herrig, Bell, Beckmueller, Lemmon, Thol and Span",
+    "year": 2023,
+    "doi": "10.1007/s10765-023-03263-6",
+    "licence": "CC-BY-4.0",
+    "table4": "Reducing parameters and Fij values for all binary mixtures required to implement the full mixture model",
+    "table5": "Parameters of the departure functions"
+  },
+  "componentOrderPolicy": "Use the paper's i-j order for beta parameters; reciprocal beta values are required if the implementation reverses the pair order.",
+  "targetComponents": [
+    "carbonDioxide",
+    "nitrogen",
+    "oxygen",
+    "argon",
+    "hydrogen",
+    "methane"
+  ],
+  "table4TargetPairs": [
+    {
+      "pair": "N2+CO2",
+      "phaseXpertPair": "CO2+N2",
+      "reference": "GERG-2008 / Kunz-Wagner as cited by EOS-CG-2021 reference [6]",
+      "betaT": 1.005895,
+      "gammaT": 1.107654,
+      "betaV": 0.977795,
+      "gammaV": 1.047578,
+      "Fij": 1.0,
+      "status": "equivalent-to-pr42-gerg-check-required",
+      "notes": "EOS-CG-2021 inherits this pair from GERG-2008; these values are the reciprocal-order form of the PR #42 CO2+N2 Gernert/GERG record."
+    },
+    {
+      "pair": "CO2+O2",
+      "phaseXpertPair": "CO2+O2",
+      "reference": "Gernert-Span / EOS-CG-2016 as cited by EOS-CG-2021 reference [5]",
+      "betaT": 1.0,
+      "gammaT": 1.031986,
+      "betaV": 1.0,
+      "gammaV": 1.08446,
+      "Fij": 0.0,
+      "status": "candidate",
+      "notes": "No binary departure function is active because Fij is zero."
+    },
+    {
+      "pair": "CO2+Ar",
+      "phaseXpertPair": "CO2+Ar",
+      "reference": "Lovseth et al. as cited by EOS-CG-2021 reference [87]",
+      "betaT": 0.998705,
+      "gammaT": 1.039675,
+      "betaV": 1.003766,
+      "gammaV": 1.013833,
+      "Fij": 1.0,
+      "status": "candidate-departure-function-required",
+      "notes": "This is the updated EOS-CG-2021 Ar formulation and must not be replaced by the older PR #43 diagnostic pair."
+    },
+    {
+      "pair": "CO2+H2",
+      "phaseXpertPair": "CO2+H2",
+      "reference": "Beckmueller et al. as cited by EOS-CG-2021 reference [7]",
+      "betaT": 0.979,
+      "gammaT": 1.961,
+      "betaV": 1.198,
+      "gammaV": 0.842,
+      "Fij": 1.0,
+      "status": "candidate-departure-function-required",
+      "notes": "Dedicated EOS-CG-2021 hydrogen binary; paper text notes later speed-of-sound deviations that must be handled property-by-property."
+    },
+    {
+      "pair": "CH4+CO2",
+      "phaseXpertPair": "CO2+CH4",
+      "reference": "GERG-2008 / Kunz-Wagner as cited by EOS-CG-2021 reference [6]",
+      "betaT": 0.999518,
+      "gammaT": 1.002806,
+      "betaV": 1.000482,
+      "gammaV": 1.022624,
+      "Fij": 1.0,
+      "status": "candidate-gerg-inherited",
+      "notes": "EOS-CG-2021 inherits the GERG CO2+CH4 pair; reciprocal beta handling is required if evaluated as CO2+CH4."
+    }
+  ],
+  "productionEnabledImpurities": [],
+  "runtimeStatus": "not-linked-to-provider"
+}

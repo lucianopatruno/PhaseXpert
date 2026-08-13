@@ -3,10 +3,14 @@
 ## Status
 
 This milestone starts the internal model-selection framework for the
-user-facing `Advanced Phase & Mixture Model (teqp)` provider. The provider name
+user-facing `Advanced CO₂ & Phase Model (teqp)` provider. The provider name
 and stable provider ID remain unchanged. Low-level teqp formulations are
 selected only behind the provider boundary and must be disclosed in scientific
 traceability.
+
+The next CCS mixture-model candidate is EOS-CG-2021, documented in
+`Documentation/EOSCG2021Integration.md`. In that work, teqp is the native C++
+engine and EOS-CG-2021 is the scientific formulation.
 
 No new impurity is enabled by this document alone. A component becomes
 selectable for teqp only after a formulation passes independent validation for

@@ -6,7 +6,12 @@ This is a deliberately narrow experimental native-provider milestone. It adds
 an optional local teqp bridge for exactly 100 mol% CO₂, plus validation-gated
 CO₂+N₂ research infrastructure. CoolProp remains the default provider, and no
 existing calculation is routed to teqp unless the user explicitly selects
-`Advanced Phase & Mixture Model (teqp)`.
+`Advanced CO₂ & Phase Model (teqp)`.
+
+Future CCS impurity formulations are documented separately in
+`Documentation/EOSCG2021Integration.md`. teqp is treated as a native
+Helmholtz-energy engine; EOS-CG-2021 or another published CCS EOS is the
+scientific mixture formulation.
 
 ## CO₂+N₂ Gate A finding
 
