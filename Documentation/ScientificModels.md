@@ -216,3 +216,11 @@ equation of state; Huber et al. (2016), DOI 10.1063/1.4940892, for thermal
 conductivity; and Laesecke and Muzny (2017), DOI 10.1063/1.4977429, for
 viscosity. Formulation traceability is not an accuracy-validation claim.
 Expanded properties remain unavailable for every mixture.
+
+The experimental teqp provider independently exposes pure-CO₂ Cv, Cp,
+Cp/Cv and speed of sound from the pinned Span-Wagner ideal-gas plus residual
+Helmholtz-energy derivatives. These values are mass-specific where PhaseXpert
+expects mass basis and are checked against NIST Chemistry WebBook CO₂
+fluid-property rows. teqp enthalpy, entropy and internal energy remain
+unavailable until their absolute reference-state convention is accepted for
+PhaseXpert traceability.

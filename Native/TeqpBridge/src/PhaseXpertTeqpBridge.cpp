@@ -3,6 +3,7 @@
 #include "PhaseXpertTeqpModelData.hpp"
 
 #include "teqp/derivs.hpp"
+#include "teqp/ideal_eosterms.hpp"
 #include "teqp/models/multifluid.hpp"
 #include "teqp/models/multifluid_ancillaries.hpp"
 
@@ -170,6 +171,7 @@ public:
               "{}"
           )),
           ancillaries_(json_.at("ANCILLARIES")),
+          ideal_model_(idealTerms(json_)),
           molar_mass_kg_mol_(json_.at("EOS").at(0).at("molar_mass")),
           critical_temperature_k_(json_.at("STATES").at("critical").at("T")),
           critical_pressure_pa_(json_.at("STATES").at("critical").at("p")),
@@ -200,6 +202,89 @@ public:
         double liquid_molar_density_mol_m3;
         double vapor_molar_density_mol_m3;
     };
+
+    struct ThermodynamicProperties {
+        double cv_j_kg_k;
+        double cp_j_kg_k;
+        double heat_capacity_ratio;
+        double speed_of_sound_m_s;
+    };
+
+    ThermodynamicProperties thermodynamicProperties(
+        double temperature_k,
+        double molar_density_mol_m3
+    ) const {
+        Eigen::Array<double, 1, 1> z;
+        z << 1.0;
+        using ResidualDerivatives =
+            teqp::TDXDerivatives<Model, double, Eigen::ArrayXd>;
+        using IdealDerivatives =
+            teqp::TDXDerivatives<teqp::IdealHelmholtz, double, Eigen::ArrayXd>;
+        const Eigen::ArrayXd molefractions = Eigen::ArrayXd::Ones(1);
+        const auto residual_density_derivatives =
+            ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                molar_density_mol_m3,
+                molefractions
+            );
+        const double ar01 = residual_density_derivatives[1];
+        const double ar02 = residual_density_derivatives[2];
+        const double ar11 =
+            ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                molar_density_mol_m3,
+                molefractions
+            );
+        const double ar20 =
+            ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                molar_density_mol_m3,
+                molefractions
+            );
+        const double a020 =
+            IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                ideal_model_,
+                temperature_k,
+                molar_density_mol_m3,
+                molefractions
+            );
+
+        const double cv_over_r = -(a020 + ar20);
+        const double pressure_derivative = 1.0 + 2.0 * ar01 + ar02;
+        const double temperature_density_coupling = 1.0 + ar01 - ar11;
+        if (!std::isfinite(cv_over_r) || !std::isfinite(pressure_derivative)
+            || !std::isfinite(temperature_density_coupling)
+            || cv_over_r <= 0.0 || pressure_derivative <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical pure-CO2 heat-capacity derivatives.");
+        }
+        const double cp_over_r = cv_over_r
+            + temperature_density_coupling * temperature_density_coupling
+                / pressure_derivative;
+        const double speed_dimensionless = pressure_derivative
+            + temperature_density_coupling * temperature_density_coupling
+                / cv_over_r;
+        if (!std::isfinite(cp_over_r) || !std::isfinite(speed_dimensionless)
+            || cp_over_r <= cv_over_r || speed_dimensionless <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical pure-CO2 Cp or speed-of-sound derivatives.");
+        }
+
+        const double gas_constant = model_.R(z);
+        const double cv_molar = cv_over_r * gas_constant;
+        const double cp_molar = cp_over_r * gas_constant;
+        const double speed_of_sound = std::sqrt(
+            speed_dimensionless * gas_constant * temperature_k
+                / molar_mass_kg_mol_
+        );
+        return {
+            cv_molar / molar_mass_kg_mol_,
+            cp_molar / molar_mass_kg_mol_,
+            cp_over_r / cv_over_r,
+            speed_of_sound
+        };
+    }
 
     SaturationState saturationState(double temperature_k) const {
         if (temperature_k >= critical_temperature_k_) {
@@ -239,9 +324,36 @@ public:
     }
 
 private:
+    static nlohmann::json idealTerms(const nlohmann::json &fluid_json) {
+        const auto eos = fluid_json.at("EOS").at(0);
+        const double reducing_temperature = eos.at("STATES").at("reducing").at("T");
+        const double reducing_molar_density =
+            eos.at("STATES").at("reducing").at("rhomolar");
+        const double gas_constant = eos.at("gas_constant");
+        nlohmann::json terms = nlohmann::json::array();
+        for (const auto &term : eos.at("alpha0")) {
+            auto converted = teqp::CoolProp2teqp_alphaig_term_reformatter(
+                term,
+                reducing_temperature,
+                reducing_molar_density,
+                gas_constant
+            );
+            for (const auto &converted_term : converted) {
+                terms.push_back(converted_term);
+            }
+        }
+        return nlohmann::json::array({
+            {
+                {"terms", terms},
+                {"R", gas_constant}
+            }
+        });
+    }
+
     nlohmann::json json_;
     Model model_;
     teqp::MultiFluidVLEAncillaries ancillaries_;
+    teqp::IdealHelmholtz ideal_model_;
     double molar_mass_kg_mol_;
     double critical_temperature_k_;
     double critical_pressure_pa_;
@@ -1072,9 +1184,28 @@ int px_teqp_calculate_pure_co2(
             copy_text("teqp returned a non-finite or non-positive density.", error_buffer, error_buffer_size);
             return 5;
         }
+        const auto properties = model.thermodynamicProperties(
+            temperature_k,
+            molar_density
+        );
+        if (!std::isfinite(properties.cv_j_kg_k)
+            || !std::isfinite(properties.cp_j_kg_k)
+            || !std::isfinite(properties.heat_capacity_ratio)
+            || !std::isfinite(properties.speed_of_sound_m_s)
+            || properties.cv_j_kg_k <= 0
+            || properties.cp_j_kg_k <= properties.cv_j_kg_k
+            || properties.heat_capacity_ratio <= 1.0
+            || properties.speed_of_sound_m_s <= 0.0) {
+            copy_text("teqp returned invalid pure-CO2 thermodynamic properties.", error_buffer, error_buffer_size);
+            return 5;
+        }
 
         result->molar_density_mol_m3 = molar_density;
         result->density_kg_m3 = density;
+        result->isochoric_heat_capacity_j_kg_k = properties.cv_j_kg_k;
+        result->isobaric_heat_capacity_j_kg_k = properties.cp_j_kg_k;
+        result->heat_capacity_ratio = properties.heat_capacity_ratio;
+        result->speed_of_sound_m_s = properties.speed_of_sound_m_s;
         result->density_root_count = static_cast<int>(roots.size());
         result->phase = phase_for_branch(selected.branch);
         copy_text("", error_buffer, error_buffer_size);

@@ -88,9 +88,13 @@ public enum TeqpFormulationCatalog {
         ],
         supportedProperties: [
             .density,
+            .isobaricHeatCapacity,
+            .isochoricHeatCapacity,
+            .heatCapacityRatio,
             .molarMass,
             .compressibilityFactor,
-            .specificVolume
+            .specificVolume,
+            .speedOfSound
         ],
         supportsPhaseEnvelope: true,
         provenance: "usnistgov/teqp v0.23.1 \(teqpCommit); CarbonDioxide.json BibTeX_EOS Span-JPCRD-1996.",
@@ -98,7 +102,8 @@ public enum TeqpFormulationCatalog {
             "Experimental local provider; no production accuracy claim.",
             "Only exactly 100 mol% CO₂ is production-enabled for teqp.",
             "Pure-CO₂ phase-envelope generation is enabled through teqp VLE saturation.",
-            "Expanded thermodynamic properties beyond density and transparent derived values are not enabled for teqp."
+            "Cv, Cp and speed of sound are calculated from complete ideal-gas plus residual Helmholtz derivatives.",
+            "Absolute internal energy, enthalpy and entropy are not enabled until reference-state validation is complete."
         ],
         references: [
             SourceReference(

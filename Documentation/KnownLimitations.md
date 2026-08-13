@@ -22,11 +22,11 @@
 - The IFE model formulation, coefficients and endpoint are not supplied.
 - The experimental teqp provider is displayed as Advanced Phase & Mixture Model
   (teqp). Its user-facing supported scope remains exactly 100 mol% CO₂ and only
-  density plus the existing transparent derived properties. Viscosity,
-  transport properties, expanded thermodynamic properties and user-facing
-  mixtures are unavailable. Pure-CO₂ phase-envelope generation is available
-  through the native teqp saturation calculation; impurity phase envelopes
-  remain unavailable. Subcritical multiple-root pure-CO₂
+  density, Cv, Cp, Cp/Cv, speed of sound and the existing transparent derived
+  properties. Viscosity, transport properties, enthalpy, entropy, internal
+  energy and user-facing mixtures are unavailable. Pure-CO₂ phase-envelope
+  generation is available through the native teqp saturation calculation;
+  impurity phase envelopes remain unavailable. Subcritical multiple-root pure-CO₂
   density states use teqp pure-fluid saturation equilibrium to select a stable
   vapor or liquid branch when the state is clearly away from saturation. States
   on or too close to saturation remain explicitly unavailable because a unique

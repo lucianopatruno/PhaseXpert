@@ -50,6 +50,12 @@ public struct NativeTeqpEngine: TeqpEngine {
             }
             return TeqpEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                isochoricHeatCapacityJoulesPerKilogramKelvin:
+                    nativeResult.isochoric_heat_capacity_j_kg_k,
+                isobaricHeatCapacityJoulesPerKilogramKelvin:
+                    nativeResult.isobaric_heat_capacity_j_kg_k,
+                heatCapacityRatio: nativeResult.heat_capacity_ratio,
+                speedOfSoundMetresPerSecond: nativeResult.speed_of_sound_m_s,
                 densityRootCount: Int(nativeResult.density_root_count),
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )

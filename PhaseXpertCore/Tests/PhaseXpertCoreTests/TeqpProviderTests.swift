@@ -7,6 +7,10 @@ final class TeqpProviderTests: XCTestCase {
         let libraryVersion = "teqp-test"
         var result = TeqpEngineResult(
             densityKilogramsPerCubicMetre: 801.2,
+            isochoricHeatCapacityJoulesPerKilogramKelvin: 850.1,
+            isobaricHeatCapacityJoulesPerKilogramKelvin: 1_250.2,
+            heatCapacityRatio: 1.47,
+            speedOfSoundMetresPerSecond: 410.3,
             densityRootCount: 1,
             phaseIdentifier: "supercritical"
         )
@@ -80,6 +84,15 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
             [.carbonDioxide]
+        )
+        XCTAssertTrue(
+            TeqpFormulationCatalog.productionSupportedProperties
+                .isSuperset(of: [
+                    .isobaricHeatCapacity,
+                    .isochoricHeatCapacity,
+                    .heatCapacityRatio,
+                    .speedOfSound
+                ])
         )
         XCTAssertEqual(
             TeqpFormulationCatalog.co2NitrogenGernertGergDiagnostic.status,
@@ -157,6 +170,63 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertNil(viscosity.value)
         XCTAssertEqual(viscosity.status, .unavailable)
         XCTAssertTrue(viscosity.message?.contains("no CoolProp fallback") == true)
+    }
+
+    func testPureCO2HeatCapacitiesAndSpeedOfSoundAreMapped() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 10_000_000,
+                temperatureK: 313.15,
+                composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+                requestedProperties: [
+                    .isobaricHeatCapacity,
+                    .isochoricHeatCapacity,
+                    .heatCapacityRatio,
+                    .speedOfSound
+                ],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(
+            response.properties.first { $0.property == .isobaricHeatCapacity }?.value,
+            1_250.2
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .isochoricHeatCapacity }?.value,
+            850.1
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .heatCapacityRatio }?.value,
+            1.47
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .speedOfSound }?.value,
+            410.3
+        )
+    }
+
+    func testPureCO2ReferenceStatePropertiesRemainUnavailable() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 10_000_000,
+                temperatureK: 313.15,
+                composition: [.init(component: .carbonDioxide, moleFraction: 1)],
+                requestedProperties: [
+                    .enthalpy,
+                    .entropy,
+                    .internalEnergy
+                ],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(response.properties.count, 3)
+        XCTAssertTrue(response.properties.allSatisfy { $0.status == .unavailable })
     }
 
     func testUnsupportedMixtureReturnsProviderDomainIssueAndDoesNotFallback() async {

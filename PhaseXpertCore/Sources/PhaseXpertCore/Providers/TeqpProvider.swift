@@ -2,15 +2,29 @@ import Foundation
 
 public struct TeqpEngineResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
+    public let isochoricHeatCapacityJoulesPerKilogramKelvin: Double?
+    public let isobaricHeatCapacityJoulesPerKilogramKelvin: Double?
+    public let heatCapacityRatio: Double?
+    public let speedOfSoundMetresPerSecond: Double?
     public let densityRootCount: Int
     public let phaseIdentifier: String
 
     public init(
         densityKilogramsPerCubicMetre: Double,
+        isochoricHeatCapacityJoulesPerKilogramKelvin: Double? = nil,
+        isobaricHeatCapacityJoulesPerKilogramKelvin: Double? = nil,
+        heatCapacityRatio: Double? = nil,
+        speedOfSoundMetresPerSecond: Double? = nil,
         densityRootCount: Int,
         phaseIdentifier: String
     ) {
         self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.isochoricHeatCapacityJoulesPerKilogramKelvin =
+            isochoricHeatCapacityJoulesPerKilogramKelvin
+        self.isobaricHeatCapacityJoulesPerKilogramKelvin =
+            isobaricHeatCapacityJoulesPerKilogramKelvin
+        self.heatCapacityRatio = heatCapacityRatio
+        self.speedOfSoundMetresPerSecond = speedOfSoundMetresPerSecond
         self.densityRootCount = densityRootCount
         self.phaseIdentifier = phaseIdentifier
     }
@@ -106,7 +120,8 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
                 "Phase classification is limited to stable vapor, stable liquid, and supercritical states that the bridge can identify robustly; otherwise the phase remains unknown.",
-                "Pure-CO₂ phase-envelope generation is available; impurity phase envelopes remain validation-gated and unavailable."
+                "Pure-CO₂ phase-envelope generation is available; impurity phase envelopes remain validation-gated and unavailable.",
+                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; absolute h, u and s remain unavailable pending reference-state validation."
             ],
             references: [
                 SourceReference(
@@ -208,7 +223,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         let values = request.requestedProperties
             .sorted { $0.rawValue < $1.rawValue }
             .map { property in
-                derivedByProperty[property] ?? propertyValue(for: property, density: raw.densityKilogramsPerCubicMetre)
+                derivedByProperty[property] ?? propertyValue(for: property, result: raw)
             }
         let derivedMethod = derivedValues.isEmpty
             ? ""
@@ -340,16 +355,44 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
 
     private func propertyValue(
         for property: PropertyID,
-        density: Double
+        result: TeqpEngineResult
     ) -> PropertyValue {
         switch property {
         case .density:
             PropertyValue(
                 property: property,
-                value: density,
+                value: result.densityKilogramsPerCubicMetre,
                 unit: "kg/m³",
                 status: .calculated,
                 message: "Native teqp pure-CO₂ density from P,T with stable-root selection where required."
+            )
+        case .isobaricHeatCapacity:
+            guardedPropertyValue(
+                property: property,
+                value: result.isobaricHeatCapacityJoulesPerKilogramKelvin,
+                unit: "J/(kg·K)",
+                message: "Native teqp pure-CO₂ Cp from ideal-gas plus residual Helmholtz derivatives."
+            )
+        case .isochoricHeatCapacity:
+            guardedPropertyValue(
+                property: property,
+                value: result.isochoricHeatCapacityJoulesPerKilogramKelvin,
+                unit: "J/(kg·K)",
+                message: "Native teqp pure-CO₂ Cv from ideal-gas plus residual Helmholtz derivatives."
+            )
+        case .heatCapacityRatio:
+            guardedPropertyValue(
+                property: property,
+                value: result.heatCapacityRatio,
+                unit: "",
+                message: "Native teqp pure-CO₂ heat-capacity ratio Cp/Cv."
+            )
+        case .speedOfSound:
+            guardedPropertyValue(
+                property: property,
+                value: result.speedOfSoundMetresPerSecond,
+                unit: "m/s",
+                message: "Native teqp pure-CO₂ speed of sound from Helmholtz derivatives."
             )
         case .dynamicViscosity:
             PropertyValue(
@@ -368,6 +411,30 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 message: "This property is not enabled for the experimental teqp pure-CO₂ milestone."
             )
         }
+    }
+
+    private func guardedPropertyValue(
+        property: PropertyID,
+        value: Double?,
+        unit: String,
+        message: String
+    ) -> PropertyValue {
+        guard let value, value.isFinite, value > 0 else {
+            return PropertyValue(
+                property: property,
+                value: nil,
+                unit: unit,
+                status: .unavailable,
+                message: "teqp did not return a finite positive value for this pure-CO₂ property."
+            )
+        }
+        return PropertyValue(
+            property: property,
+            value: value,
+            unit: unit,
+            status: .calculated,
+            message: message
+        )
     }
 
     private func phaseRegion(for identifier: String) -> PhaseRegion {

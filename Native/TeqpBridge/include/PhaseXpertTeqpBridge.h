@@ -18,6 +18,10 @@ typedef enum PXTeqpPhase {
 typedef struct PXTeqpResult {
     double density_kg_m3;
     double molar_density_mol_m3;
+    double isochoric_heat_capacity_j_kg_k;
+    double isobaric_heat_capacity_j_kg_k;
+    double heat_capacity_ratio;
+    double speed_of_sound_m_s;
     int density_root_count;
     PXTeqpPhase phase;
 } PXTeqpResult;

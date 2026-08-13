@@ -30,7 +30,7 @@ user-facing provider. The only production-enabled formulation is currently:
 
 | Formulation ID | Components | Family | Status | Enabled properties | Phase envelope |
 |---|---|---|---|---|---|
-| `teqp-v0.23.1-pure-co2-span-wagner-density` | CO₂ | multifluid | production-enabled | density, molar mass, specific volume, Z | yes, pure-fluid saturation only |
+| `teqp-v0.23.1-pure-co2-span-wagner-density` | CO₂ | multifluid | production-enabled | density, Cv, Cp, Cp/Cv, speed of sound, molar mass, specific volume, Z | yes, pure-fluid saturation only |
 
 The CO₂+N₂ Gernert/GERG formulation from PR #42 is retained as
 `teqp-v0.23.1-co2-n2-gerg-diagnostic` with `failedValidation` status. It is
@@ -45,11 +45,11 @@ standard multifluid candidate has no binary departure term in the pinned data.
 
 | Pair | Pure-fluid EOS records | Standard multifluid binary record | Departure function | Candidate teqp families | Current status |
 |---|---|---|---|---|---|
-| CO₂+N₂ | CO₂ `Span-JPCRD-1996`; N₂ `Span-JPCRD-2000` | `Gernert-Thesis-2013`, `F=1`, `betaT=0.994140013`, `gammaT=1.107654104`, `betaV=1.022709642`, `gammaV=1.047578256` | `Nitrogen-CarbonDioxide`, GERG-2008, `Kunz-JCED-2012` | standard multifluid; GERG residual; multifluid+activity Wilson example from teqp docs using Lasala et al. parameters | standard multifluid failed Gate C for user-facing support; alternatives require probe validation |
-| CO₂+O₂ | CO₂ `Span-JPCRD-1996`; O₂ `Schmidt-FPE-1985,Stewart-JPCRD-1991` | `Gernert-Thesis-2013`, `F=0`, `betaT=1.0`, `gammaT=1.031986`, `betaV=1.0`, `gammaV=1.08446` | none | standard multifluid reducing function; GERG residual | inventory only; not enabled |
-| CO₂+Ar | CO₂ `Span-JPCRD-1996`; Ar `Tegeler-JPCRD-1999` | `Gernert-Thesis-2013`, `F=1`, `betaT=1.027147`, `gammaT=0.968781`, `betaV=1.001378`, `gammaV=1.02971` | `Argon-CarbonDioxide`, GERG-2008, `Gernert-Thesis-2013` | standard multifluid; GERG residual | inventory only; not enabled |
-| CO₂+H₂ | CO₂ `Span-JPCRD-1996`; H₂ `Leachman-JPCRD-2009` | `Kunz-JCED-2012`, `F=0`, `betaT=0.942320195`, `gammaT=1.782924792`, `betaV=0.904142159`, `gammaV=1.15279255` | none | standard multifluid reducing function; GERG residual | inventory only; not enabled |
-| CO₂+CH₄ | CO₂ `Span-JPCRD-1996`; CH₄ `Setzmann-JPCRD-1991` | `Kunz-JCED-2012`, `F=1`, `betaT=1.02262449`, `gammaT=0.975665369`, `betaV=0.999518072`, `gammaV=1.002806594` | `Methane-CarbonDioxide`, GERG-2008, `Kunz-JCED-2012` | standard multifluid; GERG residual | inventory only; not enabled |
+| CO₂+N₂ | CO₂ `Span-JPCRD-1996`; N₂ `Span-JPCRD-2000` | `Gernert-Thesis-2013`, `F=1`, `betaT=0.994140013`, `gammaT=1.107654104`, `betaV=1.022709642`, `gammaV=1.047578256` | `Nitrogen-CarbonDioxide`, GERG-2008, `Kunz-JCED-2012` | standard multifluid; GERG residual; multifluid+activity Wilson example from teqp docs using Lasala et al. parameters | standard multifluid failed Gate C; Wilson example classified research-only because its parameter source is the example VLE fit rather than an independently validated predictive density formulation |
+| CO₂+O₂ | CO₂ `Span-JPCRD-1996`; O₂ `Schmidt-FPE-1985,Stewart-JPCRD-1991` | `Gernert-Thesis-2013`, `F=0`, `betaT=1.0`, `gammaT=1.031986`, `betaV=1.0`, `gammaV=1.08446` | none | standard multifluid reducing function; GERG residual | failed Mantovani density bake-off; not enabled |
+| CO₂+Ar | CO₂ `Span-JPCRD-1996`; Ar `Tegeler-JPCRD-1999` | `Gernert-Thesis-2013`, `F=1`, `betaT=1.027147`, `gammaT=0.968781`, `betaV=1.001378`, `gammaV=1.02971` | `Argon-CarbonDioxide`, GERG-2008, `Gernert-Thesis-2013` | standard multifluid; GERG residual | broad Mantovani density bake-off failed; low-Ar density-only subset remains non-production without VLE gate |
+| CO₂+H₂ | CO₂ `Span-JPCRD-1996`; H₂ `Leachman-JPCRD-2009` | `Kunz-JCED-2012`, `F=0`, `betaT=0.942320195`, `gammaT=1.782924792`, `betaV=0.904142159`, `gammaV=1.15279255` | none | standard multifluid reducing function; GERG residual | no defensible model-data basis encoded for production; not enabled |
+| CO₂+CH₄ | CO₂ `Span-JPCRD-1996`; CH₄ `Setzmann-JPCRD-1991` | `Kunz-JCED-2012`, `F=1`, `betaT=1.02262449`, `gammaT=0.975665369`, `betaV=0.999518072`, `gammaV=1.002806594` | `Methane-CarbonDioxide`, GERG-2008, `Kunz-JCED-2012` | standard multifluid; GERG residual | no defensible model-data basis encoded for production; not enabled |
 
 The teqp documentation states that GERG residual models include components
 needed here, including methane, nitrogen, carbon dioxide, hydrogen, oxygen and
@@ -73,8 +73,8 @@ Initial independent references identified for the target binaries are:
 | CO₂+N₂ | Brugge et al. 1997; Mantovani et al. 2012 | Westman et al. 2016; Lasala et al. 2016 data embedded in teqp docs for the activity-model example | Standard Gernert/GERG model failed PR #42 Gate C; alternative formulations must be compared against the same primary data. |
 | CO₂+O₂ | Mantovani et al. 2012; recent CO₂+O₂ PVT datasets require primary-source audit | Westman et al. 2016, DOI `10.1016/j.fluid.2016.04.002` | O₂ is high priority because Mantovani includes CO₂-rich PVT rows and Westman provides VLE. |
 | CO₂+Ar | Mantovani et al. 2012 | published CO₂+Ar VLE sources require primary-source audit | Ar is high priority because Mantovani includes CO₂-rich PVT rows. |
-| CO₂+H₂ | CO₂+H₂ density and phase-behavior papers relevant to CCS require primary-source audit | CO₂+H₂ phase-behavior/VLE sources require primary-source audit | GERG natural-gas coverage must not be assumed accurate in CO₂-rich H₂ service. |
-| CO₂+CH₄ | CO₂+CH₄ density and VLE literature is available and must be audited for CO₂-rich composition relevance | CO₂+CH₄ VLE literature is available, including near-critical-region datasets | Binary validation does not prove multicomponent support. |
+| CO₂+H₂ | Sanchez-Vicente et al. 2013, DOI `10.1016/j.ijggc.2012.12.002`, reports CO₂+H₂ densities relevant to CCS; newer datasets exist but are not encoded here | CO₂+H₂ phase-behavior/VLE sources exist but no complete audited numerical matrix is encoded here | GERG natural-gas coverage must not be assumed accurate in CO₂-rich H₂ service; H₂ remains unavailable. |
+| CO₂+CH₄ | CO₂-rich density literature exists but no complete audited numerical matrix is encoded here | Petropoulou et al. 2018, DOI `10.1016/j.fluid.2018.01.011`, reports CO₂+CH₄ VLE near 293-303 K; no complete audited production matrix is encoded here | Binary validation does not prove multicomponent support; CH₄ remains unavailable. |
 
 ## Current product decision
 
@@ -86,13 +86,21 @@ The requested target impurities are inventoried but not enabled for teqp:
 | N₂ | Multifluid+Activity Wilson candidate | Lasala et al.; PR #42 references for comparison | research-only: parameters are from the Lasala VLE example and are not accepted as an independently validated predictive density formulation | research-only: not a production validation set independent of the parameter source | none | no |
 | O₂ | Standard multifluid reducing-function candidate | Mantovani 2012 Tables 2, 6 and 7; Westman 2016 CO₂+O₂ identified | failed: 6 direct teqp PVT points converged, worst relative density deviation `14.803493%` | not pursued for production after density gate failed | none | no |
 | Ar | Standard multifluid Gernert/GERG candidate | Mantovani 2012 Tables 2, 8 and 9; CO₂+Ar VLE sources identified | failed for broad audited range: 6 direct teqp PVT points converged, low-Ar subset worst `0.731526%`, high-Ar subset worst `9.990878%` | not completed; low-Ar density-only promise is insufficient for phase-equilibrium support | none | no |
-| H₂ | Standard multifluid / GERG residual candidates | CO₂+H₂ phase-behavior sources identified | no defensible encoded PVT matrix in this stage | no defensible encoded VLE matrix in this stage | none | no |
-| CH₄ | Standard multifluid / GERG residual candidates | CO₂-rich CO₂+CH₄ VLE sources identified | no defensible encoded PVT matrix in this stage | no defensible encoded VLE matrix in this stage | none | no |
+| H₂ | Standard multifluid / GERG residual candidates | Sanchez-Vicente et al. 2013 density source identified | no defensible encoded PVT matrix; candidate not numerically baked off for production | no defensible encoded VLE matrix | none | no |
+| CH₄ | Standard multifluid / GERG residual candidates | Petropoulou et al. 2018 VLE source and CO₂-rich density literature identified | no defensible encoded PVT matrix; candidate not numerically baked off for production | no defensible encoded VLE matrix | none | no |
 
 The machine-readable bake-off artifact is
 `Documentation/Validation/TeqpMultiImpurityBakeoffResults.json`. It records the
 representative Mantovani O₂ and Ar density points, direct teqp outputs and the
 non-enabled scientific result for each requested impurity pair.
+
+Pure-CO₂ teqp Cv, Cp and speed of sound are enabled. They are calculated from
+the pinned Span-Wagner teqp ideal-gas and residual Helmholtz derivatives,
+converted to mass basis, and checked against NIST Chemistry WebBook CO₂ fluid
+property rows at gas, dense-liquid and supercritical states. Pure-CO₂
+enthalpy, entropy and internal energy remain unavailable because the absolute
+reference-state semantics are not yet independently accepted for PhaseXpert
+results.
 
 Pure-CO₂ teqp phase-envelope generation is enabled through the native
 pure-fluid VLE saturation calculation. The generated boundary covers the

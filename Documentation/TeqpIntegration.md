@@ -170,6 +170,9 @@ Supported:
 
 - exactly 100 mol% CO₂;
 - density;
+- isochoric heat capacity, isobaric heat capacity, heat-capacity ratio and
+  speed of sound for pure CO₂, calculated from the complete ideal-gas plus
+  residual Helmholtz-energy derivatives in the pinned teqp model;
 - transparently derived molar mass, specific volume and compressibility factor
   through the existing PhaseXpert derived-property layer.
 
@@ -184,9 +187,9 @@ Validation-gated and not yet user-facing:
 Unavailable:
 
 - viscosity and all transport properties;
-- enthalpy, entropy, internal energy, heat capacities, acoustic properties,
-  thermal conductivity and Joule-Thomson coefficient;
-- phase envelopes;
+- enthalpy, entropy and internal energy, because their absolute reference-state
+  convention has not been separately validated for PhaseXpert result semantics;
+- thermal conductivity, Joule-Thomson coefficient and transport properties;
 - user-facing CO₂+N₂ calculations and all other mixtures through teqp; Gate C
   failed to establish a supported N₂ domain for this pinned binary model.
 
@@ -213,6 +216,23 @@ experimental density.
 | dense liquid-like | 310.00 | 29,966,000 | 921.817000 | 921.860028 | 0.043028 | 0.000046677 | 0.987817 | pass |
 | supercritical | 350.00 | 19,981,000 | 613.586000 | 613.738164 | 0.152164 | 0.000247992 | 0.828586 | pass |
 | high-temperature supercritical | 400.00 | 29,994,000 | 561.435000 | 561.411573 | 0.023427 | 0.000041727 | 0.679435 | pass |
+
+Pure-CO₂ Cv, Cp and speed-of-sound validation uses the NIST Chemistry WebBook
+fluid-property service for carbon dioxide, DOI `10.18434/T4D303`, as an
+authoritative independent implementation check of the Span-Wagner property
+formulation, units and ideal/residual derivative assembly. Values are requested
+as `kg/m3`, `J/g*K` and `m/s`, then converted only where needed to
+PhaseXpert's `J/(kg*K)` property convention.
+
+| Region | T / K | P / Pa | NIST Cv / J/(kg K) | teqp Cv / J/(kg K) | NIST Cp / J/(kg K) | teqp Cp / J/(kg K) | NIST w / m/s | teqp w / m/s | Result |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| gas | 293.15 | 1,000,000 | 677.902139023 | 677.902139454 | 921.219397517 | 921.219397949 | 259.064082533 | 259.064082511 | pass |
+| dense liquid | 293.15 | 15,000,000 | 921.471647813 | 921.471648243 | 2,246.22018166 | 2,246.22018207 | 563.944857810 | 563.944857744 | pass |
+| supercritical | 350.00 | 19,981,000 | 921.209412650 | 921.209413186 | 2,622.65420410 | 2,622.65420465 | 351.207147845 | 351.207147784 | pass |
+
+The WebBook check does not validate absolute enthalpy, entropy or internal
+energy reference states for PhaseXpert. Those properties therefore remain
+explicitly unavailable for teqp.
 
 Stable-root regression checks for subcritical CO₂ use teqp equilibrium
 internally rather than treating CoolProp as a reference. At 293.15 K, the

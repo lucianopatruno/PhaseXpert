@@ -29,7 +29,11 @@ because Gate C failed to establish a supported operating range for this pinned
 binary model. The multi-impurity inventory also records upstream O₂, Ar, H₂
 and CH₄ model-data provenance; the O₂ and Ar diagnostic bake-off results in
 `Documentation/Validation/TeqpMultiImpurityBakeoffResults.json` did not
-establish a production domain. The
+establish a production domain. Pure-CO₂ teqp Cv, Cp and speed-of-sound
+validation uses NIST Chemistry WebBook fluid-property rows, SRD 69
+([DOI 10.18434/T4D303](https://doi.org/10.18434/T4D303)), as an independent
+implementation reference for the Span-Wagner property formulation and units.
+The
 generated XCFramework, recorded revision, submodule list and licence are
 ignored under `Vendor/teqp/` and must be reviewed before distribution.
 
