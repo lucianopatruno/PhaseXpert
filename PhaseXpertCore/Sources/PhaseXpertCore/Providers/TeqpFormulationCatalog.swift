@@ -92,12 +92,13 @@ public enum TeqpFormulationCatalog {
             .compressibilityFactor,
             .specificVolume
         ],
-        supportsPhaseEnvelope: false,
+        supportsPhaseEnvelope: true,
         provenance: "usnistgov/teqp v0.23.1 \(teqpCommit); CarbonDioxide.json BibTeX_EOS Span-JPCRD-1996.",
         limitations: [
             "Experimental local provider; no production accuracy claim.",
             "Only exactly 100 mol% CO₂ is production-enabled for teqp.",
-            "Phase-envelope and expanded thermodynamic properties are not enabled for teqp."
+            "Pure-CO₂ phase-envelope generation is enabled through teqp VLE saturation.",
+            "Expanded thermodynamic properties beyond density and transparent derived values are not enabled for teqp."
         ],
         references: [
             SourceReference(

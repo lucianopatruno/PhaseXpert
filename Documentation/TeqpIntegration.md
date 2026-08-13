@@ -404,8 +404,8 @@ user-facing PhaseXpert N₂ range. Scientifically defensible next options are:
    with appropriate redistribution rights and independent validation evidence;
 3. expand validated pure-CO₂ teqp thermodynamic properties after establishing
    complete definitions, units, basis and reference-state conventions;
-4. implement pure-CO₂ teqp saturation and phase-diagram functionality
-   independently of N₂.
+4. independently validate the newly exposed pure-CO₂ teqp phase-envelope
+   display against additional authoritative saturation-pressure references.
 
 PhaseXpert should not tune coefficients or fit binary interaction parameters
 inside the app without a separate research and validation project.

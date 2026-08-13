@@ -16,6 +16,25 @@ public struct TeqpEngineResult: Equatable, Sendable {
     }
 }
 
+public struct TeqpSaturationPoint: Equatable, Sendable {
+    public let temperatureK: Double
+    public let pressurePa: Double
+    public let liquidDensityKilogramsPerCubicMetre: Double
+    public let vaporDensityKilogramsPerCubicMetre: Double
+
+    public init(
+        temperatureK: Double,
+        pressurePa: Double,
+        liquidDensityKilogramsPerCubicMetre: Double,
+        vaporDensityKilogramsPerCubicMetre: Double
+    ) {
+        self.temperatureK = temperatureK
+        self.pressurePa = pressurePa
+        self.liquidDensityKilogramsPerCubicMetre = liquidDensityKilogramsPerCubicMetre
+        self.vaporDensityKilogramsPerCubicMetre = vaporDensityKilogramsPerCubicMetre
+    }
+}
+
 public protocol TeqpEngine: Sendable {
     var isAvailable: Bool { get }
     var libraryVersion: String { get }
@@ -24,6 +43,10 @@ public protocol TeqpEngine: Sendable {
         pressurePa: Double,
         temperatureK: Double
     ) async throws -> TeqpEngineResult
+
+    func pureCarbonDioxideSaturation(
+        temperatureK: Double
+    ) async throws -> TeqpSaturationPoint
 }
 
 public struct UnavailableTeqpEngine: TeqpEngine {
@@ -36,6 +59,14 @@ public struct UnavailableTeqpEngine: TeqpEngine {
         pressurePa: Double,
         temperatureK: Double
     ) async throws -> TeqpEngineResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
+    public func pureCarbonDioxideSaturation(
+        temperatureK: Double
+    ) async throws -> TeqpSaturationPoint {
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
         )
@@ -75,7 +106,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
                 "Phase classification is limited to stable vapor, stable liquid, and supercritical states that the bridge can identify robustly; otherwise the phase remains unknown.",
-                "Phase-envelope generation is unavailable in this teqp milestone."
+                "Pure-CO₂ phase-envelope generation is available; impurity phase envelopes remain validation-gated and unavailable."
             ],
             references: [
                 SourceReference(
@@ -204,19 +235,105 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     }
 
     public func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse {
-        PhaseEnvelopeResponse(
+        try Task.checkCancellation()
+        let startedAt = Date()
+        guard engine.isAvailable else {
+            return PhaseEnvelopeResponse(
+                requestID: request.requestID,
+                points: [],
+                warnings: [
+                    "teqp phase boundary unavailable because the native XCFramework is not linked."
+                ],
+                isAvailable: false,
+                model: descriptor,
+                generatedAt: Date(),
+                solver: SolverMetadata(
+                    method: "No teqp phase-boundary calculation",
+                    converged: false,
+                    durationMilliseconds: 0
+                )
+            )
+        }
+        guard request.modelID == descriptor.id else {
+            throw ProviderError.invalidRequest(
+                "The phase-envelope request model ID does not match teqp."
+            )
+        }
+        guard isPureCarbonDioxide(request.composition) else {
+            throw ProviderError.invalidRequest(
+                "The experimental teqp provider supports phase-envelope generation only for exactly 100 mol% CO₂. No CoolProp fallback is used."
+            )
+        }
+
+        let criticalTemperatureK = 304.1282
+        let criticalPressurePa = 7_377_300.0
+        let triplePointTemperatureK = 216.592
+        let pointCount = 80
+        let span = criticalTemperatureK - triplePointTemperatureK
+        let endpointOffset = max(span * 1e-6, 1e-4)
+        let firstTemperature = triplePointTemperatureK + endpointOffset
+        let lastTemperature = criticalTemperatureK - endpointOffset
+        let increment = (lastTemperature - firstTemperature)
+            / Double(pointCount - 1)
+
+        var points: [PhaseEnvelopePoint] = []
+        points.reserveCapacity(pointCount + 1)
+        for index in 0..<pointCount {
+            try Task.checkCancellation()
+            let temperature = firstTemperature + Double(index) * increment
+            let saturation = try await engine.pureCarbonDioxideSaturation(
+                temperatureK: temperature
+            )
+            guard saturation.pressurePa.isFinite, saturation.pressurePa > 0 else {
+                throw ProviderError.malformedResponse(
+                    "teqp returned a non-finite or non-positive saturation pressure."
+                )
+            }
+            guard saturation.liquidDensityKilogramsPerCubicMetre.isFinite,
+                  saturation.vaporDensityKilogramsPerCubicMetre.isFinite,
+                  saturation.liquidDensityKilogramsPerCubicMetre > saturation.vaporDensityKilogramsPerCubicMetre
+            else {
+                throw ProviderError.malformedResponse(
+                    "teqp returned invalid pure-CO₂ saturation densities."
+                )
+            }
+            guard points.last.map({ saturation.pressurePa > $0.pressurePa }) ?? true else {
+                throw ProviderError.malformedResponse(
+                    "teqp returned a non-increasing pure-CO₂ saturation boundary."
+                )
+            }
+            points.append(
+                PhaseEnvelopePoint(
+                    temperatureK: saturation.temperatureK,
+                    pressurePa: saturation.pressurePa,
+                    branch: .bubble
+                )
+            )
+        }
+        points.append(
+            PhaseEnvelopePoint(
+                temperatureK: criticalTemperatureK,
+                pressurePa: criticalPressurePa,
+                branch: .critical
+            )
+        )
+
+        return PhaseEnvelopeResponse(
             requestID: request.requestID,
-            points: [],
+            points: points,
             warnings: [
-                "The experimental teqp provider does not expose phase-envelope generation in this milestone."
+                "EXPERIMENTAL teqp provider — validation pending: do not use this boundary for engineering, safety, commercial, or regulatory decisions.",
+                "For pure CO₂, bubble and dew boundaries coincide; the chart shows one saturation boundary.",
+                "Impurity phase-envelope generation remains validation-gated and unavailable."
             ],
-            isAvailable: false,
+            isAvailable: true,
+            boundaryKind: .pureFluidSaturation,
             model: descriptor,
             generatedAt: Date(),
             solver: SolverMetadata(
-                method: "No teqp phase-boundary calculation",
-                converged: false,
-                durationMilliseconds: 0
+                method: "teqp pure-CO₂ VLE saturation solve",
+                converged: true,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             )
         )
     }

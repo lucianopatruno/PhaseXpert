@@ -17,6 +17,17 @@ final class TeqpProviderTests: XCTestCase {
         ) async throws -> TeqpEngineResult {
             result
         }
+
+        func pureCarbonDioxideSaturation(
+            temperatureK: Double
+        ) async throws -> TeqpSaturationPoint {
+            TeqpSaturationPoint(
+                temperatureK: temperatureK,
+                pressurePa: temperatureK * 1_000,
+                liquidDensityKilogramsPerCubicMetre: 1_000 - temperatureK,
+                vaporDensityKilogramsPerCubicMetre: temperatureK / 10
+            )
+        }
     }
 
     private struct FailingEngine: TeqpEngine {
@@ -27,6 +38,14 @@ final class TeqpProviderTests: XCTestCase {
             pressurePa: Double,
             temperatureK: Double
         ) async throws -> TeqpEngineResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for unsupported mixtures."
+            )
+        }
+
+        func pureCarbonDioxideSaturation(
+            temperatureK: Double
+        ) async throws -> TeqpSaturationPoint {
             throw ProviderError.malformedResponse(
                 "Engine should not be called for unsupported mixtures."
             )
@@ -57,6 +76,7 @@ final class TeqpProviderTests: XCTestCase {
             TeqpFormulationCatalog.productionFormulations.map(\.id),
             ["teqp-v0.23.1-pure-co2-span-wagner-density"]
         )
+        XCTAssertTrue(TeqpFormulationCatalog.pureCarbonDioxide.supportsPhaseEnvelope)
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
             [.carbonDioxide]
@@ -188,6 +208,52 @@ final class TeqpProviderTests: XCTestCase {
                 error as? ProviderError,
                 .invalidRequest(
                     "The experimental teqp provider supports only exactly 100 mol% CO₂. No CoolProp fallback is used."
+                )
+            )
+        })
+    }
+
+    func testPureCO2PhaseEnvelopeUsesTeqpSaturation() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let response = try await provider.phaseEnvelope(
+            PhaseEnvelopeRequest(
+                modelID: provider.descriptor.id,
+                composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+            )
+        )
+
+        XCTAssertTrue(response.isAvailable)
+        XCTAssertEqual(response.boundaryKind, .pureFluidSaturation)
+        XCTAssertEqual(response.points.count, 81)
+        XCTAssertEqual(response.points.last?.branch, .critical)
+        XCTAssertEqual(response.points.first?.branch, .bubble)
+        XCTAssertEqual(response.solver?.converged, true)
+        XCTAssertTrue(response.solver?.method.contains("teqp pure-CO₂ VLE") == true)
+        XCTAssertTrue(
+            response.warnings.contains {
+                $0.contains("Impurity phase-envelope generation remains validation-gated")
+            }
+        )
+    }
+
+    func testTeqpPhaseEnvelopeRejectsUnsupportedMixturesWithoutFallback() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.phaseEnvelope(
+                PhaseEnvelopeRequest(
+                    modelID: provider.descriptor.id,
+                    composition: [
+                        .init(component: .carbonDioxide, moleFraction: 0.97),
+                        .init(component: .nitrogen, moleFraction: 0.03)
+                    ]
+                )
+            )
+        }, { error in
+            XCTAssertEqual(
+                error as? ProviderError,
+                .invalidRequest(
+                    "The experimental teqp provider supports phase-envelope generation only for exactly 100 mol% CO₂. No CoolProp fallback is used."
                 )
             )
         })

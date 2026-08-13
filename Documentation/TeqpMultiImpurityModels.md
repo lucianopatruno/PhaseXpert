@@ -30,7 +30,7 @@ user-facing provider. The only production-enabled formulation is currently:
 
 | Formulation ID | Components | Family | Status | Enabled properties | Phase envelope |
 |---|---|---|---|---|---|
-| `teqp-v0.23.1-pure-co2-span-wagner-density` | CO₂ | multifluid | production-enabled | density, molar mass, specific volume, Z | no |
+| `teqp-v0.23.1-pure-co2-span-wagner-density` | CO₂ | multifluid | production-enabled | density, molar mass, specific volume, Z | yes, pure-fluid saturation only |
 
 The CO₂+N₂ Gernert/GERG formulation from PR #42 is retained as
 `teqp-v0.23.1-co2-n2-gerg-diagnostic` with `failedValidation` status. It is
@@ -88,6 +88,14 @@ The requested target impurities are inventoried but not enabled for teqp:
 | Ar | Standard multifluid / GERG residual candidates | Mantovani 2012; additional VLE source pending audit | not yet probed | not yet probed | none | no |
 | H₂ | Standard multifluid / GERG residual candidates | CCS-relevant CO₂+H₂ PVT/VLE sources pending audit | not yet probed | not yet probed | none | no |
 | CH₄ | Standard multifluid / GERG residual candidates | CO₂-rich CO₂+CH₄ PVT/VLE sources pending audit | not yet probed | not yet probed | none | no |
+
+Pure-CO₂ teqp phase-envelope generation is enabled through the native
+pure-fluid VLE saturation calculation. The generated boundary covers the
+Span-Wagner CO₂ model from just above the triple-point temperature through the
+critical point, avoids singular endpoints during sampling, appends the
+authoritative critical point explicitly and rejects non-finite, non-positive or
+non-monotonic saturation pressures. This does not enable any impurity phase
+diagram.
 
 Simultaneous multiple-impurity support is not enabled. Binary-pair validation
 would not validate CO₂ plus several impurities because all impurity-impurity

@@ -175,3 +175,6 @@
   inventory document. The user-facing teqp provider still enables only pure
   CO₂; N₂, O₂, Ar, H₂ and CH₄ are inventoried for validation-gated future
   formulations but remain unavailable through teqp until independent gates pass.
+- Added a native teqp pure-CO₂ saturation boundary for the existing Phase
+  Diagram workflow, using teqp VLE saturation points through the critical point
+  while keeping all impurity phase diagrams unavailable until validation passes.
