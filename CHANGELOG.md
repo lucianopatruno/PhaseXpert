@@ -191,3 +191,13 @@
   standard multifluid candidates against audited Mantovani 2012 density rows.
   O₂ and Ar remain unavailable through teqp because the evaluated candidates did
   not establish a production density+VLE domain.
+- Added the Xu-Mao-Zheng 2023 CO₂/N₂/O₂/Ar model-data acquisition audit. The
+  candidate remains blocked for PhaseXpert runtime use because the published
+  binary parameters and generalized departure-function coefficients were not
+  available through legitimate accessible primary or supplementary routes in
+  this environment.
+- Added the CO₂+H₂ validation-data acquisition audit for EOS-CG-2021. Native
+  construction remains feasible, but H₂ stays unavailable because no audited
+  CO₂-rich numerical validation matrix was accessible; snippets, plots and
+  H₂-rich/high-temperature surrogate tables were not used as production
+  evidence.

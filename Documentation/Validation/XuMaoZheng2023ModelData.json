@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "authors": "Xu, Mao and Zheng",
+    "title": "Prediction of the volumetric and vapor-liquid equilibrium properties of CO2-N2-O2-Ar fluid mixtures with a general Helmholtz equation of state",
+    "journal": "Fluid Phase Equilibria",
+    "volume": "567",
+    "article": "113703",
+    "year": 2023,
+    "doi": "10.1016/j.fluid.2022.113703",
+    "pii": "S0378-3812(22)00322-3",
+    "openAccess": false
+  },
+  "acquisitionAudit": {
+    "date": "2026-08-13",
+    "routesChecked": [
+      {
+        "route": "Crossref DOI metadata",
+        "result": "metadata only; no model coefficient tables or supplementary links"
+      },
+      {
+        "route": "Elsevier article API for PII S0378381222003223",
+        "result": "core metadata only; article marked non-open-access; no full text, coefficient tables or supplementary links"
+      },
+      {
+        "route": "ScienceDirect article page",
+        "result": "HTML shell accessible; full article coefficient text and tables not exposed in the accessible payload"
+      },
+      {
+        "route": "General web search for title, DOI, PII and supplementary terms",
+        "result": "no legitimate accessible full text or coefficient supplement found"
+      }
+    ],
+    "implementationStatus": "blocked",
+    "blocker": "The published binary mixing parameters and generalized Lemmon-Jacobsen departure-function coefficients could not be acquired from a legitimate accessible primary or supplementary source in this environment.",
+    "runtimeUseAllowed": false
+  },
+  "modelSummaryFromAccessibleMetadata": {
+    "components": [
+      "CO2",
+      "N2",
+      "O2",
+      "Ar"
+    ],
+    "reportedFamily": "General Helmholtz equation of state",
+    "reportedTerms": [
+      "high-accuracy pure-fluid equations of state",
+      "four binary mixing parameters",
+      "generalized Lemmon-Jacobsen departure function"
+    ]
+  },
+  "coefficients": [],
+  "productionDecision": {
+    "CO2+N2": "NO DEPLOYABLE MODEL DATA",
+    "CO2+O2": "NO DEPLOYABLE MODEL DATA",
+    "CO2+Ar": "NO DEPLOYABLE MODEL DATA"
+  },
+  "notes": [
+    "No PhaseXpert fitting or coefficient inference is allowed.",
+    "This artifact intentionally contains no guessed coefficients.",
+    "The candidate should be revisited only if the primary paper or supplementary coefficient tables become legally accessible."
+  ]
+}

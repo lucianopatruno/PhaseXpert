@@ -119,8 +119,17 @@ validation matrix.
   function alone.
 - CO₂+Ar and CO₂+H₂: both require exact Table 5 departure-function extraction
   before any validation bake-off.
-- CO₂+H₂: direct native construction works, but no audited primary numerical
-  density+VLE matrix is complete in this branch.
+- CO₂+H₂: direct native construction works, but the production validation gate
+  is blocked by data acquisition rather than by native feasibility. The
+  dedicated acquisition artifact
+  `Documentation/Validation/HydrogenValidationDataAcquisition.json` records
+  the source audit: Sánchez-Vicente et al. 2013 is directly relevant but its
+  numerical PVT table was not accessible through the checked metadata,
+  repository or ThermoML routes; Cheng et al. 2019 ThermoML data are accessible
+  but H₂-rich and 673 K rather than CO₂-rich CCS impurity data; and Owuna et
+  al. 2025 appears relevant from metadata but the numerical tables/PDF were not
+  accessible to this agent. No H₂ validation values are inferred from snippets
+  or plots.
 - CO₂+CH₄: EOS-CG-2021 inherits GERG; the first direct Petropoulou/ThermoML VLE
   probe failed to establish a production subdomain.
 - Simultaneous impurity support is not implied by binary construction. The
