@@ -4,9 +4,9 @@
 
 This is a deliberately narrow experimental native-provider milestone. It adds
 an optional local teqp bridge for exactly 100 mol% CO₂, plus validation-gated
-native CO₂+N₂ equilibrium primitives. CoolProp remains the default provider,
-and no existing calculation is routed to teqp unless the user explicitly
-selects `Advanced Phase & Mixture Model (teqp)`.
+CO₂+N₂ research infrastructure. CoolProp remains the default provider, and no
+existing calculation is routed to teqp unless the user explicitly selects
+`Advanced Phase & Mixture Model (teqp)`.
 
 ## CO₂+N₂ Gate A finding
 
@@ -58,16 +58,17 @@ compositions before solving the requested `T, x_liquid` point. A companion dew
 solve uses the same VLE primitive and brackets liquid composition until the
 vapor-phase N₂ composition matches the requested bulk composition.
 
-The current native point classifier is intentionally minimal. For a requested
-subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at
+The native point classifier is retained only as research infrastructure. For a
+requested subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at
 `x_liquid = z`, dew pressure at `y_vapor = z`, and uses those converged
 boundaries only to classify clearly vapor-side, clearly dense/liquid-side or
 inside/on-envelope two-phase states. Clearly single-phase states then solve
 the homogeneous multifluid EOS for density at the specified overall
 composition. Two-phase states return explicit two-phase status and do not
 invent a unique homogeneous bulk density or phase fraction. This is not yet a
-general T-p-z flash solver and is not exposed as a validated user-facing
-CO₂/N₂ teqp domain until independent Gate C data are ingested and passed.
+general T-p-z flash solver. Gate C failed for user-facing CO₂/N₂ support with
+the pinned teqp v0.23.1 Gernert/GERG binary model, so this code is not exposed
+as a supported teqp mixture domain.
 
 The generated teqp XCFramework is intentionally ignored by Git. A clean clone
 therefore remains buildable without teqp and shows the provider as unavailable
@@ -186,8 +187,8 @@ Unavailable:
 - enthalpy, entropy, internal energy, heat capacities, acoustic properties,
   thermal conductivity and Joule-Thomson coefficient;
 - phase envelopes;
-- user-facing CO₂+N₂ calculations and all other mixtures through teqp until
-  Gate C independent validation establishes a supported domain.
+- user-facing CO₂+N₂ calculations and all other mixtures through teqp; Gate C
+  failed to establish a supported N₂ domain for this pinned binary model.
 
 Unsupported compositions return provider-domain errors and are not silently
 sent to CoolProp.
@@ -239,7 +240,7 @@ They do not establish production accuracy, phase-boundary accuracy, transport
 properties, mixtures, spinodal/metastable behavior, near-critical equilibrium
 robustness or physical-iPhone manual acceptance.
 
-Native CO₂+N₂ bridge tests cover binary model provenance, exact CO₂/N₂ binary
+Native CO₂+N₂ diagnostic bridge tests cover binary model provenance, exact CO₂/N₂ binary
 parameter traceability in the version string, one converged 293.15 K
 `mix_VLE_Tx` solve at 3 mol% liquid N₂, equality of the bridge's pressure and
 chemical-potential residuals, deterministic repeated VLE solves, invalid
@@ -394,9 +395,17 @@ and numerical investigation.
 
 ## Next milestone
 
-CO₂+N₂ Gate C must ingest authoritative independent PVT/VLE data before any
-user-facing teqp mixture domain is enabled. Gate D phase-envelope UI integration
-must use native teqp binary VLE continuation rather than relabeling CoolProp
-output. Gate E property expansion must establish complete definitions, units,
-basis and reference-state conventions before exposing any caloric or acoustic
-properties.
+The pinned teqp v0.23.1 Gernert/GERG CO₂+N₂ binary model failed Gate C for a
+user-facing PhaseXpert N₂ range. Scientifically defensible next options are:
+
+1. evaluate another independently sourced CO₂+N₂ mixture model compatible with
+   teqp;
+2. evaluate whether a newer or purpose-specific CO₂+N₂ parameterization exists
+   with appropriate redistribution rights and independent validation evidence;
+3. expand validated pure-CO₂ teqp thermodynamic properties after establishing
+   complete definitions, units, basis and reference-state conventions;
+4. implement pure-CO₂ teqp saturation and phase-diagram functionality
+   independently of N₂.
+
+PhaseXpert should not tune coefficients or fit binary interaction parameters
+inside the app without a separate research and validation project.

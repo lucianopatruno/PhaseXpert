@@ -25,7 +25,8 @@ in `mixture_binary_pairs.json` cites `Gernert-Thesis-2013`, and the
 `mixture_departure_functions.json` cites `Kunz-JCED-2012`
 ([DOI 10.1021/je300655b](https://doi.org/10.1021/je300655b)). Those mixture
 data are available only to native bridge validation; they are not user-facing
-until independent validation establishes a supported operating range. The
+because Gate C failed to establish a supported operating range for this pinned
+binary model. The
 generated XCFramework, recorded revision, submodule list and licence are
 ignored under `Vendor/teqp/` and must be reviewed before distribution.
 

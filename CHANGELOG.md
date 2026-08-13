@@ -158,9 +158,8 @@
 - Renamed the user-facing provider labels to General Properties (CoolProp) and
   Advanced Phase & Mixture Model (teqp) while preserving stable provider IDs.
 - Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and added a
-  validation-gated native binary VLE/point-classification bridge layer; teqp
-  CO₂+N₂ remains unavailable to users until independent Gate C validation
-  establishes a supported domain.
+  validation-gated native binary VLE/point-classification research layer; teqp
+  CO₂+N₂ remains unavailable to users.
 - Corrected the native teqp CO₂+N₂ Gate C density-validation provenance:
   high-temperature 303-383 K diagnostic rows are Mantovani et al. 2012
   (`10.1016/j.supflu.2011.09.001`), not Mazzoccoli et al. 2012
@@ -170,5 +169,5 @@
   the CO₂/N₂ phase-topology switch. Gate C remains not passed, with no
   user-facing N₂ range enabled, because the Mantovani low-N₂ rows are correctly
   transcribed and reproduced by direct upstream teqp and the PhaseXpert bridge,
-  but the corrected density/VLE evidence does not yet establish a defensible
-  sub-domain.
+  and Gate C genuinely failed to establish a defensible user-facing sub-domain
+  for the pinned binary model.

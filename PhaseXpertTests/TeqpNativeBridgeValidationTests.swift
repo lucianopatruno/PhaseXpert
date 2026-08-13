@@ -129,7 +129,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2MixVLETxConvergesAndSatisfiesEquilibrium() throws {
+    func testNativeTeqpCO2N2DiagnosticMixVLETxConvergesAndSatisfiesEquilibrium() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -153,7 +153,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2MixVLETxIsDeterministic() throws {
+    func testNativeTeqpCO2N2DiagnosticMixVLETxIsDeterministic() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -173,7 +173,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2PointReturnsHomogeneousDensityWithoutPureCO2CriticalShortcut() throws {
+    func testNativeTeqpCO2N2DiagnosticPointReturnsHomogeneousDensityWithoutPureCO2CriticalShortcut() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -190,7 +190,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2PointPreservesExplicitTwoPhaseClassification() throws {
+    func testNativeTeqpCO2N2DiagnosticPointPreservesExplicitTwoPhaseClassification() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -205,7 +205,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2PointClassifiesSupercriticalHomogeneousState() throws {
+    func testNativeTeqpCO2N2DiagnosticPointClassifiesSupercriticalHomogeneousState() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -224,7 +224,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2ComponentOrderingAndLowDensityLimit() throws {
+    func testNativeTeqpCO2N2DiagnosticComponentOrderingAndLowDensityLimit() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -277,7 +277,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2RejectsInvalidComposition() throws {
+    func testNativeTeqpCO2N2DiagnosticRejectsInvalidComposition() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -301,7 +301,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
-    func testNativeTeqpCO2N2RejectsInvalidPressureAndTemperature() throws {
+    func testNativeTeqpCO2N2DiagnosticRejectsInvalidPressureAndTemperature() throws {
         _ = try requireNativeTeqpEngine()
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
