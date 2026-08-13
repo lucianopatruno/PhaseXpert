@@ -18,15 +18,22 @@ An optional teqp bridge can be generated locally from `usnistgov/teqp`
 available under the NIST disclaimer of copyright and warranty in its
 `LICENSE.md`. The narrow PhaseXpert build embeds the upstream
 `CarbonDioxide.json` model data, whose CO₂ EOS provenance is recorded as
-`Span-JPCRD-1996`, and validation-gated CO₂+N₂ multifluid data:
-`Nitrogen.json` records `Span-JPCRD-2000`, the CO₂/N₂ reducing-parameter record
-in `mixture_binary_pairs.json` cites `Gernert-Thesis-2013`, and the
+`Span-JPCRD-1996`, and validation-gated impurity model data. `Nitrogen.json`
+records `Span-JPCRD-2000`, the CO₂/N₂ reducing-parameter record in
+`mixture_binary_pairs.json` cites `Gernert-Thesis-2013`, and the
 `Nitrogen-CarbonDioxide` GERG-2008 departure function in
 `mixture_departure_functions.json` cites `Kunz-JCED-2012`
 ([DOI 10.1021/je300655b](https://doi.org/10.1021/je300655b)). Those mixture
 data are available only to native bridge validation; they are not user-facing
 because Gate C failed to establish a supported operating range for this pinned
-binary model. The
+binary model. The multi-impurity inventory also records upstream O₂, Ar, H₂
+and CH₄ model-data provenance; the O₂ and Ar diagnostic bake-off results in
+`Documentation/Validation/TeqpMultiImpurityBakeoffResults.json` did not
+establish a production domain. Pure-CO₂ teqp Cv, Cp and speed-of-sound
+validation uses NIST Chemistry WebBook fluid-property rows, SRD 69
+([DOI 10.18434/T4D303](https://doi.org/10.18434/T4D303)), as an independent
+implementation reference for the Span-Wagner property formulation and units.
+The
 generated XCFramework, recorded revision, submodule list and licence are
 ignored under `Vendor/teqp/` and must be reviewed before distribution.
 
@@ -45,7 +52,7 @@ REFPROP is distributed under NIST terms and is not open-source redistribution
 material. A local IFE licence does not automatically authorize embedding its
 code or data in an iPhone application.
 
-Current CO₂+N₂ validation references under audit:
+Current teqp impurity validation references under audit:
 
 - S. F. Westman, H. G. J. Stang, S. W. Løvseth, A. Austegard, I. Snustad,
   S. Ø. Størset and I. S. Ertesvåg, "Vapor-liquid equilibrium data for the

@@ -1,0 +1,97 @@
+{
+  "teqpVersion": "v0.23.1",
+  "teqpCommit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+  "generatedBy": "PhaseXpert PR #43 validation-gated teqp multi-impurity milestone",
+  "runtimePolicy": {
+    "fitsOrTunedParameters": false,
+    "coolPropFallback": false,
+    "enabledUserFacingImpurities": []
+  },
+  "pairs": [
+    {
+      "pair": "CO2+N2",
+      "candidateFormulation": "Multifluid+Activity Wilson candidate from teqp documentation",
+      "candidateStatus": "RESEARCH ONLY",
+      "reason": "Official teqp documentation demonstrates a Wilson activity-model example for CO2+N2 using Lasala et al. VLE data and states GERG-2008 is more accurate in that comparison. The parameters are not accepted here as an independently validated predictive PhaseXpert formulation for Mantovani/Brugge density plus Westman VLE without a separate bake-off, and no PhaseXpert fitting is allowed.",
+      "densityDataset": "Mantovani 2012 and Brugge 1997 retained from PR #42 for future alternative-model comparison",
+      "vleDataset": "Westman 2016 retained from PR #42; Lasala 2016 is the activity-example source, not an independent validation set for those same parameters",
+      "numberOfDensityPoints": 0,
+      "numberOfVLEPoints": 0,
+      "worstDensityRelativeDeviation": null,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "NO DEFENSIBLE MODEL/DATA",
+      "enabledDomain": "none"
+    },
+    {
+      "pair": "CO2+O2",
+      "candidateFormulation": "Pinned teqp standard multifluid: Span-JPCRD-1996 CO2 + Schmidt-FPE-1985/Stewart-JPCRD-1991 O2 with Gernert-Thesis-2013 reducing parameters, F=0, no departure function",
+      "candidateStatus": "FAILED VALIDATION",
+      "densityDataset": "Mantovani et al. 2012 Tables 2, 6 and 7; mole fractions O1=0.0607 O2, O2=0.1291 O2; density uncertainty +/-0.2 kg/m3",
+      "vleDataset": "Westman et al. 2016 CO2+O2 VLE identified but not used for production enabling because density gate failed first",
+      "numberOfDensityPoints": 6,
+      "numberOfVLEPoints": 0,
+      "worstDensityRelativeDeviation": 0.148034933188,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "densityPoints": [
+        { "label": "Mantovani-O1-gas", "temperatureK": 383.14, "pressureMPa": 1.009, "impurityMoleFraction": 0.0607, "referenceDensityKgM3": 12.82, "teqpDensityKgM3": 13.9825759614, "absoluteDeviationKgM3": 1.16257596142, "relativeDeviation": 0.0906845523732, "converged": true },
+        { "label": "Mantovani-O1-supercritical", "temperatureK": 343.15, "pressureMPa": 12.001, "impurityMoleFraction": 0.0607, "referenceDensityKgM3": 295.23, "teqpDensityKgM3": 302.022372695, "absoluteDeviationKgM3": 6.79237269541, "relativeDeviation": 0.0230070544843, "converged": true },
+        { "label": "Mantovani-O1-dense", "temperatureK": 303.22, "pressureMPa": 12.004, "impurityMoleFraction": 0.0607, "referenceDensityKgM3": 691.78, "teqpDensityKgM3": 717.508378518, "absoluteDeviationKgM3": 25.7283785179, "relativeDeviation": 0.0371915616495, "converged": true },
+        { "label": "Mantovani-O2-gas", "temperatureK": 383.14, "pressureMPa": 1.002, "impurityMoleFraction": 0.1291, "referenceDensityKgM3": 11.84, "teqpDensityKgM3": 13.5927336089, "absoluteDeviationKgM3": 1.75273360894, "relativeDeviation": 0.148034933188, "converged": true },
+        { "label": "Mantovani-O2-supercritical", "temperatureK": 343.15, "pressureMPa": 12.002, "impurityMoleFraction": 0.1291, "referenceDensityKgM3": 261.07, "teqpDensityKgM3": 269.541140172, "absoluteDeviationKgM3": 8.47114017245, "relativeDeviation": 0.0324477732886, "converged": true },
+        { "label": "Mantovani-O2-dense", "temperatureK": 303.22, "pressureMPa": 12.003, "impurityMoleFraction": 0.1291, "referenceDensityKgM3": 524.28, "teqpDensityKgM3": 582.948136387, "absoluteDeviationKgM3": 58.6681363874, "relativeDeviation": 0.111902297222, "converged": true }
+      ]
+    },
+    {
+      "pair": "CO2+Ar",
+      "candidateFormulation": "Pinned teqp standard multifluid: Span-JPCRD-1996 CO2 + Tegeler-JPCRD-1999 Ar with Gernert-Thesis-2013 reducing parameters and Argon-CarbonDioxide GERG-2008 departure function",
+      "candidateStatus": "FAILED VALIDATION",
+      "densityDataset": "Mantovani et al. 2012 Tables 2, 8 and 9; mole fractions A1=0.0308 Ar, A2=0.1694 Ar; density uncertainty +/-0.2 kg/m3",
+      "vleDataset": "Lovseth et al. 2018, DOI 10.1016/j.fluid.2018.02.009, was identified for CO2+Ar VLE and solid-boundary behavior, but no audited numerical VLE matrix is encoded in this artifact",
+      "numberOfDensityPoints": 6,
+      "numberOfVLEPoints": 0,
+      "worstDensityRelativeDeviation": 0.099908781713,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "lowArgonSubsetConclusion": "The A1 subset at 0.0308 mole fraction Ar converged with worst relative density deviation 0.731526%, but density-only evidence without an audited VLE gate is not enough to expose teqp phase-equilibrium or phase-diagram support; PhaseXpert does not currently expose density-only impurity formulations.",
+      "densityPoints": [
+        { "label": "Mantovani-A1-gas", "temperatureK": 383.14, "pressureMPa": 1.010, "impurityMoleFraction": 0.0308, "referenceDensityKgM3": 14.31, "teqpDensityKgM3": 14.2053186648, "absoluteDeviationKgM3": -0.104681335171, "relativeDeviation": -0.00731525752417, "converged": true },
+        { "label": "Mantovani-A1-supercritical", "temperatureK": 343.15, "pressureMPa": 12.001, "impurityMoleFraction": 0.0308, "referenceDensityKgM3": 320.76, "teqpDensityKgM3": 323.091319782, "absoluteDeviationKgM3": 2.33131978182, "relativeDeviation": 0.00726811255089, "converged": true },
+        { "label": "Mantovani-A1-dense", "temperatureK": 303.22, "pressureMPa": 12.002, "impurityMoleFraction": 0.0308, "referenceDensityKgM3": 763.71, "teqpDensityKgM3": 765.585234807, "absoluteDeviationKgM3": 1.87523480711, "relativeDeviation": 0.00245542785496, "converged": true },
+        { "label": "Mantovani-A2-gas", "temperatureK": 383.14, "pressureMPa": 1.004, "impurityMoleFraction": 0.1694, "referenceDensityKgM3": 12.62, "teqpDensityKgM3": 13.8808488252, "absoluteDeviationKgM3": 1.26084882522, "relativeDeviation": 0.099908781713, "converged": true },
+        { "label": "Mantovani-A2-supercritical", "temperatureK": 343.15, "pressureMPa": 12.004, "impurityMoleFraction": 0.1694, "referenceDensityKgM3": 261.01, "teqpDensityKgM3": 263.069461818, "absoluteDeviationKgM3": 2.05946181845, "relativeDeviation": 0.00789035599575, "converged": true },
+        { "label": "Mantovani-A2-dense", "temperatureK": 303.22, "pressureMPa": 12.002, "impurityMoleFraction": 0.1694, "referenceDensityKgM3": 538.57, "teqpDensityKgM3": 496.599873992, "absoluteDeviationKgM3": -41.9701260075, "relativeDeviation": -0.0779288226369, "converged": true }
+      ]
+    },
+    {
+      "pair": "CO2+H2",
+      "candidateFormulation": "Pinned teqp standard multifluid / GERG residual candidates",
+      "candidateStatus": "NOT ENABLED",
+      "reason": "Primary CO2-rich CO2+H2 density literature was identified, including Sanchez-Vicente et al. 2013, but no complete audited numerical PVT+VLE matrix is encoded and no production bake-off can be declared without primary table rows.",
+      "densityDataset": "Sanchez-Vicente et al. 2013, Densities of the carbon dioxide + hydrogen, a system of relevance to carbon capture and storage, DOI 10.1016/j.ijggc.2012.12.002; not encoded",
+      "vleDataset": "CO2+H2 phase-behavior/VLE literature identified; no audited numerical VLE matrix encoded",
+      "numberOfDensityPoints": 0,
+      "numberOfVLEPoints": 0,
+      "worstDensityRelativeDeviation": null,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "NO DEFENSIBLE MODEL/DATA",
+      "enabledDomain": "none"
+    },
+    {
+      "pair": "CO2+CH4",
+      "candidateFormulation": "Pinned teqp standard multifluid / GERG residual candidates",
+      "candidateStatus": "NOT ENABLED",
+      "reason": "CO2-rich CO2+CH4 VLE literature was identified, including Petropoulou et al. 2018, but no complete audited numerical PVT+VLE matrix is encoded and no production bake-off can be declared without primary table rows.",
+      "densityDataset": "CO2-rich density literature identified; no audited numerical density matrix encoded",
+      "vleDataset": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, DOI 10.1016/j.fluid.2018.01.011; not encoded",
+      "numberOfDensityPoints": 0,
+      "numberOfVLEPoints": 0,
+      "worstDensityRelativeDeviation": null,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "NO DEFENSIBLE MODEL/DATA",
+      "enabledDomain": "none"
+    }
+  ]
+}

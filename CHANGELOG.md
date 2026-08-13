@@ -171,3 +171,14 @@
   transcribed and reproduced by direct upstream teqp and the PhaseXpert bridge,
   and Gate C genuinely failed to establish a defensible user-facing sub-domain
   for the pinned binary model.
+- Added the first teqp internal formulation catalog and multi-impurity model
+  inventory document. The user-facing teqp provider still enables only pure
+  CO₂; N₂, O₂, Ar, H₂ and CH₄ are inventoried for validation-gated future
+  formulations but remain unavailable through teqp until independent gates pass.
+- Added a native teqp pure-CO₂ saturation boundary for the existing Phase
+  Diagram workflow, using teqp VLE saturation points through the critical point
+  while keeping all impurity phase diagrams unavailable until validation passes.
+- Added direct teqp multi-impurity bake-off results for the O₂ and Ar pinned
+  standard multifluid candidates against audited Mantovani 2012 density rows.
+  O₂ and Ar remain unavailable through teqp because the evaluated candidates did
+  not establish a production density+VLE domain.

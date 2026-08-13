@@ -50,8 +50,50 @@ public struct NativeTeqpEngine: TeqpEngine {
             }
             return TeqpEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                isochoricHeatCapacityJoulesPerKilogramKelvin:
+                    nativeResult.isochoric_heat_capacity_j_kg_k,
+                isobaricHeatCapacityJoulesPerKilogramKelvin:
+                    nativeResult.isobaric_heat_capacity_j_kg_k,
+                heatCapacityRatio: nativeResult.heat_capacity_ratio,
+                speedOfSoundMetresPerSecond: nativeResult.speed_of_sound_m_s,
                 densityRootCount: Int(nativeResult.density_root_count),
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
+
+    public func pureCarbonDioxideSaturation(
+        temperatureK: Double
+    ) async throws -> TeqpSaturationPoint {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpSaturationResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_saturation_pure_co2(
+                temperatureK,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "teqp native saturation calculation failed." : message
+                )
+            }
+            return TeqpSaturationPoint(
+                temperatureK: temperatureK,
+                pressurePa: nativeResult.pressure_pa,
+                liquidDensityKilogramsPerCubicMetre: nativeResult.liquid_density_kg_m3,
+                vaporDensityKilogramsPerCubicMetre: nativeResult.vapor_density_kg_m3
             )
         }.value
         try Task.checkCancellation()

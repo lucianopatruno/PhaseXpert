@@ -68,8 +68,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   specific volume and Z are
   derived transparently from recorded inputs and calculated density; user-facing
   provider labels are General Properties (CoolProp) and Advanced Phase &
-  Mixture Model (teqp); an explicit experimental native teqp pure-CO₂ provider for density plus the same
-  derived values when its ignored local XCFramework is built; an
+  Mixture Model (teqp); an explicit experimental native teqp pure-CO₂ provider
+  for density, Cv, Cp, Cp/Cv, speed of sound and the same derived values when
+  its ignored local XCFramework is built; an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and
@@ -103,7 +104,8 @@ views.
 
 See [Architecture](Documentation/Architecture.md),
 [Scientific Models](Documentation/ScientificModels.md),
-[teqp integration](Documentation/TeqpIntegration.md), and
+[teqp integration](Documentation/TeqpIntegration.md),
+[teqp multi-impurity model selection](Documentation/TeqpMultiImpurityModels.md), and
 [IFE API Contract](Documentation/IFEModelAPI.md).
 
 ## Dependencies and licences
@@ -162,6 +164,7 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - [Architecture and directory structure](Documentation/Architecture.md)
 - [Scientific models and phase-envelope strategy](Documentation/ScientificModels.md)
 - [CoolProp integration spike](Documentation/CoolPropIntegration.md)
+- [teqp multi-impurity model selection](Documentation/TeqpMultiImpurityModels.md)
 - [IFE Model API contract](Documentation/IFEModelAPI.md)
 - [Validation strategy](Documentation/ValidationStrategy.md)
 - [Adding providers and components](Documentation/ExtendingPhaseXpert.md)

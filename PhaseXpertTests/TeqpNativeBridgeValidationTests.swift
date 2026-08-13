@@ -30,6 +30,15 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
+    private struct PropertyReferenceCase {
+        let region: String
+        let temperatureK: Double
+        let pressurePa: Double
+        let isochoricHeatCapacityJoulesPerKilogramKelvin: Double
+        let isobaricHeatCapacityJoulesPerKilogramKelvin: Double
+        let speedOfSoundMetresPerSecond: Double
+    }
+
     func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
         let engine = try requireNativeTeqpEngine()
         XCTAssertTrue(engine.isAvailable)
@@ -88,6 +97,49 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
                 "teqp density failed Mantilla 2010 tolerance at "
                     + "\(reference.temperatureK) K and "
                     + "\(reference.pressurePa) Pa."
+            )
+        }
+    }
+
+    func testNativeTeqpPureCO2CaloricPropertiesAgainstNISTWebBook() async throws {
+        let engine = try requireNativeTeqpEngine()
+
+        for reference in propertyReferences {
+            let result = try await engine.calculatePureCarbonDioxide(
+                pressurePa: reference.pressurePa,
+                temperatureK: reference.temperatureK
+            )
+
+            let cv = try XCTUnwrap(
+                result.isochoricHeatCapacityJoulesPerKilogramKelvin
+            )
+            let cp = try XCTUnwrap(
+                result.isobaricHeatCapacityJoulesPerKilogramKelvin
+            )
+            let speedOfSound = try XCTUnwrap(result.speedOfSoundMetresPerSecond)
+            XCTAssertTrue(cv.isFinite)
+            XCTAssertTrue(cp.isFinite)
+            XCTAssertTrue(speedOfSound.isFinite)
+            XCTAssertGreaterThan(cv, 0)
+            XCTAssertGreaterThan(cp, cv)
+            XCTAssertGreaterThan(speedOfSound, 0)
+            XCTAssertEqual(
+                cv,
+                reference.isochoricHeatCapacityJoulesPerKilogramKelvin,
+                accuracy: 0.000_01,
+                "Cv mismatch for \(reference.region)."
+            )
+            XCTAssertEqual(
+                cp,
+                reference.isobaricHeatCapacityJoulesPerKilogramKelvin,
+                accuracy: 0.000_01,
+                "Cp mismatch for \(reference.region)."
+            )
+            XCTAssertEqual(
+                speedOfSound,
+                reference.speedOfSoundMetresPerSecond,
+                accuracy: 0.000_001,
+                "Speed-of-sound mismatch for \(reference.region)."
             )
         }
     }
@@ -229,7 +281,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
 
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         let temperatureK = 400.0
-        let pressurePa = 1_000_000.0
+        let pressurePa = 100_000.0
         let pureCO2 = try requireNativeBinaryPoint(
             pressurePa: pressurePa,
             temperatureK: temperatureK,
@@ -609,6 +661,35 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
                 pressurePa: 29_994_000,
                 densityKilogramsPerCubicMetre: 561.435,
                 expandedUncertaintyKilogramsPerCubicMetre: 0.118
+            )
+        ]
+    }
+
+    private var propertyReferences: [PropertyReferenceCase] {
+        [
+            PropertyReferenceCase(
+                region: "gas",
+                temperatureK: 293.15,
+                pressurePa: 1_000_000,
+                isochoricHeatCapacityJoulesPerKilogramKelvin: 677.902139023,
+                isobaricHeatCapacityJoulesPerKilogramKelvin: 921.219397517,
+                speedOfSoundMetresPerSecond: 259.064082533
+            ),
+            PropertyReferenceCase(
+                region: "dense_liquid",
+                temperatureK: 293.15,
+                pressurePa: 15_000_000,
+                isochoricHeatCapacityJoulesPerKilogramKelvin: 921.471647813,
+                isobaricHeatCapacityJoulesPerKilogramKelvin: 2_246.22018166,
+                speedOfSoundMetresPerSecond: 563.944857810
+            ),
+            PropertyReferenceCase(
+                region: "supercritical",
+                temperatureK: 350,
+                pressurePa: 19_981_000,
+                isochoricHeatCapacityJoulesPerKilogramKelvin: 921.209412650,
+                isobaricHeatCapacityJoulesPerKilogramKelvin: 2_622.65420410,
+                speedOfSoundMetresPerSecond: 351.207147845
             )
         ]
     }
