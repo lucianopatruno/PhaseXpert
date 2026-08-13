@@ -312,7 +312,10 @@ measurement uncertainty. The worst Brugge deviation after the classifier fix is
 Re-audited Mantovani CO₂-rich diagnostic rows provide lower-N₂ coverage at
 4.15 mol% N₂ and a second high-N₂ point at 9.79 mol% N₂. They are from
 Mantovani Tables 2, 4 and 5, use mole fractions, report density in kg/m³ and
-state `±0.2 kg/m³` density uncertainty.
+state `±0.2 kg/m³` density uncertainty. The suspicious low-pressure rows were
+checked directly against the primary table text: the 383.14 K, about 1 MPa
+rows are in the CO₂+N₂ N1/N2 tables, not copied from the CO₂+O₂ or CO₂+Ar
+tables, and they are measured experimental densities.
 
 | Reference point | Source table | T / K | P / MPa | zN₂ | Reference density / kg/m³ | teqp density / kg/m³ | Absolute deviation / kg/m³ | Relative deviation |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -322,6 +325,23 @@ state `±0.2 kg/m³` density uncertainty.
 | Mantovani N2 gas | Tables 2 and 5 | 383.14 | 1.000 | 0.0979 | 12.48 | 13.572064197 | 1.092064197 | 0.087505144 |
 | Mantovani N2 supercritical | Tables 2 and 5 | 343.15 | 12.002 | 0.0979 | 275.24 | 277.739339622 | 2.499339622 | 0.009080583 |
 | Mantovani N2 dense | Tables 2 and 5 | 303.22 | 12.003 | 0.0979 | 599.42 | 598.830599868 | -0.589400132 | -0.000983284 |
+
+An independent direct-upstream teqp probe was then compiled against the same
+pinned `v0.23.1` source files and embedded CO₂/N₂ model data, bypassing
+`px_teqp_calculate_co2_n2_point` and solving the homogeneous EOS density
+directly. The direct teqp densities matched the PhaseXpert bridge densities to
+the printed precision for all six Mantovani rows (`direct_minus_bridge = 0`).
+The discrepancy is therefore not a PhaseXpert classifier or density-conversion
+bug.
+
+| Reference point | Ideal-gas density / kg/m³ | Direct teqp density / kg/m³ | PhaseXpert bridge density / kg/m³ | Experimental density / kg/m³ |
+|---|---:|---:|---:|---:|
+| Mantovani N1 gas | 13.634040964 | 13.912941465 | 13.912941465 | 13.08 |
+| Mantovani N1 supercritical | 182.310470006 | 311.017446365 | 311.017446365 | 305.25 |
+| Mantovani N1 dense | 206.335502613 | 730.139902518 | 730.139902518 | 715.67 |
+| Mantovani N2 gas | 13.323618011 | 13.572064197 | 13.572064197 | 12.48 |
+| Mantovani N2 supercritical | 178.545655484 | 277.739339622 | 277.739339622 | 275.24 |
+| Mantovani N2 dense | 202.074554747 | 598.830599868 | 598.830599868 | 599.42 |
 
 Low-density diagnostics at 400 K and 1 MPa showed the native binary density
 approaches the ideal-gas limit using the expected mixture molar mass, recovers
@@ -358,18 +378,19 @@ PhaseXpert use. The fifth Westman comparison still has a material
 vapor-composition deviation of `0.00277210` mole fraction N₂ near 5 mol%
 liquid N₂, greater than the nominal mole-fraction uncertainty.
 
-After the classifier correction, Gate C is no longer blocked by the pure-CO₂
-critical-temperature bug, but it still does not establish a useful validated
-PhaseXpert N₂ range. The only lower-N₂ primary-source density rows currently
-audited are Mantovani's 4.15 mol% N₂ rows, and those show relative deviations
-from `1.889%` to `6.368%` for the gas/supercritical points and `2.022%` for
-the dense point. The Brugge 9.079 mol% N₂ matrix converges but has a worst
-relative deviation of `0.341938%`. The Westman VLE matrix remains good through
-about 4 mol% liquid N₂ but has an unexplained `0.00277210` absolute
-vapor-composition discrepancy near 5 mol% liquid N₂. Therefore the validated
-teqp N₂ range is empty, PhaseXpert must not expose CO₂+N₂ calculations through
-teqp, and Gates D and E must not proceed from this implementation without
-additional scientific and numerical investigation.
+After the Mantovani audit, Gate C is no longer blocked by a suspected
+transcription error or by the pure-CO₂ critical-temperature bug, but it still
+does not establish a useful validated PhaseXpert N₂ range. Mantovani's
+4.15 mol% N₂ rows are correctly transcribed and direct upstream teqp agrees
+with the PhaseXpert bridge, but the relative deviations remain `1.889%` to
+`6.368%` for the gas/supercritical points and `2.022%` for the dense point.
+The Brugge 9.079 mol% N₂ matrix converges but has a worst relative deviation
+of `0.341938%`. The Westman VLE matrix remains good through about 4 mol%
+liquid N₂ but has an unexplained `0.00277210` absolute vapor-composition
+discrepancy near 5 mol% liquid N₂. Therefore the validated teqp N₂ range is
+empty, PhaseXpert must not expose CO₂+N₂ calculations through teqp, and Gates D
+and E must not proceed from this implementation without additional scientific
+and numerical investigation.
 
 ## Next milestone
 

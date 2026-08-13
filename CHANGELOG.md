@@ -168,5 +168,7 @@
   (`10.1021/je970044w`) as the audited primary PVT source, and fixed the
   binary point classifier so it no longer uses pure-CO₂ critical temperature as
   the CO₂/N₂ phase-topology switch. Gate C remains not passed, with no
-  user-facing N₂ range enabled, because the corrected density/VLE evidence does
-  not yet establish a defensible sub-domain.
+  user-facing N₂ range enabled, because the Mantovani low-N₂ rows are correctly
+  transcribed and reproduced by direct upstream teqp and the PhaseXpert bridge,
+  but the corrected density/VLE evidence does not yet establish a defensible
+  sub-domain.
