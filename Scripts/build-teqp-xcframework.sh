@@ -52,8 +52,13 @@ mkdir -p "$(dirname "${generated_header}")"
 python3 - \
     "${source_root}/teqp/fluiddata/dev/fluids/CarbonDioxide.json" \
     "${source_root}/teqp/fluiddata/dev/fluids/Nitrogen.json" \
+    "${source_root}/teqp/fluiddata/dev/fluids/Oxygen.json" \
+    "${source_root}/teqp/fluiddata/dev/fluids/Argon.json" \
+    "${source_root}/teqp/fluiddata/dev/fluids/Hydrogen.json" \
+    "${source_root}/teqp/fluiddata/dev/fluids/Methane.json" \
     "${source_root}/teqp/fluiddata/dev/mixtures/mixture_binary_pairs.json" \
     "${source_root}/teqp/fluiddata/dev/mixtures/mixture_departure_functions.json" \
+    "${project_root}/Documentation/Validation/EOSCG2021TargetModelData.json" \
     "${generated_header}" \
     "${generated_model_header}" <<'PY'
 import pathlib
@@ -61,10 +66,15 @@ import sys
 
 source = pathlib.Path(sys.argv[1])
 nitrogen = pathlib.Path(sys.argv[2])
-binary_pairs = pathlib.Path(sys.argv[3])
-departures = pathlib.Path(sys.argv[4])
-target = pathlib.Path(sys.argv[5])
-model_target = pathlib.Path(sys.argv[6])
+oxygen = pathlib.Path(sys.argv[3])
+argon = pathlib.Path(sys.argv[4])
+hydrogen = pathlib.Path(sys.argv[5])
+methane = pathlib.Path(sys.argv[6])
+binary_pairs = pathlib.Path(sys.argv[7])
+departures = pathlib.Path(sys.argv[8])
+eoscg_target_model_data = pathlib.Path(sys.argv[9])
+target = pathlib.Path(sys.argv[10])
+model_target = pathlib.Path(sys.argv[11])
 text = source.read_text()
 target.write_text(
     "#pragma once\n"
@@ -84,8 +94,13 @@ model_target.write_text(
     "#pragma once\n"
     + constant("kPhaseXpertTeqpCarbonDioxideJson", source)
     + constant("kPhaseXpertTeqpNitrogenJson", nitrogen)
+    + constant("kPhaseXpertTeqpOxygenJson", oxygen)
+    + constant("kPhaseXpertTeqpArgonJson", argon)
+    + constant("kPhaseXpertTeqpHydrogenJson", hydrogen)
+    + constant("kPhaseXpertTeqpMethaneJson", methane)
     + constant("kPhaseXpertTeqpBinaryPairsJson", binary_pairs)
     + constant("kPhaseXpertTeqpDepartureFunctionsJson", departures)
+    + constant("kPhaseXpertEOSCG2021TargetModelDataJson", eoscg_target_model_data)
 )
 PY
 

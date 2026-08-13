@@ -162,6 +162,10 @@
 - Added EOS-CG-2021 integration groundwork that separates the native teqp
   engine from the published CCS mixture formulation and records extracted
   Table 4 target-pair reducing parameters for N₂, O₂, Ar, H₂ and CH₄.
+- Added EOS-CG-2021 Table 5 target departure-function extraction for N₂, Ar,
+  H₂ and CH₄, confirmed direct native teqp construction feasibility for
+  custom O₂/Ar/H₂/CH₄ model records, and recorded first O₂/Ar density
+  bake-off diagnostics. No impurity is production-enabled.
 - Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and added a
   validation-gated native binary VLE/point-classification research layer; teqp
   CO₂+N₂ remains unavailable to users.

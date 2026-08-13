@@ -106,9 +106,38 @@ final class TeqpProviderTests: XCTestCase {
             TeqpFormulationCatalog.co2ArgonGernertDiagnostic.status,
             .failedValidation
         )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2OxygenEOSCGDiagnostic.status,
+            .failedValidation
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2ArgonEOSCGDiagnostic.status,
+            .failedValidation
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2HydrogenEOSCGDiagnostic.status,
+            .surveyPending
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2MethaneEOSCGDiagnostic.status,
+            .surveyPending
+        )
+        XCTAssertTrue(
+            TeqpFormulationCatalog.researchFormulations.contains {
+                $0.family == .eosCG2021
+            }
+        )
         XCTAssertFalse(
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components.contains(.nitrogen)
+            }
+        )
+        XCTAssertFalse(
+            TeqpFormulationCatalog.productionFormulations.contains {
+                $0.components.contains(.oxygen)
+                    || $0.components.contains(.argon)
+                    || $0.components.contains(.hydrogen)
+                    || $0.components.contains(.methane)
             }
         )
         XCTAssertFalse(

@@ -81,6 +81,89 @@
       "notes": "EOS-CG-2021 inherits the GERG CO2+CH4 pair; reciprocal beta handling is required if evaluated as CO2+CH4."
     }
   ],
+  "table5TargetDepartures": [
+    {
+      "pair": "N2+CO2",
+      "phaseXpertPair": "CO2+N2",
+      "type": "GERG-2008",
+      "source": "EOS-CG-2021 Table 5, inherited from reference [6]",
+      "Npower": 2,
+      "d": [2, 3, 1, 1, 1, 2],
+      "t": [1.85, 1.4, 3.2, 2.5, 8.0, 3.75],
+      "n": [0.28661625028399, -0.10919833861247, -1.137403208227, 0.76580544237358, 0.0042638000926819, 0.17673538204534],
+      "eta": [0.0, 0.0, 0.25, 0.25, 0.0, 0.0],
+      "beta": [0.0, 0.0, 0.75, 1.0, 2.0, 3.0],
+      "gamma": [0.0, 0.0, 0.5, 0.5, 0.5, 0.5],
+      "epsilon": [0.0, 0.0, 0.5, 0.5, 0.5, 0.5],
+      "status": "matches-existing-pr42-departure"
+    },
+    {
+      "pair": "CO2+Ar",
+      "phaseXpertPair": "CO2+Ar",
+      "type": "GERG-2008",
+      "source": "EOS-CG-2021 Table 5, Løvseth et al. reference [87]",
+      "Npower": 2,
+      "d": [2, 3, 1, 1, 1, 2],
+      "t": [3.22, 2.9, 1.9, 1.57, 2.73, 1.08],
+      "n": [-0.0656, 0.0237, 3.5217, -2.831, -1.406, 0.864],
+      "eta": [0.0, 0.0, 1.243, 1.072, 1.465, 0.946],
+      "beta": [0.0, 0.0, 1.208, 0.82, 1.527, 0.86],
+      "gamma": [0.0, 0.0, 0.5, 0.5, 0.5, 0.5],
+      "epsilon": [0.0, 0.0, 0.65, 0.727, 0.648, 0.706],
+      "status": "candidate"
+    },
+    {
+      "pair": "CO2+H2",
+      "phaseXpertPair": "CO2+H2",
+      "type": "Gaussian+Exponential",
+      "source": "EOS-CG-2021 Table 5, Beckmueller et al. reference [7]",
+      "Npower": 2,
+      "d": [1, 2, 1, 2, 3, 1],
+      "t": [1.47, 1.17, 1.95, 0.31, 1.412, 2.28],
+      "n": [3.56, -1.036, -4.835, 12.38, -2.65, -3.3],
+      "eta": [0.0, 0.0, 0.58, 0.2, 0.292, 0.12],
+      "beta": [0.0, 0.0, 0.465, 0.82, 0.52, 1.0],
+      "gamma": [0.0, 0.0, 0.17, 2.11, 1.49, 1.73],
+      "epsilon": [0.0, 0.0, 0.52, 0.15, 0.24, 0.15],
+      "status": "candidate"
+    },
+    {
+      "pair": "CH4+CO2",
+      "phaseXpertPair": "CO2+CH4",
+      "type": "GERG-2008",
+      "source": "EOS-CG-2021 Table 5, inherited from reference [6]",
+      "Npower": 3,
+      "d": [1, 2, 3, 1, 2, 3],
+      "t": [2.6, 1.95, 0.0, 3.95, 7.95, 8.0],
+      "n": [-0.10859387354942, 0.080228576727389, -0.0093303985115717, 0.040989274005848, -0.24338019772494, 0.23855347281124],
+      "eta": [0.0, 0.0, 0.0, 1.0, 0.5, 0.0],
+      "beta": [0.0, 0.0, 0.0, 1.0, 2.0, 3.0],
+      "gamma": [0.0, 0.0, 0.0, 0.5, 0.5, 0.5],
+      "epsilon": [0.0, 0.0, 0.0, 0.5, 0.5, 0.5],
+      "status": "candidate-gerg-inherited"
+    }
+  ],
+  "teqpTermSupport": {
+    "v0.23.1": {
+      "GERG-2008": "supported by teqp::build_departure_function",
+      "Gaussian+Exponential": "supported by teqp::build_departure_function",
+      "Exponential": "supported by teqp::build_departure_function"
+    },
+    "missingTargetTermTypes": []
+  },
+  "directConstructionProbe": {
+    "date": "2026-08-13",
+    "engine": "pinned teqp v0.23.1 headers and vendored fluid data",
+    "purpose": "Confirm that PhaseXpert's EOS-CG-2021 target Table 4/5 records can be represented by teqp's multifluid builder before production validation.",
+    "componentsConstructed": [
+      "CO2+O2",
+      "CO2+Ar",
+      "CO2+H2",
+      "CO2+CH4"
+    ],
+    "result": "PASS",
+    "notes": "The probe constructed custom multifluid models for all listed pairs with finite mixture gas constants. This is a construction check only; it is not density, VLE, phase-equilibrium or property validation."
+  },
   "productionEnabledImpurities": [],
   "runtimeStatus": "not-linked-to-provider"
 }

@@ -67,10 +67,46 @@ The machine-readable extraction for PhaseXpert's target subset is
 | CO₂+H₂ | CO₂+H₂ | Beckmüller et al. | 0.979000 | 1.961000 | 1.198000 | 0.842000 | 1 | candidate; Table 5 departure function required |
 | CO₂+CH₄ | CH₄+CO₂ | GERG-2008 inherited | 0.999518 | 1.002806 | 1.000482 | 1.022624 | 1 | GERG-inherited candidate; reciprocal beta handling required for CO₂+CH₄ order |
 
-The extraction intentionally stops before production use for pairs with
-`Fij = 1` until the corresponding Table 5 departure-function coefficients are
-fully audited and tested. No coefficient may be guessed or fitted inside
+The extraction also records Table 5 departure-function terms for CO₂+N₂,
+CO₂+Ar, CO₂+H₂ and CO₂+CH₄. The target EOS-CG term types map onto teqp
+v0.23.1's existing `GERG-2008`, `Gaussian+Exponential` and `Exponential`
+departure builders; no new native term type has been identified for these
+five target binaries. No coefficient may be guessed or fitted inside
 PhaseXpert.
+
+A standalone direct-construction probe using the pinned teqp v0.23.1 headers,
+vendored fluid JSON data and the extracted EOS-CG Table 4/5 records constructed
+custom CO₂+O₂, CO₂+Ar, CO₂+H₂ and CO₂+CH₄ multifluid models successfully. This
+confirms native representation feasibility for the target records, but it is
+not production validation. Production enablement still requires EOS-CG identity
+checks and independent PVT/VLE validation against primary data.
+
+`Scripts/build-teqp-xcframework.sh` now prepares generated native headers with
+the target CO₂, N₂, O₂, Ar, H₂ and CH₄ fluid JSON records plus
+`Documentation/Validation/EOSCG2021TargetModelData.json`. The checked-in
+XCFramework remains generated and ignored; rebuilding it is required only when
+the native bridge ABI or embedded model-data fingerprint changes.
+
+The first direct-density bake-off against the already-audited Mantovani 2012
+CO₂+O₂ and CO₂+Ar rows is recorded in
+`Documentation/Validation/TeqpMultiImpurityBakeoffResults.json`:
+
+| Pair | EOS-CG candidate | Density points | AARD | Worst relative deviation | Result |
+|---|---|---:|---:|---:|---|
+| CO₂+O₂ | Table 4 reducing parameters, `Fij = 0`, no departure function | 6 | 7.3878% | 14.8035% | Fail |
+| CO₂+Ar | Table 4 reducing parameters plus Table 5 Løvseth departure function | 6 | 3.40533% | 9.99102% | Fail |
+| CO₂+CH₄ | GERG-inherited reducing parameters plus GERG-2008 departure function | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Fail |
+
+The CO₂+Ar 3.08 mol% subset remains a useful diagnostic with worst density
+deviation 0.732631%, but it is not user-facing support because no audited
+independent VLE gate has passed and PhaseXpert does not currently expose
+density-only impurity formulations.
+
+The CO₂+CH₄ direct VLE probe used the NIST ThermoML encoding of Petropoulou
+et al. 2018. Several low-CH₄ rows were close, but one 298.142 K row with
+xCH₄ = 0.05378 converged to a materially different pressure and vapor
+composition, so CH₄ remains disabled pending a broader audited density+VLE
+validation matrix.
 
 ## Immediate validation implications
 
@@ -83,8 +119,14 @@ PhaseXpert.
   function alone.
 - CO₂+Ar and CO₂+H₂: both require exact Table 5 departure-function extraction
   before any validation bake-off.
-- CO₂+CH₄: EOS-CG-2021 inherits GERG; validation against CO₂-rich density and
-  VLE data decides whether a PhaseXpert subdomain can be enabled.
+- CO₂+H₂: direct native construction works, but no audited primary numerical
+  density+VLE matrix is complete in this branch.
+- CO₂+CH₄: EOS-CG-2021 inherits GERG; the first direct Petropoulou/ThermoML VLE
+  probe failed to establish a production subdomain.
+- Simultaneous impurity support is not implied by binary construction. The
+  EOS-CG-2021 authors report that multicomponent validation data remain
+  comparatively scarce, so PhaseXpert must keep multicomponent impurity entry
+  disabled until an explicit multicomponent validation gate passes.
 
 ## Runtime policy
 

@@ -4,6 +4,7 @@ public enum TeqpFormulationFamily: String, Codable, Equatable, Sendable {
     case multifluid
     case multifluidActivity
     case gergResidual
+    case eosCG2021
 }
 
 public enum TeqpValidationStatus: String, Codable, Equatable, Sendable {
@@ -187,6 +188,122 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2OxygenEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-o2-diagnostic",
+        name: "CO₂+O₂ EOS-CG-2021 diagnostic model",
+        family: .eosCG2021,
+        status: .failedValidation,
+        components: [.carbonDioxide, .oxygen],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+O₂ reducing parameters, F=0 and no departure function; native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "Direct teqp density probe against Mantovani 2012 CO₂+O₂ PVT rows reproduced the existing failed density gate.",
+            "Retained only for explicit model-comparison traceability; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Mantovani, Chiesa, Valenti, Gatti and Consonni",
+                title: "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1016/j.supflu.2011.09.001"
+            )
+        ]
+    )
+
+    public static let co2ArgonEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-ar-diagnostic",
+        name: "CO₂+Ar EOS-CG-2021 diagnostic model",
+        family: .eosCG2021,
+        status: .failedValidation,
+        components: [.carbonDioxide, .argon],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+Ar reducing parameters and Table 5 Løvseth et al. GERG-2008 departure function; native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "Direct teqp density probe against Mantovani 2012 CO₂+Ar PVT rows still failed the broad audited matrix.",
+            "The 3.08 mol% Ar subset remains density-only diagnostic evidence because no audited independent VLE gate has passed.",
+            "Retained only for explicit model-comparison traceability; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Mantovani, Chiesa, Valenti, Gatti and Consonni",
+                title: "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1016/j.supflu.2011.09.001"
+            )
+        ]
+    )
+
+    public static let co2HydrogenEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-h2-diagnostic",
+        name: "CO₂+H₂ EOS-CG-2021 diagnostic model",
+        family: .eosCG2021,
+        status: .surveyPending,
+        components: [.carbonDioxide, .hydrogen],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+H₂ reducing parameters and Table 5 Beckmüller et al. Gaussian+Exponential departure function; native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "No audited PhaseXpert primary-source PVT+VLE validation matrix is complete yet.",
+            "EOS-CG-2021 reports known property-dependent limitations for CO₂+H₂ speed-of-sound data.",
+            "Retained only for model-construction diagnostics; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            )
+        ]
+    )
+
+    public static let co2MethaneEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-ch4-diagnostic",
+        name: "CO₂+CH₄ EOS-CG-2021/GERG diagnostic model",
+        family: .eosCG2021,
+        status: .surveyPending,
+        components: [.carbonDioxide, .methane],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 inherits the GERG-2008 CH₄+CO₂ binary formulation; reciprocal beta handling is required for CO₂+CH₄ order. Native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "No audited PhaseXpert primary-source CO₂-rich PVT+VLE validation matrix is complete yet.",
+            "Retained only for model-construction diagnostics; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Kunz and Wagner",
+                title: "The GERG-2008 Wide-Range Equation of State for Natural Gases and Other Mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1021/je300655b"
+            )
+        ]
+    )
+
     public static let surveyedBinaryImpurities: Set<ComponentID> = [
         .nitrogen,
         .oxygen,
@@ -203,7 +320,11 @@ public enum TeqpFormulationCatalog {
         [
             co2NitrogenGernertGergDiagnostic,
             co2OxygenGernertDiagnostic,
-            co2ArgonGernertDiagnostic
+            co2ArgonGernertDiagnostic,
+            co2OxygenEOSCGDiagnostic,
+            co2ArgonEOSCGDiagnostic,
+            co2HydrogenEOSCGDiagnostic,
+            co2MethaneEOSCGDiagnostic
         ]
     }
 

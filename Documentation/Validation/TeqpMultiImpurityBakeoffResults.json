@@ -7,6 +7,61 @@
     "coolPropFallback": false,
     "enabledUserFacingImpurities": []
   },
+  "eoscg2021Candidates": [
+    {
+      "pair": "CO2+O2",
+      "candidateFormulation": "EOS-CG-2021 Table 4 CO2+O2 reducing parameters, F=0, no departure function",
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and homogeneous P,T,z density solve",
+      "densityDataset": "Mantovani et al. 2012 Tables 2, 6 and 7; mole fractions O1=0.0607 O2, O2=0.1291 O2",
+      "numberOfDensityPoints": 6,
+      "densityAARD": 0.073878,
+      "worstDensityRelativeDeviation": 0.148035,
+      "worstDensityPoint": "Mantovani-O2-gas, T=383.14 K, p=1.002 MPa, xO2=0.1291",
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "notes": "EOS-CG-2021 CO2+O2 uses the same Table 4 values already present in the pinned teqp standard pair. The direct probe reproduces the existing Mantovani density failure and does not establish a production domain."
+    },
+    {
+      "pair": "CO2+Ar",
+      "candidateFormulation": "EOS-CG-2021 Table 4 CO2+Ar reducing parameters plus Table 5 Løvseth et al. GERG-2008 departure function",
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and homogeneous P,T,z density solve",
+      "densityDataset": "Mantovani et al. 2012 Tables 2, 8 and 9; mole fractions A1=0.0308 Ar, A2=0.1694 Ar",
+      "numberOfDensityPoints": 6,
+      "densityAARD": 0.0340533,
+      "worstDensityRelativeDeviation": 0.0999102,
+      "worstDensityPoint": "Mantovani-A2-gas, T=383.14 K, p=1.004 MPa, xAr=0.1694",
+      "lowImpuritySubset": {
+        "argonMoleFraction": 0.0308,
+        "numberOfDensityPoints": 3,
+        "worstDensityRelativeDeviation": 0.00732631,
+        "numberOfAuditedVLEPoints": 0,
+        "result": "diagnostic only"
+      },
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "notes": "The updated EOS-CG Ar model improves neither the broad Mantovani conclusion nor the missing independent VLE gate enough for user-facing phase-aware support. The 3.08 mol% Ar subset remains promising density-only diagnostic evidence."
+    },
+    {
+      "pair": "CO2+CH4",
+      "candidateFormulation": "EOS-CG-2021 inherited GERG-2008 CH4+CO2 reducing parameters and Table 5 GERG-2008 departure function",
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and binary VLE Newton solve initialized from NIST ThermoML phase compositions",
+      "vleDataset": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, DOI 10.1016/j.fluid.2018.01.011; NIST ThermoML JSON",
+      "numberOfDensityPoints": 0,
+      "densityAARD": null,
+      "worstDensityRelativeDeviation": null,
+      "numberOfVLEPoints": 5,
+      "worstVLEPressureRelativeDeviation": 0.473955,
+      "worstVLEYCH4AbsoluteDeviation": 0.01705,
+      "worstVLEPoint": "Petropoulou 298.142 K, p=7.625 MPa, xCH4=0.05378",
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "notes": "Several low-CH4 rows are close, but one converged equilibrium point lands on a materially different pressure and vapor composition. This is not a production validation pass."
+    }
+  ],
   "pairs": [
     {
       "pair": "CO2+N2",
