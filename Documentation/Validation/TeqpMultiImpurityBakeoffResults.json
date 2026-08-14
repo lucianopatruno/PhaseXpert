@@ -5,8 +5,115 @@
   "runtimePolicy": {
     "fitsOrTunedParameters": false,
     "coolPropFallback": false,
-    "enabledUserFacingImpurities": []
+    "enabledUserFacingImpurities": [
+      "H2 density-only",
+      "CH4 density-only"
+    ]
   },
+  "eoscg2021Candidates": [
+    {
+      "pair": "CO2+N2",
+      "candidateFormulation": "Xu-Mao-Zheng 2023 general Helmholtz EOS",
+      "implementationProbe": "not run; required published coefficients unavailable from legitimate accessible source",
+      "densityDataset": "Brugge 1997 and Mantovani 2012 retained from PR #42",
+      "vleDataset": "Westman 2016 retained from PR #42",
+      "numberOfDensityPoints": 0,
+      "densityAARD": null,
+      "worstDensityRelativeDeviation": null,
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "NO DEPLOYABLE MODEL DATA",
+      "enabledDomain": "none",
+      "notes": "Crossref and Elsevier metadata were accessible, but the article is non-open-access and no coefficient tables or supplementary model-data files were exposed. PhaseXpert does not infer or fit the missing coefficients."
+    },
+    {
+      "pair": "CO2+O2",
+      "candidateFormulation": "Xu-Mao-Zheng 2023 general Helmholtz EOS",
+      "implementationProbe": "not run; required published coefficients unavailable from legitimate accessible source",
+      "densityDataset": "Mantovani 2012 retained from PR #43",
+      "vleDataset": "not run",
+      "numberOfDensityPoints": 0,
+      "densityAARD": null,
+      "worstDensityRelativeDeviation": null,
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "NO DEPLOYABLE MODEL DATA",
+      "enabledDomain": "none"
+    },
+    {
+      "pair": "CO2+Ar",
+      "candidateFormulation": "Xu-Mao-Zheng 2023 general Helmholtz EOS",
+      "implementationProbe": "not run; required published coefficients unavailable from legitimate accessible source",
+      "densityDataset": "Mantovani 2012 retained from PR #43",
+      "vleDataset": "L\u00f8vseth/Westman Ar VLE still requires audited numerical rows",
+      "numberOfDensityPoints": 0,
+      "densityAARD": null,
+      "worstDensityRelativeDeviation": null,
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "NO DEPLOYABLE MODEL DATA",
+      "enabledDomain": "none"
+    },
+    {
+      "pair": "CO2+O2",
+      "candidateFormulation": "EOS-CG-2021 Table 4 CO2+O2 reducing parameters, F=0, no departure function",
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and homogeneous P,T,z density solve",
+      "densityDataset": "Mantovani et al. 2012 Tables 2, 6 and 7; mole fractions O1=0.0607 O2, O2=0.1291 O2",
+      "numberOfDensityPoints": 6,
+      "densityAARD": 0.073878,
+      "worstDensityRelativeDeviation": 0.148035,
+      "worstDensityPoint": "Mantovani-O2-gas, T=383.14 K, p=1.002 MPa, xO2=0.1291",
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "notes": "EOS-CG-2021 CO2+O2 uses the same Table 4 values already present in the pinned teqp standard pair. The direct probe reproduces the existing Mantovani density failure and does not establish a production domain."
+    },
+    {
+      "pair": "CO2+Ar",
+      "candidateFormulation": "EOS-CG-2021 Table 4 CO2+Ar reducing parameters plus Table 5 L\u00f8vseth et al. GERG-2008 departure function",
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and homogeneous P,T,z density solve",
+      "densityDataset": "Mantovani et al. 2012 Tables 2, 8 and 9; mole fractions A1=0.0308 Ar, A2=0.1694 Ar",
+      "numberOfDensityPoints": 6,
+      "densityAARD": 0.0340533,
+      "worstDensityRelativeDeviation": 0.0999102,
+      "worstDensityPoint": "Mantovani-A2-gas, T=383.14 K, p=1.004 MPa, xAr=0.1694",
+      "lowImpuritySubset": {
+        "argonMoleFraction": 0.0308,
+        "numberOfDensityPoints": 3,
+        "worstDensityRelativeDeviation": 0.00732631,
+        "numberOfAuditedVLEPoints": 0,
+        "result": "diagnostic only"
+      },
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "FAIL",
+      "enabledDomain": "none",
+      "notes": "The updated EOS-CG Ar model improves neither the broad Mantovani conclusion nor the missing independent VLE gate enough for user-facing phase-aware support. The 3.08 mol% Ar subset remains promising density-only diagnostic evidence."
+    },
+    {
+      "pair": "CO2+CH4",
+      "candidateFormulation": "EOS-CG-2021 inherited GERG-2008 CH4+CO2 reducing parameters and Table 5 GERG-2008 departure function",
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and homogeneous P,T,z density solve after static Clapeyron EOS_CG source/database identity audit",
+      "densityDataset": "Ghafri et al. 2016 NIST ThermoML JSON, 180 rows, DOI 10.1016/j.fluid.2015.08.029",
+      "vleDataset": "Petropoulou et al. 2018 historical VLE diagnostic retained as superseded because it used the pre-audit CH4 beta/gamma mapping",
+      "numberOfDensityPoints": 180,
+      "densityAARD": 0.013981775,
+      "worstDensityRelativeDeviation": 0.0515195,
+      "worstDensityPoint": "Ghafri block 3 row 12, T=301.070 K, p=7.97239 MPa, xCH4=0.05",
+      "gasDensitySubset": {
+        "numberOfDensityPoints": 6,
+        "densityAARD": 0.0020342283333333335,
+        "worstDensityRelativeDeviation": 0.00413175,
+        "worstDensityPoint": "Ghafri block 1 row 6, T=301.133 K, p=6.976 MPa, xCH4=0.05"
+      },
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "LIMITED PASS - HOMOGENEOUS GAS DENSITY ONLY",
+      "enabledDomain": "xCH4 = 0.05 exactly; T = 301.14 K +/- 0.02 K; p = 1.99046-6.976 MPa; density plus derived M/v/Z only; no VLE, phase envelope, mixture Cp/Cv/speed, h/u/s or transport.",
+      "notes": "The full Ghafri matrix converged but dense and near-critical rows showed materially larger deviations, so only the ThermoML gas block is production-enabled. Full row-level diagnostics are in Documentation/Validation/MethaneFullDensityValidationResults.csv and Documentation/Validation/MethaneFullDensityValidationSummary.json."
+    }
+  ],
   "pairs": [
     {
       "pair": "CO2+N2",
@@ -32,15 +139,75 @@
       "numberOfVLEPoints": 0,
       "worstDensityRelativeDeviation": 0.148034933188,
       "worstVLERelativeDeviation": null,
-      "scientificResult": "FAIL",
+      "scientificResult": "PROVISIONAL FAIL PENDING NUMERIC EOS-CG IDENTITY CHECK",
       "enabledDomain": "none",
       "densityPoints": [
-        { "label": "Mantovani-O1-gas", "temperatureK": 383.14, "pressureMPa": 1.009, "impurityMoleFraction": 0.0607, "referenceDensityKgM3": 12.82, "teqpDensityKgM3": 13.9825759614, "absoluteDeviationKgM3": 1.16257596142, "relativeDeviation": 0.0906845523732, "converged": true },
-        { "label": "Mantovani-O1-supercritical", "temperatureK": 343.15, "pressureMPa": 12.001, "impurityMoleFraction": 0.0607, "referenceDensityKgM3": 295.23, "teqpDensityKgM3": 302.022372695, "absoluteDeviationKgM3": 6.79237269541, "relativeDeviation": 0.0230070544843, "converged": true },
-        { "label": "Mantovani-O1-dense", "temperatureK": 303.22, "pressureMPa": 12.004, "impurityMoleFraction": 0.0607, "referenceDensityKgM3": 691.78, "teqpDensityKgM3": 717.508378518, "absoluteDeviationKgM3": 25.7283785179, "relativeDeviation": 0.0371915616495, "converged": true },
-        { "label": "Mantovani-O2-gas", "temperatureK": 383.14, "pressureMPa": 1.002, "impurityMoleFraction": 0.1291, "referenceDensityKgM3": 11.84, "teqpDensityKgM3": 13.5927336089, "absoluteDeviationKgM3": 1.75273360894, "relativeDeviation": 0.148034933188, "converged": true },
-        { "label": "Mantovani-O2-supercritical", "temperatureK": 343.15, "pressureMPa": 12.002, "impurityMoleFraction": 0.1291, "referenceDensityKgM3": 261.07, "teqpDensityKgM3": 269.541140172, "absoluteDeviationKgM3": 8.47114017245, "relativeDeviation": 0.0324477732886, "converged": true },
-        { "label": "Mantovani-O2-dense", "temperatureK": 303.22, "pressureMPa": 12.003, "impurityMoleFraction": 0.1291, "referenceDensityKgM3": 524.28, "teqpDensityKgM3": 582.948136387, "absoluteDeviationKgM3": 58.6681363874, "relativeDeviation": 0.111902297222, "converged": true }
+        {
+          "label": "Mantovani-O1-gas",
+          "temperatureK": 383.14,
+          "pressureMPa": 1.009,
+          "impurityMoleFraction": 0.0607,
+          "referenceDensityKgM3": 12.82,
+          "teqpDensityKgM3": 13.9825759614,
+          "absoluteDeviationKgM3": 1.16257596142,
+          "relativeDeviation": 0.0906845523732,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-O1-supercritical",
+          "temperatureK": 343.15,
+          "pressureMPa": 12.001,
+          "impurityMoleFraction": 0.0607,
+          "referenceDensityKgM3": 295.23,
+          "teqpDensityKgM3": 302.022372695,
+          "absoluteDeviationKgM3": 6.79237269541,
+          "relativeDeviation": 0.0230070544843,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-O1-dense",
+          "temperatureK": 303.22,
+          "pressureMPa": 12.004,
+          "impurityMoleFraction": 0.0607,
+          "referenceDensityKgM3": 691.78,
+          "teqpDensityKgM3": 717.508378518,
+          "absoluteDeviationKgM3": 25.7283785179,
+          "relativeDeviation": 0.0371915616495,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-O2-gas",
+          "temperatureK": 383.14,
+          "pressureMPa": 1.002,
+          "impurityMoleFraction": 0.1291,
+          "referenceDensityKgM3": 11.84,
+          "teqpDensityKgM3": 13.5927336089,
+          "absoluteDeviationKgM3": 1.75273360894,
+          "relativeDeviation": 0.148034933188,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-O2-supercritical",
+          "temperatureK": 343.15,
+          "pressureMPa": 12.002,
+          "impurityMoleFraction": 0.1291,
+          "referenceDensityKgM3": 261.07,
+          "teqpDensityKgM3": 269.541140172,
+          "absoluteDeviationKgM3": 8.47114017245,
+          "relativeDeviation": 0.0324477732886,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-O2-dense",
+          "temperatureK": 303.22,
+          "pressureMPa": 12.003,
+          "impurityMoleFraction": 0.1291,
+          "referenceDensityKgM3": 524.28,
+          "teqpDensityKgM3": 582.948136387,
+          "absoluteDeviationKgM3": 58.6681363874,
+          "relativeDeviation": 0.111902297222,
+          "converged": true
+        }
       ]
     },
     {
@@ -53,45 +220,114 @@
       "numberOfVLEPoints": 0,
       "worstDensityRelativeDeviation": 0.099908781713,
       "worstVLERelativeDeviation": null,
-      "scientificResult": "FAIL",
+      "scientificResult": "PROVISIONAL FAIL PENDING NUMERIC EOS-CG IDENTITY CHECK",
       "enabledDomain": "none",
       "lowArgonSubsetConclusion": "The A1 subset at 0.0308 mole fraction Ar converged with worst relative density deviation 0.731526%, but density-only evidence without an audited VLE gate is not enough to expose teqp phase-equilibrium or phase-diagram support; PhaseXpert does not currently expose density-only impurity formulations.",
       "densityPoints": [
-        { "label": "Mantovani-A1-gas", "temperatureK": 383.14, "pressureMPa": 1.010, "impurityMoleFraction": 0.0308, "referenceDensityKgM3": 14.31, "teqpDensityKgM3": 14.2053186648, "absoluteDeviationKgM3": -0.104681335171, "relativeDeviation": -0.00731525752417, "converged": true },
-        { "label": "Mantovani-A1-supercritical", "temperatureK": 343.15, "pressureMPa": 12.001, "impurityMoleFraction": 0.0308, "referenceDensityKgM3": 320.76, "teqpDensityKgM3": 323.091319782, "absoluteDeviationKgM3": 2.33131978182, "relativeDeviation": 0.00726811255089, "converged": true },
-        { "label": "Mantovani-A1-dense", "temperatureK": 303.22, "pressureMPa": 12.002, "impurityMoleFraction": 0.0308, "referenceDensityKgM3": 763.71, "teqpDensityKgM3": 765.585234807, "absoluteDeviationKgM3": 1.87523480711, "relativeDeviation": 0.00245542785496, "converged": true },
-        { "label": "Mantovani-A2-gas", "temperatureK": 383.14, "pressureMPa": 1.004, "impurityMoleFraction": 0.1694, "referenceDensityKgM3": 12.62, "teqpDensityKgM3": 13.8808488252, "absoluteDeviationKgM3": 1.26084882522, "relativeDeviation": 0.099908781713, "converged": true },
-        { "label": "Mantovani-A2-supercritical", "temperatureK": 343.15, "pressureMPa": 12.004, "impurityMoleFraction": 0.1694, "referenceDensityKgM3": 261.01, "teqpDensityKgM3": 263.069461818, "absoluteDeviationKgM3": 2.05946181845, "relativeDeviation": 0.00789035599575, "converged": true },
-        { "label": "Mantovani-A2-dense", "temperatureK": 303.22, "pressureMPa": 12.002, "impurityMoleFraction": 0.1694, "referenceDensityKgM3": 538.57, "teqpDensityKgM3": 496.599873992, "absoluteDeviationKgM3": -41.9701260075, "relativeDeviation": -0.0779288226369, "converged": true }
+        {
+          "label": "Mantovani-A1-gas",
+          "temperatureK": 383.14,
+          "pressureMPa": 1.01,
+          "impurityMoleFraction": 0.0308,
+          "referenceDensityKgM3": 14.31,
+          "teqpDensityKgM3": 14.2053186648,
+          "absoluteDeviationKgM3": -0.104681335171,
+          "relativeDeviation": -0.00731525752417,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-A1-supercritical",
+          "temperatureK": 343.15,
+          "pressureMPa": 12.001,
+          "impurityMoleFraction": 0.0308,
+          "referenceDensityKgM3": 320.76,
+          "teqpDensityKgM3": 323.091319782,
+          "absoluteDeviationKgM3": 2.33131978182,
+          "relativeDeviation": 0.00726811255089,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-A1-dense",
+          "temperatureK": 303.22,
+          "pressureMPa": 12.002,
+          "impurityMoleFraction": 0.0308,
+          "referenceDensityKgM3": 763.71,
+          "teqpDensityKgM3": 765.585234807,
+          "absoluteDeviationKgM3": 1.87523480711,
+          "relativeDeviation": 0.00245542785496,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-A2-gas",
+          "temperatureK": 383.14,
+          "pressureMPa": 1.004,
+          "impurityMoleFraction": 0.1694,
+          "referenceDensityKgM3": 12.62,
+          "teqpDensityKgM3": 13.8808488252,
+          "absoluteDeviationKgM3": 1.26084882522,
+          "relativeDeviation": 0.099908781713,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-A2-supercritical",
+          "temperatureK": 343.15,
+          "pressureMPa": 12.004,
+          "impurityMoleFraction": 0.1694,
+          "referenceDensityKgM3": 261.01,
+          "teqpDensityKgM3": 263.069461818,
+          "absoluteDeviationKgM3": 2.05946181845,
+          "relativeDeviation": 0.00789035599575,
+          "converged": true
+        },
+        {
+          "label": "Mantovani-A2-dense",
+          "temperatureK": 303.22,
+          "pressureMPa": 12.002,
+          "impurityMoleFraction": 0.1694,
+          "referenceDensityKgM3": 538.57,
+          "teqpDensityKgM3": 496.599873992,
+          "absoluteDeviationKgM3": -41.9701260075,
+          "relativeDeviation": -0.0779288226369,
+          "converged": true
+        }
       ]
     },
     {
       "pair": "CO2+H2",
-      "candidateFormulation": "Pinned teqp standard multifluid / GERG residual candidates",
-      "candidateStatus": "NOT ENABLED",
-      "reason": "Primary CO2-rich CO2+H2 density literature was identified, including Sanchez-Vicente et al. 2013, but no complete audited numerical PVT+VLE matrix is encoded and no production bake-off can be declared without primary table rows.",
-      "densityDataset": "Sanchez-Vicente et al. 2013, Densities of the carbon dioxide + hydrogen, a system of relevance to carbon capture and storage, DOI 10.1016/j.ijggc.2012.12.002; not encoded",
-      "vleDataset": "CO2+H2 phase-behavior/VLE literature identified; no audited numerical VLE matrix encoded",
-      "numberOfDensityPoints": 0,
+      "candidateFormulation": "EOS-CG-2021 Table 4 CO2+H2 reducing parameters plus Table 5 Beckm\u00fcller et al. departure function",
+      "candidateStatus": "LIMITED DENSITY PASS \u2014 PRODUCTION ENABLED",
+      "reason": "Static Clapeyron EOS_CG source/database identity passed in Documentation/Validation/EOSCGStaticIdentityAudit.json, and direct pinned-teqp validation against Souissi 2017 ThermoML gas-density rows converged for all 19 points.",
+      "densityDataset": "Souissi et al. 2017, DOI 10.1021/acs.jced.7b00213, NIST ThermoML JSON encoded in Documentation/Validation/HydrogenThermoML2017Density.json; Sanchez-Vicente 2013 remains relevant dense CCS context but its numerical table was not accessible; Cheng et al. 2019 DOI 10.1021/acs.jced.8b01206 accessible but outside CO2-rich target domain; Owuna et al. 2025 DOI 10.1021/acs.jced.4c00666 appears relevant but numerical tables unavailable",
+      "vleDataset": "CO2+H2 VLE references remain unencoded because no audited numerical primary matrix was acquired",
+      "numberOfDensityPoints": 19,
       "numberOfVLEPoints": 0,
-      "worstDensityRelativeDeviation": null,
+      "densityAARD": 0.00189492,
+      "worstDensityRelativeDeviation": 0.00370799,
+      "worstDensityPoint": "Souissi 2017 ThermoML block 1 row 1, T=273.15 K, p=3.03596 MPa, xH2=0.05362",
       "worstVLERelativeDeviation": null,
-      "scientificResult": "NO DEFENSIBLE MODEL/DATA",
-      "enabledDomain": "none"
+      "scientificResult": "LIMITED PASS \u2014 HOMOGENEOUS GAS DENSITY ONLY",
+      "enabledDomain": "xH2 = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; pressure within the corresponding Souissi 2017 gas isotherm ranges; density plus derived M/v/Z only; no VLE, phase envelope, mixture Cp/Cv/speed, h/u/s or transport."
     },
     {
       "pair": "CO2+CH4",
-      "candidateFormulation": "Pinned teqp standard multifluid / GERG residual candidates",
-      "candidateStatus": "NOT ENABLED",
-      "reason": "CO2-rich CO2+CH4 VLE literature was identified, including Petropoulou et al. 2018, but no complete audited numerical PVT+VLE matrix is encoded and no production bake-off can be declared without primary table rows.",
-      "densityDataset": "CO2-rich density literature identified; no audited numerical density matrix encoded",
-      "vleDataset": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, DOI 10.1016/j.fluid.2018.01.011; not encoded",
-      "numberOfDensityPoints": 0,
+      "candidateFormulation": "EOS-CG-2021 inherited GERG-2008 CH4+CO2 reducing parameters and GERG-2008 departure function",
+      "candidateStatus": "LIMITED DENSITY PASS - PRODUCTION ENABLED",
+      "reason": "Static EOS-CG identity passes after the CH4 beta/gamma mapping fix. The full 180-row Ghafri matrix converges but dense and near-critical deviations are too large for broad production support, while the ThermoML gas block is strong enough for a narrow homogeneous gas-density domain.",
+      "densityDataset": "Ghafri et al. 2016, Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter, DOI 10.1016/j.fluid.2015.08.029; NIST ThermoML JSON encoded in Documentation/Validation/MethaneThermoML2016Density.json",
+      "vleDataset": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, DOI 10.1016/j.fluid.2018.01.011; previous direct VLE diagnostic superseded by CH4+CO2 parameter-mapping correction",
+      "numberOfDensityPoints": 180,
       "numberOfVLEPoints": 0,
-      "worstDensityRelativeDeviation": null,
+      "gasDensitySubset": {
+        "numberOfPoints": 6,
+        "densityAARD": 0.0020342283333333335,
+        "worstDensityRelativeDeviation": 0.00413175,
+        "worstDensityPoint": "Ghafri 2016 ThermoML block 1 row 6, T=301.133 K, p=6.976 MPa, zCO2=0.95"
+      },
+      "overallDiagnosticDensityAARD": 0.013981775,
+      "worstDensityRelativeDeviation": 0.0515195,
       "worstVLERelativeDeviation": null,
-      "scientificResult": "NO DEFENSIBLE MODEL/DATA",
-      "enabledDomain": "none"
+      "scientificResult": "LIMITED PASS - HOMOGENEOUS GAS DENSITY ONLY",
+      "enabledDomain": "xCH4 = 0.05 exactly; T = 301.14 K +/- 0.02 K; pressure 1.99046-6.976 MPa; density plus derived M/v/Z only; no VLE, phase envelope, mixture Cp/Cv/speed, h/u/s or transport."
     }
   ]
 }

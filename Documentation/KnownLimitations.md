@@ -20,13 +20,19 @@
   provider-calculated but have not completed independent PhaseXpert validation.
   No estimated mixing rule or fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
-- The experimental teqp provider is displayed as Advanced Phase & Mixture Model
-  (teqp). Its user-facing supported scope remains exactly 100 mol% CO₂ and only
-  density, Cv, Cp, Cp/Cv, speed of sound and the existing transparent derived
-  properties. Viscosity, transport properties, enthalpy, entropy, internal
-  energy and user-facing mixtures are unavailable. Pure-CO₂ phase-envelope
-  generation is available through the native teqp saturation calculation;
-  impurity phase envelopes remain unavailable. Subcritical multiple-root pure-CO₂
+- The experimental teqp provider is displayed as Advanced CCS Properties when
+  the native bridge is linked. Its user-facing supported scope is property
+  specific: pure CO₂ supports density, Cv, Cp, Cp/Cv, speed of sound and the
+  existing transparent derived properties; CO₂+H₂ supports only homogeneous
+  gas density plus derived molar mass, specific volume and Z at xH₂ = 0.05362
+  and the encoded Souissi et al. 2017 isotherm pressure ranges; CO₂+CH₄
+  supports only homogeneous gas density plus derived molar mass, specific
+  volume and Z at xCH₄ = 0.05, 301.14 K ± 0.02 K and 1.99046-6.976 MPa.
+  Viscosity, transport properties, enthalpy, entropy, internal energy, N₂,
+  O₂, Ar, simultaneous impurities, impurity heat capacities, impurity speed of
+  sound and impurity phase-equilibrium outputs are unavailable. Pure-CO₂
+  phase-envelope generation is available through the native teqp saturation
+  calculation; impurity phase envelopes remain unavailable. Subcritical multiple-root pure-CO₂
   density states use teqp pure-fluid saturation equilibrium to select a stable
   vapor or liquid branch when the state is clearly away from saturation. States
   on or too close to saturation remain explicitly unavailable because a unique

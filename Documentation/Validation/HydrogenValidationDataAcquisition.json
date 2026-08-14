@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-13",
+  "purpose": "CO2-rich CO2+H2 independent density/VLE validation-data acquisition audit for EOS-CG-2021 production gating",
+  "target": {
+    "pair": "CO2+H2",
+    "candidateFormulation": "EOS-CG-2021 CO2+H2 binary model",
+    "runtimeEngine": "teqp v0.23.1 native custom multifluid construction",
+    "desiredDomain": "CO2-rich CCS impurity calculations, especially 2-10 mol% H2"
+  },
+  "sourcesChecked": [
+    {
+      "sourceID": "Souissi2017ThermoML",
+      "citation": "Souissi et al., Vapor-Phase (p, rho, T, x) Behavior and Virial Coefficients for the Binary Mixture (0.05 Hydrogen + 0.95 Carbon Dioxide) over the Temperature Range from (273.15 to 323.15) K with Pressures up to 6 MPa, Journal of Chemical & Engineering Data 62 (2017) 2973-2981",
+      "doi": "10.1021/acs.jced.7b00213",
+      "reportedDomainFromAccessibleMetadata": "xH2 = 0.05362; T = 273.15 K, 293.15 K and 323.15 K; gas-phase pressures up to the dew-point pressure or 6 MPa",
+      "routesChecked": [
+        {
+          "route": "NIST ThermoML DOI lookup",
+          "result": "machine-readable ThermoML JSON accessible and encoded in Documentation/Validation/HydrogenThermoML2017Density.json"
+        }
+      ],
+      "numberOfDensityPoints": 19,
+      "useInProductionValidation": true,
+      "reason": "This is an open, machine-readable, CO2-rich gas-density matrix suitable for an H2 homogeneous gas-density validation gate."
+    },
+    {
+      "sourceID": "SanchezVicente2013",
+      "citation": "S\u00e1nchez-Vicente et al., Densities of the carbon dioxide + hydrogen, a system of relevance to carbon capture and storage, International Journal of Greenhouse Gas Control 13 (2013) 78-86",
+      "doi": "10.1016/j.ijggc.2012.12.002",
+      "reportedDomainFromAccessibleMetadata": "xH2 = 0.020, 0.075 and 0.100; six temperatures from 288.15 K to 333.15 K; pressures up to 23 MPa",
+      "routesChecked": [
+        {
+          "route": "ScienceDirect article metadata",
+          "result": "article metadata accessible; numerical PVT tables not exposed"
+        },
+        {
+          "route": "institutional/repository metadata pages",
+          "result": "abstract/domain metadata accessible; numerical PVT tables not exposed"
+        },
+        {
+          "route": "NIST ThermoML DOI lookup",
+          "result": "no ThermoML record returned for the DOI"
+        },
+        {
+          "route": "general web search for title, DOI and table terms",
+          "result": "no legitimate accessible numerical table or supplementary data found"
+        }
+      ],
+      "useInProductionValidation": false,
+      "reason": "The paper is highly relevant, but PhaseXpert could not acquire the original numerical density table through legitimate accessible routes in this environment. Values are not digitized or inferred."
+    },
+    {
+      "sourceID": "Cheng2019ThermoML",
+      "citation": "Cheng et al., Density Data of Two (H2 + CO2) Mixtures and a (H2 + CO2 + CH4) Mixture by a Modified Burnett Method at Temperature 673 K and Pressures up to 25 MPa, Journal of Chemical & Engineering Data (2019)",
+      "doi": "10.1021/acs.jced.8b01206",
+      "routesChecked": [
+        {
+          "route": "NIST ThermoML DOI lookup",
+          "result": "machine-readable ThermoML record accessible"
+        }
+      ],
+      "reportedCompositions": [
+        "0.6005 H2 + 0.3995 CO2",
+        "0.6992 H2 + 0.3008 CO2",
+        "H2 + CO2 + CH4 ternary mixture"
+      ],
+      "reportedTemperatureK": 673,
+      "useInProductionValidation": false,
+      "reason": "The accessible data are H2-rich and high-temperature, outside PhaseXpert's intended CO2-rich CCS impurity domain. They are suitable only for future diagnostic cross-checks."
+    },
+    {
+      "sourceID": "Owuna2025",
+      "citation": "Owuna et al., high-pressure high-temperature CO2+H2 density measurements reported for CO2-rich mixtures",
+      "doi": "10.1021/acs.jced.4c00666",
+      "reportedDomainFromAccessibleMetadata": "CO2-rich mixtures including approximately 2.04, 5.37, 6.23 and 10.20 mol% H2 at CCS-relevant temperatures and pressures",
+      "routesChecked": [
+        {
+          "route": "NIST ThermoML DOI lookup",
+          "result": "no ThermoML record returned for the DOI"
+        },
+        {
+          "route": "institutional repository file route",
+          "result": "metadata/HTML response obtained rather than a numerical-table PDF"
+        },
+        {
+          "route": "ACS article/PDF route",
+          "result": "access blocked by browser verification page; numerical tables not available to this agent"
+        },
+        {
+          "route": "general web search for title, DOI and table terms",
+          "result": "metadata snippets indicate relevance, but no legitimate accessible numerical table was found"
+        }
+      ],
+      "useInProductionValidation": false,
+      "reason": "The source appears directly relevant, but the numerical table could not be legally accessed in this environment. Snippets are not used as validation data."
+    }
+  ],
+  "decision": {
+    "productionValidationMatrixAvailable": true,
+    "enabledH2Domain": "none",
+    "scientificResult": "CO2-RICH GAS-DENSITY MATRIX ACQUIRED; EOS VALIDATION PENDING",
+    "notes": [
+      "EOS-CG-2021 CO2+H2 native model construction remains feasible.",
+      "PhaseXpert does not expose H2 until the acquired ThermoML matrix is evaluated by a numerically verified EOS-CG implementation.",
+      "No values were copied from plots, snippets or secondary summaries."
+    ]
+  }
+}

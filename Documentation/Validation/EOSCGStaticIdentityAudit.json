@@ -1,0 +1,1379 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-14",
+  "purpose": "Static source/database identity audit replacing the blocked Julia runtime oracle for EOS-CG-2021 before production-enabling property-specific mixture support.",
+  "clapeyronOracle": {
+    "package": "Clapeyron.jl",
+    "version": "0.6.26",
+    "commit": "8bafad61eee016b2973997571fa026f068596db5",
+    "licence": "MIT",
+    "variantSource": "/tmp/Clapeyron.jl-eoscg/src/models/EmpiricHelmholtz/MultiFluid/variants/EOS_CG.jl",
+    "mixingDatabase": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv",
+    "departureDatabase": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv",
+    "runtimeStatus": "Julia execution unavailable in managed Xcode/Codex environment; static source/database audit used instead."
+  },
+  "phaseXpertSource": {
+    "targetModelData": "Documentation/Validation/EOSCG2021TargetModelData.json",
+    "nativeBridge": "Native/TeqpBridge/src/PhaseXpertTeqpBridge.cpp",
+    "catalog": "PhaseXpertCore/Sources/PhaseXpertCore/Providers/TeqpFormulationCatalog.swift"
+  },
+  "variantConstruction": {
+    "clapeyronEOSCGFunction": "EOS_CG(components) = MultiFluid(... mixing=AsymmetricMixing, departure=EmpiricDeparture, pure_userlocations=@DB/Empiric/EOS_CG/pures, mixing_userlocations=EOS_CG_mixing_unlike.csv, departure_userlocations=EOS_CG_departure_unlike.csv)",
+    "match": true,
+    "sourceLocation": "/tmp/Clapeyron.jl-eoscg/src/models/EmpiricHelmholtz/MultiFluid/variants/EOS_CG.jl"
+  },
+  "pureComponentIdentity": [
+    {
+      "component": "CO2",
+      "fields": [
+        {
+          "field": "pureFile",
+          "phaseXpertValue": "carbon dioxide.json",
+          "clapeyronValue": "carbon dioxide.json",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/carbon dioxide.json"
+        },
+        {
+          "field": "BibTeX_EOS",
+          "phaseXpertValue": "Span-JPCRD-1996",
+          "clapeyronValue": "Span-JPCRD-1996",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/carbon dioxide.json:BibTeX_EOS"
+        },
+        {
+          "field": "CAS",
+          "phaseXpertValue": "124-38-9",
+          "clapeyronValue": "124-38-9",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/carbon dioxide.json:CAS"
+        },
+        {
+          "field": "NAME",
+          "phaseXpertValue": "CarbonDioxide",
+          "clapeyronValue": "CarbonDioxide",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/carbon dioxide.json:NAME"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "component": "N2",
+      "fields": [
+        {
+          "field": "pureFile",
+          "phaseXpertValue": "nitrogen.json",
+          "clapeyronValue": "nitrogen.json",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/nitrogen.json"
+        },
+        {
+          "field": "BibTeX_EOS",
+          "phaseXpertValue": "Span-JPCRD-2000",
+          "clapeyronValue": "Span-JPCRD-2000",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/nitrogen.json:BibTeX_EOS"
+        },
+        {
+          "field": "CAS",
+          "phaseXpertValue": "7727-37-9",
+          "clapeyronValue": "7727-37-9",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/nitrogen.json:CAS"
+        },
+        {
+          "field": "NAME",
+          "phaseXpertValue": "Nitrogen",
+          "clapeyronValue": "Nitrogen",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/nitrogen.json:NAME"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "component": "O2",
+      "fields": [
+        {
+          "field": "pureFile",
+          "phaseXpertValue": "oxygen.json",
+          "clapeyronValue": "oxygen.json",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/oxygen.json"
+        },
+        {
+          "field": "BibTeX_EOS",
+          "phaseXpertValue": "Schmidt-FPE-1985,Stewart-JPCRD-1991",
+          "clapeyronValue": "Schmidt-FPE-1985,Stewart-JPCRD-1991",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/oxygen.json:BibTeX_EOS"
+        },
+        {
+          "field": "CAS",
+          "phaseXpertValue": "7782-44-7",
+          "clapeyronValue": "7782-44-7",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/oxygen.json:CAS"
+        },
+        {
+          "field": "NAME",
+          "phaseXpertValue": "Oxygen",
+          "clapeyronValue": "Oxygen",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/oxygen.json:NAME"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "component": "Ar",
+      "fields": [
+        {
+          "field": "pureFile",
+          "phaseXpertValue": "Argon.json",
+          "clapeyronValue": "Argon.json",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/Argon.json"
+        },
+        {
+          "field": "BibTeX_EOS",
+          "phaseXpertValue": "Tegeler-JPCRD-1999",
+          "clapeyronValue": "Tegeler-JPCRD-1999",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/Argon.json:BibTeX_EOS"
+        },
+        {
+          "field": "CAS",
+          "phaseXpertValue": "7440-37-1",
+          "clapeyronValue": "7440-37-1",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/Argon.json:CAS"
+        },
+        {
+          "field": "NAME",
+          "phaseXpertValue": "Argon",
+          "clapeyronValue": "Argon",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/Argon.json:NAME"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "component": "H2",
+      "fields": [
+        {
+          "field": "pureFile",
+          "phaseXpertValue": "hydrogen.json",
+          "clapeyronValue": "hydrogen.json",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/hydrogen.json"
+        },
+        {
+          "field": "BibTeX_EOS",
+          "phaseXpertValue": "Leachman-JPCRD-2009",
+          "clapeyronValue": "Leachman-JPCRD-2009",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/hydrogen.json:BibTeX_EOS"
+        },
+        {
+          "field": "CAS",
+          "phaseXpertValue": "1333-74-0",
+          "clapeyronValue": "1333-74-0",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/hydrogen.json:CAS"
+        },
+        {
+          "field": "NAME",
+          "phaseXpertValue": "Hydrogen",
+          "clapeyronValue": "Hydrogen",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/hydrogen.json:NAME"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "component": "CH4",
+      "fields": [
+        {
+          "field": "pureFile",
+          "phaseXpertValue": "methane.json",
+          "clapeyronValue": "methane.json",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/methane.json"
+        },
+        {
+          "field": "BibTeX_EOS",
+          "phaseXpertValue": "Setzmann-JPCRD-1991",
+          "clapeyronValue": "Setzmann-JPCRD-1991",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/methane.json:BibTeX_EOS"
+        },
+        {
+          "field": "CAS",
+          "phaseXpertValue": "74-82-8",
+          "clapeyronValue": "74-82-8",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/methane.json:CAS"
+        },
+        {
+          "field": "NAME",
+          "phaseXpertValue": "Methane",
+          "clapeyronValue": "Methane",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/pures/methane.json:NAME"
+        }
+      ],
+      "allMatch": true
+    }
+  ],
+  "mixingParameterIdentity": [
+    {
+      "phaseXpertPair": "CO2+N2",
+      "clapeyronSpeciesOrder": [
+        "nitrogen",
+        "carbon dioxide"
+      ],
+      "fields": [
+        {
+          "field": "betaV",
+          "phaseXpertValue": 0.977795,
+          "clapeyronValue": 0.977795,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:nitrogen+carbon dioxide:beta_v"
+        },
+        {
+          "field": "gammaV",
+          "phaseXpertValue": 1.047578,
+          "clapeyronValue": 1.047578,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:nitrogen+carbon dioxide:gamma_v"
+        },
+        {
+          "field": "betaT",
+          "phaseXpertValue": 1.005895,
+          "clapeyronValue": 1.005895,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:nitrogen+carbon dioxide:beta_T"
+        },
+        {
+          "field": "gammaT",
+          "phaseXpertValue": 1.107654,
+          "clapeyronValue": 1.107654,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:nitrogen+carbon dioxide:gamma_T"
+        },
+        {
+          "field": "Fij",
+          "phaseXpertValue": 1.0,
+          "clapeyronValue": 1.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:F"
+        },
+        {
+          "field": "componentOrder",
+          "phaseXpertValue": [
+            "nitrogen",
+            "carbon dioxide"
+          ],
+          "clapeyronValue": [
+            "nitrogen",
+            "carbon dioxide"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:species1/species2"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+O2",
+      "clapeyronSpeciesOrder": [
+        "carbon dioxide",
+        "oxygen"
+      ],
+      "fields": [
+        {
+          "field": "betaV",
+          "phaseXpertValue": 1.0,
+          "clapeyronValue": 1.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+oxygen:beta_v"
+        },
+        {
+          "field": "gammaV",
+          "phaseXpertValue": 1.08446,
+          "clapeyronValue": 1.08446,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+oxygen:gamma_v"
+        },
+        {
+          "field": "betaT",
+          "phaseXpertValue": 1.0,
+          "clapeyronValue": 1.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+oxygen:beta_T"
+        },
+        {
+          "field": "gammaT",
+          "phaseXpertValue": 1.031986,
+          "clapeyronValue": 1.031986,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+oxygen:gamma_T"
+        },
+        {
+          "field": "Fij",
+          "phaseXpertValue": 0.0,
+          "clapeyronValue": 0.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+oxygen:F"
+        },
+        {
+          "field": "componentOrder",
+          "phaseXpertValue": [
+            "carbon dioxide",
+            "oxygen"
+          ],
+          "clapeyronValue": [
+            "carbon dioxide",
+            "oxygen"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:species1/species2"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+Ar",
+      "clapeyronSpeciesOrder": [
+        "carbon dioxide",
+        "argon"
+      ],
+      "fields": [
+        {
+          "field": "betaV",
+          "phaseXpertValue": 1.003766,
+          "clapeyronValue": 1.003766,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+argon:beta_v"
+        },
+        {
+          "field": "gammaV",
+          "phaseXpertValue": 1.013833,
+          "clapeyronValue": 1.013833,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+argon:gamma_v"
+        },
+        {
+          "field": "betaT",
+          "phaseXpertValue": 0.998705,
+          "clapeyronValue": 0.998705,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+argon:beta_T"
+        },
+        {
+          "field": "gammaT",
+          "phaseXpertValue": 1.039675,
+          "clapeyronValue": 1.039675,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+argon:gamma_T"
+        },
+        {
+          "field": "Fij",
+          "phaseXpertValue": 1.0,
+          "clapeyronValue": 1.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:F"
+        },
+        {
+          "field": "componentOrder",
+          "phaseXpertValue": [
+            "carbon dioxide",
+            "argon"
+          ],
+          "clapeyronValue": [
+            "carbon dioxide",
+            "argon"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:species1/species2"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+H2",
+      "clapeyronSpeciesOrder": [
+        "carbon dioxide",
+        "hydrogen"
+      ],
+      "fields": [
+        {
+          "field": "betaV",
+          "phaseXpertValue": 1.198,
+          "clapeyronValue": 1.198,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+hydrogen:beta_v"
+        },
+        {
+          "field": "gammaV",
+          "phaseXpertValue": 0.842,
+          "clapeyronValue": 0.842,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+hydrogen:gamma_v"
+        },
+        {
+          "field": "betaT",
+          "phaseXpertValue": 0.979,
+          "clapeyronValue": 0.979,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+hydrogen:beta_T"
+        },
+        {
+          "field": "gammaT",
+          "phaseXpertValue": 1.961,
+          "clapeyronValue": 1.961,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:carbon dioxide+hydrogen:gamma_T"
+        },
+        {
+          "field": "Fij",
+          "phaseXpertValue": 1.0,
+          "clapeyronValue": 1.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:F"
+        },
+        {
+          "field": "componentOrder",
+          "phaseXpertValue": [
+            "carbon dioxide",
+            "hydrogen"
+          ],
+          "clapeyronValue": [
+            "carbon dioxide",
+            "hydrogen"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:species1/species2"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+CH4",
+      "clapeyronSpeciesOrder": [
+        "methane",
+        "carbon dioxide"
+      ],
+      "fields": [
+        {
+          "field": "betaV",
+          "phaseXpertValue": 0.999518,
+          "clapeyronValue": 0.999518,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:methane+carbon dioxide:beta_v"
+        },
+        {
+          "field": "gammaV",
+          "phaseXpertValue": 1.002807,
+          "clapeyronValue": 1.002807,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:methane+carbon dioxide:gamma_v"
+        },
+        {
+          "field": "betaT",
+          "phaseXpertValue": 1.022624,
+          "clapeyronValue": 1.022624,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:methane+carbon dioxide:beta_T"
+        },
+        {
+          "field": "gammaT",
+          "phaseXpertValue": 0.975665,
+          "clapeyronValue": 0.975665,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:methane+carbon dioxide:gamma_T"
+        },
+        {
+          "field": "Fij",
+          "phaseXpertValue": 1.0,
+          "clapeyronValue": 1.0,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:F"
+        },
+        {
+          "field": "componentOrder",
+          "phaseXpertValue": [
+            "methane",
+            "carbon dioxide"
+          ],
+          "clapeyronValue": [
+            "methane",
+            "carbon dioxide"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv:species1/species2"
+        }
+      ],
+      "allMatch": true
+    }
+  ],
+  "departureFunctionIdentity": [
+    {
+      "phaseXpertPair": "CO2+N2",
+      "clapeyronSpeciesOrder": [
+        "nitrogen",
+        "carbon dioxide"
+      ],
+      "departurePresent": true,
+      "fields": [
+        {
+          "field": "departureFunctionType",
+          "phaseXpertValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGERG2008"
+          ],
+          "clapeyronValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGERG2008"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:type"
+        },
+        {
+          "field": "term[0].d",
+          "phaseXpertValue": [
+            2.0,
+            3.0
+          ],
+          "clapeyronValue": [
+            2.0,
+            3.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[0].d"
+        },
+        {
+          "field": "term[0].l",
+          "phaseXpertValue": [
+            0.0,
+            0.0
+          ],
+          "clapeyronValue": [
+            0.0,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[0].l"
+        },
+        {
+          "field": "term[0].n",
+          "phaseXpertValue": [
+            0.28661625028399,
+            -0.10919833861247
+          ],
+          "clapeyronValue": [
+            0.28661625028399,
+            -0.10919833861247
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[0].n"
+        },
+        {
+          "field": "term[0].t",
+          "phaseXpertValue": [
+            1.85,
+            1.4
+          ],
+          "clapeyronValue": [
+            1.85,
+            1.4
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[0].t"
+        },
+        {
+          "field": "term[0].type",
+          "phaseXpertValue": "ResidualHelmholtzPower",
+          "clapeyronValue": "ResidualHelmholtzPower",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[0].type"
+        },
+        {
+          "field": "term[1].beta",
+          "phaseXpertValue": [
+            0.75,
+            1.0,
+            2.0,
+            3.0
+          ],
+          "clapeyronValue": [
+            0.75,
+            1.0,
+            2.0,
+            3.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].beta"
+        },
+        {
+          "field": "term[1].d",
+          "phaseXpertValue": [
+            1.0,
+            1.0,
+            1.0,
+            2.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            1.0,
+            1.0,
+            2.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].d"
+        },
+        {
+          "field": "term[1].epsilon",
+          "phaseXpertValue": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "clapeyronValue": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].epsilon"
+        },
+        {
+          "field": "term[1].eta",
+          "phaseXpertValue": [
+            0.25,
+            0.25,
+            0.0,
+            0.0
+          ],
+          "clapeyronValue": [
+            0.25,
+            0.25,
+            0.0,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].eta"
+        },
+        {
+          "field": "term[1].gamma",
+          "phaseXpertValue": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "clapeyronValue": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].gamma"
+        },
+        {
+          "field": "term[1].n",
+          "phaseXpertValue": [
+            -1.137403208227,
+            0.76580544237358,
+            0.0042638000926819,
+            0.17673538204534
+          ],
+          "clapeyronValue": [
+            -1.137403208227,
+            0.76580544237358,
+            0.0042638000926819,
+            0.17673538204534
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].n"
+        },
+        {
+          "field": "term[1].t",
+          "phaseXpertValue": [
+            3.2,
+            2.5,
+            8.0,
+            3.75
+          ],
+          "clapeyronValue": [
+            3.2,
+            2.5,
+            8.0,
+            3.75
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].t"
+        },
+        {
+          "field": "term[1].type",
+          "phaseXpertValue": "ResidualHelmholtzGERG2008",
+          "clapeyronValue": "ResidualHelmholtzGERG2008",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:nitrogen+carbon dioxide:term[1].type"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+O2",
+      "clapeyronSpeciesOrder": [
+        "carbon dioxide",
+        "oxygen"
+      ],
+      "departurePresent": false,
+      "fields": [
+        {
+          "field": "departureRecord",
+          "phaseXpertValue": null,
+          "clapeyronValue": null,
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+oxygen:parameters"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+Ar",
+      "clapeyronSpeciesOrder": [
+        "carbon dioxide",
+        "argon"
+      ],
+      "departurePresent": true,
+      "fields": [
+        {
+          "field": "departureFunctionType",
+          "phaseXpertValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGERG2008"
+          ],
+          "clapeyronValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGERG2008"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:type"
+        },
+        {
+          "field": "term[0].d",
+          "phaseXpertValue": [
+            2.0,
+            3.0
+          ],
+          "clapeyronValue": [
+            2.0,
+            3.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[0].d"
+        },
+        {
+          "field": "term[0].l",
+          "phaseXpertValue": [
+            0.0,
+            0.0
+          ],
+          "clapeyronValue": [
+            0.0,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[0].l"
+        },
+        {
+          "field": "term[0].n",
+          "phaseXpertValue": [
+            -0.0656,
+            0.0237
+          ],
+          "clapeyronValue": [
+            -0.0656,
+            0.0237
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[0].n"
+        },
+        {
+          "field": "term[0].t",
+          "phaseXpertValue": [
+            3.22,
+            2.9
+          ],
+          "clapeyronValue": [
+            3.22,
+            2.9
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[0].t"
+        },
+        {
+          "field": "term[0].type",
+          "phaseXpertValue": "ResidualHelmholtzPower",
+          "clapeyronValue": "ResidualHelmholtzPower",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[0].type"
+        },
+        {
+          "field": "term[1].beta",
+          "phaseXpertValue": [
+            1.208,
+            0.82,
+            1.527,
+            0.86
+          ],
+          "clapeyronValue": [
+            1.208,
+            0.82,
+            1.527,
+            0.86
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].beta"
+        },
+        {
+          "field": "term[1].d",
+          "phaseXpertValue": [
+            1.0,
+            1.0,
+            1.0,
+            2.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            1.0,
+            1.0,
+            2.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].d"
+        },
+        {
+          "field": "term[1].epsilon",
+          "phaseXpertValue": [
+            0.65,
+            0.727,
+            0.648,
+            0.706
+          ],
+          "clapeyronValue": [
+            0.65,
+            0.727,
+            0.648,
+            0.706
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].epsilon"
+        },
+        {
+          "field": "term[1].eta",
+          "phaseXpertValue": [
+            1.243,
+            1.072,
+            1.465,
+            0.946
+          ],
+          "clapeyronValue": [
+            1.243,
+            1.072,
+            1.465,
+            0.946
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].eta"
+        },
+        {
+          "field": "term[1].gamma",
+          "phaseXpertValue": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "clapeyronValue": [
+            0.5,
+            0.5,
+            0.5,
+            0.5
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].gamma"
+        },
+        {
+          "field": "term[1].n",
+          "phaseXpertValue": [
+            3.5217,
+            -2.831,
+            -1.406,
+            0.864
+          ],
+          "clapeyronValue": [
+            3.5217,
+            -2.831,
+            -1.406,
+            0.864
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].n"
+        },
+        {
+          "field": "term[1].t",
+          "phaseXpertValue": [
+            1.9,
+            1.57,
+            2.73,
+            1.08
+          ],
+          "clapeyronValue": [
+            1.9,
+            1.57,
+            2.73,
+            1.08
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].t"
+        },
+        {
+          "field": "term[1].type",
+          "phaseXpertValue": "ResidualHelmholtzGERG2008",
+          "clapeyronValue": "ResidualHelmholtzGERG2008",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+argon:term[1].type"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+H2",
+      "clapeyronSpeciesOrder": [
+        "carbon dioxide",
+        "hydrogen"
+      ],
+      "departurePresent": true,
+      "fields": [
+        {
+          "field": "departureFunctionType",
+          "phaseXpertValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGaussian"
+          ],
+          "clapeyronValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGaussian"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:type"
+        },
+        {
+          "field": "term[0].d",
+          "phaseXpertValue": [
+            1.0,
+            2.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            2.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[0].d"
+        },
+        {
+          "field": "term[0].l",
+          "phaseXpertValue": [
+            0.0,
+            0.0
+          ],
+          "clapeyronValue": [
+            0.0,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[0].l"
+        },
+        {
+          "field": "term[0].n",
+          "phaseXpertValue": [
+            3.56,
+            -1.036
+          ],
+          "clapeyronValue": [
+            3.56,
+            -1.036
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[0].n"
+        },
+        {
+          "field": "term[0].t",
+          "phaseXpertValue": [
+            1.47,
+            1.17
+          ],
+          "clapeyronValue": [
+            1.47,
+            1.17
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[0].t"
+        },
+        {
+          "field": "term[0].type",
+          "phaseXpertValue": "ResidualHelmholtzPower",
+          "clapeyronValue": "ResidualHelmholtzPower",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[0].type"
+        },
+        {
+          "field": "term[1].beta",
+          "phaseXpertValue": [
+            0.465,
+            0.82,
+            0.52,
+            1.0
+          ],
+          "clapeyronValue": [
+            0.465,
+            0.82,
+            0.52,
+            1.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].beta"
+        },
+        {
+          "field": "term[1].d",
+          "phaseXpertValue": [
+            1.0,
+            2.0,
+            3.0,
+            1.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            2.0,
+            3.0,
+            1.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].d"
+        },
+        {
+          "field": "term[1].epsilon",
+          "phaseXpertValue": [
+            0.52,
+            0.15,
+            0.24,
+            0.15
+          ],
+          "clapeyronValue": [
+            0.52,
+            0.15,
+            0.24,
+            0.15
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].epsilon"
+        },
+        {
+          "field": "term[1].eta",
+          "phaseXpertValue": [
+            0.58,
+            0.2,
+            0.292,
+            0.12
+          ],
+          "clapeyronValue": [
+            0.58,
+            0.2,
+            0.292,
+            0.12
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].eta"
+        },
+        {
+          "field": "term[1].gamma",
+          "phaseXpertValue": [
+            0.17,
+            2.11,
+            1.49,
+            1.73
+          ],
+          "clapeyronValue": [
+            0.17,
+            2.11,
+            1.49,
+            1.73
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].gamma"
+        },
+        {
+          "field": "term[1].n",
+          "phaseXpertValue": [
+            -4.835,
+            12.38,
+            -2.65,
+            -3.3
+          ],
+          "clapeyronValue": [
+            -4.835,
+            12.38,
+            -2.65,
+            -3.3
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].n"
+        },
+        {
+          "field": "term[1].t",
+          "phaseXpertValue": [
+            1.95,
+            0.31,
+            1.412,
+            2.28
+          ],
+          "clapeyronValue": [
+            1.95,
+            0.31,
+            1.412,
+            2.28
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].t"
+        },
+        {
+          "field": "term[1].type",
+          "phaseXpertValue": "ResidualHelmholtzGaussian",
+          "clapeyronValue": "ResidualHelmholtzGaussian",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:carbon dioxide+hydrogen:term[1].type"
+        }
+      ],
+      "allMatch": true
+    },
+    {
+      "phaseXpertPair": "CO2+CH4",
+      "clapeyronSpeciesOrder": [
+        "methane",
+        "carbon dioxide"
+      ],
+      "departurePresent": true,
+      "fields": [
+        {
+          "field": "departureFunctionType",
+          "phaseXpertValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGERG2008"
+          ],
+          "clapeyronValue": [
+            "ResidualHelmholtzPower",
+            "ResidualHelmholtzGERG2008"
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:type"
+        },
+        {
+          "field": "term[0].d",
+          "phaseXpertValue": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[0].d"
+        },
+        {
+          "field": "term[0].l",
+          "phaseXpertValue": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "clapeyronValue": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[0].l"
+        },
+        {
+          "field": "term[0].n",
+          "phaseXpertValue": [
+            -0.10859387354942,
+            0.080228576727389,
+            -0.0093303985115717
+          ],
+          "clapeyronValue": [
+            -0.10859387354942,
+            0.080228576727389,
+            -0.0093303985115717
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[0].n"
+        },
+        {
+          "field": "term[0].t",
+          "phaseXpertValue": [
+            2.6,
+            1.95,
+            0.0
+          ],
+          "clapeyronValue": [
+            2.6,
+            1.95,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[0].t"
+        },
+        {
+          "field": "term[0].type",
+          "phaseXpertValue": "ResidualHelmholtzPower",
+          "clapeyronValue": "ResidualHelmholtzPower",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[0].type"
+        },
+        {
+          "field": "term[1].beta",
+          "phaseXpertValue": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].beta"
+        },
+        {
+          "field": "term[1].d",
+          "phaseXpertValue": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].d"
+        },
+        {
+          "field": "term[1].epsilon",
+          "phaseXpertValue": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "clapeyronValue": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].epsilon"
+        },
+        {
+          "field": "term[1].eta",
+          "phaseXpertValue": [
+            1.0,
+            0.5,
+            0.0
+          ],
+          "clapeyronValue": [
+            1.0,
+            0.5,
+            0.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].eta"
+        },
+        {
+          "field": "term[1].gamma",
+          "phaseXpertValue": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "clapeyronValue": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].gamma"
+        },
+        {
+          "field": "term[1].n",
+          "phaseXpertValue": [
+            0.040989274005848,
+            -0.24338019772494,
+            0.23855347281124
+          ],
+          "clapeyronValue": [
+            0.040989274005848,
+            -0.24338019772494,
+            0.23855347281124
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].n"
+        },
+        {
+          "field": "term[1].t",
+          "phaseXpertValue": [
+            3.95,
+            7.95,
+            8.0
+          ],
+          "clapeyronValue": [
+            3.95,
+            7.95,
+            8.0
+          ],
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].t"
+        },
+        {
+          "field": "term[1].type",
+          "phaseXpertValue": "ResidualHelmholtzGERG2008",
+          "clapeyronValue": "ResidualHelmholtzGERG2008",
+          "match": true,
+          "sourceLocation": "/tmp/Clapeyron.jl-eoscg/database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv:methane+carbon dioxide:term[1].type"
+        }
+      ],
+      "allMatch": true
+    }
+  ],
+  "knownMismatchFixedBeforeThisAudit": {
+    "pair": "CO2+CH4",
+    "bug": "PhaseXpert previously mapped the inherited EOS-CG/GERG CH4+CO2 beta/gamma fields as if the pair order were CO2+CH4; the corrected native data now uses the Clapeyron/EOS-CG methane+carbon dioxide order and reciprocal handling where applicable.",
+    "status": "fixed"
+  },
+  "overallResult": "PASS"
+}

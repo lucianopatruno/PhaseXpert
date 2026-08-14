@@ -4,6 +4,7 @@ public enum TeqpFormulationFamily: String, Codable, Equatable, Sendable {
     case multifluid
     case multifluidActivity
     case gergResidual
+    case eosCG2021
 }
 
 public enum TeqpValidationStatus: String, Codable, Equatable, Sendable {
@@ -29,6 +30,55 @@ public struct TeqpCompositionLimit: Codable, Equatable, Sendable {
     }
 }
 
+public enum TeqpPhaseDomain: String, Codable, Equatable, Sendable {
+    case homogeneousGas
+    case homogeneousLiquidOrDense
+    case supercritical
+    case phaseEquilibrium
+    case pureFluid
+}
+
+public struct TeqpTemperaturePressureLimit: Codable, Equatable, Sendable {
+    public let temperatureK: Double
+    public let minimumPressurePa: Double
+    public let maximumPressurePa: Double
+
+    public init(
+        temperatureK: Double,
+        minimumPressurePa: Double,
+        maximumPressurePa: Double
+    ) {
+        self.temperatureK = temperatureK
+        self.minimumPressurePa = minimumPressurePa
+        self.maximumPressurePa = maximumPressurePa
+    }
+}
+
+public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
+    public let property: PropertyID
+    public let phaseDomain: TeqpPhaseDomain
+    public let compositionLimits: [TeqpCompositionLimit]
+    public let isothermPressureLimits: [TeqpTemperaturePressureLimit]
+    public let validationArtifact: String
+    public let notes: [String]
+
+    public init(
+        property: PropertyID,
+        phaseDomain: TeqpPhaseDomain,
+        compositionLimits: [TeqpCompositionLimit],
+        isothermPressureLimits: [TeqpTemperaturePressureLimit],
+        validationArtifact: String,
+        notes: [String]
+    ) {
+        self.property = property
+        self.phaseDomain = phaseDomain
+        self.compositionLimits = compositionLimits
+        self.isothermPressureLimits = isothermPressureLimits
+        self.validationArtifact = validationArtifact
+        self.notes = notes
+    }
+}
+
 public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
     public let id: String
     public let name: String
@@ -37,6 +87,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
     public let components: Set<ComponentID>
     public let compositionLimits: [TeqpCompositionLimit]
     public let supportedProperties: Set<PropertyID>
+    public let propertyCapabilities: [TeqpPropertyCapability]
     public let supportsPhaseEnvelope: Bool
     public let provenance: String
     public let limitations: [String]
@@ -50,6 +101,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
         components: Set<ComponentID>,
         compositionLimits: [TeqpCompositionLimit],
         supportedProperties: Set<PropertyID>,
+        propertyCapabilities: [TeqpPropertyCapability] = [],
         supportsPhaseEnvelope: Bool,
         provenance: String,
         limitations: [String],
@@ -62,6 +114,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
         self.components = components
         self.compositionLimits = compositionLimits
         self.supportedProperties = supportedProperties
+        self.propertyCapabilities = propertyCapabilities
         self.supportsPhaseEnvelope = supportsPhaseEnvelope
         self.provenance = provenance
         self.limitations = limitations
@@ -111,6 +164,157 @@ public enum TeqpFormulationCatalog {
                 title: "A New Equation of State for Carbon Dioxide Covering the Fluid Region from the Triple-Point Temperature to 1100 K at Pressures up to 800 MPa",
                 year: 1996,
                 doiOrURL: "https://doi.org/10.1063/1.555991"
+            )
+        ]
+    )
+
+    public static let co2HydrogenEOSCGGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
+        name: "CO₂+H₂ EOS-CG-2021 homogeneous gas density",
+        family: .eosCG2021,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .hydrogen],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .hydrogen,
+                minimumMoleFraction: 0.05362,
+                maximumMoleFraction: 0.05362
+            )
+        ],
+        supportedProperties: [
+            .density,
+            .molarMass,
+            .compressibilityFactor,
+            .specificVolume
+        ],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .hydrogen,
+                        minimumMoleFraction: 0.05362,
+                        maximumMoleFraction: 0.05362
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 273.15,
+                        minimumPressurePa: 513_520,
+                        maximumPressurePa: 3_035_960
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 293.15,
+                        minimumPressurePa: 503_160,
+                        maximumPressurePa: 4_984_890
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 323.15,
+                        minimumPressurePa: 549_210,
+                        maximumPressurePa: 5_997_370
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json",
+                notes: [
+                    "Validated only for homogeneous gas density at the exact Souissi et al. 2017 ThermoML H₂ mole fraction.",
+                    "No interpolation between isotherms is claimed.",
+                    "VLE, phase envelope, Cp, Cv, speed of sound, h, u, s and transport are unavailable for this mixture."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+H₂ reducing parameters and Table 5 Beckmüller et al. Gaussian+Exponential departure function evaluated through teqp v0.23.1 \(teqpCommit); gas-density validation against Souissi et al. 2017 NIST ThermoML.",
+        limitations: [
+            "LIMITED PASS — homogeneous gas density only at xH₂ = 0.05362.",
+            "Temperature must match one of the validated isotherms: 273.15 K, 293.15 K or 323.15 K.",
+            "Pressure must remain inside the observed gas-pressure range for that isotherm.",
+            "Phase equilibrium, phase envelope, heat capacities, speed of sound, reference-state properties and transport are unavailable.",
+            "No CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Souissi, Thol, Herrig, Jäger and Span",
+                title: "Vapor-Phase (p, rho, T, x) Behavior and Virial Coefficients for the Binary Mixture (0.05 Hydrogen + 0.95 Carbon Dioxide)",
+                year: 2017,
+                doiOrURL: "https://doi.org/10.1021/acs.jced.7b00213"
+            )
+        ]
+    )
+
+    public static let co2MethaneEOSCGGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
+        name: "CO₂+CH₄ EOS-CG-2021 homogeneous gas density",
+        family: .eosCG2021,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .methane],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .methane,
+                minimumMoleFraction: 0.05,
+                maximumMoleFraction: 0.05
+            )
+        ],
+        supportedProperties: [
+            .density,
+            .molarMass,
+            .compressibilityFactor,
+            .specificVolume
+        ],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .methane,
+                        minimumMoleFraction: 0.05,
+                        maximumMoleFraction: 0.05
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 301.14,
+                        minimumPressurePa: 1_990_460,
+                        maximumPressurePa: 6_976_000
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/MethaneFullDensityValidationSummary.json",
+                notes: [
+                    "Validated only for homogeneous gas density in the Ghafri et al. 2016 ThermoML gas block.",
+                    "The full 180-row Ghafri dataset converged but did not justify dense or near-critical production support.",
+                    "VLE, phase envelope, Cp, Cv, speed of sound, h, u, s and transport are unavailable for this mixture."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 inherited GERG CH₄+CO₂ reducing parameters and GERG-2008 departure function evaluated through teqp v0.23.1 \(teqpCommit); gas-density validation against Ghafri et al. 2016 NIST ThermoML after static Clapeyron EOS_CG identity audit.",
+        limitations: [
+            "LIMITED PASS — homogeneous gas density only at xCH₄ = 0.05.",
+            "Temperature must remain within the Ghafri et al. gas-block span represented as 301.14 K ± 0.02 K.",
+            "Pressure must remain between 1.99046 MPa and 6.976 MPa.",
+            "Dense, near-critical and liquid-like rows in the full Ghafri matrix are diagnostic only and are not production-enabled.",
+            "Phase equilibrium, phase envelope, heat capacities, speed of sound, reference-state properties and transport are unavailable.",
+            "No CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Ghafri, Rowland, Hughes, May and others",
+                title: "Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter",
+                year: 2016,
+                doiOrURL: "https://doi.org/10.1016/j.fluid.2015.08.029"
             )
         ]
     )
@@ -187,6 +391,122 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2OxygenEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-o2-diagnostic",
+        name: "CO₂+O₂ EOS-CG-2021 diagnostic model",
+        family: .eosCG2021,
+        status: .failedValidation,
+        components: [.carbonDioxide, .oxygen],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+O₂ reducing parameters, F=0 and no departure function; native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "Direct teqp density probe against Mantovani 2012 CO₂+O₂ PVT rows reproduced the existing failed density gate.",
+            "Retained only for explicit model-comparison traceability; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Mantovani, Chiesa, Valenti, Gatti and Consonni",
+                title: "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1016/j.supflu.2011.09.001"
+            )
+        ]
+    )
+
+    public static let co2ArgonEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-ar-diagnostic",
+        name: "CO₂+Ar EOS-CG-2021 diagnostic model",
+        family: .eosCG2021,
+        status: .failedValidation,
+        components: [.carbonDioxide, .argon],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+Ar reducing parameters and Table 5 Løvseth et al. GERG-2008 departure function; native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "Direct teqp density probe against Mantovani 2012 CO₂+Ar PVT rows still failed the broad audited matrix.",
+            "The 3.08 mol% Ar subset remains density-only diagnostic evidence because no audited independent VLE gate has passed.",
+            "Retained only for explicit model-comparison traceability; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Mantovani, Chiesa, Valenti, Gatti and Consonni",
+                title: "Supercritical pressure-density-temperature measurements on CO₂-N₂, CO₂-O₂ and CO₂-Ar binary mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1016/j.supflu.2011.09.001"
+            )
+        ]
+    )
+
+    public static let co2HydrogenEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-h2-diagnostic",
+        name: "CO₂+H₂ EOS-CG-2021 diagnostic model",
+        family: .eosCG2021,
+        status: .surveyPending,
+        components: [.carbonDioxide, .hydrogen],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+H₂ reducing parameters and Table 5 Beckmüller et al. Gaussian+Exponential departure function; native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "No audited PhaseXpert primary-source PVT+VLE validation matrix is complete yet.",
+            "EOS-CG-2021 reports known property-dependent limitations for CO₂+H₂ speed-of-sound data.",
+            "Retained only for model-construction diagnostics; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            )
+        ]
+    )
+
+    public static let co2MethaneEOSCGDiagnostic = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-ch4-diagnostic",
+        name: "CO₂+CH₄ EOS-CG-2021/GERG diagnostic model",
+        family: .eosCG2021,
+        status: .surveyPending,
+        components: [.carbonDioxide, .methane],
+        compositionLimits: [],
+        supportedProperties: [],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 inherits the GERG-2008 CH₄+CO₂ binary formulation; reciprocal beta handling is required for CO₂+CH₄ order. Native construction confirmed through pinned teqp v0.23.1 custom multifluid model data.",
+        limitations: [
+            "No audited PhaseXpert primary-source CO₂-rich PVT+VLE validation matrix is complete yet.",
+            "Retained only for model-construction diagnostics; not exposed to users."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Kunz and Wagner",
+                title: "The GERG-2008 Wide-Range Equation of State for Natural Gases and Other Mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1021/je300655b"
+            )
+        ]
+    )
+
     public static let surveyedBinaryImpurities: Set<ComponentID> = [
         .nitrogen,
         .oxygen,
@@ -196,14 +516,22 @@ public enum TeqpFormulationCatalog {
     ]
 
     public static var productionFormulations: [TeqpFormulation] {
-        [pureCarbonDioxide]
+        [
+            pureCarbonDioxide,
+            co2HydrogenEOSCGGasDensity,
+            co2MethaneEOSCGGasDensity
+        ]
     }
 
     public static var researchFormulations: [TeqpFormulation] {
         [
             co2NitrogenGernertGergDiagnostic,
             co2OxygenGernertDiagnostic,
-            co2ArgonGernertDiagnostic
+            co2ArgonGernertDiagnostic,
+            co2OxygenEOSCGDiagnostic,
+            co2ArgonEOSCGDiagnostic,
+            co2HydrogenEOSCGDiagnostic,
+            co2MethaneEOSCGDiagnostic
         ]
     }
 

@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "model": "EOS-CG-2021",
+    "title": "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+    "authors": "Neumann, Herrig, Bell, Beckmueller, Lemmon, Thol and Span",
+    "year": 2023,
+    "doi": "10.1007/s10765-023-03263-6",
+    "licence": "CC-BY-4.0",
+    "table4": "Reducing parameters and Fij values for all binary mixtures required to implement the full mixture model",
+    "table5": "Parameters of the departure functions"
+  },
+  "componentOrderPolicy": "Use the paper's i-j order for beta parameters; reciprocal beta values are required if the implementation reverses the pair order.",
+  "targetComponents": [
+    "carbonDioxide",
+    "nitrogen",
+    "oxygen",
+    "argon",
+    "hydrogen",
+    "methane"
+  ],
+  "table4TargetPairs": [
+    {
+      "pair": "N2+CO2",
+      "phaseXpertPair": "CO2+N2",
+      "reference": "GERG-2008 / Kunz-Wagner as cited by EOS-CG-2021 reference [6]",
+      "betaT": 1.005895,
+      "gammaT": 1.107654,
+      "betaV": 0.977795,
+      "gammaV": 1.047578,
+      "Fij": 1.0,
+      "status": "equivalent-to-pr42-gerg-check-required",
+      "notes": "EOS-CG-2021 inherits this pair from GERG-2008; these values are the reciprocal-order form of the PR #42 CO2+N2 Gernert/GERG record."
+    },
+    {
+      "pair": "CO2+O2",
+      "phaseXpertPair": "CO2+O2",
+      "reference": "Gernert-Span / EOS-CG-2016 as cited by EOS-CG-2021 reference [5]",
+      "betaT": 1.0,
+      "gammaT": 1.031986,
+      "betaV": 1.0,
+      "gammaV": 1.08446,
+      "Fij": 0.0,
+      "status": "candidate",
+      "notes": "No binary departure function is active because Fij is zero."
+    },
+    {
+      "pair": "CO2+Ar",
+      "phaseXpertPair": "CO2+Ar",
+      "reference": "Lovseth et al. as cited by EOS-CG-2021 reference [87]",
+      "betaT": 0.998705,
+      "gammaT": 1.039675,
+      "betaV": 1.003766,
+      "gammaV": 1.013833,
+      "Fij": 1.0,
+      "status": "candidate-departure-function-required",
+      "notes": "This is the updated EOS-CG-2021 Ar formulation and must not be replaced by the older PR #43 diagnostic pair."
+    },
+    {
+      "pair": "CO2+H2",
+      "phaseXpertPair": "CO2+H2",
+      "reference": "Beckmueller et al. as cited by EOS-CG-2021 reference [7]",
+      "betaT": 0.979,
+      "gammaT": 1.961,
+      "betaV": 1.198,
+      "gammaV": 0.842,
+      "Fij": 1.0,
+      "status": "candidate-departure-function-required",
+      "notes": "Dedicated EOS-CG-2021 hydrogen binary; paper text notes later speed-of-sound deviations that must be handled property-by-property."
+    },
+    {
+      "pair": "CH4+CO2",
+      "phaseXpertPair": "CO2+CH4",
+      "reference": "GERG-2008 / Kunz-Wagner as cited by EOS-CG-2021 reference [6]",
+      "betaT": 1.022624,
+      "gammaT": 0.975665,
+      "betaV": 0.999518,
+      "gammaV": 1.002807,
+      "Fij": 1.0,
+      "status": "candidate-gerg-inherited-corrected-after-clapeyron-audit",
+      "notes": "EOS-CG-2021 inherits the GERG CO2+CH4 pair. These values are the Clapeyron EOS_CG CH4+CO2 order; reciprocal beta handling is required if evaluated internally as CO2+CH4."
+    }
+  ],
+  "table5TargetDepartures": [
+    {
+      "pair": "N2+CO2",
+      "phaseXpertPair": "CO2+N2",
+      "type": "GERG-2008",
+      "source": "EOS-CG-2021 Table 5, inherited from reference [6]",
+      "Npower": 2,
+      "d": [2, 3, 1, 1, 1, 2],
+      "t": [1.85, 1.4, 3.2, 2.5, 8.0, 3.75],
+      "n": [0.28661625028399, -0.10919833861247, -1.137403208227, 0.76580544237358, 0.0042638000926819, 0.17673538204534],
+      "eta": [0.0, 0.0, 0.25, 0.25, 0.0, 0.0],
+      "beta": [0.0, 0.0, 0.75, 1.0, 2.0, 3.0],
+      "gamma": [0.0, 0.0, 0.5, 0.5, 0.5, 0.5],
+      "epsilon": [0.0, 0.0, 0.5, 0.5, 0.5, 0.5],
+      "status": "matches-existing-pr42-departure"
+    },
+    {
+      "pair": "CO2+Ar",
+      "phaseXpertPair": "CO2+Ar",
+      "type": "GERG-2008",
+      "source": "EOS-CG-2021 Table 5, Løvseth et al. reference [87]",
+      "Npower": 2,
+      "d": [2, 3, 1, 1, 1, 2],
+      "t": [3.22, 2.9, 1.9, 1.57, 2.73, 1.08],
+      "n": [-0.0656, 0.0237, 3.5217, -2.831, -1.406, 0.864],
+      "eta": [0.0, 0.0, 1.243, 1.072, 1.465, 0.946],
+      "beta": [0.0, 0.0, 1.208, 0.82, 1.527, 0.86],
+      "gamma": [0.0, 0.0, 0.5, 0.5, 0.5, 0.5],
+      "epsilon": [0.0, 0.0, 0.65, 0.727, 0.648, 0.706],
+      "status": "candidate"
+    },
+    {
+      "pair": "CO2+H2",
+      "phaseXpertPair": "CO2+H2",
+      "type": "Gaussian+Exponential",
+      "source": "EOS-CG-2021 Table 5, Beckmueller et al. reference [7]",
+      "Npower": 2,
+      "d": [1, 2, 1, 2, 3, 1],
+      "t": [1.47, 1.17, 1.95, 0.31, 1.412, 2.28],
+      "n": [3.56, -1.036, -4.835, 12.38, -2.65, -3.3],
+      "eta": [0.0, 0.0, 0.58, 0.2, 0.292, 0.12],
+      "beta": [0.0, 0.0, 0.465, 0.82, 0.52, 1.0],
+      "gamma": [0.0, 0.0, 0.17, 2.11, 1.49, 1.73],
+      "epsilon": [0.0, 0.0, 0.52, 0.15, 0.24, 0.15],
+      "status": "candidate"
+    },
+    {
+      "pair": "CH4+CO2",
+      "phaseXpertPair": "CO2+CH4",
+      "type": "GERG-2008",
+      "source": "EOS-CG-2021 Table 5, inherited from reference [6]",
+      "Npower": 3,
+      "d": [1, 2, 3, 1, 2, 3],
+      "t": [2.6, 1.95, 0.0, 3.95, 7.95, 8.0],
+      "n": [-0.10859387354942, 0.080228576727389, -0.0093303985115717, 0.040989274005848, -0.24338019772494, 0.23855347281124],
+      "eta": [0.0, 0.0, 0.0, 1.0, 0.5, 0.0],
+      "beta": [0.0, 0.0, 0.0, 1.0, 2.0, 3.0],
+      "gamma": [0.0, 0.0, 0.0, 0.5, 0.5, 0.5],
+      "epsilon": [0.0, 0.0, 0.0, 0.5, 0.5, 0.5],
+      "status": "candidate-gerg-inherited"
+    }
+  ],
+  "teqpTermSupport": {
+    "v0.23.1": {
+      "GERG-2008": "supported by teqp::build_departure_function",
+      "Gaussian+Exponential": "supported by teqp::build_departure_function",
+      "Exponential": "supported by teqp::build_departure_function"
+    },
+    "missingTargetTermTypes": []
+  },
+  "directConstructionProbe": {
+    "date": "2026-08-13",
+    "engine": "pinned teqp v0.23.1 headers and vendored fluid data",
+    "purpose": "Confirm that PhaseXpert's EOS-CG-2021 target Table 4/5 records can be represented by teqp's multifluid builder before production validation.",
+    "componentsConstructed": [
+      "CO2+O2",
+      "CO2+Ar",
+      "CO2+H2",
+      "CO2+CH4"
+    ],
+    "result": "PASS",
+    "notes": "The probe constructed custom multifluid models for all listed pairs with finite mixture gas constants. This is a construction check only; it is not density, VLE, phase-equilibrium or property validation."
+  },
+  "productionEnabledImpurities": [],
+  "runtimeStatus": "not-linked-to-provider"
+}

@@ -29,10 +29,19 @@ because Gate C failed to establish a supported operating range for this pinned
 binary model. The multi-impurity inventory also records upstream O₂, Ar, H₂
 and CH₄ model-data provenance; the O₂ and Ar diagnostic bake-off results in
 `Documentation/Validation/TeqpMultiImpurityBakeoffResults.json` did not
-establish a production domain. Pure-CO₂ teqp Cv, Cp and speed-of-sound
+establish a production domain, while the H₂ and CH₄ ThermoML gas-density
+subsets establish narrow property-specific production domains. Pure-CO₂ teqp
+Cv, Cp and speed-of-sound
 validation uses NIST Chemistry WebBook fluid-property rows, SRD 69
 ([DOI 10.18434/T4D303](https://doi.org/10.18434/T4D303)), as an independent
 implementation reference for the Span-Wagner property formulation and units.
+EOS-CG-2021 integration work uses Neumann, Herrig, Bell, Beckmüller, Lemmon,
+Thol and Span, "EOS-CG-2021: A Mixture Model for the Calculation of
+Thermodynamic Properties of CCS Mixtures," *International Journal of
+Thermophysics* 44, 178 (2023),
+([DOI 10.1007/s10765-023-03263-6](https://doi.org/10.1007/s10765-023-03263-6)),
+published under CC BY 4.0, as the primary source for the CCS mixture-model
+functional form and parameter tables.
 The
 generated XCFramework, recorded revision, submodule list and licence are
 ignored under `Vendor/teqp/` and must be reviewed before distribution.
@@ -74,5 +83,15 @@ Current teqp impurity validation references under audit:
   for Pipeline Transportation in the CCS Process," *Journal of Chemical &
   Engineering Data* 57, 2774-2783, 2012.
   [DOI 10.1021/je300590v](https://doi.org/10.1021/je300590v).
+- M. Souissi, M. Thol, S. Herrig, A. Jäger and R. Span,
+  "Vapor-Phase (p, rho, T, x) Behavior and Virial Coefficients for the Binary
+  Mixture (0.05 Hydrogen + 0.95 Carbon Dioxide)," *Journal of Chemical &
+  Engineering Data* 62, 2973-2981, 2017.
+  [DOI 10.1021/acs.jced.7b00213](https://doi.org/10.1021/acs.jced.7b00213).
+- S. Z. S. Al Ghafri, D. Rowland, T. J. Hughes, E. F. May and coauthors,
+  "Accurate density measurements on a binary mixture (carbon dioxide +
+  methane) at the vicinity of the critical point in the supercritical state by
+  a single-sinker densimeter," *Fluid Phase Equilibria* 418, 94-99, 2016.
+  [DOI 10.1016/j.fluid.2015.08.029](https://doi.org/10.1016/j.fluid.2015.08.029).
 
 These references are validation inputs, not production-accuracy claims.

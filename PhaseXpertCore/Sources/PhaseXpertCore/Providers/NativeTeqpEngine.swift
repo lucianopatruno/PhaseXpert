@@ -104,6 +104,88 @@ public struct NativeTeqpEngine: TeqpEngine {
         )
         #endif
     }
+
+    public func calculateCarbonDioxideHydrogenGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        hydrogenMoleFraction: Double
+    ) async throws -> TeqpMixtureDensityResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpMixtureDensityResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_eoscg_co2_h2_gas_density(
+                pressurePa,
+                temperatureK,
+                hydrogenMoleFraction,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "teqp native CO₂+H₂ gas-density calculation failed." : message
+                )
+            }
+            return TeqpMixtureDensityResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                molarDensityMolesPerCubicMetre: nativeResult.molar_density_mol_m3,
+                densityRootCount: Int(nativeResult.density_root_count),
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
+                formulationID: TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
+
+    public func calculateCarbonDioxideMethaneGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        methaneMoleFraction: Double
+    ) async throws -> TeqpMixtureDensityResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpMixtureDensityResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_eoscg_co2_ch4_gas_density(
+                pressurePa,
+                temperatureK,
+                methaneMoleFraction,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "teqp native CO₂+CH₄ gas-density calculation failed." : message
+                )
+            }
+            return TeqpMixtureDensityResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                molarDensityMolesPerCubicMetre: nativeResult.molar_density_mol_m3,
+                densityRootCount: Int(nativeResult.density_root_count),
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
+                formulationID: TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.id
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
 }
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)

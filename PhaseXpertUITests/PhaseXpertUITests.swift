@@ -133,6 +133,35 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["This model is not available in this version."].exists)
     }
 
+    func testAdvancedCCSPropertiesShowsOnlyValidatedImpurities() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let advanced = app.buttons["model-teqp-pure-co2-experimental"]
+        XCTAssertTrue(advanced.waitForExistence(timeout: 3))
+        XCTAssertEqual(advanced.label, "Advanced CCS Properties")
+        advanced.tap()
+        XCTAssertEqual(advanced.value as? String, "Selected")
+
+        addImpurity(in: app)
+        XCTAssertTrue(app.buttons["CH₄ impurity menu"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["N₂ impurity menu"].exists)
+        XCTAssertFalse(app.buttons["O₂ impurity menu"].exists)
+        XCTAssertFalse(app.buttons["Ar impurity menu"].exists)
+
+        openImpurityMenu("CH₄", in: app)
+        XCTAssertTrue(app.buttons["H₂"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["N₂"].exists)
+        XCTAssertFalse(app.buttons["O₂"].exists)
+        XCTAssertFalse(app.buttons["Ar"].exists)
+        app.buttons["H₂"].tap()
+
+        XCTAssertTrue(app.buttons["H₂ impurity menu"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.buttons["CH₄ impurity menu"].exists)
+        addImpurity(in: app)
+        XCTAssertTrue(app.buttons["CH₄ impurity menu"].waitForExistence(timeout: 3))
+    }
+
     func testOperatingPointUnitsAreSeparateAndAdaptive() {
         let app = XCUIApplication()
         app.launch()

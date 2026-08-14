@@ -157,6 +157,15 @@
   viscosity explicitly unavailable and CoolProp remaining the default provider.
 - Renamed the user-facing provider labels to General Properties (CoolProp) and
   Advanced Phase & Mixture Model (teqp) while preserving stable provider IDs.
+- Renamed the teqp display label to Advanced CO₂ & Phase Model (teqp) until a
+  production-validated CCS impurity formulation is enabled.
+- Added EOS-CG-2021 integration groundwork that separates the native teqp
+  engine from the published CCS mixture formulation and records extracted
+  Table 4 target-pair reducing parameters for N₂, O₂, Ar, H₂ and CH₄.
+- Added EOS-CG-2021 Table 5 target departure-function extraction for N₂, Ar,
+  H₂ and CH₄, confirmed direct native teqp construction feasibility for
+  custom O₂/Ar/H₂/CH₄ model records, and recorded first O₂/Ar density
+  bake-off diagnostics. No impurity is production-enabled.
 - Documented the pinned teqp v0.23.1 CO₂+N₂ model-data provenance and added a
   validation-gated native binary VLE/point-classification research layer; teqp
   CO₂+N₂ remains unavailable to users.
@@ -182,3 +191,42 @@
   standard multifluid candidates against audited Mantovani 2012 density rows.
   O₂ and Ar remain unavailable through teqp because the evaluated candidates did
   not establish a production density+VLE domain.
+- Added the Xu-Mao-Zheng 2023 CO₂/N₂/O₂/Ar model-data acquisition audit. The
+  candidate remains blocked for PhaseXpert runtime use because the published
+  binary parameters and generalized departure-function coefficients were not
+  available through legitimate accessible primary or supplementary routes in
+  this environment.
+- Added the CO₂+H₂ validation-data acquisition audit for EOS-CG-2021. Native
+  construction remains feasible, but H₂ stays unavailable because no audited
+  CO₂-rich numerical validation matrix was accessible; snippets, plots and
+  H₂-rich/high-temperature surrogate tables were not used as production
+  evidence.
+- Added open NIST ThermoML validation artifacts for Souissi et al. 2017
+  CO₂+H₂ gas density (`10.1021/acs.jced.7b00213`) and Ghafri et al. 2016
+  CO₂+CH₄ density (`10.1016/j.fluid.2015.08.029`), plus a pinned Clapeyron.jl
+  EOS_CG source/database audit. The audit corrected the CH₄+CO₂ EOS-CG Table 4
+  beta/gamma mapping and superseded the earlier CH₄ VLE failure as an
+  implementation-data result rather than a valid EOS-CG model conclusion.
+- Recorded provisional direct-teqp EOS-CG gas-density diagnostics: CO₂+H₂
+  Souissi 2017 gas density gives 19 points with 0.189492% AARD and 0.370799%
+  worst relative deviation, and corrected CO₂+CH₄ Ghafri 2016 gas density gives
+  6 gas points with 0.203422% AARD and 0.413173% worst relative deviation.
+  Impurity production support remains disabled until a numeric Clapeyron
+  EOS_CG identity check or equivalent oracle validation is completed.
+- Replaced the blocked Julia runtime oracle with a static field-by-field audit
+  against pinned Clapeyron.jl v0.6.26 EOS_CG source/database files. The audit
+  passes for CO₂+N₂, CO₂+O₂, CO₂+Ar, CO₂+H₂ and CO₂+CH₄ after the CH₄
+  beta/gamma mapping correction. Enabled the first property-specific teqp
+  impurity domain under the renamed Advanced CCS Properties provider: CO₂+H₂
+  homogeneous gas density only at xH₂ = 0.05362, the Souissi et al. 2017
+  isotherms 273.15 K, 293.15 K and 323.15 K, and the encoded gas-pressure
+  ranges. N₂, O₂, Ar, CH₄, simultaneous impurities, impurity VLE/phase
+  envelopes, mixture Cp/Cv/speed, h/u/s and transport remain unavailable for
+  teqp.
+- Classified all 180 Ghafri et al. 2016 CO₂+CH₄ ThermoML density rows. The
+  full homogeneous diagnostic matrix converges but is not a broad production
+  pass (1.3981775% AARD, 5.15195% worst relative deviation), while the
+  ThermoML gas block supports a second property-specific teqp impurity domain:
+  CO₂+CH₄ homogeneous gas density only at xCH₄ = 0.05, 301.14 K ± 0.02 K and
+  1.99046-6.976 MPa. CH₄ VLE, phase envelope, mixture Cp/Cv/speed, h/u/s and
+  transport remain unavailable.

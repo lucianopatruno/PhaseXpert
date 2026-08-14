@@ -1,0 +1,3449 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "doi": "10.1016/j.fluid.2015.08.029",
+    "title": "Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter",
+    "journal": "Fluid Phase Equilib.",
+    "volume": "418",
+    "pages": "94-99",
+    "year": "2016",
+    "authors": [
+      "Yang, X.[Xiaoxian]",
+      "Wang, Z.[Zhe]",
+      "Li, Z.[Zheng]"
+    ],
+    "thermoMLMD5": "39d96ff5f2ff4df8eaabb4a6c7ff1d84",
+    "thermoMLURL": "https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.08.029.json"
+  },
+  "compoundRegistry": {
+    "1": "carbon dioxide",
+    "2": "methane"
+  },
+  "rows": [
+    {
+      "block": 1,
+      "row": 1,
+      "phase": "Gas",
+      "temperatureK": 301.146,
+      "pressureKPa": 1990.46,
+      "pressurePa": 1990460.0,
+      "massDensityKgM3": 37.5288,
+      "expandedUncertaintyKgM3": 0.1309,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 2,
+      "phase": "Gas",
+      "temperatureK": 301.153,
+      "pressureKPa": 2980.54,
+      "pressurePa": 2980540.0,
+      "massDensityKgM3": 59.7905,
+      "expandedUncertaintyKgM3": 0.1679,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 3,
+      "phase": "Gas",
+      "temperatureK": 301.141,
+      "pressureKPa": 4003.49,
+      "pressurePa": 4003490.0,
+      "massDensityKgM3": 86.6567,
+      "expandedUncertaintyKgM3": 0.2132,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 4,
+      "phase": "Gas",
+      "temperatureK": 301.147,
+      "pressureKPa": 4979.79,
+      "pressurePa": 4979790.0,
+      "massDensityKgM3": 117.931,
+      "expandedUncertaintyKgM3": 0.273,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 5,
+      "phase": "Gas",
+      "temperatureK": 301.143,
+      "pressureKPa": 5978.25,
+      "pressurePa": 5978250.0,
+      "massDensityKgM3": 160.13,
+      "expandedUncertaintyKgM3": 0.205,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 6,
+      "phase": "Gas",
+      "temperatureK": 301.133,
+      "pressureKPa": 6976,
+      "pressurePa": 6976000,
+      "massDensityKgM3": 227.803,
+      "expandedUncertaintyKgM3": 0.273,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 2,
+      "row": 1,
+      "phase": "Liquid",
+      "temperatureK": 301.11,
+      "pressureKPa": 7972.73,
+      "pressurePa": 7972730.0,
+      "massDensityKgM3": 489.743,
+      "expandedUncertaintyKgM3": 1.093,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 2,
+      "row": 2,
+      "phase": "Liquid",
+      "temperatureK": 301.113,
+      "pressureKPa": 8970.67,
+      "pressurePa": 8970670.0,
+      "massDensityKgM3": 641.991,
+      "expandedUncertaintyKgM3": 1.214,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 2,
+      "row": 3,
+      "phase": "Liquid",
+      "temperatureK": 301.14,
+      "pressureKPa": 9969.39,
+      "pressurePa": 9969390.0,
+      "massDensityKgM3": 689.045,
+      "expandedUncertaintyKgM3": 0.53,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 2,
+      "row": 4,
+      "phase": "Liquid",
+      "temperatureK": 301.137,
+      "pressureKPa": 10966.8,
+      "pressurePa": 10966800.0,
+      "massDensityKgM3": 718.917,
+      "expandedUncertaintyKgM3": 0.539,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 2,
+      "row": 5,
+      "phase": "Liquid",
+      "temperatureK": 301.143,
+      "pressureKPa": 11966,
+      "pressurePa": 11966000,
+      "massDensityKgM3": 741.154,
+      "expandedUncertaintyKgM3": 0.543,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 1,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.066,
+      "pressureKPa": 7972.16,
+      "pressurePa": 7972160.0,
+      "massDensityKgM3": 556.595,
+      "expandedUncertaintyKgM3": 4.798,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 2,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.173,
+      "pressureKPa": 8169.81,
+      "pressurePa": 8169810.0,
+      "massDensityKgM3": 590.047,
+      "expandedUncertaintyKgM3": 2.915,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 3,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.14,
+      "pressureKPa": 8371.04,
+      "pressurePa": 8371040.000000001,
+      "massDensityKgM3": 616.06,
+      "expandedUncertaintyKgM3": 2.186,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 4,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.145,
+      "pressureKPa": 8570.34,
+      "pressurePa": 8570340.0,
+      "massDensityKgM3": 633.917,
+      "expandedUncertaintyKgM3": 1.793,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 5,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.148,
+      "pressureKPa": 8770.2,
+      "pressurePa": 8770200.0,
+      "massDensityKgM3": 648.153,
+      "expandedUncertaintyKgM3": 1.548,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 6,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.147,
+      "pressureKPa": 8969.38,
+      "pressurePa": 8969380.0,
+      "massDensityKgM3": 660.072,
+      "expandedUncertaintyKgM3": 1.382,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 7,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.147,
+      "pressureKPa": 9169.69,
+      "pressurePa": 9169690.0,
+      "massDensityKgM3": 670.371,
+      "expandedUncertaintyKgM3": 1.264,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 8,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.149,
+      "pressureKPa": 9370.44,
+      "pressurePa": 9370440.0,
+      "massDensityKgM3": 679.432,
+      "expandedUncertaintyKgM3": 1.174,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 9,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.153,
+      "pressureKPa": 9569.61,
+      "pressurePa": 9569610.0,
+      "massDensityKgM3": 687.435,
+      "expandedUncertaintyKgM3": 1.104,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 10,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.158,
+      "pressureKPa": 9768.38,
+      "pressurePa": 9768380.0,
+      "massDensityKgM3": 694.681,
+      "expandedUncertaintyKgM3": 1.048,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 11,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 300.153,
+      "pressureKPa": 9968.37,
+      "pressurePa": 9968370.0,
+      "massDensityKgM3": 701.498,
+      "expandedUncertaintyKgM3": 1.015,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 12,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.07,
+      "pressureKPa": 7972.39,
+      "pressurePa": 7972390.0,
+      "massDensityKgM3": 491.013,
+      "expandedUncertaintyKgM3": 5.373,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 13,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.17,
+      "pressureKPa": 8170.52,
+      "pressurePa": 8170520.0,
+      "massDensityKgM3": 547.088,
+      "expandedUncertaintyKgM3": 3.91,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 14,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.142,
+      "pressureKPa": 8371.46,
+      "pressurePa": 8371459.999999999,
+      "massDensityKgM3": 585.039,
+      "expandedUncertaintyKgM3": 2.739,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 15,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.144,
+      "pressureKPa": 8570.67,
+      "pressurePa": 8570670.0,
+      "massDensityKgM3": 609.188,
+      "expandedUncertaintyKgM3": 2.107,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 16,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.151,
+      "pressureKPa": 8770.47,
+      "pressurePa": 8770470.0,
+      "massDensityKgM3": 627.154,
+      "expandedUncertaintyKgM3": 1.749,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 17,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.15,
+      "pressureKPa": 8970.66,
+      "pressurePa": 8970660.0,
+      "massDensityKgM3": 641.721,
+      "expandedUncertaintyKgM3": 1.522,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 18,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.156,
+      "pressureKPa": 9169.72,
+      "pressurePa": 9169720.0,
+      "massDensityKgM3": 653.715,
+      "expandedUncertaintyKgM3": 1.365,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 19,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.149,
+      "pressureKPa": 9370.65,
+      "pressurePa": 9370650.0,
+      "massDensityKgM3": 664.364,
+      "expandedUncertaintyKgM3": 1.252,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 20,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.151,
+      "pressureKPa": 9568.52,
+      "pressurePa": 9568520.0,
+      "massDensityKgM3": 673.475,
+      "expandedUncertaintyKgM3": 1.165,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 21,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.147,
+      "pressureKPa": 9768.64,
+      "pressurePa": 9768640.0,
+      "massDensityKgM3": 681.815,
+      "expandedUncertaintyKgM3": 1.098,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 22,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 301.151,
+      "pressureKPa": 9968.2,
+      "pressurePa": 9968200.0,
+      "massDensityKgM3": 689.247,
+      "expandedUncertaintyKgM3": 1.044,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 23,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.074,
+      "pressureKPa": 7971.54,
+      "pressurePa": 7971540.0,
+      "massDensityKgM3": 416.856,
+      "expandedUncertaintyKgM3": 4.88,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 24,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.158,
+      "pressureKPa": 8169.9,
+      "pressurePa": 8169900.0,
+      "massDensityKgM3": 489.715,
+      "expandedUncertaintyKgM3": 4.528,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 25,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.163,
+      "pressureKPa": 8371.09,
+      "pressurePa": 8371090.0,
+      "massDensityKgM3": 543.85,
+      "expandedUncertaintyKgM3": 3.312,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 26,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.147,
+      "pressureKPa": 8570.04,
+      "pressurePa": 8570040.0,
+      "massDensityKgM3": 578.598,
+      "expandedUncertaintyKgM3": 2.441,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 27,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.147,
+      "pressureKPa": 8769.88,
+      "pressurePa": 8769880.0,
+      "massDensityKgM3": 602.454,
+      "expandedUncertaintyKgM3": 1.94,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 28,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.148,
+      "pressureKPa": 8969.13,
+      "pressurePa": 8969130.0,
+      "massDensityKgM3": 620.555,
+      "expandedUncertaintyKgM3": 1.638,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 29,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.149,
+      "pressureKPa": 9168.81,
+      "pressurePa": 9168810.0,
+      "massDensityKgM3": 635.22,
+      "expandedUncertaintyKgM3": 1.436,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 30,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.15,
+      "pressureKPa": 9368.96,
+      "pressurePa": 9368960.0,
+      "massDensityKgM3": 647.538,
+      "expandedUncertaintyKgM3": 1.296,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 31,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.156,
+      "pressureKPa": 9568.33,
+      "pressurePa": 9568330.0,
+      "massDensityKgM3": 658.091,
+      "expandedUncertaintyKgM3": 1.193,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 32,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.156,
+      "pressureKPa": 9768.3,
+      "pressurePa": 9768300.0,
+      "massDensityKgM3": 667.497,
+      "expandedUncertaintyKgM3": 1.113,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 33,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 302.156,
+      "pressureKPa": 9970.65,
+      "pressurePa": 9970650.0,
+      "massDensityKgM3": 676.016,
+      "expandedUncertaintyKgM3": 1.056,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 34,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.083,
+      "pressureKPa": 7971.02,
+      "pressurePa": 7971020.0,
+      "massDensityKgM3": 368.276,
+      "expandedUncertaintyKgM3": 3.794,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 35,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.153,
+      "pressureKPa": 8169.02,
+      "pressurePa": 8169020.0,
+      "massDensityKgM3": 434.951,
+      "expandedUncertaintyKgM3": 4.565,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 36,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.154,
+      "pressureKPa": 8369.83,
+      "pressurePa": 8369830.0,
+      "massDensityKgM3": 500.535,
+      "expandedUncertaintyKgM3": 4.132,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 37,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.147,
+      "pressureKPa": 8569.37,
+      "pressurePa": 8569370.0,
+      "massDensityKgM3": 546.267,
+      "expandedUncertaintyKgM3": 3.186,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 38,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.15,
+      "pressureKPa": 8770.16,
+      "pressurePa": 8770160.0,
+      "massDensityKgM3": 577.054,
+      "expandedUncertaintyKgM3": 2.472,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 39,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.17,
+      "pressureKPa": 8969.28,
+      "pressurePa": 8969280.0,
+      "massDensityKgM3": 598.947,
+      "expandedUncertaintyKgM3": 2.014,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 40,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.156,
+      "pressureKPa": 9168.68,
+      "pressurePa": 9168680.0,
+      "massDensityKgM3": 616.875,
+      "expandedUncertaintyKgM3": 1.721,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 41,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.162,
+      "pressureKPa": 9368.39,
+      "pressurePa": 9368390.0,
+      "massDensityKgM3": 631.164,
+      "expandedUncertaintyKgM3": 1.521,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 42,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.161,
+      "pressureKPa": 9567.71,
+      "pressurePa": 9567710.0,
+      "massDensityKgM3": 643.384,
+      "expandedUncertaintyKgM3": 1.375,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 43,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.168,
+      "pressureKPa": 9767.96,
+      "pressurePa": 9767960.0,
+      "massDensityKgM3": 653.938,
+      "expandedUncertaintyKgM3": 1.267,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 44,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 303.158,
+      "pressureKPa": 9967.13,
+      "pressurePa": 9967130.0,
+      "massDensityKgM3": 663.476,
+      "expandedUncertaintyKgM3": 1.169,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 45,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.098,
+      "pressureKPa": 7971.05,
+      "pressurePa": 7971050.0,
+      "massDensityKgM3": 329.354,
+      "expandedUncertaintyKgM3": 2.611,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 46,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.158,
+      "pressureKPa": 8171.48,
+      "pressurePa": 8171480.0,
+      "massDensityKgM3": 378.227,
+      "expandedUncertaintyKgM3": 3.706,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 47,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.167,
+      "pressureKPa": 8370.02,
+      "pressurePa": 8370020.0,
+      "massDensityKgM3": 438.794,
+      "expandedUncertaintyKgM3": 4.251,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 48,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.139,
+      "pressureKPa": 8569.16,
+      "pressurePa": 8569160.0,
+      "massDensityKgM3": 496.33,
+      "expandedUncertaintyKgM3": 3.804,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 49,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.149,
+      "pressureKPa": 8769.26,
+      "pressurePa": 8769260.0,
+      "massDensityKgM3": 537.629,
+      "expandedUncertaintyKgM3": 3.044,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 50,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.142,
+      "pressureKPa": 8968.39,
+      "pressurePa": 8968390.0,
+      "massDensityKgM3": 567.739,
+      "expandedUncertaintyKgM3": 2.452,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 51,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.152,
+      "pressureKPa": 9169.47,
+      "pressurePa": 9169470.0,
+      "massDensityKgM3": 590.204,
+      "expandedUncertaintyKgM3": 2.042,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 52,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.166,
+      "pressureKPa": 9370.69,
+      "pressurePa": 9370690.0,
+      "massDensityKgM3": 607.811,
+      "expandedUncertaintyKgM3": 1.764,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 53,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.149,
+      "pressureKPa": 9567.86,
+      "pressurePa": 9567860.0,
+      "massDensityKgM3": 622.735,
+      "expandedUncertaintyKgM3": 1.569,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 54,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.166,
+      "pressureKPa": 9767.28,
+      "pressurePa": 9767280.0,
+      "massDensityKgM3": 634.947,
+      "expandedUncertaintyKgM3": 1.424,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 55,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 304.157,
+      "pressureKPa": 9973.77,
+      "pressurePa": 9973770.0,
+      "massDensityKgM3": 646.365,
+      "expandedUncertaintyKgM3": 1.323,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 56,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.105,
+      "pressureKPa": 7971.66,
+      "pressurePa": 7971660.0,
+      "massDensityKgM3": 307.661,
+      "expandedUncertaintyKgM3": 1.817,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 57,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.162,
+      "pressureKPa": 8169.92,
+      "pressurePa": 8169920.0,
+      "massDensityKgM3": 344.406,
+      "expandedUncertaintyKgM3": 2.494,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 58,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.151,
+      "pressureKPa": 8370.96,
+      "pressurePa": 8370959.999999999,
+      "massDensityKgM3": 394.247,
+      "expandedUncertaintyKgM3": 3.292,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 59,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.152,
+      "pressureKPa": 8569.76,
+      "pressurePa": 8569760.0,
+      "massDensityKgM3": 449.045,
+      "expandedUncertaintyKgM3": 3.596,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 60,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.152,
+      "pressureKPa": 8769.4,
+      "pressurePa": 8769400.0,
+      "massDensityKgM3": 497.809,
+      "expandedUncertaintyKgM3": 3.23,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 61,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.148,
+      "pressureKPa": 8968.58,
+      "pressurePa": 8968580.0,
+      "massDensityKgM3": 535.323,
+      "expandedUncertaintyKgM3": 2.68,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 62,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.152,
+      "pressureKPa": 9168.26,
+      "pressurePa": 9168260.0,
+      "massDensityKgM3": 563.28,
+      "expandedUncertaintyKgM3": 2.218,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 63,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.169,
+      "pressureKPa": 9370.3,
+      "pressurePa": 9370300.0,
+      "massDensityKgM3": 584.841,
+      "expandedUncertaintyKgM3": 1.88,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 64,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.152,
+      "pressureKPa": 9568.06,
+      "pressurePa": 9568060.0,
+      "massDensityKgM3": 602.629,
+      "expandedUncertaintyKgM3": 1.643,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 65,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.157,
+      "pressureKPa": 9767.15,
+      "pressurePa": 9767150.0,
+      "massDensityKgM3": 617.141,
+      "expandedUncertaintyKgM3": 1.47,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 66,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 305.157,
+      "pressureKPa": 9967.5,
+      "pressurePa": 9967500.0,
+      "massDensityKgM3": 629.726,
+      "expandedUncertaintyKgM3": 1.341,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 67,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.096,
+      "pressureKPa": 7971.02,
+      "pressurePa": 7971020.0,
+      "massDensityKgM3": 291.729,
+      "expandedUncertaintyKgM3": 1.426,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 68,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.169,
+      "pressureKPa": 8170.1,
+      "pressurePa": 8170100.0,
+      "massDensityKgM3": 321.108,
+      "expandedUncertaintyKgM3": 1.856,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 69,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.183,
+      "pressureKPa": 8370.58,
+      "pressurePa": 8370580.0,
+      "massDensityKgM3": 359.348,
+      "expandedUncertaintyKgM3": 2.52,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 70,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.143,
+      "pressureKPa": 8569.26,
+      "pressurePa": 8569260.0,
+      "massDensityKgM3": 407.211,
+      "expandedUncertaintyKgM3": 3.105,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 71,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.147,
+      "pressureKPa": 8769.43,
+      "pressurePa": 8769430.0,
+      "massDensityKgM3": 456.137,
+      "expandedUncertaintyKgM3": 3.232,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 72,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.166,
+      "pressureKPa": 8968.96,
+      "pressurePa": 8968960.0,
+      "massDensityKgM3": 498.232,
+      "expandedUncertaintyKgM3": 2.923,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 73,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.164,
+      "pressureKPa": 9168.15,
+      "pressurePa": 9168150.0,
+      "massDensityKgM3": 532.249,
+      "expandedUncertaintyKgM3": 2.494,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 74,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.153,
+      "pressureKPa": 9367.85,
+      "pressurePa": 9367850.0,
+      "massDensityKgM3": 559.009,
+      "expandedUncertaintyKgM3": 2.113,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 75,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.15,
+      "pressureKPa": 9567.37,
+      "pressurePa": 9567370.0,
+      "massDensityKgM3": 580.099,
+      "expandedUncertaintyKgM3": 1.826,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 76,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.151,
+      "pressureKPa": 9767.56,
+      "pressurePa": 9767560.0,
+      "massDensityKgM3": 597.343,
+      "expandedUncertaintyKgM3": 1.613,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 77,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 306.166,
+      "pressureKPa": 9967.54,
+      "pressurePa": 9967540.0,
+      "massDensityKgM3": 611.559,
+      "expandedUncertaintyKgM3": 1.458,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 78,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.107,
+      "pressureKPa": 7970.75,
+      "pressurePa": 7970750.0,
+      "massDensityKgM3": 279.021,
+      "expandedUncertaintyKgM3": 1.184,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 79,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.182,
+      "pressureKPa": 8170.19,
+      "pressurePa": 8170190.0,
+      "massDensityKgM3": 303.687,
+      "expandedUncertaintyKgM3": 1.477,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 80,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.174,
+      "pressureKPa": 8370.13,
+      "pressurePa": 8370129.999999999,
+      "massDensityKgM3": 335.111,
+      "expandedUncertaintyKgM3": 1.934,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 81,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.158,
+      "pressureKPa": 8569.41,
+      "pressurePa": 8569410.0,
+      "massDensityKgM3": 373.594,
+      "expandedUncertaintyKgM3": 2.493,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 82,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.151,
+      "pressureKPa": 8769.23,
+      "pressurePa": 8769230.0,
+      "massDensityKgM3": 417.545,
+      "expandedUncertaintyKgM3": 2.899,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 83,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.176,
+      "pressureKPa": 8969.57,
+      "pressurePa": 8969570.0,
+      "massDensityKgM3": 460.414,
+      "expandedUncertaintyKgM3": 2.928,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 84,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.185,
+      "pressureKPa": 9168.12,
+      "pressurePa": 9168120.0,
+      "massDensityKgM3": 498.151,
+      "expandedUncertaintyKgM3": 2.668,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 85,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.155,
+      "pressureKPa": 9369.37,
+      "pressurePa": 9369370.0,
+      "massDensityKgM3": 530.475,
+      "expandedUncertaintyKgM3": 2.324,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 86,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.169,
+      "pressureKPa": 9567.72,
+      "pressurePa": 9567720.0,
+      "massDensityKgM3": 554.846,
+      "expandedUncertaintyKgM3": 2.01,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 87,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.163,
+      "pressureKPa": 9769.89,
+      "pressurePa": 9769890.0,
+      "massDensityKgM3": 575.499,
+      "expandedUncertaintyKgM3": 1.761,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 88,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 307.146,
+      "pressureKPa": 9968.33,
+      "pressurePa": 9968330.0,
+      "massDensityKgM3": 592.558,
+      "expandedUncertaintyKgM3": 1.581,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 89,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.137,
+      "pressureKPa": 7971.8,
+      "pressurePa": 7971800.0,
+      "massDensityKgM3": 268.365,
+      "expandedUncertaintyKgM3": 1.012,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 90,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.173,
+      "pressureKPa": 8171.22,
+      "pressurePa": 8171220.0,
+      "massDensityKgM3": 290.106,
+      "expandedUncertaintyKgM3": 1.221,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 91,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.172,
+      "pressureKPa": 8372.59,
+      "pressurePa": 8372590.0,
+      "massDensityKgM3": 316.707,
+      "expandedUncertaintyKgM3": 1.544,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 92,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.177,
+      "pressureKPa": 8570.32,
+      "pressurePa": 8570320.0,
+      "massDensityKgM3": 347.84,
+      "expandedUncertaintyKgM3": 1.973,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 93,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.162,
+      "pressureKPa": 8773.53,
+      "pressurePa": 8773530.0,
+      "massDensityKgM3": 385.91,
+      "expandedUncertaintyKgM3": 2.414,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 94,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.154,
+      "pressureKPa": 8969.56,
+      "pressurePa": 8969560.0,
+      "massDensityKgM3": 425.843,
+      "expandedUncertaintyKgM3": 2.674,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 95,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.166,
+      "pressureKPa": 9168.95,
+      "pressurePa": 9168950.0,
+      "massDensityKgM3": 464.65,
+      "expandedUncertaintyKgM3": 2.657,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 96,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.169,
+      "pressureKPa": 9368.54,
+      "pressurePa": 9368540.0,
+      "massDensityKgM3": 499.11,
+      "expandedUncertaintyKgM3": 2.441,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 97,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.164,
+      "pressureKPa": 9568.14,
+      "pressurePa": 9568140.0,
+      "massDensityKgM3": 527.899,
+      "expandedUncertaintyKgM3": 2.164,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 98,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.159,
+      "pressureKPa": 9771.98,
+      "pressurePa": 9771980.0,
+      "massDensityKgM3": 552.011,
+      "expandedUncertaintyKgM3": 1.908,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 99,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 308.163,
+      "pressureKPa": 9967.26,
+      "pressurePa": 9967260.0,
+      "massDensityKgM3": 570.979,
+      "expandedUncertaintyKgM3": 1.706,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 100,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.133,
+      "pressureKPa": 7971.98,
+      "pressurePa": 7971980.0,
+      "massDensityKgM3": 259.723,
+      "expandedUncertaintyKgM3": 0.884,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 101,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.168,
+      "pressureKPa": 8171.04,
+      "pressurePa": 8171040.0,
+      "massDensityKgM3": 279.024,
+      "expandedUncertaintyKgM3": 1.037,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 102,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.179,
+      "pressureKPa": 8371.43,
+      "pressurePa": 8371430.0,
+      "massDensityKgM3": 301.81,
+      "expandedUncertaintyKgM3": 1.275,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 103,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.174,
+      "pressureKPa": 8570.82,
+      "pressurePa": 8570820.0,
+      "massDensityKgM3": 328.632,
+      "expandedUncertaintyKgM3": 1.584,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 104,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.168,
+      "pressureKPa": 8772.17,
+      "pressurePa": 8772170.0,
+      "massDensityKgM3": 360.359,
+      "expandedUncertaintyKgM3": 1.956,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 105,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.153,
+      "pressureKPa": 8969.69,
+      "pressurePa": 8969690.0,
+      "massDensityKgM3": 395.876,
+      "expandedUncertaintyKgM3": 2.291,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 106,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.165,
+      "pressureKPa": 9170.08,
+      "pressurePa": 9170080.0,
+      "massDensityKgM3": 432.906,
+      "expandedUncertaintyKgM3": 2.463,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 107,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.166,
+      "pressureKPa": 9368.95,
+      "pressurePa": 9368950.0,
+      "massDensityKgM3": 468.272,
+      "expandedUncertaintyKgM3": 2.425,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 108,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.159,
+      "pressureKPa": 9568.6,
+      "pressurePa": 9568600.0,
+      "massDensityKgM3": 499.83,
+      "expandedUncertaintyKgM3": 2.245,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 109,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.161,
+      "pressureKPa": 9768.9,
+      "pressurePa": 9768900.0,
+      "massDensityKgM3": 526.36,
+      "expandedUncertaintyKgM3": 2.018,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 110,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 309.148,
+      "pressureKPa": 9967.34,
+      "pressurePa": 9967340.0,
+      "massDensityKgM3": 548.766,
+      "expandedUncertaintyKgM3": 1.828,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 111,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.135,
+      "pressureKPa": 7971.59,
+      "pressurePa": 7971590.0,
+      "massDensityKgM3": 252.206,
+      "expandedUncertaintyKgM3": 0.796,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 112,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.174,
+      "pressureKPa": 8169.94,
+      "pressurePa": 8169940.0,
+      "massDensityKgM3": 269.525,
+      "expandedUncertaintyKgM3": 0.914,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 113,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.169,
+      "pressureKPa": 8371.27,
+      "pressurePa": 8371270.0,
+      "massDensityKgM3": 289.994,
+      "expandedUncertaintyKgM3": 1.092,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 114,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.169,
+      "pressureKPa": 8570.47,
+      "pressurePa": 8570470.0,
+      "massDensityKgM3": 313.293,
+      "expandedUncertaintyKgM3": 1.326,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 115,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.183,
+      "pressureKPa": 8771.33,
+      "pressurePa": 8771330.0,
+      "massDensityKgM3": 340.177,
+      "expandedUncertaintyKgM3": 1.615,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 116,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.173,
+      "pressureKPa": 8969.38,
+      "pressurePa": 8969380.0,
+      "massDensityKgM3": 370.784,
+      "expandedUncertaintyKgM3": 1.931,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 117,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.151,
+      "pressureKPa": 9168.83,
+      "pressurePa": 9168830.0,
+      "massDensityKgM3": 404.887,
+      "expandedUncertaintyKgM3": 2.181,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 118,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.159,
+      "pressureKPa": 9368.69,
+      "pressurePa": 9368690.0,
+      "massDensityKgM3": 438.984,
+      "expandedUncertaintyKgM3": 2.287,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 119,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.171,
+      "pressureKPa": 9568.24,
+      "pressurePa": 9568240.0,
+      "massDensityKgM3": 470.935,
+      "expandedUncertaintyKgM3": 2.24,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 120,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.151,
+      "pressureKPa": 9768.43,
+      "pressurePa": 9768430.0,
+      "massDensityKgM3": 500.279,
+      "expandedUncertaintyKgM3": 2.091,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 121,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 310.174,
+      "pressureKPa": 9969.37,
+      "pressurePa": 9969370.0,
+      "massDensityKgM3": 524.504,
+      "expandedUncertaintyKgM3": 1.928,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 122,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.134,
+      "pressureKPa": 7972.68,
+      "pressurePa": 7972680.0,
+      "massDensityKgM3": 245.539,
+      "expandedUncertaintyKgM3": 0.72,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 123,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.169,
+      "pressureKPa": 8170.74,
+      "pressurePa": 8170740.0,
+      "massDensityKgM3": 261.395,
+      "expandedUncertaintyKgM3": 0.816,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 124,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.168,
+      "pressureKPa": 8372.11,
+      "pressurePa": 8372110.000000001,
+      "massDensityKgM3": 279.845,
+      "expandedUncertaintyKgM3": 0.957,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 125,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.169,
+      "pressureKPa": 8571.29,
+      "pressurePa": 8571290.0,
+      "massDensityKgM3": 300.517,
+      "expandedUncertaintyKgM3": 1.136,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 126,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.192,
+      "pressureKPa": 8770.55,
+      "pressurePa": 8770550.0,
+      "massDensityKgM3": 323.691,
+      "expandedUncertaintyKgM3": 1.362,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 127,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.151,
+      "pressureKPa": 8969.39,
+      "pressurePa": 8969390.0,
+      "massDensityKgM3": 351.047,
+      "expandedUncertaintyKgM3": 1.616,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 128,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.159,
+      "pressureKPa": 9169.25,
+      "pressurePa": 9169250.0,
+      "massDensityKgM3": 380.674,
+      "expandedUncertaintyKgM3": 1.875,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 129,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.186,
+      "pressureKPa": 9369.01,
+      "pressurePa": 9369010.0,
+      "massDensityKgM3": 411.617,
+      "expandedUncertaintyKgM3": 2.06,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 130,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.179,
+      "pressureKPa": 9568.62,
+      "pressurePa": 9568620.0,
+      "massDensityKgM3": 443.32,
+      "expandedUncertaintyKgM3": 2.127,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 131,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.166,
+      "pressureKPa": 9768.1,
+      "pressurePa": 9768100.0,
+      "massDensityKgM3": 473.276,
+      "expandedUncertaintyKgM3": 2.078,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 132,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 311.167,
+      "pressureKPa": 9967.76,
+      "pressurePa": 9967760.0,
+      "massDensityKgM3": 499.737,
+      "expandedUncertaintyKgM3": 1.976,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 133,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.131,
+      "pressureKPa": 7972.37,
+      "pressurePa": 7972370.0,
+      "massDensityKgM3": 239.656,
+      "expandedUncertaintyKgM3": 0.665,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 134,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.193,
+      "pressureKPa": 8172.67,
+      "pressurePa": 8172670.0,
+      "massDensityKgM3": 254.332,
+      "expandedUncertaintyKgM3": 0.739,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 135,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.191,
+      "pressureKPa": 8372.19,
+      "pressurePa": 8372190.000000001,
+      "massDensityKgM3": 270.995,
+      "expandedUncertaintyKgM3": 0.851,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 136,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.18,
+      "pressureKPa": 8571.46,
+      "pressurePa": 8571460.0,
+      "massDensityKgM3": 289.726,
+      "expandedUncertaintyKgM3": 0.994,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 137,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.173,
+      "pressureKPa": 8771.14,
+      "pressurePa": 8771140.0,
+      "massDensityKgM3": 310.807,
+      "expandedUncertaintyKgM3": 1.166,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 138,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.187,
+      "pressureKPa": 8970.53,
+      "pressurePa": 8970530.0,
+      "massDensityKgM3": 334.208,
+      "expandedUncertaintyKgM3": 1.379,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 139,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.181,
+      "pressureKPa": 9169.82,
+      "pressurePa": 9169820.0,
+      "massDensityKgM3": 360.525,
+      "expandedUncertaintyKgM3": 1.602,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 140,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.189,
+      "pressureKPa": 9369.6,
+      "pressurePa": 9369600.0,
+      "massDensityKgM3": 388.871,
+      "expandedUncertaintyKgM3": 1.802,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 141,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.17,
+      "pressureKPa": 9568.56,
+      "pressurePa": 9568560.0,
+      "massDensityKgM3": 418.783,
+      "expandedUncertaintyKgM3": 1.936,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 142,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.168,
+      "pressureKPa": 9768.9,
+      "pressurePa": 9768900.0,
+      "massDensityKgM3": 448.071,
+      "expandedUncertaintyKgM3": 1.978,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 143,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 312.173,
+      "pressureKPa": 9967.68,
+      "pressurePa": 9967680.0,
+      "massDensityKgM3": 475.106,
+      "expandedUncertaintyKgM3": 1.977,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 144,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.14,
+      "pressureKPa": 7973.28,
+      "pressurePa": 7973280.0,
+      "massDensityKgM3": 234.195,
+      "expandedUncertaintyKgM3": 0.635,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 145,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.175,
+      "pressureKPa": 8171.52,
+      "pressurePa": 8171520.0,
+      "massDensityKgM3": 247.96,
+      "expandedUncertaintyKgM3": 0.675,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 146,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.182,
+      "pressureKPa": 8372.46,
+      "pressurePa": 8372459.999999999,
+      "massDensityKgM3": 263.421,
+      "expandedUncertaintyKgM3": 0.767,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 147,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.169,
+      "pressureKPa": 8571.79,
+      "pressurePa": 8571790.0,
+      "massDensityKgM3": 280.559,
+      "expandedUncertaintyKgM3": 0.884,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 148,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.172,
+      "pressureKPa": 8771.56,
+      "pressurePa": 8771560.0,
+      "massDensityKgM3": 299.532,
+      "expandedUncertaintyKgM3": 1.031,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 149,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.172,
+      "pressureKPa": 8970.58,
+      "pressurePa": 8970580.0,
+      "massDensityKgM3": 320.608,
+      "expandedUncertaintyKgM3": 1.208,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 150,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.166,
+      "pressureKPa": 9170.19,
+      "pressurePa": 9170190.0,
+      "massDensityKgM3": 344.172,
+      "expandedUncertaintyKgM3": 1.413,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 151,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.173,
+      "pressureKPa": 9369.73,
+      "pressurePa": 9369730.0,
+      "massDensityKgM3": 369.68,
+      "expandedUncertaintyKgM3": 1.626,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 152,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.182,
+      "pressureKPa": 9569.06,
+      "pressurePa": 9569060.0,
+      "massDensityKgM3": 396.668,
+      "expandedUncertaintyKgM3": 1.809,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 3,
+      "row": 153,
+      "phase": "Fluid (supercritical or subcritical phases)",
+      "temperatureK": 313.171,
+      "pressureKPa": 9768.43,
+      "pressurePa": 9768430.0,
+      "massDensityKgM3": 424.626,
+      "expandedUncertaintyKgM3": 1.909,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Fluid (supercritical or subcritical phases)"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 1,
+      "phase": "Liquid",
+      "temperatureK": 301.082,
+      "pressureKPa": 7573.57,
+      "pressurePa": 7573570.0,
+      "massDensityKgM3": 317.651,
+      "expandedUncertaintyKgM3": 2.749,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 2,
+      "phase": "Liquid",
+      "temperatureK": 301.16,
+      "pressureKPa": 7673.54,
+      "pressurePa": 7673540.0,
+      "massDensityKgM3": 347.909,
+      "expandedUncertaintyKgM3": 4.006,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 3,
+      "phase": "Liquid",
+      "temperatureK": 301.15,
+      "pressureKPa": 7772.89,
+      "pressurePa": 7772890.0,
+      "massDensityKgM3": 394.053,
+      "expandedUncertaintyKgM3": 5.114,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 4,
+      "phase": "Liquid",
+      "temperatureK": 301.128,
+      "pressureKPa": 7872.34,
+      "pressurePa": 7872340.0,
+      "massDensityKgM3": 446.609,
+      "expandedUncertaintyKgM3": 5.655,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 5,
+      "phase": "Liquid",
+      "temperatureK": 301.144,
+      "pressureKPa": 7972.1,
+      "pressurePa": 7972100.0,
+      "massDensityKgM3": 486.831,
+      "expandedUncertaintyKgM3": 5.594,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 6,
+      "phase": "Liquid",
+      "temperatureK": 301.148,
+      "pressureKPa": 8071.63,
+      "pressurePa": 8071630.0,
+      "massDensityKgM3": 522.073,
+      "expandedUncertaintyKgM3": 5.023,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 7,
+      "phase": "Liquid",
+      "temperatureK": 301.144,
+      "pressureKPa": 8170.14,
+      "pressurePa": 8170140.0,
+      "massDensityKgM3": 548.746,
+      "expandedUncertaintyKgM3": 4.23,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 8,
+      "phase": "Liquid",
+      "temperatureK": 301.15,
+      "pressureKPa": 8271.68,
+      "pressurePa": 8271680.0,
+      "massDensityKgM3": 569.213,
+      "expandedUncertaintyKgM3": 3.651,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 9,
+      "phase": "Liquid",
+      "temperatureK": 302.093,
+      "pressureKPa": 7574.34,
+      "pressurePa": 7574340.0,
+      "massDensityKgM3": 293.998,
+      "expandedUncertaintyKgM3": 2.166,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 10,
+      "phase": "Liquid",
+      "temperatureK": 302.157,
+      "pressureKPa": 7674.44,
+      "pressurePa": 7674440.0,
+      "massDensityKgM3": 312.96,
+      "expandedUncertaintyKgM3": 3.124,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 11,
+      "phase": "Liquid",
+      "temperatureK": 302.155,
+      "pressureKPa": 7774.35,
+      "pressurePa": 7774350.0,
+      "massDensityKgM3": 340.924,
+      "expandedUncertaintyKgM3": 4.168,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 12,
+      "phase": "Liquid",
+      "temperatureK": 302.139,
+      "pressureKPa": 7873.74,
+      "pressurePa": 7873740.0,
+      "massDensityKgM3": 376.389,
+      "expandedUncertaintyKgM3": 5.414,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 13,
+      "phase": "Liquid",
+      "temperatureK": 302.147,
+      "pressureKPa": 7973.51,
+      "pressurePa": 7973510.0,
+      "massDensityKgM3": 414.824,
+      "expandedUncertaintyKgM3": 5.723,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 14,
+      "phase": "Liquid",
+      "temperatureK": 302.142,
+      "pressureKPa": 8073.14,
+      "pressurePa": 8073140.0,
+      "massDensityKgM3": 455.2,
+      "expandedUncertaintyKgM3": 5.502,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 15,
+      "phase": "Liquid",
+      "temperatureK": 302.142,
+      "pressureKPa": 8171.51,
+      "pressurePa": 8171510.0,
+      "massDensityKgM3": 491.43,
+      "expandedUncertaintyKgM3": 4.795,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 4,
+      "row": 16,
+      "phase": "Liquid",
+      "temperatureK": 302.143,
+      "pressureKPa": 8273.33,
+      "pressurePa": 8273330.0,
+      "massDensityKgM3": 521.984,
+      "expandedUncertaintyKgM3": 3.953,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "carbon dioxide",
+          "moleFraction": 0.95,
+          "phase": "Liquid"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    }
+  ],
+  "notes": [
+    "Generated directly from the NIST ThermoML JSON endpoint without manual table transcription.",
+    "Pressure values in ThermoML are kPa and are converted to Pa in this artifact.",
+    "Mass density values are kg/m3 as reported by ThermoML."
+  ]
+}
