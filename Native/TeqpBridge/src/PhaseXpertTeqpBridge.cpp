@@ -29,6 +29,7 @@ constexpr double kRelativeSaturationPressureTolerance = 1e-8;
 constexpr double kCarbonDioxideMolarMassKgMol = 0.0440098;
 constexpr double kNitrogenMolarMassKgMol = 0.02801348;
 constexpr double kHydrogenMolarMassKgMol = 0.00201588;
+constexpr double kMethaneMolarMassKgMol = 0.0160428;
 constexpr double kBinaryVLEAbsoluteTolerance = 1e-8;
 constexpr double kBinaryVLERelativeTolerance = 1e-8;
 constexpr int kBinaryVLEMaximumIterations = 50;
@@ -681,6 +682,92 @@ private:
 
 EOSCGCarbonDioxideHydrogenModel &eoscg_co2_h2_model() {
     static EOSCGCarbonDioxideHydrogenModel model;
+    return model;
+}
+
+class EOSCGCarbonDioxideMethaneModel {
+public:
+    using Model = decltype(teqp::build_multifluid_JSONstr(
+        std::vector<std::string>{std::string{}, std::string{}},
+        std::string{},
+        std::string{}
+    ));
+
+    EOSCGCarbonDioxideMethaneModel()
+        : model_(teqp::build_multifluid_JSONstr(
+              std::vector<std::string>{
+                  std::string(kPhaseXpertTeqpCarbonDioxideJson),
+                  std::string(kPhaseXpertTeqpMethaneJson)
+              },
+              binaryPairsJson(),
+              departureFunctionsJson()
+          )) {}
+
+    double pressurePa(
+        double temperature_k,
+        const Eigen::ArrayXd &molefractions,
+        double total_molar_density_mol_m3
+    ) const {
+        Eigen::ArrayXd rhovec = total_molar_density_mol_m3 * molefractions;
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        auto derivatives = Derivatives::build_Psir_fgradHessian_autodiff(
+            model_,
+            temperature_k,
+            rhovec
+        );
+        const double psir = std::get<0>(derivatives);
+        const Eigen::ArrayXd gradient = std::get<1>(derivatives);
+        return total_molar_density_mol_m3 * model_.R(molefractions) * temperature_k
+            - psir + (rhovec * gradient).sum();
+    }
+
+    double mixtureMolarMassKgMol(double methane_mole_fraction) const {
+        return (1.0 - methane_mole_fraction) * kCarbonDioxideMolarMassKgMol
+            + methane_mole_fraction * kMethaneMolarMassKgMol;
+    }
+
+private:
+    static std::string binaryPairsJson() {
+        return R"PXTEQPJSON([
+            {
+                "Name1": "CarbonDioxide",
+                "Name2": "Methane",
+                "CAS1": "124-38-9",
+                "CAS2": "74-82-8",
+                "BibTeX": "Neumann-IJT-2023",
+                "betaT": 0.9778765215758676,
+                "gammaT": 0.975665,
+                "betaV": 1.000482232436034,
+                "gammaV": 1.002807,
+                "F": 1.0,
+                "function": "EOSCG-Methane-CarbonDioxide"
+            }
+        ])PXTEQPJSON";
+    }
+
+    static std::string departureFunctionsJson() {
+        return R"PXTEQPJSON([
+            {
+                "Name": "EOSCG-Methane-CarbonDioxide",
+                "BibTeX": "Neumann-IJT-2023",
+                "type": "GERG-2008",
+                "Npower": 3,
+                "d": [1, 2, 3, 1, 2, 3],
+                "t": [2.6, 1.95, 0.0, 3.95, 7.95, 8.0],
+                "n": [-0.10859387354942, 0.080228576727389, -0.0093303985115717, 0.040989274005848, -0.24338019772494, 0.23855347281124],
+                "eta": [0.0, 0.0, 0.0, 1.0, 0.5, 0.0],
+                "beta": [0.0, 0.0, 0.0, 1.0, 2.0, 3.0],
+                "gamma": [0.0, 0.0, 0.0, 0.5, 0.5, 0.5],
+                "epsilon": [0.0, 0.0, 0.0, 0.5, 0.5, 0.5]
+            }
+        ])PXTEQPJSON";
+    }
+
+    Model model_;
+};
+
+EOSCGCarbonDioxideMethaneModel &eoscg_co2_ch4_model() {
+    static EOSCGCarbonDioxideMethaneModel model;
     return model;
 }
 
@@ -1648,6 +1735,61 @@ int px_teqp_calculate_eoscg_co2_h2_gas_density(
         return 6;
     } catch (...) {
         copy_text("teqp EOS-CG CO2/H2 gas-density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_teqp_calculate_eoscg_co2_ch4_gas_density(
+    double pressure_pa,
+    double temperature_k,
+    double methane_mole_fraction,
+    PXTeqpMixtureDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!std::isfinite(methane_mole_fraction)
+        || methane_mole_fraction <= 0.0
+        || methane_mole_fraction >= 1.0) {
+        copy_text("Methane mole fraction must be finite and in (0, 1).", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        const auto &model = eoscg_co2_ch4_model();
+        Eigen::ArrayXd molefractions(2);
+        molefractions << 1.0 - methane_mole_fraction, methane_mole_fraction;
+        const auto roots = density_roots_for_molefractions(
+            model,
+            pressure_pa,
+            temperature_k,
+            molefractions
+        );
+        if (roots.empty()) {
+            copy_text("teqp did not find a finite EOS-CG CO2/CH4 gas-density root.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        const auto selected = lowest_density_root(roots);
+        result->molar_density_mol_m3 = selected.molar_density_mol_m3;
+        result->density_kg_m3 = selected.molar_density_mol_m3
+            * model.mixtureMolarMassKgMol(methane_mole_fraction);
+        result->density_root_count = static_cast<int>(roots.size());
+        result->phase = PXTeqpPhaseGas;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("teqp EOS-CG CO2/CH4 gas-density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 7;
     }
 }

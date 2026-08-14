@@ -223,3 +223,10 @@
   ranges. N₂, O₂, Ar, CH₄, simultaneous impurities, impurity VLE/phase
   envelopes, mixture Cp/Cv/speed, h/u/s and transport remain unavailable for
   teqp.
+- Classified all 180 Ghafri et al. 2016 CO₂+CH₄ ThermoML density rows. The
+  full homogeneous diagnostic matrix converges but is not a broad production
+  pass (1.3981775% AARD, 5.15195% worst relative deviation), while the
+  ThermoML gas block supports a second property-specific teqp impurity domain:
+  CO₂+CH₄ homogeneous gas density only at xCH₄ = 0.05, 301.14 K ± 0.02 K and
+  1.99046-6.976 MPa. CH₄ VLE, phase envelope, mixture Cp/Cv/speed, h/u/s and
+  transport remain unavailable.

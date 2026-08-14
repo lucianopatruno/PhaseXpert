@@ -46,6 +46,20 @@ final class TeqpProviderTests: XCTestCase {
                 formulationID: TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id
             )
         }
+
+        func calculateCarbonDioxideMethaneGasDensity(
+            pressurePa: Double,
+            temperatureK: Double,
+            methaneMoleFraction: Double
+        ) async throws -> TeqpMixtureDensityResult {
+            TeqpMixtureDensityResult(
+                densityKilogramsPerCubicMetre: 117.93,
+                molarDensityMolesPerCubicMetre: 2_852.4,
+                densityRootCount: 1,
+                phaseIdentifier: "gas",
+                formulationID: TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.id
+            )
+        }
     }
 
     private struct FailingEngine: TeqpEngine {
@@ -78,6 +92,16 @@ final class TeqpProviderTests: XCTestCase {
                 "Engine should not be called for unsupported mixtures."
             )
         }
+
+        func calculateCarbonDioxideMethaneGasDensity(
+            pressurePa: Double,
+            temperatureK: Double,
+            methaneMoleFraction: Double
+        ) async throws -> TeqpMixtureDensityResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for unsupported mixtures."
+            )
+        }
     }
 
     func testUnavailableEngineDoesNotClaimCapabilities() {
@@ -104,13 +128,14 @@ final class TeqpProviderTests: XCTestCase {
             TeqpFormulationCatalog.productionFormulations.map(\.id),
             [
                 "teqp-v0.23.1-pure-co2-span-wagner-density",
-                "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017"
+                "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
+                "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016"
             ]
         )
         XCTAssertTrue(TeqpFormulationCatalog.pureCarbonDioxide.supportsPhaseEnvelope)
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
-            [.carbonDioxide, .hydrogen]
+            [.carbonDioxide, .methane, .hydrogen]
         )
         XCTAssertTrue(
             TeqpFormulationCatalog.productionSupportedProperties
@@ -163,7 +188,6 @@ final class TeqpProviderTests: XCTestCase {
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components.contains(.oxygen)
                     || $0.components.contains(.argon)
-                    || $0.components.contains(.methane)
             }
         )
         XCTAssertTrue(
@@ -175,9 +199,24 @@ final class TeqpProviderTests: XCTestCase {
                     }
             }
         )
+        XCTAssertTrue(
+            TeqpFormulationCatalog.productionFormulations.contains {
+                $0.components == [.carbonDioxide, .methane]
+                    && $0.propertyCapabilities.contains {
+                        $0.property == .density
+                            && $0.phaseDomain == .homogeneousGas
+                    }
+            }
+        )
         XCTAssertFalse(
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components.contains(.hydrogen)
+                    && $0.supportsPhaseEnvelope
+            }
+        )
+        XCTAssertFalse(
+            TeqpFormulationCatalog.productionFormulations.contains {
+                $0.components.contains(.methane)
                     && $0.supportsPhaseEnvelope
             }
         )
@@ -320,7 +359,7 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "Advanced CCS Properties supports pure CO₂ and a narrow CO₂+H₂ homogeneous gas-density validation domain only. No CoolProp fallback is used."
+                    "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄ homogeneous gas-density validation domains only. No CoolProp fallback is used."
                 )
             )
         })
@@ -329,11 +368,11 @@ final class TeqpProviderTests: XCTestCase {
     func testCO2N2RemainsValidationGatedDespiteNativeDiagnosticBridge() async {
         let provider = TeqpProvider(engine: FailingEngine())
         let descriptor = provider.descriptor
-        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .hydrogen])
+        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .methane, .hydrogen])
         XCTAssertFalse(descriptor.supportedComponents.contains(.nitrogen))
         XCTAssertTrue(
             descriptor.limitations.contains {
-                $0.contains("N₂, O₂, Ar, CH₄ and simultaneous impurity mixtures remain unsupported")
+                $0.contains("N₂, O₂, Ar and simultaneous impurity mixtures remain unsupported")
             }
         )
 
@@ -355,7 +394,7 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "Advanced CCS Properties supports pure CO₂ and a narrow CO₂+H₂ homogeneous gas-density validation domain only. No CoolProp fallback is used."
+                    "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄ homogeneous gas-density validation domains only. No CoolProp fallback is used."
                 )
             )
         })
@@ -429,7 +468,74 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "Advanced CCS Properties supports pure CO₂ and a narrow CO₂+H₂ homogeneous gas-density validation domain only. No CoolProp fallback is used."
+                    "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄ homogeneous gas-density validation domains only. No CoolProp fallback is used."
+                )
+            )
+        })
+    }
+
+    func testMethaneGasDensityLimitedDomainIsCalculatedWithoutFallback() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        XCTAssertTrue(provider.descriptor.supportedComponents.contains(.methane))
+
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 4_979_790,
+                temperatureK: 301.147,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.95),
+                    .init(component: .methane, moleFraction: 0.05)
+                ],
+                requestedProperties: [
+                    .density,
+                    .molarMass,
+                    .specificVolume,
+                    .speedOfSound
+                ],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(response.phase, .gas)
+        XCTAssertTrue(response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
+        XCTAssertEqual(
+            response.properties.first { $0.property == .density }?.value,
+            117.93
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .speedOfSound }?.status,
+            .unavailable
+        )
+        XCTAssertTrue(
+            response.properties.first { $0.property == .speedOfSound }?
+                .message?
+                .contains("no CoolProp fallback") == true
+        )
+    }
+
+    func testMethaneOutOfValidatedDomainIsRejectedBeforeEngineCall() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.calculate(
+                CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: 8_000_000,
+                    temperatureK: 301.14,
+                    composition: [
+                        .init(component: .carbonDioxide, moleFraction: 0.95),
+                        .init(component: .methane, moleFraction: 0.05)
+                    ],
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                )
+            )
+        }, { error in
+            XCTAssertEqual(
+                error as? ProviderError,
+                .invalidRequest(
+                    "CO₂+CH₄ teqp density pressure is outside the validated gas range."
                 )
             )
         })

@@ -1,0 +1,104 @@
+{
+  "artifactID": "eoscg2021-co2-ch4-ghafri2016-full-density-validation",
+  "createdFor": "PR #44 property-specific CH4 production decision",
+  "sourceDataset": {
+    "title": "Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter",
+    "doi": "10.1016/j.fluid.2015.08.029",
+    "machineReadableSource": "Documentation/Validation/MethaneThermoML2016Density.json",
+    "rowResults": "Documentation/Validation/MethaneFullDensityValidationResults.csv"
+  },
+  "model": {
+    "engine": "teqp v0.23.1",
+    "scientificFormulation": "EOS-CG-2021 inherited CO2+CH4 GERG pair",
+    "staticIdentityAudit": "Documentation/Validation/EOSCGStaticIdentityAudit.json",
+    "implementationNote": "Corrected CH4 reciprocal beta/gamma component-order mapping before validation."
+  },
+  "classificationPolicy": {
+    "Gas": "homogeneousGas",
+    "Liquid": "homogeneousDenseLiquidLike",
+    "Fluid (supercritical or subcritical phases)": "homogeneousFluidSingleRoot only when the native EOS returned exactly one density root",
+    "excludedRows": 0,
+    "productionDomain": "Only the ThermoML Gas block is production-enabled; dense and near-critical rows are diagnostic because broad deviations are materially larger."
+  },
+  "overallDiagnosticResult": {
+    "usableRows": 180,
+    "convergedRows": 180,
+    "temperatureRangeK": {
+      "minimum": 300.066,
+      "maximum": 313.182
+    },
+    "pressureRangePa": {
+      "minimum": 1990460,
+      "maximum": 11966000
+    },
+    "methaneMoleFraction": 0.05,
+    "aardPercent": 1.3981775,
+    "worstRelativeDeviationPercent": 5.15195,
+    "worstAbsoluteDeviationKgM3": 25.2967,
+    "worstPoint": {
+      "block": 3,
+      "row": 12,
+      "thermoMLPhase": "Fluid (supercritical or subcritical phases)",
+      "classification": "homogeneousFluidSingleRoot",
+      "temperatureK": 301.07,
+      "pressurePa": 7972390,
+      "referenceDensityKgM3": 490.929,
+      "predictedDensityKgM3": 516.226
+    }
+  },
+  "phaseRegionResults": [
+    {
+      "classification": "homogeneousGas",
+      "rows": 6,
+      "aardPercent": 0.20342283333333335,
+      "worstRelativeDeviationPercent": 0.413175,
+      "worstAbsoluteDeviationKgM3": 0.941225,
+      "worstPoint": {
+        "block": 1,
+        "row": 6,
+        "temperatureK": 301.133,
+        "pressurePa": 6976000,
+        "referenceDensityKgM3": 227.812,
+        "predictedDensityKgM3": 228.753
+      }
+    },
+    {
+      "classification": "homogeneousFluidSingleRoot",
+      "rows": 153,
+      "aardPercent": 1.2981603529411766,
+      "worstRelativeDeviationPercent": 5.15195,
+      "worstAbsoluteDeviationKgM3": 25.2967
+    },
+    {
+      "classification": "homogeneousDenseLiquidLike",
+      "rows": 21,
+      "aardPercent": 2.468232333333333,
+      "worstRelativeDeviationPercent": 4.87937,
+      "worstAbsoluteDeviationKgM3": 23.7543
+    }
+  ],
+  "productionDecision": {
+    "result": "LIMITED PASS - HOMOGENEOUS GAS DENSITY ONLY",
+    "enabled": true,
+    "composition": "xCH4 = 0.05 exactly",
+    "temperatureDomainK": "301.14 +/- 0.02",
+    "pressureDomainPa": "1990460 to 6976000",
+    "supportedProperties": [
+      "density",
+      "molarMass",
+      "compressibilityFactor",
+      "specificVolume"
+    ],
+    "unsupportedCapabilities": [
+      "VLE",
+      "phase envelope",
+      "Cp",
+      "Cv",
+      "speed of sound",
+      "h",
+      "u",
+      "s",
+      "transport"
+    ]
+  }
+}

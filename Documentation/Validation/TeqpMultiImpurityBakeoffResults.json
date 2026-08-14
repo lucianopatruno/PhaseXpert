@@ -6,7 +6,8 @@
     "fitsOrTunedParameters": false,
     "coolPropFallback": false,
     "enabledUserFacingImpurities": [
-      "H2 density-only"
+      "H2 density-only",
+      "CH4 density-only"
     ]
   },
   "eoscg2021Candidates": [
@@ -93,18 +94,24 @@
     {
       "pair": "CO2+CH4",
       "candidateFormulation": "EOS-CG-2021 inherited GERG-2008 CH4+CO2 reducing parameters and Table 5 GERG-2008 departure function",
-      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and binary VLE Newton solve initialized from NIST ThermoML phase compositions",
-      "vleDataset": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, DOI 10.1016/j.fluid.2018.01.011; NIST ThermoML JSON",
-      "numberOfDensityPoints": 0,
-      "densityAARD": null,
-      "worstDensityRelativeDeviation": null,
-      "numberOfVLEPoints": 5,
-      "worstVLEPressureRelativeDeviation": 0.473955,
-      "worstVLEYCH4AbsoluteDeviation": 0.01705,
-      "worstVLEPoint": "Petropoulou 298.142 K, p=7.625 MPa, xCH4=0.05378",
-      "scientificResult": "SUPERSEDED IMPLEMENTATION BUG",
-      "enabledDomain": "none",
-      "notes": "The Clapeyron EOS_CG database audit found that the PhaseXpert CH4+CO2 Table 4 beta/gamma mapping was wrong in this checkpoint's custom EOS-CG artifact. This Petropoulou diagnostic is retained as historical output but is no longer a valid EOS-CG model-failure conclusion."
+      "implementationProbe": "direct pinned teqp v0.23.1 custom multifluid construction and homogeneous P,T,z density solve after static Clapeyron EOS_CG source/database identity audit",
+      "densityDataset": "Ghafri et al. 2016 NIST ThermoML JSON, 180 rows, DOI 10.1016/j.fluid.2015.08.029",
+      "vleDataset": "Petropoulou et al. 2018 historical VLE diagnostic retained as superseded because it used the pre-audit CH4 beta/gamma mapping",
+      "numberOfDensityPoints": 180,
+      "densityAARD": 0.013981775,
+      "worstDensityRelativeDeviation": 0.0515195,
+      "worstDensityPoint": "Ghafri block 3 row 12, T=301.070 K, p=7.97239 MPa, xCH4=0.05",
+      "gasDensitySubset": {
+        "numberOfDensityPoints": 6,
+        "densityAARD": 0.0020342283333333335,
+        "worstDensityRelativeDeviation": 0.00413175,
+        "worstDensityPoint": "Ghafri block 1 row 6, T=301.133 K, p=6.976 MPa, xCH4=0.05"
+      },
+      "numberOfVLEPoints": 0,
+      "worstVLERelativeDeviation": null,
+      "scientificResult": "LIMITED PASS - HOMOGENEOUS GAS DENSITY ONLY",
+      "enabledDomain": "xCH4 = 0.05 exactly; T = 301.14 K +/- 0.02 K; p = 1.99046-6.976 MPa; density plus derived M/v/Z only; no VLE, phase envelope, mixture Cp/Cv/speed, h/u/s or transport.",
+      "notes": "The full Ghafri matrix converged but dense and near-critical rows showed materially larger deviations, so only the ThermoML gas block is production-enabled. Full row-level diagnostics are in Documentation/Validation/MethaneFullDensityValidationResults.csv and Documentation/Validation/MethaneFullDensityValidationSummary.json."
     }
   ],
   "pairs": [
@@ -303,23 +310,24 @@
     },
     {
       "pair": "CO2+CH4",
-      "candidateFormulation": "Pinned teqp standard multifluid / GERG residual candidates",
-      "candidateStatus": "DIAGNOSTIC GAS-DENSITY CANDIDATE; NOT ENABLED",
-      "reason": "Static EOS-CG identity now passes after the CH4 beta/gamma mapping fix, and the 6-row gas subset remains promising, but the full usable ThermoML matrix has not been classified and rerun for production bounds in this checkpoint.",
+      "candidateFormulation": "EOS-CG-2021 inherited GERG-2008 CH4+CO2 reducing parameters and GERG-2008 departure function",
+      "candidateStatus": "LIMITED DENSITY PASS - PRODUCTION ENABLED",
+      "reason": "Static EOS-CG identity passes after the CH4 beta/gamma mapping fix. The full 180-row Ghafri matrix converges but dense and near-critical deviations are too large for broad production support, while the ThermoML gas block is strong enough for a narrow homogeneous gas-density domain.",
       "densityDataset": "Ghafri et al. 2016, Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter, DOI 10.1016/j.fluid.2015.08.029; NIST ThermoML JSON encoded in Documentation/Validation/MethaneThermoML2016Density.json",
       "vleDataset": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, DOI 10.1016/j.fluid.2018.01.011; previous direct VLE diagnostic superseded by CH4+CO2 parameter-mapping correction",
       "numberOfDensityPoints": 180,
       "numberOfVLEPoints": 0,
       "gasDensitySubset": {
         "numberOfPoints": 6,
-        "densityAARD": 0.00203422,
-        "worstDensityRelativeDeviation": 0.00413173,
+        "densityAARD": 0.0020342283333333335,
+        "worstDensityRelativeDeviation": 0.00413175,
         "worstDensityPoint": "Ghafri 2016 ThermoML block 1 row 6, T=301.133 K, p=6.976 MPa, zCO2=0.95"
       },
-      "worstDensityRelativeDeviation": null,
+      "overallDiagnosticDensityAARD": 0.013981775,
+      "worstDensityRelativeDeviation": 0.0515195,
       "worstVLERelativeDeviation": null,
-      "scientificResult": "DIAGNOSTIC ONLY",
-      "enabledDomain": "none"
+      "scientificResult": "LIMITED PASS - HOMOGENEOUS GAS DENSITY ONLY",
+      "enabledDomain": "xCH4 = 0.05 exactly; T = 301.14 K +/- 0.02 K; pressure 1.99046-6.976 MPa; density plus derived M/v/Z only; no VLE, phase envelope, mixture Cp/Cv/speed, h/u/s or transport."
     }
   ]
 }

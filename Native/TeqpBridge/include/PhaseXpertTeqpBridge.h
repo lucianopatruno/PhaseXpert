@@ -114,6 +114,15 @@ int px_teqp_calculate_eoscg_co2_h2_gas_density(
     size_t error_buffer_size
 );
 
+int px_teqp_calculate_eoscg_co2_ch4_gas_density(
+    double pressure_pa,
+    double temperature_k,
+    double methane_mole_fraction,
+    PXTeqpMixtureDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
 #ifdef __cplusplus
 }
 #endif

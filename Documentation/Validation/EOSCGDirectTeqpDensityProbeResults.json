@@ -3,14 +3,14 @@
   "date": "2026-08-13",
   "engine": "direct pinned teqp v0.23.1 custom multifluid probe",
   "teqpCommit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
-  "purpose": "Provisional homogeneous gas-density diagnostics for EOS-CG-2021 CO2+H2 and corrected CO2+CH4 records against open NIST ThermoML datasets",
+  "purpose": "Homogeneous gas-density diagnostics for EOS-CG-2021 CO2+H2 and corrected CO2+CH4 records against open NIST ThermoML datasets",
   "modelData": {
     "CO2+H2": "EOS-CG-2021 Table 4 CO2+H2 plus Table 5 Beckmueller departure; component order CO2+H2",
     "CO2+CH4": "EOS-CG-2021 GERG-inherited CH4+CO2 Table 4 values corrected from Clapeyron EOS_CG database; reciprocal beta handling used for CO2+CH4 order"
   },
   "rootSelection": "All positive density roots were scanned over 1e-6 to 70000 mol/m3; gas-domain diagnostics select the lowest-density root for ThermoML gas rows.",
   "clapeyronNumericIdentity": "replaced by static source/database identity audit; see Documentation/Validation/EOSCGStaticIdentityAudit.json, overallResult PASS",
-  "productionDecision": "CO2+H2 homogeneous gas density LIMITED PASS enabled for exact xH2=0.05362, validated isotherms 273.15/293.15/323.15 K and ThermoML gas pressure ranges; CH4 remains diagnostic pending full usable-row review.",
+  "productionDecision": "CO2+H2 homogeneous gas density LIMITED PASS enabled for exact xH2=0.05362, validated isotherms 273.15/293.15/323.15 K and ThermoML gas pressure ranges. CO2+CH4 homogeneous gas density LIMITED PASS enabled for exact xCH4=0.05, T=301.14 K +/- 0.02 K and the Ghafri 2016 ThermoML gas-block pressure range; full 180-row Ghafri diagnostic is recorded separately in Documentation/Validation/MethaneFullDensityValidationSummary.json.",
   "summaries": {
     "H2": {
       "points": 19,

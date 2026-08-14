@@ -248,6 +248,77 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2MethaneEOSCGGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
+        name: "CO₂+CH₄ EOS-CG-2021 homogeneous gas density",
+        family: .eosCG2021,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .methane],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .methane,
+                minimumMoleFraction: 0.05,
+                maximumMoleFraction: 0.05
+            )
+        ],
+        supportedProperties: [
+            .density,
+            .molarMass,
+            .compressibilityFactor,
+            .specificVolume
+        ],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .methane,
+                        minimumMoleFraction: 0.05,
+                        maximumMoleFraction: 0.05
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 301.14,
+                        minimumPressurePa: 1_990_460,
+                        maximumPressurePa: 6_976_000
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/MethaneFullDensityValidationSummary.json",
+                notes: [
+                    "Validated only for homogeneous gas density in the Ghafri et al. 2016 ThermoML gas block.",
+                    "The full 180-row Ghafri dataset converged but did not justify dense or near-critical production support.",
+                    "VLE, phase envelope, Cp, Cv, speed of sound, h, u, s and transport are unavailable for this mixture."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 inherited GERG CH₄+CO₂ reducing parameters and GERG-2008 departure function evaluated through teqp v0.23.1 \(teqpCommit); gas-density validation against Ghafri et al. 2016 NIST ThermoML after static Clapeyron EOS_CG identity audit.",
+        limitations: [
+            "LIMITED PASS — homogeneous gas density only at xCH₄ = 0.05.",
+            "Temperature must remain within the Ghafri et al. gas-block span represented as 301.14 K ± 0.02 K.",
+            "Pressure must remain between 1.99046 MPa and 6.976 MPa.",
+            "Dense, near-critical and liquid-like rows in the full Ghafri matrix are diagnostic only and are not production-enabled.",
+            "Phase equilibrium, phase envelope, heat capacities, speed of sound, reference-state properties and transport are unavailable.",
+            "No CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Ghafri, Rowland, Hughes, May and others",
+                title: "Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter",
+                year: 2016,
+                doiOrURL: "https://doi.org/10.1016/j.fluid.2015.08.029"
+            )
+        ]
+    )
+
     public static let co2NitrogenGernertGergDiagnostic = TeqpFormulation(
         id: "teqp-v0.23.1-co2-n2-gerg-diagnostic",
         name: "CO₂+N₂ Gernert/GERG diagnostic model",
@@ -445,7 +516,11 @@ public enum TeqpFormulationCatalog {
     ]
 
     public static var productionFormulations: [TeqpFormulation] {
-        [pureCarbonDioxide, co2HydrogenEOSCGGasDensity]
+        [
+            pureCarbonDioxide,
+            co2HydrogenEOSCGGasDensity,
+            co2MethaneEOSCGGasDensity
+        ]
     }
 
     public static var researchFormulations: [TeqpFormulation] {

@@ -71,7 +71,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   Properties; an explicit experimental native teqp pure-CO₂ provider
   for density, Cv, Cp, Cp/Cv, speed of sound and the same derived values, plus
   a narrowly validation-gated CO₂+H₂ homogeneous gas-density domain at
-  xH₂ = 0.05362 when its ignored local XCFramework is built; an
+  xH₂ = 0.05362 and a CO₂+CH₄ homogeneous gas-density domain at
+  xCH₄ = 0.05 within the Ghafri et al. 2016 gas block when its ignored
+  local XCFramework is built; an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and
@@ -159,9 +161,10 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - saved cases are local-only and do not sync between devices;
 - teqp impurity support is property-specific: H₂ is enabled only for
   homogeneous gas density at xH₂ = 0.05362 and the encoded Souissi et al. 2017
-  isotherm pressure ranges; N₂, O₂, Ar, CH₄, simultaneous impurities, impurity
-  phase envelopes, mixture Cp/Cv/speed, h/u/s and transport remain unavailable
-  for teqp.
+  isotherm pressure ranges, and CH₄ is enabled only for homogeneous gas
+  density at xCH₄ = 0.05, 301.14 K ± 0.02 K and 1.99046-6.976 MPa; N₂, O₂,
+  Ar, simultaneous impurities, impurity phase envelopes, mixture Cp/Cv/speed,
+  h/u/s and transport remain unavailable for teqp.
 
 ## Documentation
 
