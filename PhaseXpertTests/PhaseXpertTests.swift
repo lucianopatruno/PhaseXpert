@@ -193,6 +193,179 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testAdvancedCCSPropertiesShowsOnlyValidatedImpurities() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        XCTAssertEqual(viewModel.selectedDescriptor?.name, "Advanced CCS Properties")
+        XCTAssertEqual(Set(viewModel.supportedImpurityComponents), [.methane, .hydrogen])
+        XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.nitrogen))
+        XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.oxygen))
+        XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.argon))
+
+        let firstID = try XCTUnwrap(viewModel.addImpurity())
+        XCTAssertEqual(
+            viewModel.composition.first { $0.id == firstID }?.component,
+            .methane
+        )
+        let methaneOptions = viewModel.impurityOptions(including: .methane)
+        XCTAssertEqual(Set(methaneOptions), [.methane, .hydrogen])
+        XCTAssertFalse(methaneOptions.contains(.nitrogen))
+        XCTAssertFalse(methaneOptions.contains(.oxygen))
+        XCTAssertFalse(methaneOptions.contains(.argon))
+
+        let secondID = try XCTUnwrap(viewModel.addImpurity())
+        XCTAssertEqual(
+            viewModel.composition.first { $0.id == secondID }?.component,
+            .hydrogen
+        )
+    }
+
+    @MainActor
+    func testAdvancedCCSPropertiesHydrogenCalculationUsesValidatedDensityDomain() async throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        viewModel.pressureText = "30"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "94.638"),
+            .init(component: .hydrogen, value: "5.362")
+        ]
+
+        await viewModel.calculate()
+
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertEqual(record.request.modelID, "teqp-pure-co2-experimental")
+        XCTAssertEqual(record.response.model.name, "Advanced CCS Properties")
+        XCTAssertEqual(record.response.phase, .gas)
+        XCTAssertEqual(
+            record.response.properties.first { $0.property == .density }?.status,
+            .calculated
+        )
+        XCTAssertEqual(
+            record.response.properties.first { $0.property == .speedOfSound }?.status,
+            .unavailable
+        )
+        XCTAssertTrue(record.response.solver.method.contains("EOS-CG-2021 CO₂+H₂"))
+        XCTAssertTrue(record.response.warnings.contains { $0.contains("Souissi") })
+        XCTAssertTrue(record.response.warnings.contains { $0.contains("No CoolProp fallback") })
+    }
+
+    @MainActor
+    func testAdvancedCCSPropertiesMethaneCalculationUsesValidatedDensityDomain() async throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        viewModel.pressureText = "49.7979"
+        viewModel.temperatureText = "27.997"
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "95"),
+            .init(component: .methane, value: "5")
+        ]
+
+        await viewModel.calculate()
+
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertEqual(record.request.modelID, "teqp-pure-co2-experimental")
+        XCTAssertEqual(record.response.model.name, "Advanced CCS Properties")
+        XCTAssertEqual(record.response.phase, .gas)
+        XCTAssertEqual(
+            record.response.properties.first { $0.property == .density }?.status,
+            .calculated
+        )
+        XCTAssertEqual(
+            record.response.properties.first { $0.property == .isobaricHeatCapacity }?.status,
+            .unavailable
+        )
+        XCTAssertTrue(record.response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
+        XCTAssertTrue(record.response.solver.method.contains("MethaneFullDensityValidationSummary"))
+        XCTAssertTrue(record.response.warnings.contains { $0.contains("Ghafri") })
+    }
+
+    @MainActor
+    func testAdvancedCCSPropertiesRejectsOutOfDomainMixtureState() async throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        viewModel.pressureText = "80"
+        viewModel.temperatureText = "27.99"
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "95"),
+            .init(component: .methane, value: "5")
+        ]
+
+        await viewModel.calculate()
+
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertTrue(
+            viewModel.calculationError?.contains("outside the validated gas range") == true
+        )
+    }
+
+    @MainActor
+    func testAdvancedCCSPropertiesMixtureDoesNotExposePhaseDiagram() async throws {
+        let descriptor = try XCTUnwrap(
+            ProviderRegistry().descriptors.first {
+                $0.id == "teqp-pure-co2-experimental"
+            }
+        )
+        let record = try await makeRecord(
+            modelID: "teqp-pure-co2-experimental",
+            modelDescriptor: descriptor,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.94638),
+                .init(component: .hydrogen, moleFraction: 0.05362)
+            ]
+        )
+        let viewModel = PhaseDiagramViewModel()
+
+        viewModel.load(for: record)
+
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertNil(viewModel.response)
+        XCTAssertNil(viewModel.phaseMapRecord)
+        XCTAssertTrue(
+            viewModel.scopeMessage?.contains("Phase equilibrium is not validated") == true
+        )
+    }
+
+    @MainActor
+    func testAdvancedProviderIDSavedCaseCompatibility() async throws {
+        let descriptor = try XCTUnwrap(
+            ProviderRegistry().descriptors.first {
+                $0.id == "teqp-pure-co2-experimental"
+            }
+        )
+        let record = try await makeRecord(
+            modelID: "teqp-pure-co2-experimental",
+            modelDescriptor: descriptor,
+            composition: [.init(component: .carbonDioxide, moleFraction: 1)]
+        )
+        let viewModel = CalculatorViewModel()
+
+        viewModel.loadInputs(from: record)
+
+        XCTAssertEqual(viewModel.selectedModelID, "teqp-pure-co2-experimental")
+        XCTAssertEqual(record.response.model.id, "teqp-pure-co2-experimental")
+    }
+
+    @MainActor
     func testIFEModelIsVisibleUnavailableAndCannotCalculateOrFallback() async throws {
         let viewModel = CalculatorViewModel()
         viewModel.selectedModelID = "ife-model"

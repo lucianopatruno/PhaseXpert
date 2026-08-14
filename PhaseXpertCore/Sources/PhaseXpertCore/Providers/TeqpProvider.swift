@@ -705,7 +705,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             )
         }
         guard let gasBlock = supported.isothermPressureLimits.first(where: {
-            abs(request.temperatureK - $0.temperatureK) <= 0.02
+            abs(request.temperatureK - $0.temperatureK) <= 0.020_000_1
         }) else {
             throw ProviderError.invalidRequest(
                 "CO₂+CH₄ teqp density is validated only within the Ghafri et al. gas-block temperature span around 301.14 K."

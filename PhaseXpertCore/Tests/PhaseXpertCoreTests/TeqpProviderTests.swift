@@ -427,6 +427,8 @@ final class TeqpProviderTests: XCTestCase {
 
         XCTAssertEqual(response.phase, .gas)
         XCTAssertTrue(response.solver.method.contains("EOS-CG-2021 CO₂+H₂"))
+        XCTAssertTrue(response.solver.method.contains("teqp v0.23.1"))
+        XCTAssertTrue(response.solver.method.contains("EOSCGDirectTeqpDensityProbeResults"))
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.value,
             11.42
@@ -445,6 +447,8 @@ final class TeqpProviderTests: XCTestCase {
                 $0.contains("LIMITED PASS")
             }
         )
+        XCTAssertTrue(response.warnings.contains { $0.contains("Phase equilibrium") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("No CoolProp fallback") })
     }
 
     func testHydrogenOutOfValidatedDomainIsRejectedBeforeEngineCall() async {
@@ -474,6 +478,80 @@ final class TeqpProviderTests: XCTestCase {
         })
     }
 
+    func testHydrogenGasDensityDomainBoundariesAreExact() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let supportedStates = [
+            (pressurePa: 513_520.0, temperatureK: 273.15),
+            (pressurePa: 3_035_960.0, temperatureK: 273.15),
+            (pressurePa: 503_160.0, temperatureK: 293.15),
+            (pressurePa: 4_984_890.0, temperatureK: 293.15),
+            (pressurePa: 549_210.0, temperatureK: 323.15),
+            (pressurePa: 5_997_370.0, temperatureK: 323.15)
+        ]
+
+        for state in supportedStates {
+            let response = try await provider.calculate(hydrogenRequest(
+                pressurePa: state.pressurePa,
+                temperatureK: state.temperatureK,
+                hydrogenMoleFraction: 0.05362
+            ))
+            XCTAssertEqual(response.phase, .gas)
+            XCTAssertEqual(
+                response.properties.first { $0.property == .density }?.status,
+                .calculated
+            )
+        }
+    }
+
+    func testHydrogenGasDensityRejectsOutsideExactDomain() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+        let rejectedRequests = [
+            (
+                request: hydrogenRequest(
+                    pressurePa: 513_519,
+                    temperatureK: 273.15,
+                    hydrogenMoleFraction: 0.05362
+                ),
+                message: "pressure is outside"
+            ),
+            (
+                request: hydrogenRequest(
+                    pressurePa: 3_035_961,
+                    temperatureK: 273.15,
+                    hydrogenMoleFraction: 0.05362
+                ),
+                message: "pressure is outside"
+            ),
+            (
+                request: hydrogenRequest(
+                    pressurePa: 3_000_000,
+                    temperatureK: 293.18,
+                    hydrogenMoleFraction: 0.05362
+                ),
+                message: "validated only at 273.15 K, 293.15 K or 323.15 K"
+            ),
+            (
+                request: hydrogenRequest(
+                    pressurePa: 3_000_000,
+                    temperatureK: 293.15,
+                    hydrogenMoleFraction: 0.054
+                ),
+                message: "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄"
+            )
+        ]
+
+        for rejected in rejectedRequests {
+            await XCTAssertThrowsErrorAsync({
+                try await provider.calculate(rejected.request)
+            }, { error in
+                guard case let ProviderError.invalidRequest(message) = error else {
+                    return XCTFail("Expected invalidRequest, got \(error).")
+                }
+                XCTAssertTrue(message.contains(rejected.message), message)
+            })
+        }
+    }
+
     func testMethaneGasDensityLimitedDomainIsCalculatedWithoutFallback() async throws {
         let provider = TeqpProvider(engine: MockEngine())
         XCTAssertTrue(provider.descriptor.supportedComponents.contains(.methane))
@@ -499,6 +577,8 @@ final class TeqpProviderTests: XCTestCase {
 
         XCTAssertEqual(response.phase, .gas)
         XCTAssertTrue(response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
+        XCTAssertTrue(response.solver.method.contains("teqp v0.23.1"))
+        XCTAssertTrue(response.solver.method.contains("MethaneFullDensityValidationSummary"))
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.value,
             117.93
@@ -512,6 +592,8 @@ final class TeqpProviderTests: XCTestCase {
                 .message?
                 .contains("no CoolProp fallback") == true
         )
+        XCTAssertTrue(response.warnings.contains { $0.contains("LIMITED PASS") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("Phase equilibrium") })
     }
 
     func testMethaneOutOfValidatedDomainIsRejectedBeforeEngineCall() async {
@@ -539,6 +621,85 @@ final class TeqpProviderTests: XCTestCase {
                 )
             )
         })
+    }
+
+    func testMethaneGasDensityDomainBoundariesAreExact() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let supportedStates = [
+            (pressurePa: 1_990_460.0, temperatureK: 301.12),
+            (pressurePa: 6_976_000.0, temperatureK: 301.16),
+            (pressurePa: 4_979_790.0, temperatureK: 301.14)
+        ]
+
+        for state in supportedStates {
+            let response = try await provider.calculate(methaneRequest(
+                pressurePa: state.pressurePa,
+                temperatureK: state.temperatureK,
+                methaneMoleFraction: 0.05
+            ))
+            XCTAssertEqual(response.phase, .gas)
+            XCTAssertEqual(
+                response.properties.first { $0.property == .density }?.status,
+                .calculated
+            )
+        }
+    }
+
+    func testMethaneGasDensityRejectsOutsideExactDomain() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+        let rejectedRequests = [
+            (
+                request: methaneRequest(
+                    pressurePa: 1_990_459,
+                    temperatureK: 301.14,
+                    methaneMoleFraction: 0.05
+                ),
+                message: "pressure is outside"
+            ),
+            (
+                request: methaneRequest(
+                    pressurePa: 6_976_001,
+                    temperatureK: 301.14,
+                    methaneMoleFraction: 0.05
+                ),
+                message: "pressure is outside"
+            ),
+            (
+                request: methaneRequest(
+                    pressurePa: 4_000_000,
+                    temperatureK: 301.119,
+                    methaneMoleFraction: 0.05
+                ),
+                message: "validated only within"
+            ),
+            (
+                request: methaneRequest(
+                    pressurePa: 4_000_000,
+                    temperatureK: 301.161,
+                    methaneMoleFraction: 0.05
+                ),
+                message: "validated only within"
+            ),
+            (
+                request: methaneRequest(
+                    pressurePa: 4_000_000,
+                    temperatureK: 301.14,
+                    methaneMoleFraction: 0.051
+                ),
+                message: "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄"
+            )
+        ]
+
+        for rejected in rejectedRequests {
+            await XCTAssertThrowsErrorAsync({
+                try await provider.calculate(rejected.request)
+            }, { error in
+                guard case let ProviderError.invalidRequest(message) = error else {
+                    return XCTFail("Expected invalidRequest, got \(error).")
+                }
+                XCTAssertTrue(message.contains(rejected.message), message)
+            })
+        }
     }
 
     func testPureCO2PhaseEnvelopeUsesTeqpSaturation() async throws {
@@ -649,6 +810,42 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertEqual(registry.providers.first?.descriptor.id, "coolprop-heos")
         XCTAssertTrue(registry.descriptors.contains { $0.id == "teqp-pure-co2-experimental" })
         XCTAssertNil(registry.provider(id: "ife-model"))
+    }
+
+    private func hydrogenRequest(
+        pressurePa: Double,
+        temperatureK: Double,
+        hydrogenMoleFraction: Double
+    ) -> CalculationRequest {
+        CalculationRequest(
+            modelID: "teqp-pure-co2-experimental",
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 1 - hydrogenMoleFraction),
+                .init(component: .hydrogen, moleFraction: hydrogenMoleFraction)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+    }
+
+    private func methaneRequest(
+        pressurePa: Double,
+        temperatureK: Double,
+        methaneMoleFraction: Double
+    ) -> CalculationRequest {
+        CalculationRequest(
+            modelID: "teqp-pure-co2-experimental",
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 1 - methaneMoleFraction),
+                .init(component: .methane, moleFraction: methaneMoleFraction)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
     }
 }
 
