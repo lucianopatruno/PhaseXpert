@@ -72,13 +72,13 @@
       "pair": "CH4+CO2",
       "phaseXpertPair": "CO2+CH4",
       "reference": "GERG-2008 / Kunz-Wagner as cited by EOS-CG-2021 reference [6]",
-      "betaT": 0.999518,
-      "gammaT": 1.002806,
-      "betaV": 1.000482,
-      "gammaV": 1.022624,
+      "betaT": 1.022624,
+      "gammaT": 0.975665,
+      "betaV": 0.999518,
+      "gammaV": 1.002807,
       "Fij": 1.0,
-      "status": "candidate-gerg-inherited",
-      "notes": "EOS-CG-2021 inherits the GERG CO2+CH4 pair; reciprocal beta handling is required if evaluated as CO2+CH4."
+      "status": "candidate-gerg-inherited-corrected-after-clapeyron-audit",
+      "notes": "EOS-CG-2021 inherits the GERG CO2+CH4 pair. These values are the Clapeyron EOS_CG CH4+CO2 order; reciprocal beta handling is required if evaluated internally as CO2+CH4."
     }
   ],
   "table5TargetDepartures": [

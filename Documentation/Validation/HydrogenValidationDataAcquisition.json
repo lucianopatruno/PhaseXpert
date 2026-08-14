@@ -10,6 +10,21 @@
   },
   "sourcesChecked": [
     {
+      "sourceID": "Souissi2017ThermoML",
+      "citation": "Souissi et al., Vapor-Phase (p, rho, T, x) Behavior and Virial Coefficients for the Binary Mixture (0.05 Hydrogen + 0.95 Carbon Dioxide) over the Temperature Range from (273.15 to 323.15) K with Pressures up to 6 MPa, Journal of Chemical & Engineering Data 62 (2017) 2973-2981",
+      "doi": "10.1021/acs.jced.7b00213",
+      "reportedDomainFromAccessibleMetadata": "xH2 = 0.05362; T = 273.15 K, 293.15 K and 323.15 K; gas-phase pressures up to the dew-point pressure or 6 MPa",
+      "routesChecked": [
+        {
+          "route": "NIST ThermoML DOI lookup",
+          "result": "machine-readable ThermoML JSON accessible and encoded in Documentation/Validation/HydrogenThermoML2017Density.json"
+        }
+      ],
+      "numberOfDensityPoints": 19,
+      "useInProductionValidation": true,
+      "reason": "This is an open, machine-readable, CO2-rich gas-density matrix suitable for an H2 homogeneous gas-density validation gate."
+    },
+    {
       "sourceID": "SanchezVicente2013",
       "citation": "Sánchez-Vicente et al., Densities of the carbon dioxide + hydrogen, a system of relevance to carbon capture and storage, International Journal of Greenhouse Gas Control 13 (2013) 78-86",
       "doi": "10.1016/j.ijggc.2012.12.002",
@@ -82,12 +97,12 @@
     }
   ],
   "decision": {
-    "productionValidationMatrixAvailable": false,
+    "productionValidationMatrixAvailable": true,
     "enabledH2Domain": "none",
-    "scientificResult": "NO ACCESSIBLE CO2-RICH VALIDATION MATRIX",
+    "scientificResult": "CO2-RICH GAS-DENSITY MATRIX ACQUIRED; EOS VALIDATION PENDING",
     "notes": [
       "EOS-CG-2021 CO2+H2 native model construction remains feasible.",
-      "PhaseXpert does not expose H2 without an audited CO2-rich primary numerical validation matrix.",
+      "PhaseXpert does not expose H2 until the acquired ThermoML matrix is evaluated by a numerically verified EOS-CG implementation.",
       "No values were copied from plots, snippets or secondary summaries."
     ]
   }

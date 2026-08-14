@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-13",
+  "purpose": "EOS-CG-2021 reference-implementation cross-check for PhaseXpert custom teqp model data",
+  "referenceImplementation": {
+    "name": "Clapeyron.jl EOS_CG",
+    "repository": "https://github.com/ClapeyronThermo/Clapeyron.jl",
+    "tag": "v0.6.26",
+    "commit": "8bafad61eee016b2973997571fa026f068596db5",
+    "licence": "MIT",
+    "sourceFile": "src/models/EmpiricHelmholtz/MultiFluid/variants/EOS_CG.jl",
+    "mixingDatabase": "database/Empiric/EOS_CG/mixing/EOS_CG_mixing_unlike.csv",
+    "departureDatabase": "database/Empiric/EOS_CG/departure/EOS_CG_departure_unlike.csv",
+    "modelReferences": [
+      {
+        "title": "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+        "doi": "10.1007/s10765-023-03263-6"
+      }
+    ]
+  },
+  "runtimeOracleStatus": {
+    "juliaExecutableAvailable": false,
+    "numericPressureDensityDerivativeCrosscheckRun": false,
+    "blocker": "No Julia executable is installed in the managed Xcode/Codex environment. Homebrew metadata access also failed on the sandboxed cache path, so a runnable Clapeyron EOS_CG oracle was not installed during this checkpoint.",
+    "iosRuntimeImpact": "none; Julia/Clapeyron is used only as a desktop/reference oracle and is not part of the iOS runtime"
+  },
+  "directTeqpDiagnostics": {
+    "artifact": "Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json",
+    "status": "provisional; uses corrected PhaseXpert custom-teqp model data but does not replace the missing Clapeyron numeric oracle",
+    "results": {
+      "CO2+H2": {
+        "dataset": "Souissi et al. 2017 NIST ThermoML gas density",
+        "points": 19,
+        "densityAARD": 0.00189492,
+        "worstRelativeDeviation": 0.00370799
+      },
+      "CO2+CH4GasSubset": {
+        "dataset": "Ghafri et al. 2016 NIST ThermoML gas-density block",
+        "points": 6,
+        "densityAARD": 0.00203422,
+        "worstRelativeDeviation": 0.00413173
+      }
+    }
+  },
+  "databaseAudit": [
+    {
+      "pair": "CO2+N2",
+      "clapeyronOrder": "nitrogen + carbon dioxide",
+      "phaseXpertStatus": "matches Clapeyron EOS_CG Table 4 data; reciprocal beta handling still required for CO2+N2 order",
+      "mixingParameters": {
+        "betaV": 0.977795,
+        "gammaV": 1.047578,
+        "betaT": 1.005895,
+        "gammaT": 1.107654
+      },
+      "departureStatus": "matches Clapeyron EOS_CG departure record"
+    },
+    {
+      "pair": "CO2+O2",
+      "clapeyronOrder": "carbon dioxide + oxygen",
+      "phaseXpertStatus": "matches Clapeyron EOS_CG Table 4 data",
+      "mixingParameters": {
+        "betaV": 1.0,
+        "gammaV": 1.08446,
+        "betaT": 1.0,
+        "gammaT": 1.031986
+      },
+      "departureStatus": "no Clapeyron departure record; Fij is zero"
+    },
+    {
+      "pair": "CO2+Ar",
+      "clapeyronOrder": "carbon dioxide + argon",
+      "phaseXpertStatus": "matches Clapeyron EOS_CG Table 4 and departure data",
+      "mixingParameters": {
+        "betaV": 1.003766,
+        "gammaV": 1.013833,
+        "betaT": 0.998705,
+        "gammaT": 1.039675
+      },
+      "departureStatus": "matches Clapeyron EOS_CG departure record"
+    },
+    {
+      "pair": "CO2+H2",
+      "clapeyronOrder": "carbon dioxide + hydrogen",
+      "phaseXpertStatus": "matches Clapeyron EOS_CG Table 4 and departure data",
+      "mixingParameters": {
+        "betaV": 1.198,
+        "gammaV": 0.842,
+        "betaT": 0.979,
+        "gammaT": 1.961
+      },
+      "departureStatus": "matches Clapeyron EOS_CG departure record"
+    },
+    {
+      "pair": "CO2+CH4",
+      "clapeyronOrder": "methane + carbon dioxide",
+      "phaseXpertStatus": "corrected after audit; previous PhaseXpert artifact swapped/misassigned CH4+CO2 beta/gamma values and any CH4 numerical diagnostic based on that record is superseded",
+      "mixingParameters": {
+        "betaV": 0.999518,
+        "gammaV": 1.002807,
+        "betaT": 1.022624,
+        "gammaT": 0.975665
+      },
+      "departureStatus": "matches Clapeyron EOS_CG departure record"
+    }
+  ],
+  "decision": {
+    "previousO2ArFailuresStatus": "not promoted to final EOS-CG model failures because numeric Clapeyron-vs-custom-teqp equivalence has not yet run",
+    "previousCH4FailureStatus": "invalidated as an EOS-CG model conclusion by the CH4+CO2 Table 4 mapping bug",
+    "productionImpurityEnablement": "none from this cross-check alone"
+  }
+}

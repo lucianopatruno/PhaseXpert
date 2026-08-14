@@ -201,3 +201,15 @@
   CO₂-rich numerical validation matrix was accessible; snippets, plots and
   H₂-rich/high-temperature surrogate tables were not used as production
   evidence.
+- Added open NIST ThermoML validation artifacts for Souissi et al. 2017
+  CO₂+H₂ gas density (`10.1021/acs.jced.7b00213`) and Ghafri et al. 2016
+  CO₂+CH₄ density (`10.1016/j.fluid.2015.08.029`), plus a pinned Clapeyron.jl
+  EOS_CG source/database audit. The audit corrected the CH₄+CO₂ EOS-CG Table 4
+  beta/gamma mapping and superseded the earlier CH₄ VLE failure as an
+  implementation-data result rather than a valid EOS-CG model conclusion.
+- Recorded provisional direct-teqp EOS-CG gas-density diagnostics: CO₂+H₂
+  Souissi 2017 gas density gives 19 points with 0.189492% AARD and 0.370799%
+  worst relative deviation, and corrected CO₂+CH₄ Ghafri 2016 gas density gives
+  6 gas points with 0.203422% AARD and 0.413173% worst relative deviation.
+  Impurity production support remains disabled until a numeric Clapeyron
+  EOS_CG identity check or equivalent oracle validation is completed.

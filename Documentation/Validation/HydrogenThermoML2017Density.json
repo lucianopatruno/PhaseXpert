@@ -1,0 +1,391 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "doi": "10.1021/acs.jced.7b00213",
+    "title": "Vapor-Phase (p, rho, T, x) Behavior and Virial Coefficients for the Binary Mixture (0.05 Hydrogen + 0.95 Carbon Dioxide) over the Temperature Range from (273.15 to 323.15) K with Pressures up to 6 MPa",
+    "journal": "J. Chem. Eng. Data",
+    "volume": "62",
+    "pages": "2973-2981",
+    "year": "2017",
+    "authors": [
+      "Souissi, M. A. B.[Mohamed A. Ben]",
+      "Kleinrahm, R.[Reiner]",
+      "Yang, X.[Xiaoxian]",
+      "Richter, M.[Markus]"
+    ],
+    "thermoMLMD5": "b536bd1de262979de190f89065c132c1",
+    "thermoMLURL": "https://trc.nist.gov/ThermoML/10.1021/acs.jced.7b00213.json"
+  },
+  "compoundRegistry": {
+    "1": "hydrogen",
+    "2": "carbon dioxide"
+  },
+  "rows": [
+    {
+      "block": 1,
+      "row": 1,
+      "phase": "Gas",
+      "temperatureK": 273.15,
+      "pressureKPa": 3035.96,
+      "pressurePa": 3035960.0,
+      "massDensityKgM3": 71.3532,
+      "expandedUncertaintyKgM3": 0.0438,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 2,
+      "phase": "Gas",
+      "temperatureK": 273.15,
+      "pressureKPa": 2536.9,
+      "pressurePa": 2536900.0,
+      "massDensityKgM3": 56.521,
+      "expandedUncertaintyKgM3": 0.0348,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 3,
+      "phase": "Gas",
+      "temperatureK": 273.15,
+      "pressureKPa": 2022.37,
+      "pressurePa": 2022370.0,
+      "massDensityKgM3": 42.9575,
+      "expandedUncertaintyKgM3": 0.0265,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 4,
+      "phase": "Gas",
+      "temperatureK": 273.15,
+      "pressureKPa": 1524.62,
+      "pressurePa": 1524620.0,
+      "massDensityKgM3": 31.0881,
+      "expandedUncertaintyKgM3": 0.0193,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 5,
+      "phase": "Gas",
+      "temperatureK": 273.15,
+      "pressureKPa": 1039.57,
+      "pressurePa": 1039569.9999999999,
+      "massDensityKgM3": 20.4494,
+      "expandedUncertaintyKgM3": 0.0129,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 6,
+      "phase": "Gas",
+      "temperatureK": 273.15,
+      "pressureKPa": 513.52,
+      "pressurePa": 513520.0,
+      "massDensityKgM3": 9.74868,
+      "expandedUncertaintyKgM3": 0.00661,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 7,
+      "phase": "Gas",
+      "temperatureK": 293.15,
+      "pressureKPa": 4984.89,
+      "pressurePa": 4984890.0,
+      "massDensityKgM3": 121.352,
+      "expandedUncertaintyKgM3": 0.092,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 8,
+      "phase": "Gas",
+      "temperatureK": 293.15,
+      "pressureKPa": 4051.14,
+      "pressurePa": 4051140.0,
+      "massDensityKgM3": 89.7154,
+      "expandedUncertaintyKgM3": 0.0681,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 9,
+      "phase": "Gas",
+      "temperatureK": 293.15,
+      "pressureKPa": 3016.7,
+      "pressurePa": 3016700.0,
+      "massDensityKgM3": 61.5091,
+      "expandedUncertaintyKgM3": 0.0461,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 10,
+      "phase": "Gas",
+      "temperatureK": 293.15,
+      "pressureKPa": 1991.99,
+      "pressurePa": 1991990.0,
+      "massDensityKgM3": 37.9543,
+      "expandedUncertaintyKgM3": 0.0286,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 11,
+      "phase": "Gas",
+      "temperatureK": 293.15,
+      "pressureKPa": 1014.6,
+      "pressurePa": 1014600.0,
+      "massDensityKgM3": 18.2895,
+      "expandedUncertaintyKgM3": 0.014,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 12,
+      "phase": "Gas",
+      "temperatureK": 293.15,
+      "pressureKPa": 503.16,
+      "pressurePa": 503160.0,
+      "massDensityKgM3": 8.83486,
+      "expandedUncertaintyKgM3": 0.00718,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 13,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 5997.37,
+      "pressurePa": 5997370.0,
+      "massDensityKgM3": 121.561,
+      "expandedUncertaintyKgM3": 0.092,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 14,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 5030.44,
+      "pressurePa": 5030440.0,
+      "massDensityKgM3": 96.6051,
+      "expandedUncertaintyKgM3": 0.0723,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 15,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 4029.43,
+      "pressurePa": 4029430.0,
+      "massDensityKgM3": 73.5962,
+      "expandedUncertaintyKgM3": 0.0551,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 16,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 3009.75,
+      "pressurePa": 3009750.0,
+      "massDensityKgM3": 52.4905,
+      "expandedUncertaintyKgM3": 0.0394,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 17,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 2031.06,
+      "pressurePa": 2031060.0,
+      "massDensityKgM3": 34.0104,
+      "expandedUncertaintyKgM3": 0.0257,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 18,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 1038.12,
+      "pressurePa": 1038119.9999999999,
+      "massDensityKgM3": 16.7369,
+      "expandedUncertaintyKgM3": 0.0129,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    },
+    {
+      "block": 1,
+      "row": 19,
+      "phase": "Gas",
+      "temperatureK": 323.15,
+      "pressureKPa": 549.21,
+      "pressurePa": 549210.0,
+      "massDensityKgM3": 8.70026,
+      "expandedUncertaintyKgM3": 0.00708,
+      "compositionConstraints": [
+        {
+          "componentRegNum": 1,
+          "component": "hydrogen",
+          "moleFraction": 0.05362,
+          "phase": "Gas"
+        }
+      ],
+      "property": "Mass density, kg/m3"
+    }
+  ],
+  "notes": [
+    "Generated directly from the NIST ThermoML JSON endpoint without manual table transcription.",
+    "Pressure values in ThermoML are kPa and are converted to Pa in this artifact.",
+    "Mass density values are kg/m3 as reported by ThermoML."
+  ]
+}

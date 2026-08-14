@@ -65,7 +65,7 @@ The machine-readable extraction for PhaseXpert's target subset is
 | CO₂+O₂ | CO₂+O₂ | EOS-CG/Gernert-Span | 1.000000 | 1.031986 | 1.000000 | 1.084460 | 0 | candidate; no departure function |
 | CO₂+Ar | CO₂+Ar | Løvseth et al. | 0.998705 | 1.039675 | 1.003766 | 1.013833 | 1 | candidate; Table 5 departure function required |
 | CO₂+H₂ | CO₂+H₂ | Beckmüller et al. | 0.979000 | 1.961000 | 1.198000 | 0.842000 | 1 | candidate; Table 5 departure function required |
-| CO₂+CH₄ | CH₄+CO₂ | GERG-2008 inherited | 0.999518 | 1.002806 | 1.000482 | 1.022624 | 1 | GERG-inherited candidate; reciprocal beta handling required for CO₂+CH₄ order |
+| CO₂+CH₄ | CH₄+CO₂ | GERG-2008 inherited | 1.022624 | 0.975665 | 0.999518 | 1.002807 | 1 | GERG-inherited candidate; reciprocal beta handling required for CO₂+CH₄ order |
 
 The extraction also records Table 5 departure-function terms for CO₂+N₂,
 CO₂+Ar, CO₂+H₂ and CO₂+CH₄. The target EOS-CG term types map onto teqp
@@ -95,7 +95,9 @@ CO₂+O₂ and CO₂+Ar rows is recorded in
 |---|---|---:|---:|---:|---|
 | CO₂+O₂ | Table 4 reducing parameters, `Fij = 0`, no departure function | 6 | 7.3878% | 14.8035% | Fail |
 | CO₂+Ar | Table 4 reducing parameters plus Table 5 Løvseth departure function | 6 | 3.40533% | 9.99102% | Fail |
-| CO₂+CH₄ | GERG-inherited reducing parameters plus GERG-2008 departure function | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Fail |
+| CO₂+H₂ | Table 4 reducing parameters plus Table 5 Beckmüller departure function | 19 gas-density points | 0.189492% | 0.370799% | Limited density-pass candidate; held for numeric EOS-CG identity oracle |
+| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 6 gas-density points | 0.203422% | 0.413173% | Gas-density pass candidate; held for numeric EOS-CG identity oracle and non-gas review |
+| CO₂+CH₄ | Prior mis-mapped GERG-inherited record | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Superseded by CH₄ Table 4 mapping bug |
 
 The CO₂+Ar 3.08 mol% subset remains a useful diagnostic with worst density
 deviation 0.732631%, but it is not user-facing support because no audited
@@ -103,10 +105,25 @@ independent VLE gate has passed and PhaseXpert does not currently expose
 density-only impurity formulations.
 
 The CO₂+CH₄ direct VLE probe used the NIST ThermoML encoding of Petropoulou
-et al. 2018. Several low-CH₄ rows were close, but one 298.142 K row with
-xCH₄ = 0.05378 converged to a materially different pressure and vapor
-composition, so CH₄ remains disabled pending a broader audited density+VLE
-validation matrix.
+et al. 2018. That historical result is now superseded: a pinned Clapeyron
+EOS_CG database audit found that PhaseXpert's CH₄+CO₂ Table 4 values had been
+mis-mapped. The corrected CH₄+CO₂ values are recorded in
+`Documentation/Validation/EOSCG2021TargetModelData.json`, and the prior VLE
+deviation must not be cited as an EOS-CG model failure until the corrected
+implementation is rerun.
+
+A corrected direct-teqp homogeneous gas-density probe is recorded in
+`Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json`. It gives:
+
+| Pair/domain | Reference data | Points | AARD | Worst relative deviation |
+|---|---|---:|---:|---:|
+| CO₂+H₂ gas, xH₂ = 0.05362 | Souissi et al. 2017 NIST ThermoML | 19 | 0.189492% | 0.370799% |
+| CO₂+CH₄ gas, zCO₂ = 0.95 | Ghafri et al. 2016 NIST ThermoML gas block | 6 | 0.203422% | 0.413173% |
+
+These are promising property-specific density candidates, not production
+enablement. A runnable Clapeyron EOS_CG oracle was not available in the managed
+Xcode/Codex environment, so numerical EOS-CG identity against Clapeyron remains
+open before PhaseXpert exposes H₂ or CH₄.
 
 ## Immediate validation implications
 
@@ -119,8 +136,13 @@ validation matrix.
   function alone.
 - CO₂+Ar and CO₂+H₂: both require exact Table 5 departure-function extraction
   before any validation bake-off.
-- CO₂+H₂: direct native construction works, but the production validation gate
-  is blocked by data acquisition rather than by native feasibility. The
+- CO₂+H₂: direct native construction works, and the open Souissi et al. 2017
+  NIST ThermoML gas-density matrix is now encoded in
+  `Documentation/Validation/HydrogenThermoML2017Density.json` with 19
+  machine-readable points at xH₂ = 0.05362. The production validation gate is
+  no longer blocked by gas-density data acquisition, but it still requires a
+  numeric EOS-CG identity check or corrected native probe run before H₂ can be
+  exposed. The
   dedicated acquisition artifact
   `Documentation/Validation/HydrogenValidationDataAcquisition.json` records
   the source audit: Sánchez-Vicente et al. 2013 is directly relevant but its
