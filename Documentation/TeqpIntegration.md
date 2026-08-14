@@ -3,10 +3,11 @@
 ## Status
 
 This is a deliberately narrow experimental native-provider milestone. It adds
-an optional local teqp bridge for exactly 100 mol% CO₂, plus validation-gated
-CO₂+N₂ research infrastructure. CoolProp remains the default provider, and no
+an optional local teqp bridge for pure CO₂, a property-specific CO₂+H₂
+homogeneous gas-density production domain, and validation-gated CO₂+N₂
+research infrastructure. CoolProp remains the default provider, and no
 existing calculation is routed to teqp unless the user explicitly selects
-`Advanced CO₂ & Phase Model (teqp)`.
+`Advanced CCS Properties`.
 
 Future CCS impurity formulations are documented separately in
 `Documentation/EOSCG2021Integration.md`. teqp is treated as a native

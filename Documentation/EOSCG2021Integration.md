@@ -8,13 +8,16 @@ This milestone separates three concepts:
 - native engine: the local teqp C++ bridge and derivative/equilibrium tools;
 - scientific formulation: a published CCS mixture EOS such as EOS-CG-2021.
 
-The current production teqp provider remains pure CO₂ only. No impurity is
+The production advanced provider now supports pure CO₂ plus one
+property-specific impurity domain: CO₂+H₂ homogeneous gas density at the exact
+Souissi et al. 2017 ThermoML composition and isotherm pressure ranges. No
+other impurity, phase equilibrium, phase envelope, mixture heat capacity,
+mixture speed of sound, reference-state property or transport property is
 enabled by this document or by the extracted parameter artifact alone.
 
-Until at least one impurity formulation passes the production validation gate,
-the user-facing display name is:
+The user-facing display name is:
 
-`Advanced CO₂ & Phase Model (teqp)`
+`Advanced CCS Properties`
 
 The stable provider ID remains `teqp-pure-co2-experimental` for saved-case
 compatibility.
@@ -79,7 +82,8 @@ vendored fluid JSON data and the extracted EOS-CG Table 4/5 records constructed
 custom CO₂+O₂, CO₂+Ar, CO₂+H₂ and CO₂+CH₄ multifluid models successfully. This
 confirms native representation feasibility for the target records, but it is
 not production validation. Production enablement still requires EOS-CG identity
-checks and independent PVT/VLE validation against primary data.
+checks and independent PVT/VLE validation against primary data for each
+property-specific domain.
 
 `Scripts/build-teqp-xcframework.sh` now prepares generated native headers with
 the target CO₂, N₂, O₂, Ar, H₂ and CH₄ fluid JSON records plus
@@ -95,8 +99,8 @@ CO₂+O₂ and CO₂+Ar rows is recorded in
 |---|---|---:|---:|---:|---|
 | CO₂+O₂ | Table 4 reducing parameters, `Fij = 0`, no departure function | 6 | 7.3878% | 14.8035% | Fail |
 | CO₂+Ar | Table 4 reducing parameters plus Table 5 Løvseth departure function | 6 | 3.40533% | 9.99102% | Fail |
-| CO₂+H₂ | Table 4 reducing parameters plus Table 5 Beckmüller departure function | 19 gas-density points | 0.189492% | 0.370799% | Limited density-pass candidate; held for numeric EOS-CG identity oracle |
-| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 6 gas-density points | 0.203422% | 0.413173% | Gas-density pass candidate; held for numeric EOS-CG identity oracle and non-gas review |
+| CO₂+H₂ | Table 4 reducing parameters plus Table 5 Beckmüller departure function | 19 gas-density points | 0.189492% | 0.370799% | Limited homogeneous gas-density pass; production-enabled only for the encoded domain |
+| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 6 gas-density points | 0.203422% | 0.413173% | Diagnostic only pending full usable ThermoML row review |
 | CO₂+CH₄ | Prior mis-mapped GERG-inherited record | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Superseded by CH₄ Table 4 mapping bug |
 
 The CO₂+Ar 3.08 mol% subset remains a useful diagnostic with worst density
@@ -120,10 +124,18 @@ A corrected direct-teqp homogeneous gas-density probe is recorded in
 | CO₂+H₂ gas, xH₂ = 0.05362 | Souissi et al. 2017 NIST ThermoML | 19 | 0.189492% | 0.370799% |
 | CO₂+CH₄ gas, zCO₂ = 0.95 | Ghafri et al. 2016 NIST ThermoML gas block | 6 | 0.203422% | 0.413173% |
 
-These are promising property-specific density candidates, not production
-enablement. A runnable Clapeyron EOS_CG oracle was not available in the managed
-Xcode/Codex environment, so numerical EOS-CG identity against Clapeyron remains
-open before PhaseXpert exposes H₂ or CH₄.
+The CO₂+H₂ gas-density result is production-enabled only for the exact
+validated domain. The CO₂+CH₄ gas subset remains diagnostic because the full
+usable ThermoML matrix has not yet been classified and rerun for production
+bounds.
+
+A runnable Clapeyron EOS_CG oracle was not available in the managed
+Xcode/Codex environment. Instead,
+`Documentation/Validation/EOSCGStaticIdentityAudit.json` compares the pinned
+Clapeyron.jl v0.6.26 EOS_CG source/database records with PhaseXpert's
+EOS-CG model data field-by-field for CO₂+N₂, CO₂+O₂, CO₂+Ar, CO₂+H₂ and
+CO₂+CH₄. The static audit result is `PASS`, and it records the corrected
+CO₂+CH₄ beta/gamma order bug found in the earlier implementation.
 
 ## Immediate validation implications
 
@@ -139,10 +151,9 @@ open before PhaseXpert exposes H₂ or CH₄.
 - CO₂+H₂: direct native construction works, and the open Souissi et al. 2017
   NIST ThermoML gas-density matrix is now encoded in
   `Documentation/Validation/HydrogenThermoML2017Density.json` with 19
-  machine-readable points at xH₂ = 0.05362. The production validation gate is
-  no longer blocked by gas-density data acquisition, but it still requires a
-  numeric EOS-CG identity check or corrected native probe run before H₂ can be
-  exposed. The
+  machine-readable points at xH₂ = 0.05362. Static EOS-CG identity plus the
+  direct teqp density probe establish a limited homogeneous gas-density
+  production domain at the encoded composition/isotherms/pressure ranges. The
   dedicated acquisition artifact
   `Documentation/Validation/HydrogenValidationDataAcquisition.json` records
   the source audit: Sánchez-Vicente et al. 2013 is directly relevant but its
@@ -153,7 +164,9 @@ open before PhaseXpert exposes H₂ or CH₄.
   accessible to this agent. No H₂ validation values are inferred from snippets
   or plots.
 - CO₂+CH₄: EOS-CG-2021 inherits GERG; the first direct Petropoulou/ThermoML VLE
-  probe failed to establish a production subdomain.
+  probe is superseded by the CH₄ beta/gamma mapping correction, while the
+  corrected 6-row gas-density subset remains diagnostic pending full usable-row
+  review.
 - Simultaneous impurity support is not implied by binary construction. The
   EOS-CG-2021 authors report that multicomponent validation data remain
   comparatively scarce, so PhaseXpert must keep multicomponent impurity entry

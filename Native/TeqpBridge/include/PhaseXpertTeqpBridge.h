@@ -61,6 +61,13 @@ typedef struct PXTeqpBinaryPointResult {
     int bubble_converged;
 } PXTeqpBinaryPointResult;
 
+typedef struct PXTeqpMixtureDensityResult {
+    double density_kg_m3;
+    double molar_density_mol_m3;
+    int density_root_count;
+    PXTeqpPhase phase;
+} PXTeqpMixtureDensityResult;
+
 int px_teqp_calculate_pure_co2(
     double pressure_pa,
     double temperature_k,
@@ -94,6 +101,15 @@ int px_teqp_calculate_co2_n2_point(
     double temperature_k,
     double nitrogen_mole_fraction,
     PXTeqpBinaryPointResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_eoscg_co2_h2_gas_density(
+    double pressure_pa,
+    double temperature_k,
+    double hydrogen_mole_fraction,
+    PXTeqpMixtureDensityResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

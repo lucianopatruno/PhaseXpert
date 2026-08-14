@@ -213,3 +213,13 @@
   6 gas points with 0.203422% AARD and 0.413173% worst relative deviation.
   Impurity production support remains disabled until a numeric Clapeyron
   EOS_CG identity check or equivalent oracle validation is completed.
+- Replaced the blocked Julia runtime oracle with a static field-by-field audit
+  against pinned Clapeyron.jl v0.6.26 EOS_CG source/database files. The audit
+  passes for CO₂+N₂, CO₂+O₂, CO₂+Ar, CO₂+H₂ and CO₂+CH₄ after the CH₄
+  beta/gamma mapping correction. Enabled the first property-specific teqp
+  impurity domain under the renamed Advanced CCS Properties provider: CO₂+H₂
+  homogeneous gas density only at xH₂ = 0.05362, the Souissi et al. 2017
+  isotherms 273.15 K, 293.15 K and 323.15 K, and the encoded gas-pressure
+  ranges. N₂, O₂, Ar, CH₄, simultaneous impurities, impurity VLE/phase
+  envelopes, mixture Cp/Cv/speed, h/u/s and transport remain unavailable for
+  teqp.

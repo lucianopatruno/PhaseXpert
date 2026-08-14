@@ -30,6 +30,55 @@ public struct TeqpCompositionLimit: Codable, Equatable, Sendable {
     }
 }
 
+public enum TeqpPhaseDomain: String, Codable, Equatable, Sendable {
+    case homogeneousGas
+    case homogeneousLiquidOrDense
+    case supercritical
+    case phaseEquilibrium
+    case pureFluid
+}
+
+public struct TeqpTemperaturePressureLimit: Codable, Equatable, Sendable {
+    public let temperatureK: Double
+    public let minimumPressurePa: Double
+    public let maximumPressurePa: Double
+
+    public init(
+        temperatureK: Double,
+        minimumPressurePa: Double,
+        maximumPressurePa: Double
+    ) {
+        self.temperatureK = temperatureK
+        self.minimumPressurePa = minimumPressurePa
+        self.maximumPressurePa = maximumPressurePa
+    }
+}
+
+public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
+    public let property: PropertyID
+    public let phaseDomain: TeqpPhaseDomain
+    public let compositionLimits: [TeqpCompositionLimit]
+    public let isothermPressureLimits: [TeqpTemperaturePressureLimit]
+    public let validationArtifact: String
+    public let notes: [String]
+
+    public init(
+        property: PropertyID,
+        phaseDomain: TeqpPhaseDomain,
+        compositionLimits: [TeqpCompositionLimit],
+        isothermPressureLimits: [TeqpTemperaturePressureLimit],
+        validationArtifact: String,
+        notes: [String]
+    ) {
+        self.property = property
+        self.phaseDomain = phaseDomain
+        self.compositionLimits = compositionLimits
+        self.isothermPressureLimits = isothermPressureLimits
+        self.validationArtifact = validationArtifact
+        self.notes = notes
+    }
+}
+
 public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
     public let id: String
     public let name: String
@@ -38,6 +87,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
     public let components: Set<ComponentID>
     public let compositionLimits: [TeqpCompositionLimit]
     public let supportedProperties: Set<PropertyID>
+    public let propertyCapabilities: [TeqpPropertyCapability]
     public let supportsPhaseEnvelope: Bool
     public let provenance: String
     public let limitations: [String]
@@ -51,6 +101,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
         components: Set<ComponentID>,
         compositionLimits: [TeqpCompositionLimit],
         supportedProperties: Set<PropertyID>,
+        propertyCapabilities: [TeqpPropertyCapability] = [],
         supportsPhaseEnvelope: Bool,
         provenance: String,
         limitations: [String],
@@ -63,6 +114,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
         self.components = components
         self.compositionLimits = compositionLimits
         self.supportedProperties = supportedProperties
+        self.propertyCapabilities = propertyCapabilities
         self.supportsPhaseEnvelope = supportsPhaseEnvelope
         self.provenance = provenance
         self.limitations = limitations
@@ -112,6 +164,86 @@ public enum TeqpFormulationCatalog {
                 title: "A New Equation of State for Carbon Dioxide Covering the Fluid Region from the Triple-Point Temperature to 1100 K at Pressures up to 800 MPa",
                 year: 1996,
                 doiOrURL: "https://doi.org/10.1063/1.555991"
+            )
+        ]
+    )
+
+    public static let co2HydrogenEOSCGGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
+        name: "CO₂+H₂ EOS-CG-2021 homogeneous gas density",
+        family: .eosCG2021,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .hydrogen],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .hydrogen,
+                minimumMoleFraction: 0.05362,
+                maximumMoleFraction: 0.05362
+            )
+        ],
+        supportedProperties: [
+            .density,
+            .molarMass,
+            .compressibilityFactor,
+            .specificVolume
+        ],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .hydrogen,
+                        minimumMoleFraction: 0.05362,
+                        maximumMoleFraction: 0.05362
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 273.15,
+                        minimumPressurePa: 513_520,
+                        maximumPressurePa: 3_035_960
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 293.15,
+                        minimumPressurePa: 503_160,
+                        maximumPressurePa: 4_984_890
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 323.15,
+                        minimumPressurePa: 549_210,
+                        maximumPressurePa: 5_997_370
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json",
+                notes: [
+                    "Validated only for homogeneous gas density at the exact Souissi et al. 2017 ThermoML H₂ mole fraction.",
+                    "No interpolation between isotherms is claimed.",
+                    "VLE, phase envelope, Cp, Cv, speed of sound, h, u, s and transport are unavailable for this mixture."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 Table 4 CO₂+H₂ reducing parameters and Table 5 Beckmüller et al. Gaussian+Exponential departure function evaluated through teqp v0.23.1 \(teqpCommit); gas-density validation against Souissi et al. 2017 NIST ThermoML.",
+        limitations: [
+            "LIMITED PASS — homogeneous gas density only at xH₂ = 0.05362.",
+            "Temperature must match one of the validated isotherms: 273.15 K, 293.15 K or 323.15 K.",
+            "Pressure must remain inside the observed gas-pressure range for that isotherm.",
+            "Phase equilibrium, phase envelope, heat capacities, speed of sound, reference-state properties and transport are unavailable.",
+            "No CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            ),
+            SourceReference(
+                authors: "Souissi, Thol, Herrig, Jäger and Span",
+                title: "Vapor-Phase (p, rho, T, x) Behavior and Virial Coefficients for the Binary Mixture (0.05 Hydrogen + 0.95 Carbon Dioxide)",
+                year: 2017,
+                doiOrURL: "https://doi.org/10.1021/acs.jced.7b00213"
             )
         ]
     )
@@ -313,7 +445,7 @@ public enum TeqpFormulationCatalog {
     ]
 
     public static var productionFormulations: [TeqpFormulation] {
-        [pureCarbonDioxide]
+        [pureCarbonDioxide, co2HydrogenEOSCGGasDensity]
     }
 
     public static var researchFormulations: [TeqpFormulation] {

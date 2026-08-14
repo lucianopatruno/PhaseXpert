@@ -67,10 +67,11 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   transport outputs plus restricted dry CO₂-rich mixture density/phase calculations; molar mass,
   specific volume and Z are
   derived transparently from recorded inputs and calculated density; user-facing
-  provider labels are General Properties (CoolProp) and Advanced CO₂ & Phase
-  Model (teqp); an explicit experimental native teqp pure-CO₂ provider
-  for density, Cv, Cp, Cp/Cv, speed of sound and the same derived values when
-  its ignored local XCFramework is built; an
+  provider labels are General Properties (CoolProp) and Advanced CCS
+  Properties; an explicit experimental native teqp pure-CO₂ provider
+  for density, Cv, Cp, Cp/Cv, speed of sound and the same derived values, plus
+  a narrowly validation-gated CO₂+H₂ homogeneous gas-density domain at
+  xH₂ = 0.05362 when its ignored local XCFramework is built; an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and
@@ -156,7 +157,11 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - comparison is pairwise and its PDF/CSV exports report numerical differences,
   not model accuracy;
 - saved cases are local-only and do not sync between devices;
-- impurity-specific validated limits are not established.
+- teqp impurity support is property-specific: H₂ is enabled only for
+  homogeneous gas density at xH₂ = 0.05362 and the encoded Souissi et al. 2017
+  isotherm pressure ranges; N₂, O₂, Ar, CH₄, simultaneous impurities, impurity
+  phase envelopes, mixture Cp/Cv/speed, h/u/s and transport remain unavailable
+  for teqp.
 
 ## Documentation
 

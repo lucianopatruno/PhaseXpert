@@ -3,18 +3,17 @@
 ## Status
 
 This milestone starts the internal model-selection framework for the
-user-facing `Advanced CO₂ & Phase Model (teqp)` provider. The provider name
-and stable provider ID remain unchanged. Low-level teqp formulations are
-selected only behind the provider boundary and must be disclosed in scientific
-traceability.
+user-facing `Advanced CCS Properties` provider. The stable provider ID remains
+unchanged. Low-level teqp formulations are selected only behind the provider
+boundary and must be disclosed in scientific traceability.
 
 The next CCS mixture-model candidate is EOS-CG-2021, documented in
 `Documentation/EOSCG2021Integration.md`. In that work, teqp is the native C++
 engine and EOS-CG-2021 is the scientific formulation.
 
-No new impurity is enabled by this document alone. A component becomes
-selectable for teqp only after a formulation passes independent validation for
-a declared composition, temperature and pressure range.
+No impurity is enabled by inventory alone. A component becomes selectable for
+teqp only after a formulation passes independent validation for a declared
+property, composition, temperature and pressure range.
 
 ## Gate 0 version review
 
@@ -30,11 +29,12 @@ unchanged.
 ## Internal formulation registry
 
 `TeqpFormulationCatalog` records internal teqp formulations separately from the
-user-facing provider. The only production-enabled formulation is currently:
+user-facing provider. The production-enabled formulations are currently:
 
 | Formulation ID | Components | Family | Status | Enabled properties | Phase envelope |
 |---|---|---|---|---|---|
 | `teqp-v0.23.1-pure-co2-span-wagner-density` | CO₂ | multifluid | production-enabled | density, Cv, Cp, Cp/Cv, speed of sound, molar mass, specific volume, Z | yes, pure-fluid saturation only |
+| `teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017` | CO₂+H₂ | EOS-CG-2021 | production-enabled, limited pass | homogeneous gas density at xH₂ = 0.05362 plus molar mass, specific volume, Z | no |
 
 The CO₂+N₂ Gernert/GERG formulation from PR #42 is retained as
 `teqp-v0.23.1-co2-n2-gerg-diagnostic` with `failedValidation` status. It is
@@ -77,7 +77,7 @@ Initial independent references identified for the target binaries are:
 | CO₂+N₂ | Brugge et al. 1997; Mantovani et al. 2012 | Westman et al. 2016; Lasala et al. 2016 data embedded in teqp docs for the activity-model example | Standard Gernert/GERG model failed PR #42 Gate C; alternative formulations must be compared against the same primary data. |
 | CO₂+O₂ | Mantovani et al. 2012; recent CO₂+O₂ PVT datasets require primary-source audit | Westman et al. 2016, DOI `10.1016/j.fluid.2016.04.002` | O₂ is high priority because Mantovani includes CO₂-rich PVT rows and Westman provides VLE. |
 | CO₂+Ar | Mantovani et al. 2012 | published CO₂+Ar VLE sources require primary-source audit | Ar is high priority because Mantovani includes CO₂-rich PVT rows. |
-| CO₂+H₂ | Sanchez-Vicente et al. 2013, DOI `10.1016/j.ijggc.2012.12.002`, reports CO₂+H₂ densities relevant to CCS; newer datasets exist but are not encoded here | CO₂+H₂ phase-behavior/VLE sources exist but no complete audited numerical matrix is encoded here | GERG natural-gas coverage must not be assumed accurate in CO₂-rich H₂ service; H₂ remains unavailable. |
+| CO₂+H₂ | Sánchez-Vicente et al. 2013, DOI `10.1016/j.ijggc.2012.12.002`, reports CO₂+H₂ densities relevant to CCS; Souissi et al. 2017 ThermoML gas-density rows are now encoded for EOS-CG-2021 | CO₂+H₂ phase-behavior/VLE sources exist but no complete audited numerical matrix is encoded here | GERG natural-gas coverage must not be assumed accurate in CO₂-rich H₂ service; current production H₂ support is limited to the EOS-CG/Souissi homogeneous gas-density domain. |
 | CO₂+CH₄ | CO₂-rich density literature exists but no complete audited numerical matrix is encoded here | Petropoulou et al. 2018, DOI `10.1016/j.fluid.2018.01.011`, reports CO₂+CH₄ VLE near 293-303 K; no complete audited production matrix is encoded here | Binary validation does not prove multicomponent support; CH₄ remains unavailable. |
 
 ## Current product decision
@@ -90,7 +90,7 @@ The requested target impurities are inventoried but not enabled for teqp:
 | N₂ | Multifluid+Activity Wilson candidate | Lasala et al.; PR #42 references for comparison | research-only: parameters are from the Lasala VLE example and are not accepted as an independently validated predictive density formulation | research-only: not a production validation set independent of the parameter source | none | no |
 | O₂ | Standard multifluid reducing-function candidate | Mantovani 2012 Tables 2, 6 and 7; Westman 2016 CO₂+O₂ identified | failed: 6 direct teqp PVT points converged, worst relative density deviation `14.803493%` | not pursued for production after density gate failed | none | no |
 | Ar | Standard multifluid Gernert/GERG candidate | Mantovani 2012 Tables 2, 8 and 9; CO₂+Ar VLE sources identified | failed for broad audited range: 6 direct teqp PVT points converged, low-Ar subset worst `0.731526%`, high-Ar subset worst `9.990878%` | not completed; low-Ar density-only promise is insufficient for phase-equilibrium support | none | no |
-| H₂ | Standard multifluid / GERG residual candidates | Sanchez-Vicente et al. 2013 density source identified | no defensible encoded PVT matrix; candidate not numerically baked off for production | no defensible encoded VLE matrix | none | no |
+| H₂ | EOS-CG-2021 Table 4/5 Beckmüller formulation | Souissi et al. 2017 NIST ThermoML gas density; Sánchez-Vicente et al. 2013 retained as dense-domain context | limited homogeneous gas-density pass: 19/19 points, AARD 0.189492%, worst 0.370799% | no audited VLE matrix; phase equilibrium unavailable | xH₂ = 0.05362 exactly, T = 273.15/293.15/323.15 K, encoded gas-pressure ranges only | no |
 | CH₄ | Standard multifluid / GERG residual candidates | Petropoulou et al. 2018 VLE source and CO₂-rich density literature identified | no defensible encoded PVT matrix; candidate not numerically baked off for production | no defensible encoded VLE matrix | none | no |
 
 The machine-readable bake-off artifact is
