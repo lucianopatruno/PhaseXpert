@@ -41,6 +41,8 @@ decision.
 - unsupported component and binary pair;
 - pressure/temperature bounds;
 - flash non-convergence and phase-envelope partial failure;
+- property-specific teqp mixture slices, where density support must not imply
+  VLE, phase-envelope, Cp, Cv, speed-of-sound, h/u/s or transport support;
 - cancellation, timeout, offline, rate limiting and model mismatch;
 - malformed, non-finite, wrong-unit and mismatched-request remote responses.
 

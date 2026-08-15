@@ -230,3 +230,12 @@
   CO₂+CH₄ homogeneous gas density only at xCH₄ = 0.05, 301.14 K ± 0.02 K and
   1.99046-6.976 MPa. CH₄ VLE, phase envelope, mixture Cp/Cv/speed, h/u/s and
   transport remain unavailable.
+- Expanded the CO₂+CH₄ teqp density gate with a physically interpretable
+  high-temperature supercritical Ghafri 2016 slice: xCH₄ = 0.05, 65 points
+  from 308.137 K to 313.182 K and 7.97159-9.96937 MPa, 1.1254775% AARD and
+  1.99333% worst relative deviation. The lower-temperature near-critical and
+  dense/liquid-like rows remain diagnostic only. CO₂+H₂ remains limited to the
+  Souissi 2017 gas-density slice because no additional authoritative numerical
+  CO₂-rich H₂ density table was acquired. H₂/CH₄ VLE, impurity phase
+  envelopes, mixture Cp/Cv/speed, simultaneous H₂+CH₄, h/u/s and transport
+  remain unavailable.

@@ -15,7 +15,8 @@ scientific and product constraints.
 The app therefore does not attempt, approximate, extrapolate, or export
 multicomponent phase envelopes. A composition with any positive impurity is
 shown a deliberate product-scope message in the phase-diagram screen, while
-property calculations for the selected mixture remain available.
+property calculations for the selected mixture remain available. Density-only
+teqp H₂/CH₄ support does not unlock an impurity phase diagram.
 
 Future reconsideration requires a new scientific feasibility milestone with new
 acceptance criteria before any production provider or user-interface integration

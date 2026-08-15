@@ -1,0 +1,19 @@
+{
+  "artifactID": "eoscg2021-co2-ch4-corrected-vle-audit-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "candidateSource": {
+    "title": "Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms",
+    "doi": "10.1016/j.fluid.2018.01.011",
+    "machineReadableSource": "https://trc.nist.gov/ThermoML/10.1016/j.fluid.2018.01.011.json"
+  },
+  "implementationAudit": {
+    "nativeBridgeSupport": "No production CO2+CH4 VLE entry point exists in PhaseXpertTeqpBridge.xcframework.",
+    "providerSupport": "TeqpProvider exposes only density for CO2+CH4 mixtures.",
+    "result": "NOT ENABLED"
+  },
+  "productionDecision": {
+    "vle": "unavailable",
+    "phaseEnvelope": "unavailable",
+    "reason": "The Petropoulou ThermoML source is accessible, but corrected EOS-CG/GERG VLE could not be run without a CO2+CH4 native VLE bridge entry point."
+  }
+}

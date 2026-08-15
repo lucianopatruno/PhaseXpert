@@ -1,0 +1,22 @@
+{
+  "artifactID": "eoscg2021-co2-h2-vle-audit-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "candidateSources": [
+    {
+      "title": "Phase behavior of (CO2 + H2) and (CO2 + N2) at temperatures between (218.15 and 303.15) K at pressures up to 15 MPa",
+      "doi": "10.1016/j.ijggc.2015.02.018",
+      "accessibleMetadata": "VLE data are reported for CO2+H2 and CO2+N2 over 218.15 K to 303.15 K up to 15 MPa."
+    }
+  ],
+  "implementationAudit": {
+    "nativeBridgeSupport": "No production CO2+H2 VLE entry point exists in PhaseXpertTeqpBridge.xcframework.",
+    "providerSupport": "TeqpProvider exposes only density for CO2+H2 mixtures.",
+    "result": "NOT ENABLED"
+  },
+  "productionDecision": {
+    "vle": "unavailable",
+    "phaseClassification": "unchanged",
+    "phaseEnvelope": "unavailable",
+    "reason": "No audited numerical VLE matrix was encoded and no native CO2+H2 VLE bridge exists for deterministic validation."
+  }
+}

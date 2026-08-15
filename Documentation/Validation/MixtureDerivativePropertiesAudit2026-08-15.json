@@ -1,0 +1,15 @@
+{
+  "artifactID": "eoscg2021-mixture-caloric-speed-audit-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "implementationAudit": {
+    "nativeBridgeSupport": "The current binary native bridge returns mixture density and molar density only.",
+    "providerSupport": "TeqpProvider exposes mixture density plus derived molar mass, specific volume and compressibility factor only.",
+    "result": "NOT ENABLED"
+  },
+  "productionDecision": {
+    "cv": "unavailable for CO2+H2 and CO2+CH4",
+    "cp": "unavailable for CO2+H2 and CO2+CH4",
+    "speedOfSound": "unavailable for CO2+H2 and CO2+CH4",
+    "reason": "Complete ideal/residual derivative implementation and independent numerical validation were not established for mixtures in this milestone."
+  }
+}

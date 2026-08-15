@@ -1,0 +1,159 @@
+{
+  "artifactID": "eoscg2021-co2-ch4-ghafri2016-density-domain-expansion-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "supersedesProductionDecisionFrom": "Documentation/Validation/MethaneFullDensityValidationSummary.json",
+  "sourceDataset": {
+    "title": "Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter",
+    "doi": "10.1016/j.fluid.2015.08.029",
+    "machineReadableSource": "Documentation/Validation/MethaneThermoML2016Density.json",
+    "rowResults": "Documentation/Validation/MethaneFullDensityValidationResults.csv"
+  },
+  "model": {
+    "engine": "teqp v0.23.1",
+    "scientificFormulation": "EOS-CG-2021 inherited CO2+CH4 GERG pair",
+    "staticIdentityAudit": "Documentation/Validation/EOSCGStaticIdentityAudit.json",
+    "implementationNote": "Uses corrected CH4 reciprocal beta/gamma component-order mapping from PR #44."
+  },
+  "overallDiagnosticResult": {
+    "usableRows": 180,
+    "convergedRows": 180,
+    "temperatureRangeK": {
+      "minimum": 300.066,
+      "maximum": 313.182
+    },
+    "pressureRangePa": {
+      "minimum": 1990460,
+      "maximum": 11966000
+    },
+    "methaneMoleFraction": 0.05,
+    "aardPercent": 1.3981775,
+    "worstRelativeDeviationPercent": 5.15195,
+    "worstAbsoluteDeviationKgM3": 25.2967
+  },
+  "partitionResults": [
+    {
+      "classification": "homogeneousGas",
+      "rows": 6,
+      "temperatureRangeK": {
+        "minimum": 301.133,
+        "maximum": 301.153
+      },
+      "pressureRangePa": {
+        "minimum": 1990460,
+        "maximum": 6976000
+      },
+      "densityRangeKgM3": {
+        "minimum": 37.5288,
+        "maximum": 227.803
+      },
+      "aardPercent": 0.2034228,
+      "worstRelativeDeviationPercent": 0.413175,
+      "worstAbsoluteDeviationKgM3": 0.941225
+    },
+    {
+      "classification": "highTemperatureSupercritical",
+      "selectionRule": "All Ghafri rows with T >= 308 K, excluding lower-temperature near-critical and dense/liquid-like rows.",
+      "rows": 65,
+      "temperatureRangeK": {
+        "minimum": 308.137,
+        "maximum": 313.182
+      },
+      "pressureRangePa": {
+        "minimum": 7971590,
+        "maximum": 9969370
+      },
+      "densityRangeKgM3": {
+        "minimum": 234.195,
+        "maximum": 570.979
+      },
+      "aardPercent": 1.1254775,
+      "worstRelativeDeviationPercent": 1.99333,
+      "worstAbsoluteDeviationKgM3": 9.262
+    },
+    {
+      "classification": "diagnosticOnlyLowerTemperatureNearCriticalDense",
+      "rows": 109,
+      "reasonNotProductionEnabled": "Lower-temperature dense, liquid-like and near-critical rows include materially larger deviations up to 5.15195% and do not form an acceptable production domain."
+    }
+  ],
+  "productionDecision": {
+    "result": "EXPANDED PASS - HOMOGENEOUS GAS AND HIGH-TEMPERATURE SUPERCRITICAL DENSITY ONLY",
+    "enabled": true,
+    "composition": "xCH4 = 0.05 exactly",
+    "enabledTemperaturePressureSlices": [
+      {
+        "nominalTemperatureK": 301.14,
+        "minimumTemperatureK": 301.133,
+        "maximumTemperatureK": 301.153,
+        "minimumPressurePa": 1990460,
+        "maximumPressurePa": 6976000,
+        "phaseRegion": "homogeneousGas"
+      },
+      {
+        "nominalTemperatureK": 308.15,
+        "minimumTemperatureK": 308.137,
+        "maximumTemperatureK": 308.177,
+        "minimumPressurePa": 7971800,
+        "maximumPressurePa": 9967260,
+        "phaseRegion": "highTemperatureSupercritical"
+      },
+      {
+        "nominalTemperatureK": 309.15,
+        "minimumTemperatureK": 309.133,
+        "maximumTemperatureK": 309.179,
+        "minimumPressurePa": 7971980,
+        "maximumPressurePa": 9967340,
+        "phaseRegion": "highTemperatureSupercritical"
+      },
+      {
+        "nominalTemperatureK": 310.15,
+        "minimumTemperatureK": 310.135,
+        "maximumTemperatureK": 310.183,
+        "minimumPressurePa": 7971590,
+        "maximumPressurePa": 9969370,
+        "phaseRegion": "highTemperatureSupercritical"
+      },
+      {
+        "nominalTemperatureK": 311.15,
+        "minimumTemperatureK": 311.134,
+        "maximumTemperatureK": 311.192,
+        "minimumPressurePa": 7972680,
+        "maximumPressurePa": 9967760,
+        "phaseRegion": "highTemperatureSupercritical"
+      },
+      {
+        "nominalTemperatureK": 312.15,
+        "minimumTemperatureK": 312.131,
+        "maximumTemperatureK": 312.193,
+        "minimumPressurePa": 7972370,
+        "maximumPressurePa": 9967680,
+        "phaseRegion": "highTemperatureSupercritical"
+      },
+      {
+        "nominalTemperatureK": 313.15,
+        "minimumTemperatureK": 313.14,
+        "maximumTemperatureK": 313.182,
+        "minimumPressurePa": 7973280,
+        "maximumPressurePa": 9768430,
+        "phaseRegion": "highTemperatureSupercritical"
+      }
+    ],
+    "supportedProperties": [
+      "density",
+      "molarMass",
+      "compressibilityFactor",
+      "specificVolume"
+    ],
+    "unsupportedCapabilities": [
+      "VLE",
+      "phase envelope",
+      "Cp",
+      "Cv",
+      "speed of sound",
+      "h",
+      "u",
+      "s",
+      "transport"
+    ]
+  }
+}

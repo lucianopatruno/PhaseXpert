@@ -4,8 +4,9 @@
 
 This is a deliberately narrow experimental native-provider milestone. It adds
 an optional local teqp bridge for pure CO₂, a property-specific CO₂+H₂
-homogeneous gas-density production domain, and validation-gated CO₂+N₂
-research infrastructure. CoolProp remains the default provider, and no
+homogeneous gas-density production domain, a property-specific CO₂+CH₄
+homogeneous gas/supercritical density production domain, and validation-gated
+CO₂+N₂ research infrastructure. CoolProp remains the default provider, and no
 existing calculation is routed to teqp unless the user explicitly selects
 `Advanced CCS Properties`.
 

@@ -290,7 +290,7 @@ final class PhaseXpertTests: XCTestCase {
             .unavailable
         )
         XCTAssertTrue(record.response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
-        XCTAssertTrue(record.response.solver.method.contains("MethaneFullDensityValidationSummary"))
+        XCTAssertTrue(record.response.solver.method.contains("MethaneDensityDomainExpansion2026-08-15"))
         XCTAssertTrue(record.response.warnings.contains { $0.contains("Ghafri") })
     }
 

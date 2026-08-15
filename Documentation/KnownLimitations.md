@@ -26,8 +26,9 @@
   existing transparent derived properties; CO₂+H₂ supports only homogeneous
   gas density plus derived molar mass, specific volume and Z at xH₂ = 0.05362
   and the encoded Souissi et al. 2017 isotherm pressure ranges; CO₂+CH₄
-  supports only homogeneous gas density plus derived molar mass, specific
-  volume and Z at xCH₄ = 0.05, 301.14 K ± 0.02 K and 1.99046-6.976 MPa.
+  supports only homogeneous density plus derived molar mass, specific volume
+  and Z at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 301.14 K gas
+  block and 308.15-313.15 K high-temperature supercritical slices.
   Viscosity, transport properties, enthalpy, entropy, internal energy, N₂,
   O₂, Ar, simultaneous impurities, impurity heat capacities, impurity speed of
   sound and impurity phase-equilibrium outputs are unavailable. Pure-CO₂
