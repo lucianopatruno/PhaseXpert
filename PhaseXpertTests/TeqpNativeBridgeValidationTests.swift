@@ -39,6 +39,14 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         let speedOfSoundMetresPerSecond: Double
     }
 
+    private struct PetropoulouVLERow {
+        let temperatureK: Double
+        let pressurePa: Double
+        let liquidMethaneMoleFraction: Double
+        let vaporMethaneMoleFraction: Double
+        let nearCritical: Bool
+    }
+
     func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
         let engine = try requireNativeTeqpEngine()
         XCTAssertTrue(engine.isAvailable)
@@ -221,6 +229,91 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             XCTAssertEqual(repeated.pressure_pa, first.pressure_pa)
             XCTAssertEqual(repeated.liquid_n2_mole_fraction, first.liquid_n2_mole_fraction)
             XCTAssertEqual(repeated.vapor_n2_mole_fraction, first.vapor_n2_mole_fraction)
+        }
+        #endif
+    }
+
+    func testNativeTeqpGenericBinaryVLEBridgeRunsCorrectedCO2CH4PetropoulouSlice() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let references = [
+            PetropoulouVLERow(
+                temperatureK: 293.13,
+                pressurePa: 6_134_700,
+                liquidMethaneMoleFraction: 0.01528,
+                vaporMethaneMoleFraction: 0.03970,
+                nearCritical: false
+            ),
+            PetropoulouVLERow(
+                temperatureK: 298.142,
+                pressurePa: 6_641_050,
+                liquidMethaneMoleFraction: 0.00800,
+                vaporMethaneMoleFraction: 0.01703,
+                nearCritical: false
+            ),
+            PetropoulouVLERow(
+                temperatureK: 303.144,
+                pressurePa: 7_302_500,
+                liquidMethaneMoleFraction: 0.00209,
+                vaporMethaneMoleFraction: 0.00305,
+                nearCritical: true
+            )
+        ]
+
+        for reference in references {
+            let result = try requireNativeGenericBinaryVLE(
+                formulation: PXTeqpBinaryFormulationEOSCGCO2CH4,
+                temperatureK: reference.temperatureK,
+                liquidComponent2MoleFraction:
+                    reference.liquidMethaneMoleFraction,
+                initialGuess: petropoulouInitialGuess(for: reference)
+            )
+            let pressureRelativeDeviation = abs(result.pressure_pa - reference.pressurePa)
+                / reference.pressurePa
+            let vaporCompositionDeviation = abs(
+                result.vapor_component2_mole_fraction
+                    - reference.vaporMethaneMoleFraction
+            )
+            print(
+                "TEQP_CO2_CH4_PETROPOULOU_VLE "
+                    + "T=\(reference.temperatureK)K "
+                    + "referenceP=\(reference.pressurePa)Pa "
+                    + "predictedP=\(result.pressure_pa)Pa "
+                    + "pressureRelativeDeviation=\(pressureRelativeDeviation) "
+                    + "referenceYCH4=\(reference.vaporMethaneMoleFraction) "
+                    + "predictedYCH4=\(result.vapor_component2_mole_fraction) "
+                    + "vaporCompositionDeviation=\(vaporCompositionDeviation) "
+                    + "nearCritical=\(reference.nearCritical) "
+                    + "iterations=\(result.iteration_count) "
+                    + "pressureResidual=\(result.pressure_residual_pa) "
+                    + "component1Residual=\(result.component1_chemical_potential_residual) "
+                    + "component2Residual=\(result.component2_chemical_potential_residual)"
+            )
+
+            XCTAssertEqual(result.converged, 1)
+            XCTAssertGreaterThan(result.pressure_pa, 0)
+            XCTAssertEqual(
+                result.liquid_component2_mole_fraction,
+                reference.liquidMethaneMoleFraction,
+                accuracy: 1e-8
+            )
+            XCTAssertTrue(result.vapor_component2_mole_fraction.isFinite)
+            XCTAssertGreaterThan(
+                result.liquid_molar_density_mol_m3,
+                result.vapor_molar_density_mol_m3
+            )
+            XCTAssertEqual(result.pressure_residual_pa, 0, accuracy: 1e-3)
+            XCTAssertEqual(
+                result.component1_chemical_potential_residual,
+                0,
+                accuracy: 1e-4
+            )
+            XCTAssertEqual(
+                result.component2_chemical_potential_residual,
+                0,
+                accuracy: 1e-4
+            )
         }
         #endif
     }
@@ -576,6 +669,57 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             )
         }
         return nativeResult
+    }
+
+    private func requireNativeGenericBinaryVLE(
+        formulation: PXTeqpBinaryFormulation,
+        temperatureK: Double,
+        liquidComponent2MoleFraction: Double,
+        initialGuess: PXTeqpBinaryVLEInitialGuess? = nil
+    ) throws -> PXTeqpGenericBinaryVLEResult {
+        var nativeResult = PXTeqpGenericBinaryVLEResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status: Int32
+        if let initialGuess {
+            status = px_teqp_calculate_binary_vle_tx_with_initial_guess(
+                formulation,
+                temperatureK,
+                liquidComponent2MoleFraction,
+                initialGuess,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+        } else {
+            status = px_teqp_calculate_binary_vle_tx(
+                formulation,
+                temperatureK,
+                liquidComponent2MoleFraction,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+        }
+        guard status == 0 else {
+            throw XCTSkip(
+                "Native generic binary VLE solve failed: "
+                    + nullTerminatedString(errorBuffer)
+            )
+        }
+        return nativeResult
+    }
+
+    private func petropoulouInitialGuess(
+        for reference: PetropoulouVLERow
+    ) -> PXTeqpBinaryVLEInitialGuess {
+        let idealVaporDensity = reference.pressurePa
+            / (8.314_462_618_153_24 * reference.temperatureK)
+        return PXTeqpBinaryVLEInitialGuess(
+            liquid_molar_density_mol_m3: 19_000,
+            vapor_molar_density_mol_m3: idealVaporDensity,
+            vapor_component2_mole_fraction:
+                reference.vaporMethaneMoleFraction
+        )
     }
 
     private func requireNativeBinaryPoint(

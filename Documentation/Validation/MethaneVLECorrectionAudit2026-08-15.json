@@ -7,13 +7,26 @@
     "machineReadableSource": "https://trc.nist.gov/ThermoML/10.1016/j.fluid.2018.01.011.json"
   },
   "implementationAudit": {
-    "nativeBridgeSupport": "No production CO2+CH4 VLE entry point exists in PhaseXpertTeqpBridge.xcframework.",
+    "nativeBridgeSupport": "A generic diagnostic binary VLE bridge now supports EOS-CG CO2+CH4 with Helmholtz chemical-potential equality, pressure equality, fixed liquid methane composition and optional initial guesses.",
     "providerSupport": "TeqpProvider exposes only density for CO2+CH4 mixtures.",
-    "result": "NOT ENABLED"
+    "result": "DIAGNOSTIC BRIDGE IMPLEMENTED"
+  },
+  "correctedBakeoff": {
+    "artifact": "Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json",
+    "rows": 37,
+    "converged": 37,
+    "nonconverged": 0,
+    "ordinaryRows": 25,
+    "ordinaryPressureAARDPercent": 0.585602458987648,
+    "ordinaryWorstPressureRelativeDeviationPercent": 1.78701766827,
+    "ordinaryAverageVaporCompositionDeviation": 0.009146336413153976,
+    "ordinaryWorstVaporCompositionDeviation": 0.0262579747323,
+    "allRowsPressureAARDPercent": 0.4166638624569919,
+    "allRowsWorstPressureRelativeDeviationPercent": 1.78701766827
   },
   "productionDecision": {
     "vle": "unavailable",
     "phaseEnvelope": "unavailable",
-    "reason": "The Petropoulou ThermoML source is accessible, but corrected EOS-CG/GERG VLE could not be run without a CO2+CH4 native VLE bridge entry point."
+    "reason": "The corrected diagnostic VLE equations converge against the Petropoulou ThermoML matrix, but production phase-envelope tracing, production initial-guess/continuation policy and provider capability gating are not complete in this checkpoint."
   }
 }

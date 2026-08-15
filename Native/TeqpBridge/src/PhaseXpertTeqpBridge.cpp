@@ -617,6 +617,25 @@ public:
         return model_.R(molefractions);
     }
 
+    auto psirDerivatives(double temperature_k, const Eigen::ArrayXd &rhovec) const {
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        return Derivatives::build_Psir_fgradHessian_autodiff(
+            model_,
+            temperature_k,
+            rhovec
+        );
+    }
+
+    double pressurePa(double temperature_k, const Eigen::ArrayXd &rhovec) const {
+        const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+        auto derivatives = psirDerivatives(temperature_k, rhovec);
+        const double residual_pressure =
+            -std::get<0>(derivatives)
+            + (rhovec * std::get<1>(derivatives).array()).sum();
+        return rhovec.sum() * model_.R(molefractions) * temperature_k
+            + residual_pressure;
+    }
+
     double pressurePa(
         double temperature_k,
         const Eigen::ArrayXd &molefractions,
@@ -703,6 +722,29 @@ public:
               departureFunctionsJson()
           )) {}
 
+    double gasConstant(const Eigen::ArrayXd &molefractions) const {
+        return model_.R(molefractions);
+    }
+
+    auto psirDerivatives(double temperature_k, const Eigen::ArrayXd &rhovec) const {
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        return Derivatives::build_Psir_fgradHessian_autodiff(
+            model_,
+            temperature_k,
+            rhovec
+        );
+    }
+
+    double pressurePa(double temperature_k, const Eigen::ArrayXd &rhovec) const {
+        const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+        auto derivatives = psirDerivatives(temperature_k, rhovec);
+        const double residual_pressure =
+            -std::get<0>(derivatives)
+            + (rhovec * std::get<1>(derivatives).array()).sum();
+        return rhovec.sum() * model_.R(molefractions) * temperature_k
+            + residual_pressure;
+    }
+
     double pressurePa(
         double temperature_k,
         const Eigen::ArrayXd &molefractions,
@@ -781,22 +823,24 @@ struct BinaryVLEState {
     Eigen::VectorXd residual;
 };
 
-bool valid_binary_fraction(double nitrogen_mole_fraction) {
-    return std::isfinite(nitrogen_mole_fraction)
-        && nitrogen_mole_fraction > 0.0
-        && nitrogen_mole_fraction < 1.0;
+bool valid_binary_fraction(double component2_mole_fraction) {
+    return std::isfinite(component2_mole_fraction)
+        && component2_mole_fraction > 0.0
+        && component2_mole_fraction < 1.0;
 }
 
+template<typename BinaryModel>
 BinaryVLEState solve_binary_vle_tx_once(
-    const CarbonDioxideNitrogenModel &model,
+    const BinaryModel &model,
     double temperature_k,
     Eigen::ArrayXd liquid_initial,
     Eigen::ArrayXd vapor_initial,
-    double liquid_nitrogen_mole_fraction
+    double liquid_component2_mole_fraction
 ) {
     constexpr int kComponentCount = 2;
     Eigen::ArrayXd xspec(kComponentCount);
-    xspec << 1.0 - liquid_nitrogen_mole_fraction, liquid_nitrogen_mole_fraction;
+    xspec << 1.0 - liquid_component2_mole_fraction,
+        liquid_component2_mole_fraction;
 
     Eigen::MatrixXd jacobian(2 * kComponentCount, 2 * kComponentCount);
     Eigen::VectorXd residual(2 * kComponentCount);
@@ -1153,25 +1197,26 @@ PXTeqpPhase phase_for_branch(StableBranch branch) {
     }
 }
 
+template<typename BinaryModel>
 BinaryVLEState solve_binary_vle_tx(
+    const BinaryModel &model,
     double temperature_k,
-    double liquid_nitrogen_mole_fraction
+    double liquid_component2_mole_fraction
 ) {
     if (!std::isfinite(temperature_k) || temperature_k <= 0) {
         throw std::invalid_argument("Temperature must be finite and positive.");
     }
-    if (!valid_binary_fraction(liquid_nitrogen_mole_fraction)) {
-        throw std::invalid_argument("Liquid nitrogen mole fraction must be finite and in (0, 1).");
+    if (!valid_binary_fraction(liquid_component2_mole_fraction)) {
+        throw std::invalid_argument("Liquid component-2 mole fraction must be finite and in (0, 1).");
     }
     const auto pure_saturation = co2_model().saturationState(temperature_k);
-    const auto &model = co2_n2_model();
 
-    constexpr double kInitialNitrogenSeed = 1e-8;
+    constexpr double kInitialComponent2Seed = 1e-8;
     Eigen::ArrayXd liquid(2), vapor(2);
-    liquid << pure_saturation.liquid_molar_density_mol_m3 * (1.0 - kInitialNitrogenSeed),
-        pure_saturation.liquid_molar_density_mol_m3 * kInitialNitrogenSeed;
-    vapor << pure_saturation.vapor_molar_density_mol_m3 * (1.0 - kInitialNitrogenSeed),
-        pure_saturation.vapor_molar_density_mol_m3 * kInitialNitrogenSeed;
+    liquid << pure_saturation.liquid_molar_density_mol_m3 * (1.0 - kInitialComponent2Seed),
+        pure_saturation.liquid_molar_density_mol_m3 * kInitialComponent2Seed;
+    vapor << pure_saturation.vapor_molar_density_mol_m3 * (1.0 - kInitialComponent2Seed),
+        pure_saturation.vapor_molar_density_mol_m3 * kInitialComponent2Seed;
 
     std::vector<double> targets = {
         1e-6,
@@ -1188,13 +1233,13 @@ BinaryVLEState solve_binary_vle_tx(
         std::remove_if(
             targets.begin(),
             targets.end(),
-            [liquid_nitrogen_mole_fraction](double value) {
-                return value >= liquid_nitrogen_mole_fraction;
+            [liquid_component2_mole_fraction](double value) {
+                return value >= liquid_component2_mole_fraction;
             }
         ),
         targets.end()
     );
-    targets.push_back(liquid_nitrogen_mole_fraction);
+    targets.push_back(liquid_component2_mole_fraction);
     std::sort(targets.begin(), targets.end());
 
     BinaryVLEState state{};
@@ -1207,7 +1252,7 @@ BinaryVLEState solve_binary_vle_tx(
             target
         );
         if (!state.converged) {
-            throw std::runtime_error("teqp CO2/N2 mix_VLE_Tx did not converge during continuation.");
+            throw std::runtime_error("teqp binary mix_VLE_Tx did not converge during continuation.");
         }
         liquid = state.rhovec_liquid;
         vapor = state.rhovec_vapor;
@@ -1215,42 +1260,101 @@ BinaryVLEState solve_binary_vle_tx(
     return state;
 }
 
-BinaryVLEState solve_binary_dew_for_vapor_composition(
+template<typename BinaryModel>
+BinaryVLEState solve_binary_vle_tx_with_initial_guess(
+    const BinaryModel &model,
     double temperature_k,
-    double vapor_nitrogen_mole_fraction
+    double liquid_component2_mole_fraction,
+    double liquid_molar_density_mol_m3,
+    double vapor_molar_density_mol_m3,
+    double vapor_component2_mole_fraction
 ) {
-    if (!valid_binary_fraction(vapor_nitrogen_mole_fraction)) {
-        throw std::invalid_argument("Vapor nitrogen mole fraction must be finite and in (0, 1).");
+    if (!std::isfinite(temperature_k) || temperature_k <= 0) {
+        throw std::invalid_argument("Temperature must be finite and positive.");
+    }
+    if (!valid_binary_fraction(liquid_component2_mole_fraction)) {
+        throw std::invalid_argument("Liquid component-2 mole fraction must be finite and in (0, 1).");
+    }
+    if (!valid_binary_fraction(vapor_component2_mole_fraction)) {
+        throw std::invalid_argument("Vapor component-2 mole fraction must be finite and in (0, 1).");
+    }
+    if (!std::isfinite(liquid_molar_density_mol_m3)
+        || !std::isfinite(vapor_molar_density_mol_m3)
+        || liquid_molar_density_mol_m3 <= 0.0
+        || vapor_molar_density_mol_m3 <= 0.0) {
+        throw std::invalid_argument("Initial molar densities must be finite and positive.");
+    }
+
+    Eigen::ArrayXd liquid(2), vapor(2);
+    liquid << liquid_molar_density_mol_m3 * (1.0 - liquid_component2_mole_fraction),
+        liquid_molar_density_mol_m3 * liquid_component2_mole_fraction;
+    vapor << vapor_molar_density_mol_m3 * (1.0 - vapor_component2_mole_fraction),
+        vapor_molar_density_mol_m3 * vapor_component2_mole_fraction;
+
+    auto state = solve_binary_vle_tx_once(
+        model,
+        temperature_k,
+        liquid,
+        vapor,
+        liquid_component2_mole_fraction
+    );
+    if (!state.converged) {
+        throw std::runtime_error(
+            "teqp binary mix_VLE_Tx did not converge from the supplied initial guess."
+        );
+    }
+    return state;
+}
+
+BinaryVLEState solve_binary_vle_tx(
+    double temperature_k,
+    double liquid_nitrogen_mole_fraction
+) {
+    return solve_binary_vle_tx(
+        co2_n2_model(),
+        temperature_k,
+        liquid_nitrogen_mole_fraction
+    );
+}
+
+template<typename BinaryModel>
+BinaryVLEState solve_binary_dew_for_vapor_composition(
+    const BinaryModel &model,
+    double temperature_k,
+    double vapor_component2_mole_fraction
+) {
+    if (!valid_binary_fraction(vapor_component2_mole_fraction)) {
+        throw std::invalid_argument("Vapor component-2 mole fraction must be finite and in (0, 1).");
     }
 
     double lower = 1e-8;
-    auto lower_state = solve_binary_vle_tx(temperature_k, lower);
+    auto lower_state = solve_binary_vle_tx(model, temperature_k, lower);
     auto lower_y = lower_state.rhovec_vapor(1) / lower_state.rhovec_vapor.sum();
-    if (lower_y > vapor_nitrogen_mole_fraction) {
+    if (lower_y > vapor_component2_mole_fraction) {
         return lower_state;
     }
 
-    double upper = std::min(0.5, std::max(0.001, vapor_nitrogen_mole_fraction));
-    BinaryVLEState upper_state = solve_binary_vle_tx(temperature_k, upper);
+    double upper = std::min(0.5, std::max(0.001, vapor_component2_mole_fraction));
+    BinaryVLEState upper_state = solve_binary_vle_tx(model, temperature_k, upper);
     double upper_y = upper_state.rhovec_vapor(1) / upper_state.rhovec_vapor.sum();
-    while (upper_y < vapor_nitrogen_mole_fraction && upper < 0.95) {
+    while (upper_y < vapor_component2_mole_fraction && upper < 0.95) {
         upper = std::min(0.95, upper * 1.5);
-        upper_state = solve_binary_vle_tx(temperature_k, upper);
+        upper_state = solve_binary_vle_tx(model, temperature_k, upper);
         upper_y = upper_state.rhovec_vapor(1) / upper_state.rhovec_vapor.sum();
     }
-    if (upper_y < vapor_nitrogen_mole_fraction) {
-        throw std::runtime_error("teqp CO2/N2 dew solve could not bracket the vapor composition.");
+    if (upper_y < vapor_component2_mole_fraction) {
+        throw std::runtime_error("teqp binary dew solve could not bracket the vapor composition.");
     }
 
     BinaryVLEState mid_state = upper_state;
     for (int iteration = 0; iteration < 40; ++iteration) {
         const double mid = 0.5 * (lower + upper);
-        mid_state = solve_binary_vle_tx(temperature_k, mid);
+        mid_state = solve_binary_vle_tx(model, temperature_k, mid);
         const double mid_y = mid_state.rhovec_vapor(1) / mid_state.rhovec_vapor.sum();
-        if (std::abs(mid_y - vapor_nitrogen_mole_fraction) <= 1e-8) {
+        if (std::abs(mid_y - vapor_component2_mole_fraction) <= 1e-8) {
             return mid_state;
         }
-        if (mid_y < vapor_nitrogen_mole_fraction) {
+        if (mid_y < vapor_component2_mole_fraction) {
             lower = mid;
             lower_state = mid_state;
         } else {
@@ -1259,6 +1363,17 @@ BinaryVLEState solve_binary_dew_for_vapor_composition(
         }
     }
     return mid_state;
+}
+
+BinaryVLEState solve_binary_dew_for_vapor_composition(
+    double temperature_k,
+    double vapor_nitrogen_mole_fraction
+) {
+    return solve_binary_dew_for_vapor_composition(
+        co2_n2_model(),
+        temperature_k,
+        vapor_nitrogen_mole_fraction
+    );
 }
 
 std::vector<Root> binary_density_roots(
@@ -1390,6 +1505,97 @@ void fill_binary_vle_result(
     result->pressure_residual_pa = state.residual(2);
     result->co2_chemical_potential_residual = state.residual(0);
     result->n2_chemical_potential_residual = state.residual(1);
+}
+
+void fill_generic_binary_vle_result(
+    const BinaryVLEState &state,
+    PXTeqpGenericBinaryVLEResult *result
+) {
+    result->converged = state.converged ? 1 : 0;
+    result->iteration_count = state.iteration_count;
+    result->return_code = state.return_code;
+    result->pressure_pa = state.pressure_pa;
+    result->liquid_molar_density_mol_m3 = state.rhovec_liquid.sum();
+    result->vapor_molar_density_mol_m3 = state.rhovec_vapor.sum();
+    result->liquid_component1_mole_fraction =
+        state.rhovec_liquid(0) / state.rhovec_liquid.sum();
+    result->liquid_component2_mole_fraction =
+        state.rhovec_liquid(1) / state.rhovec_liquid.sum();
+    result->vapor_component1_mole_fraction =
+        state.rhovec_vapor(0) / state.rhovec_vapor.sum();
+    result->vapor_component2_mole_fraction =
+        state.rhovec_vapor(1) / state.rhovec_vapor.sum();
+    result->pressure_residual_pa = state.residual(2);
+    result->component1_chemical_potential_residual = state.residual(0);
+    result->component2_chemical_potential_residual = state.residual(1);
+}
+
+BinaryVLEState solve_binary_vle_tx(
+    PXTeqpBinaryFormulation formulation,
+    double temperature_k,
+    double liquid_component2_mole_fraction
+) {
+    switch (formulation) {
+    case PXTeqpBinaryFormulationCO2N2:
+        return solve_binary_vle_tx(
+            co2_n2_model(),
+            temperature_k,
+            liquid_component2_mole_fraction
+        );
+    case PXTeqpBinaryFormulationEOSCGCO2H2:
+        return solve_binary_vle_tx(
+            eoscg_co2_h2_model(),
+            temperature_k,
+            liquid_component2_mole_fraction
+        );
+    case PXTeqpBinaryFormulationEOSCGCO2CH4:
+        return solve_binary_vle_tx(
+            eoscg_co2_ch4_model(),
+            temperature_k,
+            liquid_component2_mole_fraction
+        );
+    default:
+        throw std::invalid_argument("Unsupported binary teqp formulation.");
+    }
+}
+
+BinaryVLEState solve_binary_vle_tx_with_initial_guess(
+    PXTeqpBinaryFormulation formulation,
+    double temperature_k,
+    double liquid_component2_mole_fraction,
+    const PXTeqpBinaryVLEInitialGuess &initial_guess
+) {
+    switch (formulation) {
+    case PXTeqpBinaryFormulationCO2N2:
+        return solve_binary_vle_tx_with_initial_guess(
+            co2_n2_model(),
+            temperature_k,
+            liquid_component2_mole_fraction,
+            initial_guess.liquid_molar_density_mol_m3,
+            initial_guess.vapor_molar_density_mol_m3,
+            initial_guess.vapor_component2_mole_fraction
+        );
+    case PXTeqpBinaryFormulationEOSCGCO2H2:
+        return solve_binary_vle_tx_with_initial_guess(
+            eoscg_co2_h2_model(),
+            temperature_k,
+            liquid_component2_mole_fraction,
+            initial_guess.liquid_molar_density_mol_m3,
+            initial_guess.vapor_molar_density_mol_m3,
+            initial_guess.vapor_component2_mole_fraction
+        );
+    case PXTeqpBinaryFormulationEOSCGCO2CH4:
+        return solve_binary_vle_tx_with_initial_guess(
+            eoscg_co2_ch4_model(),
+            temperature_k,
+            liquid_component2_mole_fraction,
+            initial_guess.liquid_molar_density_mol_m3,
+            initial_guess.vapor_molar_density_mol_m3,
+            initial_guess.vapor_component2_mole_fraction
+        );
+    default:
+        throw std::invalid_argument("Unsupported binary teqp formulation.");
+    }
 }
 
 }  // namespace
@@ -1526,6 +1732,68 @@ int px_teqp_calculate_co2_n2_vle_tx(
         return 6;
     } catch (...) {
         copy_text("teqp CO2/N2 VLE calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_teqp_calculate_binary_vle_tx(
+    PXTeqpBinaryFormulation formulation,
+    double temperature_k,
+    double liquid_component2_mole_fraction,
+    PXTeqpGenericBinaryVLEResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    try {
+        const auto state = solve_binary_vle_tx(
+            formulation,
+            temperature_k,
+            liquid_component2_mole_fraction
+        );
+        fill_generic_binary_vle_result(state, result);
+        copy_text("", error_buffer, error_buffer_size);
+        return state.converged ? 0 : 6;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("teqp generic binary VLE calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_teqp_calculate_binary_vle_tx_with_initial_guess(
+    PXTeqpBinaryFormulation formulation,
+    double temperature_k,
+    double liquid_component2_mole_fraction,
+    PXTeqpBinaryVLEInitialGuess initial_guess,
+    PXTeqpGenericBinaryVLEResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    try {
+        const auto state = solve_binary_vle_tx_with_initial_guess(
+            formulation,
+            temperature_k,
+            liquid_component2_mole_fraction,
+            initial_guess
+        );
+        fill_generic_binary_vle_result(state, result);
+        copy_text("", error_buffer, error_buffer_size);
+        return state.converged ? 0 : 6;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("teqp generic binary VLE calculation with initial guess failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 7;
     }
 }

@@ -74,7 +74,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   xH₂ = 0.05362 and a CO₂+CH₄ homogeneous gas-density domain at
   xCH₄ = 0.05 within the Ghafri et al. 2016 gas block plus explicit
   high-temperature supercritical density slices from 308.15 K through
-  313.15 K when its ignored local XCFramework is built; an
+  313.15 K when its ignored local XCFramework is built; a generic native
+  binary VLE diagnostic bridge for corrected CO₂+CH₄ Petropoulou 2018 rows,
+  with impurity VLE and phase envelopes still unavailable in production; an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and

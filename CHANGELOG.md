@@ -239,3 +239,12 @@
   CO₂-rich H₂ density table was acquired. H₂/CH₄ VLE, impurity phase
   envelopes, mixture Cp/Cv/speed, simultaneous H₂+CH₄, h/u/s and transport
   remain unavailable.
+- Added a generic native binary VLE diagnostic bridge for pinned teqp
+  formulations with pressure equality, component chemical-potential equality
+  and optional initial guesses. The corrected EOS-CG/GERG CO₂+CH₄ bake-off
+  against Petropoulou et al. 2018 NIST ThermoML converged 37/37 rows; ordinary
+  rows give 0.585602% pressure AARD and 1.787018% worst pressure deviation.
+  This is diagnostic evidence only: CH₄ VLE and impurity phase envelopes remain
+  unavailable until production continuation, critical handling and capability
+  gating are completed. The targeted H₂ VLE pass found no suitable open binary
+  CO₂+H₂ x/y/P/T matrix, so H₂ VLE remains unavailable.

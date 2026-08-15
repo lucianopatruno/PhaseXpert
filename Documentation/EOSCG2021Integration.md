@@ -104,6 +104,7 @@ CO₂+O₂ and CO₂+Ar rows is recorded in
 | CO₂+Ar | Table 4 reducing parameters plus Table 5 Løvseth departure function | 6 | 3.40533% | 9.99102% | Fail |
 | CO₂+H₂ | Table 4 reducing parameters plus Table 5 Beckmüller departure function | 19 gas-density points | 0.189492% | 0.370799% | Limited homogeneous gas-density pass; production-enabled only for the encoded domain |
 | CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 180 homogeneous density rows; 6-row gas block plus 65-row high-temperature supercritical production subset | 1.3981775% overall; 0.2034228% gas block; 1.1254775% supercritical slice | 5.15195% overall; 0.413175% gas block; 1.99333% supercritical slice | Expanded homogeneous density pass for encoded gas and high-temperature supercritical slices only |
+| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 37 Petropoulou 2018 VLE rows | 0.416664% pressure overall; 0.585602% pressure ordinary rows | 1.787018% pressure; 0.026258 absolute yCH₄ | Diagnostic VLE bridge pass; not production-enabled until phase-envelope continuation and capability gating are complete |
 | CO₂+CH₄ | Prior mis-mapped GERG-inherited record | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Superseded by CH₄ Table 4 mapping bug |
 
 The CO₂+Ar 3.08 mol% subset remains a useful diagnostic with worst density
@@ -112,12 +113,14 @@ only three Mantovani density points and does not define a robust independent
 property-specific production domain.
 
 The CO₂+CH₄ direct VLE probe used the NIST ThermoML encoding of Petropoulou
-et al. 2018. That historical result is now superseded: a pinned Clapeyron
-EOS_CG database audit found that PhaseXpert's CH₄+CO₂ Table 4 values had been
+et al. 2018. The original failure is superseded: a pinned Clapeyron EOS_CG
+database audit found that PhaseXpert's CH₄+CO₂ Table 4 values had been
 mis-mapped. The corrected CH₄+CO₂ values are recorded in
-`Documentation/Validation/EOSCG2021TargetModelData.json`, and the prior VLE
-deviation must not be cited as an EOS-CG model failure until the corrected
-implementation is rerun.
+`Documentation/Validation/EOSCG2021TargetModelData.json`. The corrected generic
+native VLE bridge now converges 37/37 Petropoulou rows with the summary in
+`Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json`, but this is
+still diagnostic evidence only until production phase-envelope continuation,
+critical handling and provider capability gating are implemented.
 
 A corrected direct-teqp homogeneous gas-density probe is recorded in
 `Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json`. It gives:

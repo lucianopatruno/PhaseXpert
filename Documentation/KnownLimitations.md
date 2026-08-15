@@ -38,12 +38,11 @@
   vapor or liquid branch when the state is clearly away from saturation. States
   on or too close to saturation remain explicitly unavailable because a unique
   homogeneous bulk density is not reported. The native bridge now embeds pinned
-  teqp v0.23.1 CO₂+N₂ multifluid data and exposes validation-gated research
-  primitives for binary VLE and point classification using fixed-composition
-  mixture critical conditions rather than pure-CO₂ critical temperature. The
-  corrected independent Gate C density and VLE audit failed to establish a
-  supported CO₂+N₂ teqp operating range for the pinned Gernert/GERG binary
-  model, so the enabled teqp N₂ range is empty.
+  teqp v0.23.1 binary diagnostic data and exposes validation-gated research
+  primitives for generic binary VLE plus CO₂+N₂ point classification. Corrected
+  CO₂+CH₄ Petropoulou VLE diagnostics now converge, but production
+  continuation, critical handling and provider capability gates are not
+  complete, so CH₄ VLE and impurity phase envelopes remain unavailable.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

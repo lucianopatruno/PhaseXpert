@@ -186,9 +186,98 @@ public struct NativeTeqpEngine: TeqpEngine {
         )
         #endif
     }
+
+    public func calculateBinaryVLE(
+        formulation: TeqpBinaryFormulationID,
+        temperatureK: Double,
+        liquidComponent2MoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess? = nil
+    ) async throws -> TeqpBinaryVLEResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpGenericBinaryVLEResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let nativeFormulation = nativeFormulation(for: formulation)
+            let status: Int32
+            if let initialGuess {
+                let nativeInitialGuess = PXTeqpBinaryVLEInitialGuess(
+                    liquid_molar_density_mol_m3:
+                        initialGuess.liquidMolarDensityMolesPerCubicMetre,
+                    vapor_molar_density_mol_m3:
+                        initialGuess.vaporMolarDensityMolesPerCubicMetre,
+                    vapor_component2_mole_fraction:
+                        initialGuess.vaporComponent2MoleFraction
+                )
+                status = px_teqp_calculate_binary_vle_tx_with_initial_guess(
+                    nativeFormulation,
+                    temperatureK,
+                    liquidComponent2MoleFraction,
+                    nativeInitialGuess,
+                    &nativeResult,
+                    &errorBuffer,
+                    errorBuffer.count
+                )
+            } else {
+                status = px_teqp_calculate_binary_vle_tx(
+                    nativeFormulation,
+                    temperatureK,
+                    liquidComponent2MoleFraction,
+                    &nativeResult,
+                    &errorBuffer,
+                    errorBuffer.count
+                )
+            }
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "teqp native binary VLE calculation failed." : message
+                )
+            }
+            return TeqpBinaryVLEResult(
+                converged: nativeResult.converged == 1,
+                iterationCount: Int(nativeResult.iteration_count),
+                returnCode: Int(nativeResult.return_code),
+                pressurePa: nativeResult.pressure_pa,
+                liquidMolarDensityMolesPerCubicMetre:
+                    nativeResult.liquid_molar_density_mol_m3,
+                vaporMolarDensityMolesPerCubicMetre:
+                    nativeResult.vapor_molar_density_mol_m3,
+                liquidComponent2MoleFraction:
+                    nativeResult.liquid_component2_mole_fraction,
+                vaporComponent2MoleFraction:
+                    nativeResult.vapor_component2_mole_fraction,
+                pressureResidualPa: nativeResult.pressure_residual_pa,
+                component1ChemicalPotentialResidual:
+                    nativeResult.component1_chemical_potential_residual,
+                component2ChemicalPotentialResidual:
+                    nativeResult.component2_chemical_potential_residual
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
 }
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+private func nativeFormulation(
+    for formulation: TeqpBinaryFormulationID
+) -> PXTeqpBinaryFormulation {
+    switch formulation {
+    case .carbonDioxideNitrogen:
+        PXTeqpBinaryFormulationCO2N2
+    case .eoscgCarbonDioxideHydrogen:
+        PXTeqpBinaryFormulationEOSCGCO2H2
+    case .eoscgCarbonDioxideMethane:
+        PXTeqpBinaryFormulationEOSCGCO2CH4
+    }
+}
+
 private func phaseIdentifier(for phase: PXTeqpPhase) -> String {
     switch phase {
     case PXTeqpPhaseSupercritical:

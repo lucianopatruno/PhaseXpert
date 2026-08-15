@@ -61,6 +61,27 @@ final class TeqpProviderTests: XCTestCase {
                 formulationID: TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.id
             )
         }
+
+        func calculateBinaryVLE(
+            formulation: TeqpBinaryFormulationID,
+            temperatureK: Double,
+            liquidComponent2MoleFraction: Double,
+            initialGuess: TeqpBinaryVLEInitialGuess?
+        ) async throws -> TeqpBinaryVLEResult {
+            TeqpBinaryVLEResult(
+                converged: true,
+                iterationCount: 6,
+                returnCode: 1,
+                pressurePa: 7_000_000,
+                liquidMolarDensityMolesPerCubicMetre: 20_000,
+                vaporMolarDensityMolesPerCubicMetre: 1_000,
+                liquidComponent2MoleFraction: liquidComponent2MoleFraction,
+                vaporComponent2MoleFraction: liquidComponent2MoleFraction * 2,
+                pressureResidualPa: 0,
+                component1ChemicalPotentialResidual: 0,
+                component2ChemicalPotentialResidual: 0
+            )
+        }
     }
 
     private struct FailingEngine: TeqpEngine {
@@ -99,6 +120,17 @@ final class TeqpProviderTests: XCTestCase {
             temperatureK: Double,
             methaneMoleFraction: Double
         ) async throws -> TeqpMixtureDensityResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for unsupported mixtures."
+            )
+        }
+
+        func calculateBinaryVLE(
+            formulation: TeqpBinaryFormulationID,
+            temperatureK: Double,
+            liquidComponent2MoleFraction: Double,
+            initialGuess: TeqpBinaryVLEInitialGuess?
+        ) async throws -> TeqpBinaryVLEResult {
             throw ProviderError.malformedResponse(
                 "Engine should not be called for unsupported mixtures."
             )

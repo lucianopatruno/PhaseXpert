@@ -71,6 +71,74 @@ public struct TeqpMixtureDensityResult: Equatable, Sendable {
     }
 }
 
+public enum TeqpBinaryFormulationID: Sendable {
+    case carbonDioxideNitrogen
+    case eoscgCarbonDioxideHydrogen
+    case eoscgCarbonDioxideMethane
+}
+
+public struct TeqpBinaryVLEResult: Equatable, Sendable {
+    public let converged: Bool
+    public let iterationCount: Int
+    public let returnCode: Int
+    public let pressurePa: Double
+    public let liquidMolarDensityMolesPerCubicMetre: Double
+    public let vaporMolarDensityMolesPerCubicMetre: Double
+    public let liquidComponent2MoleFraction: Double
+    public let vaporComponent2MoleFraction: Double
+    public let pressureResidualPa: Double
+    public let component1ChemicalPotentialResidual: Double
+    public let component2ChemicalPotentialResidual: Double
+
+    public init(
+        converged: Bool,
+        iterationCount: Int,
+        returnCode: Int,
+        pressurePa: Double,
+        liquidMolarDensityMolesPerCubicMetre: Double,
+        vaporMolarDensityMolesPerCubicMetre: Double,
+        liquidComponent2MoleFraction: Double,
+        vaporComponent2MoleFraction: Double,
+        pressureResidualPa: Double,
+        component1ChemicalPotentialResidual: Double,
+        component2ChemicalPotentialResidual: Double
+    ) {
+        self.converged = converged
+        self.iterationCount = iterationCount
+        self.returnCode = returnCode
+        self.pressurePa = pressurePa
+        self.liquidMolarDensityMolesPerCubicMetre =
+            liquidMolarDensityMolesPerCubicMetre
+        self.vaporMolarDensityMolesPerCubicMetre =
+            vaporMolarDensityMolesPerCubicMetre
+        self.liquidComponent2MoleFraction = liquidComponent2MoleFraction
+        self.vaporComponent2MoleFraction = vaporComponent2MoleFraction
+        self.pressureResidualPa = pressureResidualPa
+        self.component1ChemicalPotentialResidual =
+            component1ChemicalPotentialResidual
+        self.component2ChemicalPotentialResidual =
+            component2ChemicalPotentialResidual
+    }
+}
+
+public struct TeqpBinaryVLEInitialGuess: Equatable, Sendable {
+    public let liquidMolarDensityMolesPerCubicMetre: Double
+    public let vaporMolarDensityMolesPerCubicMetre: Double
+    public let vaporComponent2MoleFraction: Double
+
+    public init(
+        liquidMolarDensityMolesPerCubicMetre: Double,
+        vaporMolarDensityMolesPerCubicMetre: Double,
+        vaporComponent2MoleFraction: Double
+    ) {
+        self.liquidMolarDensityMolesPerCubicMetre =
+            liquidMolarDensityMolesPerCubicMetre
+        self.vaporMolarDensityMolesPerCubicMetre =
+            vaporMolarDensityMolesPerCubicMetre
+        self.vaporComponent2MoleFraction = vaporComponent2MoleFraction
+    }
+}
+
 public protocol TeqpEngine: Sendable {
     var isAvailable: Bool { get }
     var libraryVersion: String { get }
@@ -95,6 +163,13 @@ public protocol TeqpEngine: Sendable {
         temperatureK: Double,
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult
+
+    func calculateBinaryVLE(
+        formulation: TeqpBinaryFormulationID,
+        temperatureK: Double,
+        liquidComponent2MoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess?
+    ) async throws -> TeqpBinaryVLEResult
 }
 
 public struct UnavailableTeqpEngine: TeqpEngine {
@@ -135,6 +210,17 @@ public struct UnavailableTeqpEngine: TeqpEngine {
         temperatureK: Double,
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
+    public func calculateBinaryVLE(
+        formulation: TeqpBinaryFormulationID,
+        temperatureK: Double,
+        liquidComponent2MoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess? = nil
+    ) async throws -> TeqpBinaryVLEResult {
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
         )

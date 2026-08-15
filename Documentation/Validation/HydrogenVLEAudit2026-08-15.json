@@ -9,7 +9,7 @@
     }
   ],
   "implementationAudit": {
-    "nativeBridgeSupport": "No production CO2+H2 VLE entry point exists in PhaseXpertTeqpBridge.xcframework.",
+    "nativeBridgeSupport": "A generic diagnostic binary VLE bridge now accepts the EOS-CG CO2+H2 formulation, fixed liquid component-2 composition and optional initial guesses.",
     "providerSupport": "TeqpProvider exposes only density for CO2+H2 mixtures.",
     "result": "NOT ENABLED"
   },
@@ -17,6 +17,6 @@
     "vle": "unavailable",
     "phaseClassification": "unchanged",
     "phaseEnvelope": "unavailable",
-    "reason": "No audited numerical VLE matrix was encoded and no native CO2+H2 VLE bridge exists for deterministic validation."
+    "reason": "No audited open numerical binary CO2+H2 x/y/P/T matrix was encoded. The targeted pass found ThermoML ternary CO2+H2+methanol data and unrelated systems, but no CCS-relevant binary validation artifact suitable for production gating."
   }
 }

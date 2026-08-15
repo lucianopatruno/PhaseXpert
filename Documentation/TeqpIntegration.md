@@ -43,27 +43,33 @@ warranty. These data are upstream teqp model data; PhaseXpert does not tune
 binary interaction parameters, does not substitute CoolProp parameters and does
 not claim an independently validated CO₂+N₂ operating range from these records.
 
-## CO₂+N₂ Gate B native layer
+## Generic binary diagnostic native layer
 
-The native build now embeds the pinned CO₂, N₂, CO₂/N₂ binary-pair and
-CO₂/N₂ GERG-2008 departure-function JSON directly in the XCFramework. The app
-does not load model JSON from the filesystem at runtime and does not require
-Python, network access or external services on device.
+The native build now embeds the pinned CO₂, N₂, H₂, CH₄, binary-pair and
+departure-function JSON required for the audited teqp diagnostics directly in
+the XCFramework. The app does not load model JSON from the filesystem at
+runtime and does not require Python, network access or external services on
+device.
 
-The bridge adds a narrow binary VLE implementation equivalent to teqp
-v0.23.1's documented `mix_VLE_Tx` residual system for the concrete
-CarbonDioxide + Nitrogen multifluid model. It enforces equality of pressure,
-CO₂ chemical potential and N₂ chemical potential between equilibrium phases,
-with the Jacobian assembled from teqp's automatic-differentiation Helmholtz
-derivatives. The implementation deliberately avoids the broader `teqpcpp`
-wrapper path because that path still encounters the AppleClang issue described
-below.
+The bridge adds a generic binary VLE implementation equivalent to teqp
+v0.23.1's documented `mix_VLE_Tx` residual system for pinned two-component
+Helmholtz formulations. It enforces equality of pressure and each component's
+chemical potential between equilibrium phases, with the Jacobian assembled
+from teqp's automatic-differentiation Helmholtz derivatives. The implementation
+supports explicit initial guesses for liquid density, vapor density and vapor
+composition so production callers can warm-start continuation rather than rely
+on one hard-coded pure-CO₂ seed. The implementation deliberately avoids the
+broader `teqpcpp` wrapper path because that path still encounters the
+AppleClang issue described below.
 
-For CO₂-rich subcritical initialization, the bridge starts from teqp's pure-CO₂
-saturation state and continues through intermediate liquid-phase N₂
-compositions before solving the requested `T, x_liquid` point. A companion dew
-solve uses the same VLE primitive and brackets liquid composition until the
-vapor-phase N₂ composition matches the requested bulk composition.
+For the retained CO₂+N₂ diagnostic initialization, the bridge starts from
+teqp's pure-CO₂ saturation state and continues through intermediate
+liquid-phase N₂ compositions before solving the requested `T, x_liquid` point.
+A companion dew solve uses the same VLE primitive and brackets liquid
+composition until the vapor-phase N₂ composition matches the requested bulk
+composition. CO₂+CH₄ Petropoulou diagnostics use the generic initial-guess path
+because the inherited pure-CO₂ continuation seed is not robust enough for the
+ordinary 293 K and 298 K rows.
 
 The native point classifier is retained only as research infrastructure. For a
 requested subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at
@@ -140,7 +146,8 @@ The C ABI exposes:
 
 - linked teqp version/provenance text;
 - pure-CO₂ density from pressure in Pa and temperature in K;
-- CO₂/N₂ binary `mix_VLE_Tx` diagnostics for bridge validation;
+- generic binary `mix_VLE_Tx` diagnostics for bridge validation, including
+  optional initial guesses;
 - CO₂/N₂ subcritical point classification for validation-gated vapor,
   dense/liquid and two-phase states;
 - molar density and root count for bridge diagnostics;
