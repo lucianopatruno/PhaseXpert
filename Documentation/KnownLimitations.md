@@ -47,7 +47,12 @@
   primitives for generic binary VLE plus CO₂+N₂ point classification. Corrected
   CO₂+CH₄ Petropoulou VLE now has a limited production gate; two-phase bulk
   density, phase fraction and near-critical envelope termination remain
-  unavailable.
+  unavailable. The 2026-08-16 CCS full-thermodynamics milestone records the
+  bounded data-acquisition and production decision: mixture Cv, Cp and speed of
+  sound are not enabled because the native bridge does not expose verified
+  mixture Helmholtz derivative outputs and no primary production validation
+  matrix was encoded; continuous CH₄ envelopes, fixed-composition CH₄ critical
+  termination, H₂ VLE and simultaneous H₂+CH₄ remain unavailable.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

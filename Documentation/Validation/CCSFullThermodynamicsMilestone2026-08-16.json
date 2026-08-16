@@ -1,0 +1,101 @@
+{
+  "artifactID": "ccs-full-thermodynamics-milestone-2026-08-16",
+  "branch": "agent/ccs-full-thermodynamics",
+  "provider": "Advanced CCS Properties",
+  "stableProviderID": "teqp-pure-co2-experimental",
+  "engine": "teqp v0.23.1 native bridge",
+  "baseEvidence": [
+    "Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json",
+    "Documentation/Validation/MethaneDensityDomainExpansion2026-08-15.json",
+    "Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
+    "Documentation/Validation/MixtureDerivativePropertiesAudit2026-08-16.json",
+    "Documentation/Validation/HydrogenVLEAudit2026-08-16.json",
+    "Documentation/Validation/SimultaneousHydrogenMethaneAudit2026-08-16.json"
+  ],
+  "boundedAcquisitionPass": {
+    "performedAt": "2026-08-16",
+    "queries": [
+      "CO2 methane mixture speed of sound heat capacity Cp Cv ThermoML NIST",
+      "carbon dioxide methane mixture isobaric heat capacity speed of sound experimental data DOI",
+      "CO2 hydrogen mixture speed of sound heat capacity experimental data"
+    ],
+    "usableProductionDatasetsEncoded": [],
+    "candidateFindings": [
+      {
+        "source": "Speed of sound measurements for a CO2 rich mixture",
+        "status": "rejected_for_production_gate",
+        "reason": "CO2-rich multicomponent natural-gas mixture rather than the exact binary xCH4 = 0.05 production slice."
+      },
+      {
+        "source": "Speed of sound and heat-capacity datasets for CH4+H2 or H2-enriched natural-gas mixtures",
+        "status": "rejected_for_production_gate",
+        "reason": "Not binary CO2+H2 or CO2+CH4 at the existing CCS production compositions."
+      },
+      {
+        "source": "NIST WebBook pure-fluid Cp/Cv/speed tables",
+        "status": "rejected_for_mixture_validation",
+        "reason": "Pure-fluid reference data cannot validate binary mixture caloric or acoustic properties."
+      }
+    ],
+    "decision": "No new primary numerical CO2+CH4 or CO2+H2 Cp, Cv or speed-of-sound matrix was encoded for production."
+  },
+  "productionCapabilityTable": [
+    {
+      "system": "CO2",
+      "density": "yes",
+      "cv": "yes",
+      "cp": "yes",
+      "speed": "yes",
+      "vle": "pure saturation",
+      "phaseEnvelope": "pure saturation",
+      "critical": "yes",
+      "domain": "exact pure CO2; teqp Span-Wagner pure-fluid path; preliminary until independent PhaseXpert acceptance"
+    },
+    {
+      "system": "CO2+H2",
+      "density": "yes",
+      "cv": "no",
+      "cp": "no",
+      "speed": "no",
+      "vle": "no",
+      "phaseEnvelope": "no",
+      "critical": "no",
+      "domain": "xH2 = 0.05362 exactly; 273.15 K, 293.15 K and 323.15 K; encoded Souissi 2017 gas-pressure ranges"
+    },
+    {
+      "system": "CO2+CH4",
+      "density": "yes",
+      "cv": "no",
+      "cp": "no",
+      "speed": "no",
+      "vle": "limited phase classification",
+      "phaseEnvelope": "validated bubble/dew points only",
+      "critical": "no",
+      "domain": "xCH4 = 0.05 exactly; Ghafri 2016 homogeneous gas/supercritical density slices; Petropoulou 2018 VLE at 293.13 K and 298.142 K only"
+    },
+    {
+      "system": "CO2+H2+CH4",
+      "density": "no",
+      "cv": "no",
+      "cp": "no",
+      "speed": "no",
+      "vle": "no",
+      "phaseEnvelope": "no",
+      "critical": "no",
+      "domain": "no validated simultaneous impurity domain"
+    }
+  ],
+  "productionDecisions": {
+    "mixtureDerivativeEngine": "not_enabled",
+    "mixtureDerivativeReason": "The linked native bridge does not expose verified mixture Helmholtz derivative outputs, and no independently validated CO2+CH4 or CO2+H2 Cp/Cv/speed matrix was encoded.",
+    "methaneContinuousEnvelope": "not_enabled",
+    "methaneEnvelopeReason": "Production remains limited to validated Petropoulou isotherm bubble/dew points; continuous continuation would interpolate across unvalidated temperatures.",
+    "methaneCriticalPoint": "not_enabled",
+    "methaneCriticalReason": "Petropoulou critical-region data do not validate a fixed zCH4 = 0.05 critical endpoint.",
+    "petropoulou303K": "diagnostic_only",
+    "petropoulou303KReason": "Rows are retained as critical-region diagnostic evidence but not promoted to the ordinary fixed-composition production gate.",
+    "hydrogenVLE": "not_enabled",
+    "simultaneousHydrogenMethane": "not_enabled",
+    "hus": "not_enabled"
+  }
+}

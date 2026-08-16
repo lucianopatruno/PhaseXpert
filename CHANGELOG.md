@@ -257,3 +257,10 @@
   without fabricating two-phase bulk density. Critical termination, arbitrary
   composition interpolation, H₂ VLE, mixture Cp/Cv/speed, simultaneous
   impurities, h/u/s and transport remain unavailable.
+- Added the CCS full-thermodynamics milestone decision artifact and tightened
+  Advanced CCS Properties capability metadata. CO₂+CH₄ VLE support is now
+  represented as a production phase-equilibrium gate with validation metrics,
+  while continuous CH₄ envelope tracing, CH₄ critical termination, Petropoulou
+  303.15 K production use, CO₂+H₂ VLE, simultaneous H₂+CH₄, mixture Cp/Cv/speed
+  and h/u/s remain explicitly unavailable because the required native derivative
+  ABI and independent primary validation matrices are not present.

@@ -77,7 +77,8 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   313.15 K when its ignored local XCFramework is built; a generic native
   binary VLE bridge with a limited production CO₂+CH₄ phase-classification
   and bubble/dew point gate at xCH₄ = 0.05 on the validated Petropoulou 2018
-  ordinary isotherms; H₂ VLE and H₂ phase envelopes remain unavailable; an
+  ordinary isotherms; continuous CH₄ tracing and critical termination remain
+  diagnostic/unavailable until independently validated; H₂ VLE and H₂ phase envelopes remain unavailable; an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and
@@ -170,7 +171,7 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   block and 308.15-313.15 K high-temperature supercritical slices. CH₄ phase
   classification and phase-envelope points are available only for xCH₄ = 0.05
   on the 293.13 K and 298.14 K Petropoulou ordinary VLE isotherms; two-phase
-  bulk density, critical termination, H₂ phase envelopes, N₂, O₂, Ar,
+  bulk density, continuous CH₄ envelopes, critical termination, H₂ phase envelopes, N₂, O₂, Ar,
   simultaneous impurities, mixture Cp/Cv/speed, h/u/s and transport remain
   unavailable for teqp.
 

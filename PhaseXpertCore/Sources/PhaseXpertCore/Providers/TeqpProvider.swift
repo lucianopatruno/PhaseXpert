@@ -266,7 +266,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
                 "Phase classification is limited to pure-CO₂ stable vapor/liquid/supercritical states and the validated CO₂+CH₄ VLE gate; otherwise the phase remains unknown or unavailable.",
                 "Pure-CO₂ phase-envelope generation is available; CO₂+CH₄ phase-envelope points are available only inside the validated VLE gate.",
-                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cv, Cp and speed of sound remain unavailable pending validation.",
+                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cv, Cp and speed of sound remain unavailable because the native bridge does not expose verified mixture derivative outputs and no independent production validation gate has passed.",
                 "Absolute h, u and s remain unavailable pending reference-state validation."
             ],
             references: [
@@ -654,7 +654,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     value: nil,
                     unit: "",
                     status: .unavailable,
-                    message: "This property is not validated for the CO₂+H₂ EOS-CG-2021 gas-density domain; no CoolProp fallback is used."
+                    message: unsupportedHydrogenPropertyMessage(for: property)
                 )
             }
 
@@ -732,7 +732,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     value: nil,
                     unit: "",
                     status: .unavailable,
-                    message: "This property is not validated for the CO₂+CH₄ EOS-CG-2021 density domain; no CoolProp fallback is used."
+                    message: unsupportedMethanePropertyMessage(for: property)
                 )
             }
 
@@ -792,7 +792,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     status: .unavailable,
                     message: property == .density
                         ? "CO₂+CH₄ VLE phase classification is available here, but homogeneous bulk density is not validated for this two-phase/phase-boundary domain."
-                        : "This property is not validated for the CO₂+CH₄ EOS-CG-2021 VLE domain; no CoolProp fallback is used."
+                        : unsupportedMethaneVLEPropertyMessage(for: property)
                 )
             }
 
@@ -895,6 +895,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             warnings: [
                 "LIMITED PASS — CO₂+CH₄ phase-envelope points are validation-gated to xCH₄ = 0.05 and ordinary Petropoulou et al. 2018 isotherms.",
                 "Critical termination is not drawn for xCH₄ = 0.05 because the Petropoulou critical-region rows do not validate this composition; PhaseXpert does not interpolate to a critical endpoint.",
+                "Continuous CH₄ phase-envelope tracing remains diagnostic only; production output is restricted to the validated isotherm samples and failed gaps are not connected.",
                 "No failed or missing VLE points are connected by interpolation; no CoolProp fallback is used."
             ],
             isAvailable: true,
@@ -902,7 +903,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             model: descriptor,
             generatedAt: Date(),
             solver: SolverMetadata(
-                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ binary VLE phase-envelope points; validation artifact Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
+                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ binary VLE phase-envelope points; \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.accuracySummary) validation artifact \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.validationArtifact)",
                 converged: true,
                 iterationCount: nil,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
@@ -1165,6 +1166,68 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             status: .calculated,
             message: message
         )
+    }
+
+    private func unsupportedHydrogenPropertyMessage(
+        for property: PropertyID
+    ) -> String {
+        guard let capability = try? supportedHydrogenCapability() else {
+            return "This property is not validated for CO₂+H₂; no CoolProp fallback is used."
+        }
+        return unsupportedPropertyMessage(
+            property: property,
+            system: "CO₂+H₂",
+            enabledCapability: capability,
+            unavailableDetail: "mixture Cv, Cp, speed of sound, VLE, phase envelope, h/u/s and transport remain unavailable"
+        )
+    }
+
+    private func unsupportedMethanePropertyMessage(
+        for property: PropertyID
+    ) -> String {
+        guard let capability = try? supportedMethaneCapability() else {
+            return "This property is not validated for CO₂+CH₄; no CoolProp fallback is used."
+        }
+        return unsupportedPropertyMessage(
+            property: property,
+            system: "CO₂+CH₄",
+            enabledCapability: capability,
+            unavailableDetail: "mixture Cv, Cp, speed of sound, h/u/s and transport remain unavailable"
+        )
+    }
+
+    private func unsupportedMethaneVLEPropertyMessage(
+        for property: PropertyID
+    ) -> String {
+        let capability = TeqpFormulationCatalog.co2MethaneEOSCGVLE
+        let propertyName = displayName(for: property)
+        return "\(propertyName) for CO₂+CH₄ is not production-validated in the VLE gate; \(capability.validationSummary) enables phase classification and bubble/dew points only. \(capability.accuracySummary) No CoolProp fallback is used."
+    }
+
+    private func unsupportedPropertyMessage(
+        property: PropertyID,
+        system: String,
+        enabledCapability: TeqpPropertyCapability,
+        unavailableDetail: String
+    ) -> String {
+        let propertyName = displayName(for: property)
+        let accuracy = enabledCapability.accuracySummary.map { " \($0)" } ?? ""
+        return "\(propertyName) for \(system) is not production-validated; the enabled gate is \(enabledCapability.validationSummary)\(accuracy) \(unavailableDetail). No CoolProp fallback is used."
+    }
+
+    private func displayName(for property: PropertyID) -> String {
+        switch property {
+        case .isobaricHeatCapacity:
+            "Cp"
+        case .isochoricHeatCapacity:
+            "Cv"
+        case .speedOfSound:
+            "Speed of sound"
+        case .heatCapacityRatio:
+            "Cp/Cv"
+        default:
+            property.rawValue
+        }
     }
 
     private func temperatureDomainSummary(

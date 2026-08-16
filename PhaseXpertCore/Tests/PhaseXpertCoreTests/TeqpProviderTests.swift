@@ -166,6 +166,14 @@ final class TeqpProviderTests: XCTestCase {
             ]
         )
         XCTAssertTrue(TeqpFormulationCatalog.pureCarbonDioxide.supportsPhaseEnvelope)
+        XCTAssertTrue(TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.supportsPhaseEnvelope)
+        XCTAssertFalse(TeqpFormulationCatalog.co2MethaneEOSCGVLE.supportsContinuousEnvelope)
+        XCTAssertFalse(TeqpFormulationCatalog.co2MethaneEOSCGVLE.supportsCriticalPoint)
+        XCTAssertTrue(
+            TeqpFormulationCatalog.co2MethaneEOSCGVLE
+                .accuracySummary
+                .contains("pressure AARD 0.608899%")
+        )
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
             [.carbonDioxide, .methane, .hydrogen]
@@ -250,7 +258,7 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertFalse(
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components.contains(.methane)
-                    && $0.supportsPhaseEnvelope
+                    && $0.supportedProperties.contains(.speedOfSound)
             }
         )
     }
@@ -473,7 +481,12 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertTrue(
             response.properties.first { $0.property == .isobaricHeatCapacity }?
                 .message?
-                .contains("no CoolProp fallback") == true
+                .contains("Souissi et al. 2017") == true
+        )
+        XCTAssertTrue(
+            response.properties.first { $0.property == .isobaricHeatCapacity }?
+                .message?
+                .contains("CoolProp fallback") == true
         )
         XCTAssertTrue(
             response.warnings.contains {
@@ -623,7 +636,12 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertTrue(
             response.properties.first { $0.property == .speedOfSound }?
                 .message?
-                .contains("no CoolProp fallback") == true
+                .contains("Ghafri et al. 2016") == true
+        )
+        XCTAssertTrue(
+            response.properties.first { $0.property == .speedOfSound }?
+                .message?
+                .contains("CoolProp fallback") == true
         )
         XCTAssertTrue(response.warnings.contains { $0.contains("LIMITED PASS") })
         XCTAssertTrue(response.warnings.contains { $0.contains("Phase equilibrium") })
@@ -980,6 +998,14 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertTrue(
             response.solver?.method.contains("CO₂+CH₄ binary VLE phase-envelope") == true
+        )
+        XCTAssertTrue(
+            response.solver?.method.contains("pressure AARD 0.608899%") == true
+        )
+        XCTAssertTrue(
+            response.warnings.contains {
+                $0.contains("Continuous CH₄ phase-envelope tracing remains diagnostic")
+            }
         )
     }
 

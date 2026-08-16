@@ -28,8 +28,9 @@ provider. It solves density locally through teqp's pinned pure-CO₂ multifluid
 model, exposes pure-CO₂ saturation for the Phase Diagram workflow, and reports
 unsupported properties as unavailable rather than borrowing them from CoolProp.
 Its impurity support is property-specific: EOS-CG-2021 CO₂+H₂ homogeneous
-gas-density slices and CO₂+CH₄ homogeneous gas/supercritical density slices
-are enabled only inside their encoded ThermoML validation domains. The native bridge also contains validation-gated CO₂+N₂
+gas-density slices, CO₂+CH₄ homogeneous gas/supercritical density slices and
+the limited CO₂+CH₄ Petropoulou ordinary-isotherm VLE gate are enabled only
+inside their encoded ThermoML validation domains. The native bridge also contains validation-gated CO₂+N₂
 research infrastructure built from pinned upstream teqp data. Gate C did not
 establish a defensible user-facing N₂ range for that pinned binary model.
 
@@ -42,12 +43,12 @@ establish a defensible user-facing N₂ range for that pinned binary model.
 
 ## Advanced CCS capability table
 
-| Mixture | Density | Cp | Cv | Speed | VLE | Phase envelope | Validated domain |
-| ------- | ------- | -- | -- | ----- | --- | -------------- | ---------------- |
-| Pure CO₂ | yes | yes | yes | yes | pure saturation only | pure saturation only | Span-Wagner pure-fluid teqp path; preliminary until independently accepted |
-| CO₂+H₂ | yes | no | no | no | no | no | xH₂ = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; encoded Souissi 2017 gas-pressure bounds |
-| CO₂+CH₄ | yes | no | no | no | limited yes | limited bubble/dew points | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE phase classification at 293.13 K and 298.14 K only |
-| CO₂+H₂+CH₄ | no | no | no | no | no | no | no validated simultaneous impurity domain |
+| System | Density | Cv | Cp | Speed | VLE | Phase envelope | Critical | Domain |
+| ------ | ------: | -: | -: | ----: | --: | -------------: | -------: | ------ |
+| CO₂ | yes | yes | yes | yes | pure saturation | pure saturation | yes | Span-Wagner pure-fluid teqp path; preliminary until independently accepted |
+| CO₂+H₂ | yes | no | no | no | no | no | no | xH₂ = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; encoded Souissi 2017 gas-pressure bounds |
+| CO₂+CH₄ | yes | no | no | no | limited phase classification | validated bubble/dew points only | no | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE phase classification at 293.13 K and 298.142 K only |
+| CO₂+H₂+CH₄ | no | no | no | no | no | no | no | no validated simultaneous impurity domain |
 | REFPROP | Strong reference implementation and broad property coverage | Proprietary licence; redistribution and iOS embedding require explicit NIST permission/terms |
 | GERG-2008 implementation | Strong basis for natural-gas-like mixtures and phase behaviour | Component set and CO₂-rich impurity coverage are limited; implementation/data licensing and edge-domain validation required |
 | Cubic EOS such as Peng–Robinson | Compact, offline and phase-equilibrium capable | Needs sourced pure-component data and binary interaction parameters; density and transport accuracy may be inadequate without validated corrections |
@@ -233,3 +234,10 @@ expects mass basis and are checked against NIST Chemistry WebBook CO₂
 fluid-property rows. teqp enthalpy, entropy and internal energy remain
 unavailable until their absolute reference-state convention is accepted for
 PhaseXpert traceability.
+
+Mixture Cv, Cp and speed of sound remain unavailable for Advanced CCS
+Properties. The linked native bridge has not exposed a verified mixture
+Helmholtz derivative ABI, and the bounded 2026-08-16 acquisition pass did not
+encode a primary numerical CO₂+CH₄ or CO₂+H₂ heat-capacity/acoustic matrix at
+the production compositions. PhaseXpert therefore returns metadata-derived
+unsupported-property messages instead of calculating unvalidated values.
