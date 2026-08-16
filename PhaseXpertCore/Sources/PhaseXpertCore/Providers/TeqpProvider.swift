@@ -71,6 +71,100 @@ public struct TeqpMixtureDensityResult: Equatable, Sendable {
     }
 }
 
+public struct TeqpMixtureThermodynamicResult: Equatable, Sendable {
+    public let densityKilogramsPerCubicMetre: Double
+    public let molarDensityMolesPerCubicMetre: Double
+    public let pressurePa: Double
+    public let pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double
+    public let pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: Double
+    public let isochoricHeatCapacityJoulesPerKilogramKelvin: Double
+    public let isobaricHeatCapacityJoulesPerKilogramKelvin: Double
+    public let heatCapacityRatio: Double
+    public let speedOfSoundMetresPerSecond: Double
+    public let speedOfSoundSquaredMetresSquaredPerSecondSquared: Double
+    public let minimumStabilityEigenvalue: Double
+    public let densityRootCount: Int
+    public let converged: Bool
+    public let phaseIdentifier: String
+    public let formulationID: String
+
+    public init(
+        densityKilogramsPerCubicMetre: Double,
+        molarDensityMolesPerCubicMetre: Double,
+        pressurePa: Double,
+        pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double,
+        pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: Double,
+        isochoricHeatCapacityJoulesPerKilogramKelvin: Double,
+        isobaricHeatCapacityJoulesPerKilogramKelvin: Double,
+        heatCapacityRatio: Double,
+        speedOfSoundMetresPerSecond: Double,
+        speedOfSoundSquaredMetresSquaredPerSecondSquared: Double,
+        minimumStabilityEigenvalue: Double,
+        densityRootCount: Int,
+        converged: Bool,
+        phaseIdentifier: String,
+        formulationID: String
+    ) {
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.pressurePa = pressurePa
+        self.pressureDerivativeWithRespectToMolarDensityJoulesPerMole =
+            pressureDerivativeWithRespectToMolarDensityJoulesPerMole
+        self.pressureDerivativeWithRespectToTemperaturePascalsPerKelvin =
+            pressureDerivativeWithRespectToTemperaturePascalsPerKelvin
+        self.isochoricHeatCapacityJoulesPerKilogramKelvin =
+            isochoricHeatCapacityJoulesPerKilogramKelvin
+        self.isobaricHeatCapacityJoulesPerKilogramKelvin =
+            isobaricHeatCapacityJoulesPerKilogramKelvin
+        self.heatCapacityRatio = heatCapacityRatio
+        self.speedOfSoundMetresPerSecond = speedOfSoundMetresPerSecond
+        self.speedOfSoundSquaredMetresSquaredPerSecondSquared =
+            speedOfSoundSquaredMetresSquaredPerSecondSquared
+        self.minimumStabilityEigenvalue = minimumStabilityEigenvalue
+        self.densityRootCount = densityRootCount
+        self.converged = converged
+        self.phaseIdentifier = phaseIdentifier
+        self.formulationID = formulationID
+    }
+}
+
+public struct TeqpBinaryCriticalResult: Equatable, Sendable {
+    public let converged: Bool
+    public let iterationCount: Int
+    public let temperatureK: Double
+    public let pressurePa: Double
+    public let molarDensityMolesPerCubicMetre: Double
+    public let densityKilogramsPerCubicMetre: Double
+    public let component2MoleFraction: Double
+    public let minimumStabilityEigenvalue: Double
+    public let thirdOrderResidual: Double
+    public let formulationID: String
+
+    public init(
+        converged: Bool,
+        iterationCount: Int,
+        temperatureK: Double,
+        pressurePa: Double,
+        molarDensityMolesPerCubicMetre: Double,
+        densityKilogramsPerCubicMetre: Double,
+        component2MoleFraction: Double,
+        minimumStabilityEigenvalue: Double,
+        thirdOrderResidual: Double,
+        formulationID: String
+    ) {
+        self.converged = converged
+        self.iterationCount = iterationCount
+        self.temperatureK = temperatureK
+        self.pressurePa = pressurePa
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.component2MoleFraction = component2MoleFraction
+        self.minimumStabilityEigenvalue = minimumStabilityEigenvalue
+        self.thirdOrderResidual = thirdOrderResidual
+        self.formulationID = formulationID
+    }
+}
+
 public enum TeqpBinaryFormulationID: Sendable {
     case carbonDioxideNitrogen
     case eoscgCarbonDioxideHydrogen
@@ -164,6 +258,18 @@ public protocol TeqpEngine: Sendable {
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult
 
+    func calculateBinaryThermodynamicState(
+        formulation: TeqpBinaryFormulationID,
+        pressurePa: Double,
+        temperatureK: Double,
+        component2MoleFraction: Double
+    ) async throws -> TeqpMixtureThermodynamicResult
+
+    func calculateBinaryCriticalPoint(
+        formulation: TeqpBinaryFormulationID,
+        component2MoleFraction: Double
+    ) async throws -> TeqpBinaryCriticalResult
+
     func calculateBinaryVLE(
         formulation: TeqpBinaryFormulationID,
         temperatureK: Double,
@@ -221,6 +327,26 @@ public struct UnavailableTeqpEngine: TeqpEngine {
         liquidComponent2MoleFraction: Double,
         initialGuess: TeqpBinaryVLEInitialGuess? = nil
     ) async throws -> TeqpBinaryVLEResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
+    public func calculateBinaryThermodynamicState(
+        formulation: TeqpBinaryFormulationID,
+        pressurePa: Double,
+        temperatureK: Double,
+        component2MoleFraction: Double
+    ) async throws -> TeqpMixtureThermodynamicResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
+    public func calculateBinaryCriticalPoint(
+        formulation: TeqpBinaryFormulationID,
+        component2MoleFraction: Double
+    ) async throws -> TeqpBinaryCriticalResult {
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
         )
@@ -829,12 +955,25 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         methaneMoleFraction: Double
     ) async throws -> MethaneVLEBoundary {
         let isotherm = try methaneVLEIsotherm(for: temperatureK)
-        let bubble = try await methaneBubblePoint(
+        return try await methaneVLEBoundaryAtTemperature(
             temperatureK: isotherm,
-            liquidMethaneMoleFraction: methaneMoleFraction
+            methaneMoleFraction: methaneMoleFraction,
+            bubbleInitialGuess: nil
+        )
+    }
+
+    private func methaneVLEBoundaryAtTemperature(
+        temperatureK: Double,
+        methaneMoleFraction: Double,
+        bubbleInitialGuess: TeqpBinaryVLEInitialGuess?
+    ) async throws -> MethaneVLEBoundary {
+        let bubble = try await methaneBubblePoint(
+            temperatureK: temperatureK,
+            liquidMethaneMoleFraction: methaneMoleFraction,
+            initialGuess: bubbleInitialGuess
         )
         let dew = try await methaneDewPoint(
-            temperatureK: isotherm,
+            temperatureK: temperatureK,
             vaporMethaneMoleFraction: methaneMoleFraction
         )
         guard bubble.liquidMolarDensityMolesPerCubicMetre
@@ -866,12 +1005,31 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         }
 
         var points: [PhaseEnvelopePoint] = []
-        points.reserveCapacity(methaneVLEProductionIsotherms.count * 2)
-        for isotherm in methaneVLEProductionIsotherms {
+        var failedTemperatures: [Double] = []
+        var previousBubbleGuess: TeqpBinaryVLEInitialGuess?
+        let temperatures = methaneDiagnosticEnvelopeTemperatures()
+        points.reserveCapacity(temperatures.count * 2)
+        for isotherm in temperatures {
             try Task.checkCancellation()
-            let boundary = try await methaneVLEBoundary(
-                temperatureK: isotherm,
-                methaneMoleFraction: methaneMoleFraction
+            let boundary: MethaneVLEBoundary
+            do {
+                boundary = try await methaneVLEBoundaryAtTemperature(
+                    temperatureK: isotherm,
+                    methaneMoleFraction: methaneMoleFraction,
+                    bubbleInitialGuess: previousBubbleGuess
+                )
+            } catch {
+                failedTemperatures.append(isotherm)
+                previousBubbleGuess = nil
+                continue
+            }
+            previousBubbleGuess = TeqpBinaryVLEInitialGuess(
+                liquidMolarDensityMolesPerCubicMetre:
+                    boundary.bubble.liquidMolarDensityMolesPerCubicMetre,
+                vaporMolarDensityMolesPerCubicMetre:
+                    boundary.bubble.vaporMolarDensityMolesPerCubicMetre,
+                vaporComponent2MoleFraction:
+                    boundary.bubble.vaporComponent2MoleFraction
             )
             points.append(
                 PhaseEnvelopePoint(
@@ -888,23 +1046,28 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 )
             )
         }
+        guard points.count >= 8 else {
+            throw ProviderError.malformedResponse(
+                "teqp CO₂+CH₄ diagnostic VLE continuation returned too few finite boundary points."
+            )
+        }
 
         return PhaseEnvelopeResponse(
             requestID: request.requestID,
             points: points,
             warnings: [
-                "LIMITED PASS — CO₂+CH₄ phase-envelope points are validation-gated to xCH₄ = 0.05 and ordinary Petropoulou et al. 2018 isotherms.",
+                "LIMITED PASS — CO₂+CH₄ production validation remains restricted to xCH₄ = 0.05 and the ordinary Petropoulou et al. 2018 isotherms 293.13 K and 298.142 K.",
+                "DIAGNOSTIC — Continuous CH₄ phase-envelope tracing remains diagnostic beyond the validated Petropoulou isotherms; additional bubble/dew samples are model-continuation points used to draw the branch shape, not independent experimental validation.",
                 "Critical termination is not drawn for xCH₄ = 0.05 because the Petropoulou critical-region rows do not validate this composition; PhaseXpert does not interpolate to a critical endpoint.",
-                "Continuous CH₄ phase-envelope tracing remains diagnostic only; production output is restricted to the validated isotherm samples and failed gaps are not connected.",
-                "No failed or missing VLE points are connected by interpolation; no CoolProp fallback is used."
+                "No failed or missing VLE points are connected by interpolation; \(failedTemperatures.count) diagnostic temperature samples failed and were omitted; no CoolProp fallback is used."
             ],
             isAvailable: true,
             boundaryKind: .mixtureEnvelope,
             model: descriptor,
             generatedAt: Date(),
             solver: SolverMetadata(
-                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ binary VLE phase-envelope points; \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.accuracySummary) validation artifact \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.validationArtifact)",
-                converged: true,
+                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ adaptive diagnostic binary VLE continuation with previous-solution warm starts; \(points.count) plotted points; \(failedTemperatures.count) failed samples; \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.accuracySummary) validation artifact \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.validationArtifact)",
+                converged: failedTemperatures.isEmpty,
                 iterationCount: nil,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             )
@@ -913,13 +1076,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
 
     private func methaneBubblePoint(
         temperatureK: Double,
-        liquidMethaneMoleFraction: Double
+        liquidMethaneMoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess? = nil
     ) async throws -> TeqpBinaryVLEResult {
         try await engine.calculateBinaryVLE(
             formulation: .eoscgCarbonDioxideMethane,
             temperatureK: temperatureK,
             liquidComponent2MoleFraction: liquidMethaneMoleFraction,
-            initialGuess: methaneInitialGuess(
+            initialGuess: initialGuess ?? methaneInitialGuess(
                 temperatureK: temperatureK,
                 pressurePa: methanePressureGuess(for: temperatureK),
                 vaporMethaneMoleFraction: min(
@@ -928,6 +1092,21 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 )
             )
         )
+    }
+
+    private func methaneDiagnosticEnvelopeTemperatures() -> [Double] {
+        var temperatures: [Double] = []
+        var temperature = 293.13
+        while temperature <= 303.145 + 1e-9 {
+            temperatures.append((temperature * 1_000).rounded() / 1_000)
+            temperature += 0.5
+        }
+        for validated in methaneVLEProductionIsotherms + [303.145] {
+            if !temperatures.contains(where: { abs($0 - validated) <= 1e-6 }) {
+                temperatures.append(validated)
+            }
+        }
+        return temperatures.sorted()
     }
 
     private func methaneDewPoint(

@@ -1,0 +1,42 @@
+{
+  "artifactID": "eoscg2021-co2-ch4-continuous-envelope-diagnostics-2026-08-16",
+  "createdFor": "agent/ccs-full-thermodynamics",
+  "system": "CO2+CH4",
+  "composition": {
+    "methaneMoleFraction": 0.05,
+    "carbonDioxideMoleFraction": 0.95,
+    "basis": "overall/fixed production composition"
+  },
+  "implementation": {
+    "status": "IMPLEMENTED_DIAGNOSTIC_ONLY",
+    "providerPath": "TeqpProvider.methanePhaseEnvelope",
+    "nativeBridge": "Existing EOS-CG binary VLE ABI with previous-solution bubble warm starts",
+    "continuationMethod": "temperature continuation from the validated Petropoulou production isotherms, 0.5 K nominal step, exact insertion of 293.13 K, 298.142 K and 303.145 K, failed samples omitted instead of interpolated",
+    "branchIdentityChecks": [
+      "liquid molar density must exceed vapor molar density",
+      "bubble and dew pressure must be finite and positive",
+      "temperature samples are retained as paired bubble/dew points"
+    ],
+    "pointPlan": {
+      "temperatureSamples": 23,
+      "bubblePoints": 23,
+      "dewPoints": 23,
+      "totalPlottedPoints": 46,
+      "temperatureRangeK": [293.13, 303.145]
+    },
+    "failedPointPolicy": "A failed diagnostic sample resets the warm start and is not connected by interpolation."
+  },
+  "validationStatus": {
+    "productionVisibleStatus": "validated production gate remains limited to Petropoulou ordinary isotherms 293.13 K and 298.142 K",
+    "diagnosticStatus": "continuous continuation points are model-only diagnostics beyond the accepted Petropoulou rows",
+    "criticalMarker": "not shown because no fixed xCH4 = 0.05 critical endpoint validation has been encoded"
+  },
+  "petropoulou303KReassessment": {
+    "status": "DIAGNOSTIC_ONLY",
+    "priorBakeoffArtifact": "Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json",
+    "ordinary303KPressureAARDPercent": 0.0697158635284,
+    "ordinary303KWorstPressureRelativeDeviationPercent": 0.156641626016,
+    "ordinary303KWorstVaporCompositionAbsoluteDeviation": 0.0021341235255,
+    "decision": "The EOS agreement is numerically good for ordinary 303.145 K rows, but the isotherm is treated as critical-region evidence in the Petropoulou source and is not promoted to a production fixed-composition envelope without a validated critical termination model."
+  }
+}

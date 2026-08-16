@@ -33,6 +33,7 @@ constexpr double kMethaneMolarMassKgMol = 0.0160428;
 constexpr double kBinaryVLEAbsoluteTolerance = 1e-8;
 constexpr double kBinaryVLERelativeTolerance = 1e-8;
 constexpr int kBinaryVLEMaximumIterations = 50;
+constexpr double kGasConstantJMolK = 8.31446261815324;
 
 void copy_text(const std::string &text, char *buffer, size_t buffer_size) {
     if (buffer == nullptr || buffer_size == 0) {
@@ -367,6 +368,100 @@ CarbonDioxideModel &co2_model() {
     return model;
 }
 
+teqp::IdealHelmholtz ideal_terms_for_components(
+    const std::vector<std::string> &component_json_strings
+) {
+    nlohmann::json mixture_terms = nlohmann::json::array();
+    for (const auto &component_json_string : component_json_strings) {
+        const auto fluid_json = nlohmann::json::parse(component_json_string);
+        const auto eos = fluid_json.at("EOS").at(0);
+        const double reducing_temperature =
+            eos.at("STATES").at("reducing").at("T");
+        const double reducing_molar_density =
+            eos.at("STATES").at("reducing").at("rhomolar");
+        const double gas_constant = eos.at("gas_constant");
+        nlohmann::json terms = nlohmann::json::array();
+        for (const auto &term : eos.at("alpha0")) {
+            auto converted = teqp::CoolProp2teqp_alphaig_term_reformatter(
+                term,
+                reducing_temperature,
+                reducing_molar_density,
+                gas_constant
+            );
+            for (const auto &converted_term : converted) {
+                terms.push_back(converted_term);
+            }
+        }
+        mixture_terms.push_back({
+            {"terms", terms},
+            {"R", gas_constant}
+        });
+    }
+    return teqp::IdealHelmholtz(mixture_terms);
+}
+
+struct BinaryThermodynamicProperties {
+    double cv_j_kg_k;
+    double cp_j_kg_k;
+    double heat_capacity_ratio;
+    double speed_of_sound_m_s;
+    double speed_of_sound_squared_m2_s2;
+    double dp_drho_molar_j_mol;
+    double dp_dt_pa_k;
+    double minimum_stability_eigenvalue;
+};
+
+struct BinaryCriticalPoint {
+    bool converged;
+    int iteration_count;
+    double temperature_k;
+    double pressure_pa;
+    double molar_density_mol_m3;
+    double density_kg_m3;
+    double component2_mole_fraction;
+    double minimum_stability_eigenvalue;
+    double third_order_residual;
+};
+
+template<typename Model>
+Eigen::MatrixXd total_psi_hessian(
+    const Model &model,
+    double temperature_k,
+    const Eigen::ArrayXd &rhovec
+) {
+    const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+    using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+    auto derivatives = Derivatives::build_Psir_fgradHessian_autodiff(
+        model,
+        temperature_k,
+        rhovec
+    );
+    Eigen::MatrixXd hessian = std::get<2>(derivatives);
+    const double gas_constant_temperature = model.R(molefractions) * temperature_k;
+    for (Eigen::Index index = 0; index < rhovec.size(); ++index) {
+        if (rhovec[index] <= 0 || !std::isfinite(rhovec[index])) {
+            throw std::runtime_error("teqp mixture Hessian requires positive molar concentrations.");
+        }
+        hessian(index, index) += gas_constant_temperature / rhovec[index];
+    }
+    return hessian;
+}
+
+template<typename Model>
+double minimum_stability_eigenvalue(
+    const Model &model,
+    double temperature_k,
+    const Eigen::ArrayXd &rhovec
+) {
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen(
+        total_psi_hessian(model, temperature_k, rhovec)
+    );
+    if (eigen.info() != Eigen::Success || eigen.eigenvalues().size() == 0) {
+        return -std::numeric_limits<double>::infinity();
+    }
+    return eigen.eigenvalues()[0];
+}
+
 class CarbonDioxideNitrogenModel {
 public:
     using Model = decltype(teqp::build_multifluid_JSONstr(
@@ -659,7 +754,295 @@ public:
             + hydrogen_mole_fraction * kHydrogenMolarMassKgMol;
     }
 
+    BinaryThermodynamicProperties thermodynamicProperties(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        double hydrogen_mole_fraction
+    ) const {
+        Eigen::ArrayXd molefractions(2);
+        molefractions << 1.0 - hydrogen_mole_fraction, hydrogen_mole_fraction;
+        return thermodynamicPropertiesForMolefractions(
+            temperature_k,
+            total_molar_density_mol_m3,
+            molefractions,
+            mixtureMolarMassKgMol(hydrogen_mole_fraction)
+        );
+    }
+
+    Eigen::Array<double, 2, 1> criticalityConditions(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        double hydrogen_mole_fraction
+    ) const {
+        Eigen::ArrayXd rhovec(2);
+        rhovec << (1.0 - hydrogen_mole_fraction) * total_molar_density_mol_m3,
+            hydrogen_mole_fraction * total_molar_density_mol_m3;
+        const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+        const double gas_constant_temperature =
+            model_.R(molefractions) * temperature_k;
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen(
+            total_psi_hessian(model_, temperature_k, rhovec)
+        );
+        if (eigen.info() != Eigen::Success || eigen.eigenvalues().size() < 2) {
+            throw std::runtime_error("teqp mixture critical Hessian eigenproblem failed.");
+        }
+        const Eigen::ArrayXd critical_direction = eigen.eigenvectors().col(0).array();
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        const Eigen::ArrayXd residual_sigma_derivatives =
+            Derivatives::get_Psir_sigma_derivs(
+                model_,
+                temperature_k,
+                rhovec,
+                critical_direction
+            );
+        double ideal_third_derivative = 0.0;
+        for (Eigen::Index index = 0; index < rhovec.size(); ++index) {
+            ideal_third_derivative += -gas_constant_temperature
+                * std::pow(critical_direction[index], 3)
+                / std::pow(rhovec[index], 2);
+        }
+        return (Eigen::Array<double, 2, 1>()
+            << eigen.eigenvalues()[0],
+            residual_sigma_derivatives[3] + ideal_third_derivative
+        ).finished();
+    }
+
+    BinaryCriticalPoint criticalPoint(double hydrogen_mole_fraction) const {
+        return criticalPointForComposition(
+            hydrogen_mole_fraction,
+            mixtureMolarMassKgMol(hydrogen_mole_fraction)
+        );
+    }
+
 private:
+    BinaryCriticalPoint criticalPointForComposition(
+        double component2_mole_fraction,
+        double molar_mass_kg_mol
+    ) const {
+        const double critical_temperature_seed = co2_model().criticalTemperatureK();
+        const double critical_density_seed = co2_model().criticalMolarDensityMolM3();
+        std::vector<Eigen::Array<double, 2, 1>> seeds;
+        for (double temperature_offset : {10.0, 5.0, 0.0, -2.0, -5.0, -10.0, -20.0}) {
+            for (double density_factor : {0.65, 0.85, 1.0, 1.15, 1.35}) {
+                seeds.push_back(
+                    (Eigen::Array<double, 2, 1>()
+                        << critical_temperature_seed + temperature_offset,
+                        critical_density_seed * density_factor
+                    ).finished()
+                );
+            }
+        }
+
+        BinaryCriticalPoint best{
+            false,
+            0,
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN(),
+            component2_mole_fraction,
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN()
+        };
+        double best_norm = std::numeric_limits<double>::infinity();
+        for (auto state : seeds) {
+            int iteration_count = 0;
+            for (int iteration = 0; iteration < 35; ++iteration) {
+                if (!std::isfinite(state[0]) || !std::isfinite(state[1])
+                    || state[0] <= 0 || state[1] <= 0) {
+                    break;
+                }
+                Eigen::Array<double, 2, 1> residual;
+                try {
+                    residual = criticalityConditions(
+                        state[0],
+                        state[1],
+                        component2_mole_fraction
+                    );
+                } catch (...) {
+                    break;
+                }
+                const double residual_norm = residual.matrix().norm();
+                if (std::isfinite(residual_norm) && residual_norm < best_norm) {
+                    best_norm = residual_norm;
+                    best.temperature_k = state[0];
+                    best.molar_density_mol_m3 = state[1];
+                    best.minimum_stability_eigenvalue = residual[0];
+                    best.third_order_residual = residual[1];
+                    best.iteration_count = iteration_count;
+                }
+                const double temperature_step = std::max(1e-4, 1e-6 * state[0]);
+                const double density_step = std::max(1e-3, 1e-6 * state[1]);
+                Eigen::Matrix2d jacobian;
+                try {
+                    jacobian.col(0) =
+                        ((criticalityConditions(
+                            state[0] + temperature_step,
+                            state[1],
+                            component2_mole_fraction
+                        ) - criticalityConditions(
+                            state[0] - temperature_step,
+                            state[1],
+                            component2_mole_fraction
+                        )) / (2.0 * temperature_step)).matrix();
+                    jacobian.col(1) =
+                        ((criticalityConditions(
+                            state[0],
+                            state[1] + density_step,
+                            component2_mole_fraction
+                        ) - criticalityConditions(
+                            state[0],
+                            state[1] - density_step,
+                            component2_mole_fraction
+                        )) / (2.0 * density_step)).matrix();
+                } catch (...) {
+                    break;
+                }
+                const Eigen::Vector2d update =
+                    jacobian.colPivHouseholderQr().solve(-residual.matrix());
+                if (!std::isfinite(update[0]) || !std::isfinite(update[1])) {
+                    break;
+                }
+                state[0] += update[0];
+                state[1] += update[1];
+                iteration_count = iteration + 1;
+                if (std::abs(update[0]) < 1e-6
+                    && std::abs(update[1]) < 1e-6 * std::max(1.0, state[1])) {
+                    break;
+                }
+            }
+            if (!std::isfinite(state[0]) || !std::isfinite(state[1])
+                || state[0] <= 0 || state[1] <= 0
+                || state[0] < 150.0 || state[0] > 600.0) {
+                continue;
+            }
+            try {
+                const auto residual = criticalityConditions(
+                    state[0],
+                    state[1],
+                    component2_mole_fraction
+                );
+                if (std::abs(residual[0]) < 1e-5
+                    && std::abs(residual[1]) < 1e-7) {
+                    Eigen::ArrayXd molefractions(2);
+                    molefractions << 1.0 - component2_mole_fraction,
+                        component2_mole_fraction;
+                    best.converged = true;
+                    best.temperature_k = state[0];
+                    best.molar_density_mol_m3 = state[1];
+                    best.density_kg_m3 = state[1] * molar_mass_kg_mol;
+                    best.pressure_pa = pressurePa(
+                        state[0],
+                        molefractions,
+                        state[1]
+                    );
+                    best.component2_mole_fraction = component2_mole_fraction;
+                    best.minimum_stability_eigenvalue = residual[0];
+                    best.third_order_residual = residual[1];
+                    return best;
+                }
+            } catch (...) {
+                continue;
+            }
+        }
+        return best;
+    }
+
+    BinaryThermodynamicProperties thermodynamicPropertiesForMolefractions(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        const Eigen::ArrayXd &molefractions,
+        double molar_mass_kg_mol
+    ) const {
+        // Fixed-composition homogeneous multifluid Helmholtz relations.
+        // teqp's TDXDerivatives evaluate residual and ideal Helmholtz
+        // derivatives at fixed z, including composition-dependent reducing
+        // density/temperature functions in the residual EOS.
+        using ResidualDerivatives =
+            teqp::TDXDerivatives<Model, double, Eigen::ArrayXd>;
+        using IdealDerivatives =
+            teqp::TDXDerivatives<teqp::IdealHelmholtz, double, Eigen::ArrayXd>;
+        const auto residual_density_derivatives =
+            ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+        const double ar01 = residual_density_derivatives[1];
+        const double ar02 = residual_density_derivatives[2];
+        const double ar11 =
+            ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+        const double ar20 =
+            ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+        const double a020 =
+            IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                ideal_model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+
+        const double cv_over_r = -(a020 + ar20);
+        const double pressure_derivative_dimensionless = 1.0 + 2.0 * ar01 + ar02;
+        const double temperature_density_coupling = 1.0 + ar01 - ar11;
+        const Eigen::ArrayXd rhovec = total_molar_density_mol_m3 * molefractions;
+        const double minimum_eigenvalue =
+            minimum_stability_eigenvalue(model_, temperature_k, rhovec);
+        if (!std::isfinite(cv_over_r)
+            || !std::isfinite(pressure_derivative_dimensionless)
+            || !std::isfinite(temperature_density_coupling)
+            || !std::isfinite(minimum_eigenvalue)
+            || cv_over_r <= 0.0
+            || pressure_derivative_dimensionless <= 0.0
+            || minimum_eigenvalue <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical mixture Helmholtz derivatives.");
+        }
+        const double cp_over_r = cv_over_r
+            + temperature_density_coupling * temperature_density_coupling
+                / pressure_derivative_dimensionless;
+        const double speed_dimensionless = pressure_derivative_dimensionless
+            + temperature_density_coupling * temperature_density_coupling
+                / cv_over_r;
+        if (!std::isfinite(cp_over_r)
+            || !std::isfinite(speed_dimensionless)
+            || cp_over_r <= cv_over_r
+            || speed_dimensionless <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical mixture Cp or speed-of-sound derivatives.");
+        }
+
+        const double gas_constant = model_.R(molefractions);
+        const double cv_molar = cv_over_r * gas_constant;
+        const double cp_molar = cp_over_r * gas_constant;
+        const double speed_squared =
+            speed_dimensionless * gas_constant * temperature_k / molar_mass_kg_mol;
+        const double dp_drho_molar =
+            gas_constant * temperature_k * pressure_derivative_dimensionless;
+        const double dp_dt =
+            total_molar_density_mol_m3 * gas_constant
+                * temperature_density_coupling;
+        return {
+            cv_molar / molar_mass_kg_mol,
+            cp_molar / molar_mass_kg_mol,
+            cp_over_r / cv_over_r,
+            std::sqrt(speed_squared),
+            speed_squared,
+            dp_drho_molar,
+            dp_dt,
+            minimum_eigenvalue
+        };
+    }
+
     static std::string binaryPairsJson() {
         return R"PXTEQPJSON([
             {
@@ -697,6 +1080,10 @@ private:
     }
 
     Model model_;
+    teqp::IdealHelmholtz ideal_model_ = ideal_terms_for_components({
+        std::string(kPhaseXpertTeqpCarbonDioxideJson),
+        std::string(kPhaseXpertTeqpHydrogenJson)
+    });
 };
 
 EOSCGCarbonDioxideHydrogenModel &eoscg_co2_h2_model() {
@@ -768,7 +1155,294 @@ public:
             + methane_mole_fraction * kMethaneMolarMassKgMol;
     }
 
+    BinaryThermodynamicProperties thermodynamicProperties(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        double methane_mole_fraction
+    ) const {
+        Eigen::ArrayXd molefractions(2);
+        molefractions << 1.0 - methane_mole_fraction, methane_mole_fraction;
+        return thermodynamicPropertiesForMolefractions(
+            temperature_k,
+            total_molar_density_mol_m3,
+            molefractions,
+            mixtureMolarMassKgMol(methane_mole_fraction)
+        );
+    }
+
+    Eigen::Array<double, 2, 1> criticalityConditions(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        double methane_mole_fraction
+    ) const {
+        Eigen::ArrayXd rhovec(2);
+        rhovec << (1.0 - methane_mole_fraction) * total_molar_density_mol_m3,
+            methane_mole_fraction * total_molar_density_mol_m3;
+        const Eigen::ArrayXd molefractions = (rhovec / rhovec.sum()).eval();
+        const double gas_constant_temperature =
+            model_.R(molefractions) * temperature_k;
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen(
+            total_psi_hessian(model_, temperature_k, rhovec)
+        );
+        if (eigen.info() != Eigen::Success || eigen.eigenvalues().size() < 2) {
+            throw std::runtime_error("teqp mixture critical Hessian eigenproblem failed.");
+        }
+        const Eigen::ArrayXd critical_direction = eigen.eigenvectors().col(0).array();
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        const Eigen::ArrayXd residual_sigma_derivatives =
+            Derivatives::get_Psir_sigma_derivs(
+                model_,
+                temperature_k,
+                rhovec,
+                critical_direction
+            );
+        double ideal_third_derivative = 0.0;
+        for (Eigen::Index index = 0; index < rhovec.size(); ++index) {
+            ideal_third_derivative += -gas_constant_temperature
+                * std::pow(critical_direction[index], 3)
+                / std::pow(rhovec[index], 2);
+        }
+        return (Eigen::Array<double, 2, 1>()
+            << eigen.eigenvalues()[0],
+            residual_sigma_derivatives[3] + ideal_third_derivative
+        ).finished();
+    }
+
+    BinaryCriticalPoint criticalPoint(double methane_mole_fraction) const {
+        return criticalPointForComposition(
+            methane_mole_fraction,
+            mixtureMolarMassKgMol(methane_mole_fraction)
+        );
+    }
+
 private:
+    BinaryCriticalPoint criticalPointForComposition(
+        double component2_mole_fraction,
+        double molar_mass_kg_mol
+    ) const {
+        const double critical_temperature_seed = co2_model().criticalTemperatureK();
+        const double critical_density_seed = co2_model().criticalMolarDensityMolM3();
+        std::vector<Eigen::Array<double, 2, 1>> seeds;
+        for (double temperature_offset : {10.0, 5.0, 0.0, -2.0, -5.0, -10.0, -20.0}) {
+            for (double density_factor : {0.65, 0.85, 1.0, 1.15, 1.35}) {
+                seeds.push_back(
+                    (Eigen::Array<double, 2, 1>()
+                        << critical_temperature_seed + temperature_offset,
+                        critical_density_seed * density_factor
+                    ).finished()
+                );
+            }
+        }
+
+        BinaryCriticalPoint best{
+            false,
+            0,
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN(),
+            component2_mole_fraction,
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN()
+        };
+        double best_norm = std::numeric_limits<double>::infinity();
+        for (auto state : seeds) {
+            int iteration_count = 0;
+            for (int iteration = 0; iteration < 35; ++iteration) {
+                if (!std::isfinite(state[0]) || !std::isfinite(state[1])
+                    || state[0] <= 0 || state[1] <= 0) {
+                    break;
+                }
+                Eigen::Array<double, 2, 1> residual;
+                try {
+                    residual = criticalityConditions(
+                        state[0],
+                        state[1],
+                        component2_mole_fraction
+                    );
+                } catch (...) {
+                    break;
+                }
+                const double residual_norm = residual.matrix().norm();
+                if (std::isfinite(residual_norm) && residual_norm < best_norm) {
+                    best_norm = residual_norm;
+                    best.temperature_k = state[0];
+                    best.molar_density_mol_m3 = state[1];
+                    best.minimum_stability_eigenvalue = residual[0];
+                    best.third_order_residual = residual[1];
+                    best.iteration_count = iteration_count;
+                }
+                const double temperature_step = std::max(1e-4, 1e-6 * state[0]);
+                const double density_step = std::max(1e-3, 1e-6 * state[1]);
+                Eigen::Matrix2d jacobian;
+                try {
+                    jacobian.col(0) =
+                        ((criticalityConditions(
+                            state[0] + temperature_step,
+                            state[1],
+                            component2_mole_fraction
+                        ) - criticalityConditions(
+                            state[0] - temperature_step,
+                            state[1],
+                            component2_mole_fraction
+                        )) / (2.0 * temperature_step)).matrix();
+                    jacobian.col(1) =
+                        ((criticalityConditions(
+                            state[0],
+                            state[1] + density_step,
+                            component2_mole_fraction
+                        ) - criticalityConditions(
+                            state[0],
+                            state[1] - density_step,
+                            component2_mole_fraction
+                        )) / (2.0 * density_step)).matrix();
+                } catch (...) {
+                    break;
+                }
+                const Eigen::Vector2d update =
+                    jacobian.colPivHouseholderQr().solve(-residual.matrix());
+                if (!std::isfinite(update[0]) || !std::isfinite(update[1])) {
+                    break;
+                }
+                state[0] += update[0];
+                state[1] += update[1];
+                iteration_count = iteration + 1;
+                if (std::abs(update[0]) < 1e-6
+                    && std::abs(update[1]) < 1e-6 * std::max(1.0, state[1])) {
+                    break;
+                }
+            }
+            if (!std::isfinite(state[0]) || !std::isfinite(state[1])
+                || state[0] <= 0 || state[1] <= 0
+                || state[0] < 150.0 || state[0] > 600.0) {
+                continue;
+            }
+            try {
+                const auto residual = criticalityConditions(
+                    state[0],
+                    state[1],
+                    component2_mole_fraction
+                );
+                if (std::abs(residual[0]) < 1e-5
+                    && std::abs(residual[1]) < 1e-7) {
+                    Eigen::ArrayXd molefractions(2);
+                    molefractions << 1.0 - component2_mole_fraction,
+                        component2_mole_fraction;
+                    best.converged = true;
+                    best.temperature_k = state[0];
+                    best.molar_density_mol_m3 = state[1];
+                    best.density_kg_m3 = state[1] * molar_mass_kg_mol;
+                    best.pressure_pa = pressurePa(
+                        state[0],
+                        molefractions,
+                        state[1]
+                    );
+                    best.component2_mole_fraction = component2_mole_fraction;
+                    best.minimum_stability_eigenvalue = residual[0];
+                    best.third_order_residual = residual[1];
+                    return best;
+                }
+            } catch (...) {
+                continue;
+            }
+        }
+        return best;
+    }
+
+    BinaryThermodynamicProperties thermodynamicPropertiesForMolefractions(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        const Eigen::ArrayXd &molefractions,
+        double molar_mass_kg_mol
+    ) const {
+        // Fixed-composition homogeneous multifluid Helmholtz relations.
+        // teqp supplies the analytic residual derivatives; the ideal mixture
+        // contribution is built from the component ideal-gas Helmholtz terms.
+        using ResidualDerivatives =
+            teqp::TDXDerivatives<Model, double, Eigen::ArrayXd>;
+        using IdealDerivatives =
+            teqp::TDXDerivatives<teqp::IdealHelmholtz, double, Eigen::ArrayXd>;
+        const auto residual_density_derivatives =
+            ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+        const double ar01 = residual_density_derivatives[1];
+        const double ar02 = residual_density_derivatives[2];
+        const double ar11 =
+            ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+        const double ar20 =
+            ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+        const double a020 =
+            IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                ideal_model_,
+                temperature_k,
+                total_molar_density_mol_m3,
+                molefractions
+            );
+
+        const double cv_over_r = -(a020 + ar20);
+        const double pressure_derivative_dimensionless = 1.0 + 2.0 * ar01 + ar02;
+        const double temperature_density_coupling = 1.0 + ar01 - ar11;
+        const Eigen::ArrayXd rhovec = total_molar_density_mol_m3 * molefractions;
+        const double minimum_eigenvalue =
+            minimum_stability_eigenvalue(model_, temperature_k, rhovec);
+        if (!std::isfinite(cv_over_r)
+            || !std::isfinite(pressure_derivative_dimensionless)
+            || !std::isfinite(temperature_density_coupling)
+            || !std::isfinite(minimum_eigenvalue)
+            || cv_over_r <= 0.0
+            || pressure_derivative_dimensionless <= 0.0
+            || minimum_eigenvalue <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical mixture Helmholtz derivatives.");
+        }
+        const double cp_over_r = cv_over_r
+            + temperature_density_coupling * temperature_density_coupling
+                / pressure_derivative_dimensionless;
+        const double speed_dimensionless = pressure_derivative_dimensionless
+            + temperature_density_coupling * temperature_density_coupling
+                / cv_over_r;
+        if (!std::isfinite(cp_over_r)
+            || !std::isfinite(speed_dimensionless)
+            || cp_over_r <= cv_over_r
+            || speed_dimensionless <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical mixture Cp or speed-of-sound derivatives.");
+        }
+
+        const double gas_constant = model_.R(molefractions);
+        const double cv_molar = cv_over_r * gas_constant;
+        const double cp_molar = cp_over_r * gas_constant;
+        const double speed_squared =
+            speed_dimensionless * gas_constant * temperature_k / molar_mass_kg_mol;
+        const double dp_drho_molar =
+            gas_constant * temperature_k * pressure_derivative_dimensionless;
+        const double dp_dt =
+            total_molar_density_mol_m3 * gas_constant
+                * temperature_density_coupling;
+        return {
+            cv_molar / molar_mass_kg_mol,
+            cp_molar / molar_mass_kg_mol,
+            cp_over_r / cv_over_r,
+            std::sqrt(speed_squared),
+            speed_squared,
+            dp_drho_molar,
+            dp_dt,
+            minimum_eigenvalue
+        };
+    }
+
     static std::string binaryPairsJson() {
         return R"PXTEQPJSON([
             {
@@ -806,6 +1480,10 @@ private:
     }
 
     Model model_;
+    teqp::IdealHelmholtz ideal_model_ = ideal_terms_for_components({
+        std::string(kPhaseXpertTeqpCarbonDioxideJson),
+        std::string(kPhaseXpertTeqpMethaneJson)
+    });
 };
 
 EOSCGCarbonDioxideMethaneModel &eoscg_co2_ch4_model() {
@@ -1530,6 +2208,70 @@ void fill_generic_binary_vle_result(
     result->component2_chemical_potential_residual = state.residual(1);
 }
 
+template<typename BinaryModel>
+void fill_binary_thermodynamic_result(
+    const BinaryModel &model,
+    double pressure_pa,
+    double temperature_k,
+    double component2_mole_fraction,
+    PXTeqpPhase phase,
+    PXTeqpMixtureThermodynamicResult *result
+) {
+    Eigen::ArrayXd molefractions(2);
+    molefractions << 1.0 - component2_mole_fraction, component2_mole_fraction;
+    const auto roots = density_roots_for_molefractions(
+        model,
+        pressure_pa,
+        temperature_k,
+        molefractions
+    );
+    if (roots.empty()) {
+        throw std::runtime_error("teqp did not find a finite EOS-CG mixture density root.");
+    }
+    const auto selected = lowest_density_root(roots);
+    const auto properties = model.thermodynamicProperties(
+        temperature_k,
+        selected.molar_density_mol_m3,
+        component2_mole_fraction
+    );
+    const double density = selected.molar_density_mol_m3
+        * model.mixtureMolarMassKgMol(component2_mole_fraction);
+    if (!std::isfinite(density)
+        || !std::isfinite(properties.cv_j_kg_k)
+        || !std::isfinite(properties.cp_j_kg_k)
+        || !std::isfinite(properties.heat_capacity_ratio)
+        || !std::isfinite(properties.speed_of_sound_m_s)
+        || !std::isfinite(properties.speed_of_sound_squared_m2_s2)
+        || !std::isfinite(properties.dp_drho_molar_j_mol)
+        || !std::isfinite(properties.dp_dt_pa_k)
+        || density <= 0.0
+        || properties.cv_j_kg_k <= 0.0
+        || properties.cp_j_kg_k <= properties.cv_j_kg_k
+        || properties.heat_capacity_ratio <= 1.0
+        || properties.speed_of_sound_m_s <= 0.0
+        || properties.speed_of_sound_squared_m2_s2 <= 0.0
+        || properties.dp_drho_molar_j_mol <= 0.0) {
+        throw std::runtime_error("teqp returned invalid EOS-CG mixture thermodynamic properties.");
+    }
+
+    result->density_kg_m3 = density;
+    result->molar_density_mol_m3 = selected.molar_density_mol_m3;
+    result->pressure_pa = pressure_pa;
+    result->dp_drho_molar_j_mol = properties.dp_drho_molar_j_mol;
+    result->dp_dt_pa_k = properties.dp_dt_pa_k;
+    result->isochoric_heat_capacity_j_kg_k = properties.cv_j_kg_k;
+    result->isobaric_heat_capacity_j_kg_k = properties.cp_j_kg_k;
+    result->heat_capacity_ratio = properties.heat_capacity_ratio;
+    result->speed_of_sound_m_s = properties.speed_of_sound_m_s;
+    result->speed_of_sound_squared_m2_s2 =
+        properties.speed_of_sound_squared_m2_s2;
+    result->minimum_stability_eigenvalue =
+        properties.minimum_stability_eigenvalue;
+    result->density_root_count = static_cast<int>(roots.size());
+    result->converged = 1;
+    result->phase = phase;
+}
+
 BinaryVLEState solve_binary_vle_tx(
     PXTeqpBinaryFormulation formulation,
     double temperature_k,
@@ -1596,6 +2338,71 @@ BinaryVLEState solve_binary_vle_tx_with_initial_guess(
     default:
         throw std::invalid_argument("Unsupported binary teqp formulation.");
     }
+}
+
+void fill_binary_thermodynamic_result(
+    PXTeqpBinaryFormulation formulation,
+    double pressure_pa,
+    double temperature_k,
+    double component2_mole_fraction,
+    PXTeqpMixtureThermodynamicResult *result
+) {
+    switch (formulation) {
+    case PXTeqpBinaryFormulationEOSCGCO2H2:
+        fill_binary_thermodynamic_result(
+            eoscg_co2_h2_model(),
+            pressure_pa,
+            temperature_k,
+            component2_mole_fraction,
+            PXTeqpPhaseGas,
+            result
+        );
+        return;
+    case PXTeqpBinaryFormulationEOSCGCO2CH4:
+        fill_binary_thermodynamic_result(
+            eoscg_co2_ch4_model(),
+            pressure_pa,
+            temperature_k,
+            component2_mole_fraction,
+            PXTeqpPhaseGas,
+            result
+        );
+        return;
+    case PXTeqpBinaryFormulationCO2N2:
+    default:
+        throw std::invalid_argument("Thermodynamic mixture properties are implemented only for EOS-CG CO2/H2 and CO2/CH4.");
+    }
+}
+
+BinaryCriticalPoint binary_critical_point(
+    PXTeqpBinaryFormulation formulation,
+    double component2_mole_fraction
+) {
+    switch (formulation) {
+    case PXTeqpBinaryFormulationEOSCGCO2H2:
+        return eoscg_co2_h2_model().criticalPoint(component2_mole_fraction);
+    case PXTeqpBinaryFormulationEOSCGCO2CH4:
+        return eoscg_co2_ch4_model().criticalPoint(component2_mole_fraction);
+    case PXTeqpBinaryFormulationCO2N2:
+    default:
+        throw std::invalid_argument("Critical diagnostics are implemented only for EOS-CG CO2/H2 and CO2/CH4.");
+    }
+}
+
+void fill_binary_critical_result(
+    const BinaryCriticalPoint &critical,
+    PXTeqpBinaryCriticalResult *result
+) {
+    result->converged = critical.converged ? 1 : 0;
+    result->iteration_count = critical.iteration_count;
+    result->temperature_k = critical.temperature_k;
+    result->pressure_pa = critical.pressure_pa;
+    result->molar_density_mol_m3 = critical.molar_density_mol_m3;
+    result->density_kg_m3 = critical.density_kg_m3;
+    result->component2_mole_fraction = critical.component2_mole_fraction;
+    result->minimum_stability_eigenvalue =
+        critical.minimum_stability_eigenvalue;
+    result->third_order_residual = critical.third_order_residual;
 }
 
 }  // namespace
@@ -2058,6 +2865,89 @@ int px_teqp_calculate_eoscg_co2_ch4_gas_density(
         return 6;
     } catch (...) {
         copy_text("teqp EOS-CG CO2/CH4 gas-density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_teqp_calculate_binary_thermodynamic_state(
+    PXTeqpBinaryFormulation formulation,
+    double pressure_pa,
+    double temperature_k,
+    double component2_mole_fraction,
+    PXTeqpMixtureThermodynamicResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!valid_binary_fraction(component2_mole_fraction)) {
+        copy_text("Component-2 mole fraction must be finite and in (0, 1).", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        fill_binary_thermodynamic_result(
+            formulation,
+            pressure_pa,
+            temperature_k,
+            component2_mole_fraction,
+            result
+        );
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        result->converged = 0;
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        result->converged = 0;
+        copy_text("teqp EOS-CG binary thermodynamic-state calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_teqp_calculate_binary_critical_point(
+    PXTeqpBinaryFormulation formulation,
+    double component2_mole_fraction,
+    PXTeqpBinaryCriticalResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!valid_binary_fraction(component2_mole_fraction)) {
+        copy_text("Component-2 mole fraction must be finite and in (0, 1).", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        const auto critical = binary_critical_point(
+            formulation,
+            component2_mole_fraction
+        );
+        fill_binary_critical_result(critical, result);
+        if (!critical.converged) {
+            copy_text("teqp EOS-CG binary critical-point solver did not converge.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        result->converged = 0;
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        result->converged = 0;
+        copy_text("teqp EOS-CG binary critical-point calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 7;
     }
 }

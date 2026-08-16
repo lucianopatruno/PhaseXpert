@@ -1,15 +1,23 @@
 {
   "artifactID": "eoscg2021-mixture-caloric-speed-audit-2026-08-16",
-  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "createdFor": "agent/ccs-full-thermodynamics",
   "implementationAudit": {
-    "nativeBridgeSupport": "The production native binary bridge currently returns density, phase-equilibrium pressure, liquid/vapor molar densities, compositions and residual metadata. It does not yet expose complete mixture Helmholtz derivative outputs for Cv, Cp or speed of sound.",
-    "providerSupport": "TeqpProvider exposes mixture density plus derived molar mass, specific volume and compressibility factor only, and reports mixture Cv, Cp and speed of sound as unavailable.",
-    "result": "NOT ENABLED"
+    "nativeBridgeSupport": "IMPLEMENTED DIAGNOSTICALLY. PhaseXpertTeqpBridge now exposes px_teqp_calculate_binary_thermodynamic_state for EOS-CG CO2+H2 and CO2+CH4. The ABI returns homogeneous density, molar density, pressure, analytic dp/drho|T,z, analytic dp/dT|rho,z, Cv, Cp, Cp/Cv, frozen-composition homogeneous speed of sound, stability eigenvalue, density-root count, phase/status and formulation ID.",
+    "derivativeSource": "teqp v0.23.1 analytic residual Helmholtz derivatives through TDXDerivatives plus teqp IdealHelmholtz ideal-gas derivatives reconstructed from the pinned component JSON alpha0 terms.",
+    "formulaConvention": "Fixed-composition homogeneous Helmholtz convention on a molar basis: cv/R = -(alpha00_tt + alphar_tt); cp/R = cv/R + (1 + alphar_delta - alphar_delta_tau)^2 / (1 + 2 alphar_delta + alphar_delta_delta); w^2 = (R T / M) * [(1 + 2 alphar_delta + alphar_delta_delta) + (1 + alphar_delta - alphar_delta_tau)^2 / (cv/R)]. Pressure derivatives are dp/drho_molar|T,z = R T (1 + 2 alphar_delta + alphar_delta_delta) and dp/dT|rho,z = rho_molar R (1 + alphar_delta - alphar_delta_tau). These are evaluated at fixed composition for the teqp multifluid reducing functions.",
+    "rejectionRules": "Rejects nonfinite results, nonpositive Cv, nonpositive dp/drho, nonpositive stability eigenvalue, Cp < Cv, nonpositive speed squared and nonfinite density roots.",
+    "providerSupport": "TeqpEngine and NativeTeqpEngine expose diagnostic binary thermodynamic-state and critical-state contracts. TeqpProvider still reports mixture Cv, Cp and speed of sound as unavailable for user calculations because no independently validated production matrix was encoded.",
+    "result": "IMPLEMENTED_DIAGNOSTIC_ONLY"
+  },
+  "implementationVerification": {
+    "swiftPackageContractTests": "TeqpProviderTests include finite diagnostic contract coverage for EOS-CG CO2+H2 and CO2+CH4 thermodynamic states plus fixed-composition critical result mapping.",
+    "nativeBridgeTests": "PhaseXpertTests/TeqpNativeBridgeValidationTests adds iOS native ABI smoke coverage for CO2+CH4 and CO2+H2 thermodynamic diagnostics and CO2+CH4 fixed-composition critical diagnostics. These require the Xcode/iOS test runner and linked native XCFramework.",
+    "xcodeSnippetStatus": "RunCodeSnippet reached compilation after removing async RunLoop usage but failed at runtime linking in the snippet harness; this is recorded as an infrastructure limitation of snippet execution, not a scientific validation pass."
   },
   "productionDecision": {
     "cv": "unavailable for CO2+H2 and CO2+CH4",
     "cp": "unavailable for CO2+H2 and CO2+CH4",
     "speedOfSound": "unavailable for CO2+H2 and CO2+CH4",
-    "reason": "Complete ideal/residual derivative implementation, reducing-function derivative verification and independent numerical validation were not completed in this checkpoint. The properties remain independently gated and unavailable rather than being exposed from unvalidated formulas."
+    "reason": "The native implementation exists and is exercised diagnostically, but the bounded source search did not acquire open, independently traceable numerical CO2+CH4 or CO2+H2 Cp/Cv/speed matrices at the production compositions. The properties remain hidden rather than being exposed from unvalidated formulas."
   }
 }

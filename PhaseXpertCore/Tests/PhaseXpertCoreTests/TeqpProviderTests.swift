@@ -82,6 +82,57 @@ final class TeqpProviderTests: XCTestCase {
                 component2ChemicalPotentialResidual: 0
             )
         }
+
+        func calculateBinaryThermodynamicState(
+            formulation: TeqpBinaryFormulationID,
+            pressurePa: Double,
+            temperatureK: Double,
+            component2MoleFraction: Double
+        ) async throws -> TeqpMixtureThermodynamicResult {
+            TeqpMixtureThermodynamicResult(
+                densityKilogramsPerCubicMetre: formulation == .eoscgCarbonDioxideMethane
+                    ? 118.5
+                    : 11.7,
+                molarDensityMolesPerCubicMetre: formulation == .eoscgCarbonDioxideMethane
+                    ? 2_865
+                    : 276,
+                pressurePa: pressurePa,
+                pressureDerivativeWithRespectToMolarDensityJoulesPerMole: 2_600,
+                pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: 9_500,
+                isochoricHeatCapacityJoulesPerKilogramKelvin: 770,
+                isobaricHeatCapacityJoulesPerKilogramKelvin: 1_040,
+                heatCapacityRatio: 1.350_649,
+                speedOfSoundMetresPerSecond: 285,
+                speedOfSoundSquaredMetresSquaredPerSecondSquared: 81_225,
+                minimumStabilityEigenvalue: 1.2,
+                densityRootCount: 1,
+                converged: true,
+                phaseIdentifier: "gas",
+                formulationID: formulation == .eoscgCarbonDioxideMethane
+                    ? TeqpFormulationCatalog.co2MethaneEOSCGDiagnostic.id
+                    : TeqpFormulationCatalog.co2HydrogenEOSCGDiagnostic.id
+            )
+        }
+
+        func calculateBinaryCriticalPoint(
+            formulation: TeqpBinaryFormulationID,
+            component2MoleFraction: Double
+        ) async throws -> TeqpBinaryCriticalResult {
+            TeqpBinaryCriticalResult(
+                converged: true,
+                iterationCount: 8,
+                temperatureK: 306.9,
+                pressurePa: 7_860_000,
+                molarDensityMolesPerCubicMetre: 10_300,
+                densityKilogramsPerCubicMetre: 425,
+                component2MoleFraction: component2MoleFraction,
+                minimumStabilityEigenvalue: 4e-7,
+                thirdOrderResidual: 2e-9,
+                formulationID: formulation == .eoscgCarbonDioxideMethane
+                    ? TeqpFormulationCatalog.co2MethaneEOSCGDiagnostic.id
+                    : TeqpFormulationCatalog.co2HydrogenEOSCGDiagnostic.id
+            )
+        }
     }
 
     private struct FailingEngine: TeqpEngine {
@@ -131,6 +182,26 @@ final class TeqpProviderTests: XCTestCase {
             liquidComponent2MoleFraction: Double,
             initialGuess: TeqpBinaryVLEInitialGuess?
         ) async throws -> TeqpBinaryVLEResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for unsupported mixtures."
+            )
+        }
+
+        func calculateBinaryThermodynamicState(
+            formulation: TeqpBinaryFormulationID,
+            pressurePa: Double,
+            temperatureK: Double,
+            component2MoleFraction: Double
+        ) async throws -> TeqpMixtureThermodynamicResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for unsupported mixtures."
+            )
+        }
+
+        func calculateBinaryCriticalPoint(
+            formulation: TeqpBinaryFormulationID,
+            component2MoleFraction: Double
+        ) async throws -> TeqpBinaryCriticalResult {
             throw ProviderError.malformedResponse(
                 "Engine should not be called for unsupported mixtures."
             )
@@ -294,6 +365,66 @@ final class TeqpProviderTests: XCTestCase {
             .calculated
         )
         XCTAssertTrue(response.solver.method.contains("stable-branch selection"))
+    }
+
+    func testDiagnosticBinaryThermodynamicEngineContractReturnsFiniteValues() async throws {
+        let engine = MockEngine()
+
+        let methane = try await engine.calculateBinaryThermodynamicState(
+            formulation: .eoscgCarbonDioxideMethane,
+            pressurePa: 5_000_000,
+            temperatureK: 301.14,
+            component2MoleFraction: 0.05
+        )
+        XCTAssertTrue(methane.converged)
+        XCTAssertEqual(
+            methane.formulationID,
+            TeqpFormulationCatalog.co2MethaneEOSCGDiagnostic.id
+        )
+        XCTAssertGreaterThan(
+            methane.isochoricHeatCapacityJoulesPerKilogramKelvin,
+            0
+        )
+        XCTAssertGreaterThan(
+            methane.isobaricHeatCapacityJoulesPerKilogramKelvin,
+            methane.isochoricHeatCapacityJoulesPerKilogramKelvin
+        )
+        XCTAssertGreaterThan(methane.speedOfSoundMetresPerSecond, 0)
+        XCTAssertGreaterThan(
+            methane.pressureDerivativeWithRespectToMolarDensityJoulesPerMole,
+            0
+        )
+        XCTAssertGreaterThan(methane.minimumStabilityEigenvalue, 0)
+
+        let hydrogen = try await engine.calculateBinaryThermodynamicState(
+            formulation: .eoscgCarbonDioxideHydrogen,
+            pressurePa: 3_000_000,
+            temperatureK: 293.15,
+            component2MoleFraction: 0.05362
+        )
+        XCTAssertTrue(hydrogen.converged)
+        XCTAssertEqual(
+            hydrogen.formulationID,
+            TeqpFormulationCatalog.co2HydrogenEOSCGDiagnostic.id
+        )
+        XCTAssertGreaterThan(hydrogen.speedOfSoundSquaredMetresSquaredPerSecondSquared, 0)
+    }
+
+    func testDiagnosticBinaryCriticalEngineContractReturnsFiniteResult() async throws {
+        let result = try await MockEngine().calculateBinaryCriticalPoint(
+            formulation: .eoscgCarbonDioxideMethane,
+            component2MoleFraction: 0.05
+        )
+
+        XCTAssertTrue(result.converged)
+        XCTAssertEqual(result.component2MoleFraction, 0.05)
+        XCTAssertEqual(
+            result.formulationID,
+            TeqpFormulationCatalog.co2MethaneEOSCGDiagnostic.id
+        )
+        XCTAssertGreaterThan(result.temperatureK, 300)
+        XCTAssertGreaterThan(result.pressurePa, 0)
+        XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
     }
 
     func testViscosityIsExplicitlyUnavailableWithoutFallback() async throws {
@@ -988,16 +1119,28 @@ final class TeqpProviderTests: XCTestCase {
 
         XCTAssertTrue(response.isAvailable)
         XCTAssertEqual(response.boundaryKind, .mixtureEnvelope)
-        XCTAssertEqual(response.points.count, 4)
-        XCTAssertEqual(response.points.filter { $0.branch == .bubble }.count, 2)
-        XCTAssertEqual(response.points.filter { $0.branch == .dew }.count, 2)
+        XCTAssertGreaterThan(response.points.count, 20)
+        XCTAssertEqual(
+            response.points.filter { $0.branch == .bubble }.count,
+            response.points.filter { $0.branch == .dew }.count
+        )
+        XCTAssertTrue(
+            response.points.contains {
+                $0.branch == .bubble && abs($0.temperatureK - 303.145) <= 1e-6
+            }
+        )
         XCTAssertTrue(
             response.warnings.contains {
                 $0.contains("Critical termination is not drawn")
             }
         )
         XCTAssertTrue(
-            response.solver?.method.contains("CO₂+CH₄ binary VLE phase-envelope") == true
+            response.warnings.contains {
+                $0.contains("DIAGNOSTIC")
+            }
+        )
+        XCTAssertTrue(
+            response.solver?.method.contains("adaptive diagnostic binary VLE continuation") == true
         )
         XCTAssertTrue(
             response.solver?.method.contains("pressure AARD 0.608899%") == true

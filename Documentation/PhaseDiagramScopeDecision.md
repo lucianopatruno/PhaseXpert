@@ -21,8 +21,11 @@ composition and domain. Density-only teqp H₂ support does not unlock an
 impurity phase diagram. The only impurity exception is the corrected
 CO₂+CH₄ Petropoulou 2018 gate for exact xCH₄ = 0.05, where Advanced CCS
 Properties may return explicit bubble/dew points at the accepted isotherms.
-Those points are not interpolated across failures and do not include a
-validated critical termination.
+The native provider now also traces diagnostic model-only bubble/dew
+continuation samples across 293.13-303.145 K using previous-solution warm
+starts and omitted failed samples; those continuation samples are not
+independent validation, are not connected across failures and do not include a
+validated critical termination or critical marker.
 
 Future reconsideration requires a new scientific feasibility milestone with new
 acceptance criteria before any production provider or user-interface integration

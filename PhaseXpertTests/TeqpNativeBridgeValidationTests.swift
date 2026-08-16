@@ -3,7 +3,80 @@ import XCTest
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)
 import PhaseXpertTeqpBridge
+
+private struct PXTestTeqpMixtureThermodynamicResult {
+    var density_kg_m3: Double = 0
+    var molar_density_mol_m3: Double = 0
+    var pressure_pa: Double = 0
+    var dp_drho_molar_j_mol: Double = 0
+    var dp_dt_pa_k: Double = 0
+    var isochoric_heat_capacity_j_kg_k: Double = 0
+    var isobaric_heat_capacity_j_kg_k: Double = 0
+    var heat_capacity_ratio: Double = 0
+    var speed_of_sound_m_s: Double = 0
+    var speed_of_sound_squared_m2_s2: Double = 0
+    var minimum_stability_eigenvalue: Double = 0
+    var density_root_count: Int32 = 0
+    var converged: Int32 = 0
+    var phase: Int32 = 0
+}
+
+private struct PXTestTeqpBinaryCriticalResult {
+    var converged: Int32 = 0
+    var iteration_count: Int32 = 0
+    var temperature_k: Double = 0
+    var pressure_pa: Double = 0
+    var molar_density_mol_m3: Double = 0
+    var density_kg_m3: Double = 0
+    var component2_mole_fraction: Double = 0
+    var minimum_stability_eigenvalue: Double = 0
+    var third_order_residual: Double = 0
+}
+
+@_silgen_name("px_teqp_calculate_binary_thermodynamic_state")
+private func px_test_teqp_calculate_binary_thermodynamic_state(
+    _ formulation: Int32,
+    _ pressurePa: Double,
+    _ temperatureK: Double,
+    _ component2MoleFraction: Double,
+    _ result: UnsafeMutablePointer<PXTestTeqpMixtureThermodynamicResult>,
+    _ errorBuffer: UnsafeMutablePointer<CChar>,
+    _ errorBufferSize: Int
+) -> Int32
+
+@_silgen_name("px_teqp_calculate_binary_critical_point")
+private func px_test_teqp_calculate_binary_critical_point(
+    _ formulation: Int32,
+    _ component2MoleFraction: Double,
+    _ result: UnsafeMutablePointer<PXTestTeqpBinaryCriticalResult>,
+    _ errorBuffer: UnsafeMutablePointer<CChar>,
+    _ errorBufferSize: Int
+) -> Int32
 #endif
+
+private struct NativeMixtureThermodynamicState {
+    let converged: Bool
+    let densityKilogramsPerCubicMetre: Double
+    let molarDensityMolesPerCubicMetre: Double
+    let pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double
+    let pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: Double
+    let isochoricHeatCapacityJoulesPerKilogramKelvin: Double
+    let isobaricHeatCapacityJoulesPerKilogramKelvin: Double
+    let heatCapacityRatio: Double
+    let speedOfSoundMetresPerSecond: Double
+    let speedOfSoundSquaredMetresSquaredPerSecondSquared: Double
+    let minimumStabilityEigenvalue: Double
+}
+
+private struct NativeBinaryCriticalState {
+    let converged: Bool
+    let temperatureK: Double
+    let pressurePa: Double
+    let densityKilogramsPerCubicMetre: Double
+    let component2MoleFraction: Double
+    let minimumStabilityEigenvalue: Double
+    let thirdOrderResidual: Double
+}
 
 /// Native teqp checks for the experimental pure-CO₂ provider.
 ///
@@ -356,6 +429,47 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
+    func testNativeTeqpEOSCGMixtureThermodynamicDiagnosticsAreFinite() async throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let methane = try requireNativeMixtureThermodynamicState(
+            formulation: 3,
+            pressurePa: 4_979_790,
+            temperatureK: 301.147,
+            component2MoleFraction: 0.05
+        )
+        assertFiniteStableMixtureThermodynamicResult(methane)
+
+        let hydrogen = try requireNativeMixtureThermodynamicState(
+            formulation: 2,
+            pressurePa: 3_000_000,
+            temperatureK: 293.15,
+            component2MoleFraction: 0.05362
+        )
+        assertFiniteStableMixtureThermodynamicResult(hydrogen)
+        #endif
+    }
+
+    func testNativeTeqpEOSCGMethaneCriticalDiagnosticRunsAtFixedComposition() async throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let critical = try requireNativeBinaryCriticalPoint(
+            formulation: 3,
+            component2MoleFraction: 0.05
+        )
+        XCTAssertTrue(critical.converged)
+        XCTAssertEqual(critical.component2MoleFraction, 0.05, accuracy: 1e-12)
+        XCTAssertGreaterThan(critical.temperatureK, 250)
+        XCTAssertLessThan(critical.temperatureK, 350)
+        XCTAssertGreaterThan(critical.pressurePa, 0)
+        XCTAssertGreaterThan(critical.densityKilogramsPerCubicMetre, 0)
+        XCTAssertLessThan(abs(critical.minimumStabilityEigenvalue), 1e-4)
+        XCTAssertLessThan(abs(critical.thirdOrderResidual), 1e-6)
+        #endif
+    }
+
     func testNativeTeqpCO2N2DiagnosticPointReturnsHomogeneousDensityWithoutPureCO2CriticalShortcut() throws {
         _ = try requireNativeTeqpEngine()
 
@@ -656,6 +770,100 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             )
         }
         return engine
+    }
+
+    private func requireNativeMixtureThermodynamicState(
+        formulation: Int32,
+        pressurePa: Double,
+        temperatureK: Double,
+        component2MoleFraction: Double
+    ) throws -> NativeMixtureThermodynamicState {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var native = PXTestTeqpMixtureThermodynamicResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status = px_test_teqp_calculate_binary_thermodynamic_state(
+            formulation,
+            pressurePa,
+            temperatureK,
+            component2MoleFraction,
+            &native,
+            &errorBuffer,
+            errorBuffer.count
+        )
+        XCTAssertEqual(status, 0, nullTerminatedString(errorBuffer))
+        return NativeMixtureThermodynamicState(
+            converged: native.converged == 1,
+            densityKilogramsPerCubicMetre: native.density_kg_m3,
+            molarDensityMolesPerCubicMetre: native.molar_density_mol_m3,
+            pressureDerivativeWithRespectToMolarDensityJoulesPerMole:
+                native.dp_drho_molar_j_mol,
+            pressureDerivativeWithRespectToTemperaturePascalsPerKelvin:
+                native.dp_dt_pa_k,
+            isochoricHeatCapacityJoulesPerKilogramKelvin:
+                native.isochoric_heat_capacity_j_kg_k,
+            isobaricHeatCapacityJoulesPerKilogramKelvin:
+                native.isobaric_heat_capacity_j_kg_k,
+            heatCapacityRatio: native.heat_capacity_ratio,
+            speedOfSoundMetresPerSecond: native.speed_of_sound_m_s,
+            speedOfSoundSquaredMetresSquaredPerSecondSquared:
+                native.speed_of_sound_squared_m2_s2,
+            minimumStabilityEigenvalue: native.minimum_stability_eigenvalue
+        )
+        #else
+        throw XCTSkip("Native teqp XCFramework is not linked in this build.")
+        #endif
+    }
+
+    private func requireNativeBinaryCriticalPoint(
+        formulation: Int32,
+        component2MoleFraction: Double
+    ) throws -> NativeBinaryCriticalState {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var native = PXTestTeqpBinaryCriticalResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status = px_test_teqp_calculate_binary_critical_point(
+            formulation,
+            component2MoleFraction,
+            &native,
+            &errorBuffer,
+            errorBuffer.count
+        )
+        XCTAssertEqual(status, 0, nullTerminatedString(errorBuffer))
+        return NativeBinaryCriticalState(
+            converged: native.converged == 1,
+            temperatureK: native.temperature_k,
+            pressurePa: native.pressure_pa,
+            densityKilogramsPerCubicMetre: native.density_kg_m3,
+            component2MoleFraction: native.component2_mole_fraction,
+            minimumStabilityEigenvalue: native.minimum_stability_eigenvalue,
+            thirdOrderResidual: native.third_order_residual
+        )
+        #else
+        throw XCTSkip("Native teqp XCFramework is not linked in this build.")
+        #endif
+    }
+
+    private func assertFiniteStableMixtureThermodynamicResult(
+        _ result: NativeMixtureThermodynamicState,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertTrue(result.converged, file: file, line: line)
+        XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0, file: file, line: line)
+        XCTAssertGreaterThan(result.molarDensityMolesPerCubicMetre, 0, file: file, line: line)
+        XCTAssertGreaterThan(result.pressureDerivativeWithRespectToMolarDensityJoulesPerMole, 0, file: file, line: line)
+        XCTAssertGreaterThan(result.pressureDerivativeWithRespectToTemperaturePascalsPerKelvin, 0, file: file, line: line)
+        XCTAssertGreaterThan(result.isochoricHeatCapacityJoulesPerKilogramKelvin, 0, file: file, line: line)
+        XCTAssertGreaterThan(
+            result.isobaricHeatCapacityJoulesPerKilogramKelvin,
+            result.isochoricHeatCapacityJoulesPerKilogramKelvin,
+            file: file,
+            line: line
+        )
+        XCTAssertGreaterThan(result.heatCapacityRatio, 1, file: file, line: line)
+        XCTAssertGreaterThan(result.speedOfSoundMetresPerSecond, 0, file: file, line: line)
+        XCTAssertGreaterThan(result.speedOfSoundSquaredMetresSquaredPerSecondSquared, 0, file: file, line: line)
+        XCTAssertGreaterThan(result.minimumStabilityEigenvalue, 0, file: file, line: line)
     }
 
     private func requireNativeSaturation(

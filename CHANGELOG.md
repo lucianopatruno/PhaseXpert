@@ -264,3 +264,11 @@
   303.15 K production use, CO₂+H₂ VLE, simultaneous H₂+CH₄, mixture Cp/Cv/speed
   and h/u/s remain explicitly unavailable because the required native derivative
   ABI and independent primary validation matrices are not present.
+- Added the diagnostic native EOS-CG binary thermodynamic derivative ABI for
+  CO₂+H₂ and CO₂+CH₄, returning homogeneous density, analytic pressure
+  derivatives, Cv, Cp, Cp/Cv, fixed-composition speed of sound and stability
+  metadata below the production gate. Added diagnostic CO₂+CH₄ continuous
+  bubble/dew continuation across 293.13-303.145 K and a fixed-composition
+  critical solver; production user-visible support remains unchanged because no
+  independent caloric/acoustic matrices or exact xCH₄ = 0.05 critical validation
+  were acquired.

@@ -15,10 +15,13 @@
   comparisons require matching recorded model and provider versions.
 - No independently sourced numeric dry CO₂-rich mixture cases have yet been approved and
   ingested. Mixture results must not be used for engineering decisions.
-- Dry CO₂-rich mixture viscosity, caloric, heat-capacity, acoustic, conductivity and
-  derivative properties remain unavailable. Mixture phase envelopes are
-  provider-calculated but have not completed independent PhaseXpert validation.
-  No estimated mixing rule or fallback correlation is used.
+- Dry CO₂-rich mixture viscosity, production caloric, heat-capacity, acoustic,
+  conductivity and derivative properties remain unavailable. Diagnostic native
+  Cv, Cp and speed-of-sound calculations now exist for EOS-CG CO₂+H₂ and
+  CO₂+CH₄, but they are not user-visible without independent property
+  validation. Mixture phase envelopes are provider-calculated but have not
+  completed independent PhaseXpert validation. No estimated mixing rule or
+  fallback correlation is used.
 - The IFE model formulation, coefficients and endpoint are not supplied.
 - The experimental teqp provider is displayed as Advanced CCS Properties when
   the native bridge is linked. Its user-facing supported scope is property
@@ -49,10 +52,11 @@
   density, phase fraction and near-critical envelope termination remain
   unavailable. The 2026-08-16 CCS full-thermodynamics milestone records the
   bounded data-acquisition and production decision: mixture Cv, Cp and speed of
-  sound are not enabled because the native bridge does not expose verified
-  mixture Helmholtz derivative outputs and no primary production validation
-  matrix was encoded; continuous CH₄ envelopes, fixed-composition CH₄ critical
-  termination, H₂ VLE and simultaneous H₂+CH₄ remain unavailable.
+  sound are not enabled because no primary production validation matrix was
+  encoded; production continuous CH₄ envelopes, fixed-composition CH₄ critical
+  termination, H₂ VLE and simultaneous H₂+CH₄ remain unavailable. CH₄
+  continuation and critical calculations are retained as diagnostic
+  implementation artifacts only.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.
