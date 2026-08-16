@@ -272,3 +272,12 @@
   critical solver; production user-visible support remains unchanged because no
   independent caloric/acoustic matrices or exact xCH₄ = 0.05 critical validation
   were acquired.
+- Production-enabled a continuous CO₂+CH₄ bubble/dew phase-envelope segment for
+  Advanced CCS Properties at exact xCH₄ = 0.05 from 293.13 K to 298.142 K. The
+  provider returns 41 bubble and 41 dew samples grouped as continuous chart
+  branches, requires every sample to converge with valid branch ordering and
+  monotonic pressure progression, and labels intermediate points as
+  EOS-CG-2021 calculations inside the experimentally validated Petropoulou 2018
+  ordinary VLE temperature bounds. The 303.15 K Petropoulou rows remain
+  model-validation evidence only, and the fixed-composition critical point
+  remains diagnostic-only.

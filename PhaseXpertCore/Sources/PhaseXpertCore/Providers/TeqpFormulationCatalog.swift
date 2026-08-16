@@ -439,12 +439,13 @@ public enum TeqpFormulationCatalog {
             )
         ],
         validationArtifact: "Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
-        validationSummary: "Petropoulou et al. 2018 NIST ThermoML ordinary VLE rows, exact xCH₄ = 0.05.",
+        validationSummary: "Petropoulou et al. 2018 NIST ThermoML ordinary VLE rows, exact xCH₄ = 0.05; production envelope points between anchors are EOS-CG-2021 calculations inside the validated temperature bounds.",
         accuracySummary: "24 accepted rows; pressure AARD 0.608899%; worst pressure deviation 1.787018%; worst absolute yCH₄ deviation 0.026258.",
-        supportsContinuousEnvelope: false,
+        supportsContinuousEnvelope: true,
         supportsCriticalPoint: false,
         notes: [
-            "Production support is limited to calculated bubble/dew points and phase classification on the accepted ordinary isotherms.",
+            "Production support includes calculated bubble/dew phase classification and a continuous envelope segment from 293.13 K to 298.142 K at exact xCH₄ = 0.05.",
+            "Intermediate curve points are EOS-CG-2021 interpolation within the experimentally validated Petropoulou ordinary VLE temperature bounds; they are not direct experimental rows.",
             "The 303.15 K Petropoulou critical-region rows remain diagnostic only.",
             "No validated critical endpoint or arbitrary composition interpolation is exposed."
         ]

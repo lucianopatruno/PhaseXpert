@@ -46,7 +46,7 @@
     "candidateSources": [
       {
         "title": "Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms",
-        "doi": "10.1016/j.fluid.2018.01.013",
+        "doi": "10.1016/j.fluid.2018.01.011",
         "result": "usable for VLE rows, not sufficient for exact fixed-composition critical production validation"
       }
     ]

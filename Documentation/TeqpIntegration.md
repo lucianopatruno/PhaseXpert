@@ -94,10 +94,13 @@ composition. CO₂+CH₄ Petropoulou diagnostics and the production gate use the
 generic initial-guess path because the inherited pure-CO₂ continuation seed is
 not robust enough for the ordinary 293 K and 298 K rows. The production
 provider gate is deliberately narrower than the diagnostic matrix: exact
-xCH₄ = 0.05, the accepted 293.13 K and 298.14 K ordinary isotherms, explicit
-vapor/dense/two-phase classification and bubble/dew phase-envelope points only.
-It does not report a two-phase bulk density, phase fraction, arbitrary
-composition interpolation or a validated critical termination.
+xCH₄ = 0.05, explicit vapor/dense/two-phase classification and a continuous
+bubble/dew phase-envelope segment from 293.13 K to 298.142 K. The endpoints are
+the accepted Petropoulou ordinary isotherm validation anchors, and intermediate
+curve samples are EOS-CG-2021 calculations inside those experimentally
+validated temperature bounds rather than measured rows. It does not report a
+two-phase bulk density, phase fraction, arbitrary composition interpolation or
+a validated critical termination.
 
 The native point classifier is retained only as research infrastructure. For a
 requested subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at

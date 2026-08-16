@@ -1,5 +1,5 @@
 {
-  "artifactID": "eoscg2021-co2-ch4-continuous-envelope-diagnostics-2026-08-16",
+  "artifactID": "eoscg2021-co2-ch4-continuous-envelope-production-segment-2026-08-16",
   "createdFor": "agent/ccs-full-thermodynamics",
   "system": "CO2+CH4",
   "composition": {
@@ -8,27 +8,30 @@
     "basis": "overall/fixed production composition"
   },
   "implementation": {
-    "status": "IMPLEMENTED_DIAGNOSTIC_ONLY",
+    "status": "PRODUCTION_ENABLED_LIMITED_INTERVAL_WITH_DIAGNOSTIC_EXTENSION_RETAINED",
     "providerPath": "TeqpProvider.methanePhaseEnvelope",
     "nativeBridge": "Existing EOS-CG binary VLE ABI with previous-solution bubble warm starts",
-    "continuationMethod": "temperature continuation from the validated Petropoulou production isotherms, 0.5 K nominal step, exact insertion of 293.13 K, 298.142 K and 303.145 K, failed samples omitted instead of interpolated",
+    "continuationMethod": "deterministic temperature continuation across the experimentally validated Petropoulou ordinary VLE temperature bounds, exact insertion of 293.13 K and 298.142 K, previous bubble solution used as the next initial guess, all samples required to converge for production display",
     "branchIdentityChecks": [
       "liquid molar density must exceed vapor molar density",
       "bubble and dew pressure must be finite and positive",
-      "temperature samples are retained as paired bubble/dew points"
+      "bubble pressure must exceed dew pressure at each fixed overall composition sample",
+      "bubble and dew branch pressures must progress monotonically with temperature",
+      "provider output is grouped by branch so the app draws continuous branch lines rather than alternating isolated points"
     ],
     "pointPlan": {
-      "temperatureSamples": 23,
-      "bubblePoints": 23,
-      "dewPoints": 23,
-      "totalPlottedPoints": 46,
-      "temperatureRangeK": [293.13, 303.145]
+      "temperatureSamples": 41,
+      "bubblePoints": 41,
+      "dewPoints": 41,
+      "totalPlottedPoints": 82,
+      "temperatureRangeK": [293.13, 298.142]
     },
-    "failedPointPolicy": "A failed diagnostic sample resets the warm start and is not connected by interpolation."
+    "failedPointPolicy": "Any failed production sample rejects the production envelope response; no failed or missing point is connected graphically."
   },
   "validationStatus": {
-    "productionVisibleStatus": "validated production gate remains limited to Petropoulou ordinary isotherms 293.13 K and 298.142 K",
-    "diagnosticStatus": "continuous continuation points are model-only diagnostics beyond the accepted Petropoulou rows",
+    "productionVisibleStatus": "continuous bubble/dew phase-envelope segment production-enabled for exact xCH4 = 0.05 and 293.13 K <= T <= 298.142 K",
+    "experimentalAnchors": "Petropoulou ordinary VLE rows at 293.13 K and 298.142 K are direct validation anchors; intermediate points are EOS-CG-2021 calculations inside those experimentally validated bounds.",
+    "diagnosticStatus": "303.145 K continuation and fixed-composition critical termination remain diagnostic only and are not drawn as production envelope points",
     "criticalMarker": "not shown because no fixed xCH4 = 0.05 critical endpoint validation has been encoded"
   },
   "petropoulou303KReassessment": {

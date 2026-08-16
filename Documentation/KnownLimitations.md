@@ -33,15 +33,16 @@
   and Z at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 301.14 K gas
   block and 308.15-313.15 K high-temperature supercritical slices. CO₂+CH₄
   VLE phase classification and bubble/dew phase-envelope points are enabled
-  only for exact xCH₄ = 0.05 on the 293.13 K and 298.14 K Petropoulou 2018
-  ordinary isotherms.
+  only for exact xCH₄ = 0.05 from 293.13 K to 298.142 K inside the
+  Petropoulou 2018 ordinary VLE temperature bounds.
   Viscosity, transport properties, enthalpy, entropy, internal energy, N₂,
   O₂, Ar, simultaneous impurities, impurity heat capacities, impurity speed of
   sound and impurity phase-equilibrium outputs are unavailable. Pure-CO₂
   phase-envelope generation is available through the native teqp saturation
-  calculation; CH₄ impurity phase-envelope support is limited to the validated
-  bubble/dew points above, without critical termination or interpolation across
-  unconverged regions. Subcritical multiple-root pure-CO₂
+  calculation; CH₄ impurity phase-envelope support is limited to an 82-point
+  continuous bubble/dew curve inside the validated Petropoulou temperature
+  interval, without critical termination or interpolation across unconverged
+  regions. Subcritical multiple-root pure-CO₂
   density states use teqp pure-fluid saturation equilibrium to select a stable
   vapor or liquid branch when the state is clearly away from saturation. States
   on or too close to saturation remain explicitly unavailable because a unique
@@ -53,10 +54,9 @@
   unavailable. The 2026-08-16 CCS full-thermodynamics milestone records the
   bounded data-acquisition and production decision: mixture Cv, Cp and speed of
   sound are not enabled because no primary production validation matrix was
-  encoded; production continuous CH₄ envelopes, fixed-composition CH₄ critical
-  termination, H₂ VLE and simultaneous H₂+CH₄ remain unavailable. CH₄
-  continuation and critical calculations are retained as diagnostic
-  implementation artifacts only.
+  encoded; fixed-composition CH₄ critical termination, 303.15 K production VLE,
+  H₂ VLE and simultaneous H₂+CH₄ remain unavailable. CH₄ critical calculations
+  are retained as diagnostic implementation artifacts only.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

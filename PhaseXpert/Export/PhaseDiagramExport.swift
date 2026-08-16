@@ -399,6 +399,35 @@ private struct PhaseDiagramExportCanvas: View {
         PhaseBoundarySeriesBuilder.plotData(for: response)
     }
 
+    private var isMixtureEnvelope: Bool {
+        response.boundaryKind == .mixtureEnvelope
+    }
+
+    private var title: String {
+        isMixtureEnvelope
+            ? "CO₂+CH₄ pressure–temperature envelope"
+            : "Pure CO₂ pressure–temperature diagram"
+    }
+
+    private var statusText: String {
+        isMixtureEnvelope ? "LIMITED VALIDATED VLE RANGE" : "PRELIMINARY — VALIDATION PENDING"
+    }
+
+    private var modelName: String {
+        isMixtureEnvelope ? "CO₂+CH₄ EOS-CG-2021 VLE" : "Pure CO₂ saturation"
+    }
+
+    private func seriesName(for branch: PhaseEnvelopePoint.Branch) -> String {
+        switch branch {
+        case .bubble:
+            isMixtureEnvelope ? "Bubble branch" : "CO₂ saturation boundary"
+        case .dew:
+            "Dew branch"
+        case .critical:
+            "Critical point"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack(alignment: .top) {
@@ -406,9 +435,9 @@ private struct PhaseDiagramExportCanvas: View {
                     Text("PhaseXpert")
                         .font(.system(size: 42, weight: .bold))
                         .foregroundStyle(Color.ifePrimary)
-                    Text("Pure CO₂ pressure–temperature diagram")
+                    Text(title)
                         .font(.system(size: 28, weight: .semibold))
-                    Text("PRELIMINARY — VALIDATION PENDING")
+                    Text(statusText)
                         .font(.system(size: 19, weight: .bold))
                         .foregroundStyle(Color.ifePrimary)
                 }
@@ -429,7 +458,7 @@ private struct PhaseDiagramExportCanvas: View {
                         )
                         .foregroundStyle(by: .value(
                             "Series",
-                            "CO₂ saturation boundary"
+                            seriesName(for: segment.branch)
                         ))
                         .interpolationMethod(.linear)
                     }
@@ -451,6 +480,8 @@ private struct PhaseDiagramExportCanvas: View {
             }
             .chartForegroundStyleScale([
                 "CO₂ saturation boundary": Color.ifePrimary,
+                "Bubble branch": Color.ifePrimary,
+                "Dew branch": Color.ifeBlue,
                 "Critical point": Color.ifeSignal,
                 "Operating point": Color.ifeText
             ])
@@ -466,7 +497,7 @@ private struct PhaseDiagramExportCanvas: View {
             }
             .font(.system(size: 18, weight: .medium))
 
-            Text("Model: Pure CO₂ saturation • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Implementation \(response.model?.providerVersion ?? record.response.model.providerVersion)")
+            Text("Model: \(modelName) • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Implementation \(response.model?.providerVersion ?? record.response.model.providerVersion)")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
             Text("Calculation ID: \(record.response.calculationID.uuidString) • Envelope request ID: \(response.requestID.uuidString)")

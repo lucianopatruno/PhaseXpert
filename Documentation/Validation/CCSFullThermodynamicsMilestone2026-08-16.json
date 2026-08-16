@@ -73,9 +73,9 @@
       "cp": "no",
       "speed": "no",
       "vle": "limited phase classification",
-      "phaseEnvelope": "diagnostic continuous trace; production validation limited",
+      "phaseEnvelope": "yes, limited continuous bubble/dew segment",
       "critical": "no",
-      "domain": "xCH4 = 0.05 exactly; Ghafri 2016 homogeneous gas/supercritical density slices; Petropoulou 2018 VLE at 293.13 K and 298.142 K only"
+      "domain": "xCH4 = 0.05 exactly; Ghafri 2016 homogeneous gas/supercritical density slices; Petropoulou 2018 continuous VLE interpolation segment from 293.13 K to 298.142 K with direct experimental anchor rows only at the endpoints"
     },
     {
       "system": "CO2+H2+CH4",
@@ -92,8 +92,8 @@
   "productionDecisions": {
     "mixtureDerivativeEngine": "implemented_diagnostic_only",
     "mixtureDerivativeReason": "The native bridge now exposes EOS-CG CO2+H2 and CO2+CH4 homogeneous Cv/Cp/speed diagnostics from analytic Helmholtz derivatives, but no independently validated CO2+CH4 or CO2+H2 Cp/Cv/speed matrix was encoded.",
-    "methaneContinuousEnvelope": "implemented_diagnostic_only",
-    "methaneEnvelopeReason": "Production remains limited to validated Petropoulou ordinary isotherm bubble/dew points; additional continuation points are model-only diagnostics across unvalidated temperatures.",
+    "methaneContinuousEnvelope": "production_enabled_limited_interval",
+    "methaneEnvelopeReason": "A continuous 41-temperature bubble/dew segment is generated only inside the two ordinary Petropoulou VLE anchor isotherms, with traceability stating that intermediate curve points are EOS-CG-2021 calculations inside experimentally validated temperature bounds rather than direct experimental rows.",
     "methaneCriticalPoint": "implemented_diagnostic_only",
     "methaneCriticalReason": "A fixed-composition critical diagnostic ABI exists, but Petropoulou critical-region data do not validate a fixed zCH4 = 0.05 critical endpoint.",
     "petropoulou303K": "diagnostic_only",

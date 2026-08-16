@@ -72,7 +72,9 @@ final class TeqpProviderTests: XCTestCase {
                 converged: true,
                 iterationCount: 6,
                 returnCode: 1,
-                pressurePa: 6_000_000 + 20_000_000 * liquidComponent2MoleFraction,
+                pressurePa: 6_000_000
+                    + 20_000_000 * liquidComponent2MoleFraction
+                    + 100_000 * (temperatureK - 293.13),
                 liquidMolarDensityMolesPerCubicMetre: 20_000,
                 vaporMolarDensityMolesPerCubicMetre: 1_000,
                 liquidComponent2MoleFraction: liquidComponent2MoleFraction,
@@ -238,7 +240,7 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertTrue(TeqpFormulationCatalog.pureCarbonDioxide.supportsPhaseEnvelope)
         XCTAssertTrue(TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.supportsPhaseEnvelope)
-        XCTAssertFalse(TeqpFormulationCatalog.co2MethaneEOSCGVLE.supportsContinuousEnvelope)
+        XCTAssertTrue(TeqpFormulationCatalog.co2MethaneEOSCGVLE.supportsContinuousEnvelope)
         XCTAssertFalse(TeqpFormulationCatalog.co2MethaneEOSCGVLE.supportsCriticalPoint)
         XCTAssertTrue(
             TeqpFormulationCatalog.co2MethaneEOSCGVLE
@@ -970,7 +972,7 @@ final class TeqpProviderTests: XCTestCase {
         let response = try await provider.calculate(
             CalculationRequest(
                 modelID: provider.descriptor.id,
-                pressurePa: 6_750_000,
+                pressurePa: 7_000_000,
                 temperatureK: 293.13,
                 composition: [
                     .init(component: .carbonDioxide, moleFraction: 0.95),
@@ -1058,6 +1060,44 @@ final class TeqpProviderTests: XCTestCase {
         }
     }
 
+    func testMethaneVLEClassificationUsesContinuousProductionInterval() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
+            MixtureComponent(component: .methane, moleFraction: 0.05)
+        ]
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 6_750_000,
+                temperatureK: 295.636,
+                composition: composition,
+                requestedProperties: [.density, .isobaricHeatCapacity],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(response.phase, .twoPhase)
+        XCTAssertEqual(
+            response.properties.first { $0.property == .density }?.status,
+            .unavailable
+        )
+        XCTAssertEqual(
+            response.properties.first { $0.property == .isobaricHeatCapacity }?.status,
+            .unavailable
+        )
+        XCTAssertTrue(
+            response.warnings.contains {
+                $0.contains("from 293.13 K to 298.142 K")
+            }
+        )
+        XCTAssertTrue(
+            response.warnings.contains {
+                $0.contains("experimentally validated Petropoulou")
+            }
+        )
+    }
+
     func testMethaneVLEPhaseClassificationRejectsUnsupportedTemperatureAndComposition() async {
         let provider = TeqpProvider(engine: FailingEngine())
 
@@ -1080,9 +1120,9 @@ final class TeqpProviderTests: XCTestCase {
                 return XCTFail("Expected invalidRequest, got \(error).")
             }
             XCTAssertTrue(message.contains("Ghafri density slices"))
-            XCTAssertTrue(message.contains("Petropoulou 2018 ordinary VLE isotherms"))
-            XCTAssertTrue(message.contains("293.13 K (19.98 °C)"))
-            XCTAssertTrue(message.contains("298.14 K (24.99 °C)"))
+        XCTAssertTrue(message.contains("Petropoulou 2018 ordinary VLE temperature interval"))
+        XCTAssertTrue(message.contains("293.13 K (19.98 °C)"))
+        XCTAssertTrue(message.contains("298.142 K (24.99 °C)"))
         })
 
         await XCTAssertThrowsErrorAsync({
@@ -1119,14 +1159,33 @@ final class TeqpProviderTests: XCTestCase {
 
         XCTAssertTrue(response.isAvailable)
         XCTAssertEqual(response.boundaryKind, .mixtureEnvelope)
-        XCTAssertGreaterThan(response.points.count, 20)
+        XCTAssertEqual(response.points.count, 82)
         XCTAssertEqual(
             response.points.filter { $0.branch == .bubble }.count,
-            response.points.filter { $0.branch == .dew }.count
+            41
+        )
+        XCTAssertEqual(
+            response.points.filter { $0.branch == .dew }.count,
+            41
         )
         XCTAssertTrue(
             response.points.contains {
-                $0.branch == .bubble && abs($0.temperatureK - 303.145) <= 1e-6
+                $0.branch == .bubble && abs($0.temperatureK - 293.13) <= 1e-6
+            }
+        )
+        XCTAssertTrue(
+            response.points.contains {
+                $0.branch == .dew && abs($0.temperatureK - 298.142) <= 1e-6
+            }
+        )
+        XCTAssertTrue(
+            response.points.contains {
+                abs($0.temperatureK - 295.636) <= 1e-6
+            }
+        )
+        XCTAssertFalse(
+            response.points.contains {
+                abs($0.temperatureK - 303.145) <= 1e-6
             }
         )
         XCTAssertTrue(
@@ -1136,18 +1195,18 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertTrue(
             response.warnings.contains {
-                $0.contains("DIAGNOSTIC")
+                $0.contains("production-enabled only")
             }
         )
         XCTAssertTrue(
-            response.solver?.method.contains("adaptive diagnostic binary VLE continuation") == true
+            response.solver?.method.contains("production VLE interpolation") == true
         )
         XCTAssertTrue(
             response.solver?.method.contains("pressure AARD 0.608899%") == true
         )
         XCTAssertTrue(
             response.warnings.contains {
-                $0.contains("Continuous CH₄ phase-envelope tracing remains diagnostic")
+                $0.contains("only the anchor isotherms are direct experimental validation rows")
             }
         )
     }

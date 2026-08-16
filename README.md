@@ -75,12 +75,13 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   xCH₄ = 0.05 within the Ghafri et al. 2016 gas block plus explicit
   high-temperature supercritical density slices from 308.15 K through
   313.15 K when its ignored local XCFramework is built; a generic native
-  binary VLE bridge with a limited production CO₂+CH₄ phase-classification
-  and bubble/dew point gate at xCH₄ = 0.05 on the validated Petropoulou 2018
-  ordinary isotherms; diagnostic native mixture Cv/Cp/speed, continuous
-  CH₄ tracing and fixed-composition critical calculations exist below the
-  production gate but remain user-hidden until independently validated; H₂ VLE
-  and H₂ phase envelopes remain unavailable; an
+  binary VLE bridge with limited production CO₂+CH₄ phase classification and a
+  continuous bubble/dew envelope segment at xCH₄ = 0.05 from 293.13 K to
+  298.142 K, calculated with EOS-CG-2021 inside the validated Petropoulou 2018
+  ordinary VLE temperature bounds; diagnostic native mixture Cv/Cp/speed and
+  fixed-composition critical calculations exist below the production gate but
+  remain user-hidden until independently validated; H₂ VLE and H₂ phase
+  envelopes remain unavailable; an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and
@@ -171,14 +172,15 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   isotherm pressure ranges, and CH₄ is enabled only for homogeneous gas
   density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 301.14 K gas
   block and 308.15-313.15 K high-temperature supercritical slices. CH₄ phase
-  classification and phase-envelope points are available only for xCH₄ = 0.05
-  on the 293.13 K and 298.14 K Petropoulou ordinary VLE isotherms; two-phase
-  bulk density, critical termination, H₂ phase envelopes, N₂, O₂, Ar,
+  classification and continuous bubble/dew phase-envelope curves are available
+  only for xCH₄ = 0.05 from 293.13 K to 298.142 K inside the Petropoulou
+  ordinary VLE temperature bounds; two-phase bulk density, critical
+  termination, H₂ phase envelopes, N₂, O₂, Ar,
   simultaneous impurities, mixture Cp/Cv/speed, h/u/s and transport remain
   unavailable for teqp. The native teqp bridge can now calculate diagnostic
   fixed-composition homogeneous Cv, Cp and speed of sound for CO₂+H₂ and
-  CO₂+CH₄, and the CH₄ diagram path traces additional model-only bubble/dew
-  points without presenting them as independent validation.
+  CO₂+CH₄. CH₄ critical-region and 303.15 K VLE calculations remain diagnostic
+  and are not drawn as production critical termination.
 
 ## Documentation
 
