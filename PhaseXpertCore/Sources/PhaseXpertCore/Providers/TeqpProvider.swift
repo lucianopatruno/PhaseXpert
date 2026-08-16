@@ -367,7 +367,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 return try await calculateMethaneVLEClassification(request)
             }
             throw ProviderError.invalidRequest(
-                "CO₂+CH₄ teqp support at xCH₄ = 0.05 is limited to the Ghafri density slices and the Petropoulou 2018 ordinary VLE isotherms."
+                "CO₂+CH₄ teqp support at xCH₄ = 0.05 is limited to the Ghafri density slices and the Petropoulou 2018 ordinary VLE isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C)."
             )
         }
         guard isPureCarbonDioxide(request.composition) else {
@@ -1092,7 +1092,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             abs(temperatureK - $0) <= 0.02
         }) else {
             throw ProviderError.invalidRequest(
-                "CO₂+CH₄ VLE is validated only at the ordinary Petropoulou et al. 2018 isotherms 293.13 K and 298.14 K for xCH₄ = 0.05."
+                "CO₂+CH₄ VLE is validated only at the ordinary Petropoulou et al. 2018 isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C) for xCH₄ = 0.05."
             )
         }
         return isotherm

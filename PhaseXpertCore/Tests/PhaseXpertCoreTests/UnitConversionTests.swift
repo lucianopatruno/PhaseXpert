@@ -19,6 +19,9 @@ final class UnitConversionTests: XCTestCase {
 
     func testTemperatureConversions() {
         XCTAssertEqual(TemperatureUnit.celsius.toKelvin(0), 273.15, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureUnit.celsius.toKelvin(-0.02), 273.13, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureUnit.celsius.toKelvin(19.98), 293.13, accuracy: 1e-12)
+        XCTAssertEqual(TemperatureUnit.celsius.toKelvin(24.99), 298.14, accuracy: 1e-12)
         XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(0), 255.3722222222222, accuracy: 1e-12)
         XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(32), 273.15, accuracy: 1e-12)
         XCTAssertEqual(TemperatureUnit.fahrenheit.toKelvin(212), 373.15, accuracy: 1e-12)

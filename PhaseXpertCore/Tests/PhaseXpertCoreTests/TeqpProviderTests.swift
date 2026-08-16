@@ -916,8 +916,8 @@ final class TeqpProviderTests: XCTestCase {
             try await provider.calculate(
                 CalculationRequest(
                     modelID: provider.descriptor.id,
-                    pressurePa: 7_000_000,
-                    temperatureK: 303.15,
+                    pressurePa: 6_600_000,
+                    temperatureK: 273.13,
                     composition: [
                         .init(component: .carbonDioxide, moleFraction: 0.95),
                         .init(component: .methane, moleFraction: 0.05)
@@ -932,6 +932,8 @@ final class TeqpProviderTests: XCTestCase {
             }
             XCTAssertTrue(message.contains("Ghafri density slices"))
             XCTAssertTrue(message.contains("Petropoulou 2018 ordinary VLE isotherms"))
+            XCTAssertTrue(message.contains("293.13 K (19.98 °C)"))
+            XCTAssertTrue(message.contains("298.14 K (24.99 °C)"))
         })
 
         await XCTAssertThrowsErrorAsync({
