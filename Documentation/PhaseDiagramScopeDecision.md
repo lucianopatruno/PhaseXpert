@@ -20,9 +20,13 @@ provider advertises a validated phase-envelope capability for that exact
 composition and domain. Density-only teqp H₂ support does not unlock an
 impurity phase diagram. The only impurity exception is the corrected
 CO₂+CH₄ Petropoulou 2018 gate for exact xCH₄ = 0.05, where Advanced CCS
-Properties may return explicit bubble/dew points at the accepted isotherms.
-Those points are not interpolated across failures and do not include a
-validated critical termination.
+Properties may return continuous bubble/dew branches from 293.13 K to
+298.142 K. The endpoint isotherms are the direct Petropoulou validation anchors;
+intermediate branch points are EOS-CG-2021 calculations inside those validated
+temperature bounds and are not described as measured data. The native provider
+also retains diagnostic model-only 303.15 K and fixed-composition critical
+calculations, but those points are not connected into the production diagram
+and do not include a validated critical termination or critical marker.
 
 Future reconsideration requires a new scientific feasibility milestone with new
 acceptance criteria before any production provider or user-interface integration

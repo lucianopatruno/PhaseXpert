@@ -998,12 +998,61 @@ private struct PhaseBoundaryChart: View {
         }
     }
 
+    private var isMixtureEnvelope: Bool {
+        response.boundaryKind == .mixtureEnvelope
+    }
+
+    private var bannerTitle: String {
+        isMixtureEnvelope ? "Validated methane phase envelope" : "Preliminary pure CO₂ boundary"
+    }
+
+    private var bannerMessage: String {
+        isMixtureEnvelope
+            ? "EOS-CG-2021 bubble/dew curve inside the experimentally validated Petropoulou VLE temperature bounds."
+            : "Calculated saturation values are preliminary and validation pending."
+    }
+
+    private var modelTitle: String {
+        isMixtureEnvelope ? "CO₂+CH₄ phase-envelope model" : "Pure CO₂ saturation model"
+    }
+
+    private var chartSubtitle: String {
+        isMixtureEnvelope
+            ? "CO₂+CH₄ bubble and dew branches with operating point"
+            : "Pure CO₂ saturation boundary with operating point"
+    }
+
+    private var boundaryNote: String {
+        isMixtureEnvelope
+            ? "Bubble and dew branches enclose the validated two-phase interval for the fixed composition. The operating phase shown above comes from the source calculation."
+            : "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the source calculation."
+    }
+
+    private var traceabilityBoundaryType: String {
+        isMixtureEnvelope ? "Mixture bubble/dew envelope" : "Pure-fluid saturation"
+    }
+
+    private var traceabilityModelName: String {
+        isMixtureEnvelope ? "CO₂+CH₄ EOS-CG-2021 VLE" : "Pure CO₂ saturation"
+    }
+
+    private func seriesName(for branch: PhaseEnvelopePoint.Branch) -> String {
+        switch branch {
+        case .bubble:
+            isMixtureEnvelope ? "Bubble branch" : "CO₂ saturation boundary"
+        case .dew:
+            "Dew branch"
+        case .critical:
+            "Critical point"
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
                 ScientificStatusBanner(
-                    title: "Preliminary pure CO₂ boundary",
-                    message: "Calculated saturation values are preliminary and validation pending."
+                    title: bannerTitle,
+                    message: bannerMessage
                 )
 
                 IFECard {
@@ -1042,7 +1091,7 @@ private struct PhaseBoundaryChart: View {
 
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
-                        Text("Pure CO₂ saturation model")
+                        Text(modelTitle)
                             .font(.headline)
                         LabeledContent(
                             "Operating pressure",
@@ -1065,9 +1114,7 @@ private struct PhaseBoundaryChart: View {
                             .font(.caption)
                             .foregroundStyle(Color.pxWarning)
                         }
-                        Text(
-                            "A pure-fluid saturation boundary is a line, not an enclosed two-phase envelope. The operating phase shown above comes from the source calculation."
-                        )
+                        Text(boundaryNote)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     }
@@ -1077,7 +1124,7 @@ private struct PhaseBoundaryChart: View {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
                         Text("Pressure–temperature diagram")
                             .font(.headline)
-                        Text("Pure CO₂ saturation boundary with operating point")
+                        Text(chartSubtitle)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
@@ -1091,7 +1138,7 @@ private struct PhaseBoundaryChart: View {
                                     )
                                     .foregroundStyle(by: .value(
                                         "Series",
-                                        "CO₂ saturation boundary"
+                                        seriesName(for: segment.branch)
                                     ))
                                     .interpolationMethod(.linear)
                                 }
@@ -1124,6 +1171,8 @@ private struct PhaseBoundaryChart: View {
                         }
                         .chartForegroundStyleScale([
                             "CO₂ saturation boundary": Color.pxChartBoundary,
+                            "Bubble branch": Color.pxChartBoundary,
+                            "Dew branch": Color.ifeBlue,
                             "Critical point": Color.pxChartCritical,
                             "Operating point": Color.pxChartOperatingPoint
                         ])
@@ -1135,7 +1184,9 @@ private struct PhaseBoundaryChart: View {
                         .frame(minHeight: 360)
                         .accessibilityIdentifier("phase-boundary-chart")
                         .accessibilityLabel(
-                            "Pure carbon dioxide saturation boundary with critical point and operating point"
+                            isMixtureEnvelope
+                                ? "Carbon dioxide methane bubble and dew phase envelope with operating point"
+                                : "Pure carbon dioxide saturation boundary with critical point and operating point"
                         )
 
                         if let selectedSample {
@@ -1168,7 +1219,7 @@ private struct PhaseBoundaryChart: View {
                     IFEExpandableRow("Phase-boundary traceability") {
                         LabeledContent(
                             "Boundary type",
-                            value: "Pure-fluid saturation"
+                            value: traceabilityBoundaryType
                         )
                         LabeledContent(
                             "Calculated points",
@@ -1181,7 +1232,7 @@ private struct PhaseBoundaryChart: View {
                             .multilineTextAlignment(.trailing)
                         }
                         if let model = response.model {
-                            LabeledContent("Model", value: "Pure CO₂ saturation")
+                            LabeledContent("Model", value: traceabilityModelName)
                             LabeledContent("Model version", value: model.modelVersion)
                             LabeledContent("Implementation version", value: model.providerVersion)
                         }
@@ -1193,7 +1244,12 @@ private struct PhaseBoundaryChart: View {
                             }
                         }
                         if let solver = response.solver {
-                            LabeledContent("Method", value: "Pure CO₂ saturation calculation")
+                            LabeledContent(
+                                "Method",
+                                value: isMixtureEnvelope
+                                    ? "CO₂+CH₄ bubble/dew calculation"
+                                    : "Pure CO₂ saturation calculation"
+                            )
                             LabeledContent(
                                 "Converged",
                                 value: solver.converged ? "Yes" : "No"

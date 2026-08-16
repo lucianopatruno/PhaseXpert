@@ -13,9 +13,12 @@ property-specific impurity domains: CO₂+H₂ homogeneous gas density at the ex
 Souissi et al. 2017 ThermoML composition and isotherm pressure ranges, and
 CO₂+CH₄ homogeneous density at the exact Ghafri et al. 2016 ThermoML gas
 composition/pressure range plus the encoded 308.15 K through 313.15 K
-high-temperature supercritical density slices. No other impurity, phase
-equilibrium, phase envelope, mixture heat capacity, mixture speed of sound, reference-state
-property or transport property is enabled by this document or by the extracted
+high-temperature supercritical density slices. The native bridge now also has
+diagnostic fixed-composition homogeneous Cv, Cp and speed-of-sound ABI support
+for EOS-CG CO₂+H₂ and CO₂+CH₄, plus diagnostic CO₂+CH₄ continuous VLE and
+critical calculations. No other impurity, phase equilibrium, phase envelope,
+mixture heat capacity, mixture speed of sound, reference-state property or
+transport property is production-enabled by this document or by the extracted
 parameter artifact alone.
 
 The user-facing display name is:
@@ -104,7 +107,7 @@ CO₂+O₂ and CO₂+Ar rows is recorded in
 | CO₂+Ar | Table 4 reducing parameters plus Table 5 Løvseth departure function | 6 | 3.40533% | 9.99102% | Fail |
 | CO₂+H₂ | Table 4 reducing parameters plus Table 5 Beckmüller departure function | 19 gas-density points | 0.189492% | 0.370799% | Limited homogeneous gas-density pass; production-enabled only for the encoded domain |
 | CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 180 homogeneous density rows; 6-row gas block plus 65-row high-temperature supercritical production subset | 1.3981775% overall; 0.2034228% gas block; 1.1254775% supercritical slice | 5.15195% overall; 0.413175% gas block; 1.99333% supercritical slice | Expanded homogeneous density pass for encoded gas and high-temperature supercritical slices only |
-| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 37 Petropoulou 2018 VLE rows; 24 ordinary rows accepted for the fixed production gate | 0.416664% pressure overall; 0.608899% pressure for accepted ordinary production rows | 1.787018% pressure; 0.026258 absolute yCH₄ | Limited VLE production gate for exact xCH₄ = 0.05 at 293.13 K and 298.14 K; critical termination and arbitrary composition interpolation unavailable |
+| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 37 Petropoulou 2018 VLE rows; 24 ordinary rows accepted for the fixed production gate; 82 production envelope points generated across 293.13-298.142 K | 0.416664% pressure overall; 0.608899% pressure for accepted ordinary production rows | 1.787018% pressure; 0.026258 absolute yCH₄ | Limited VLE production gate for exact xCH₄ = 0.05 with continuous EOS-CG-2021 bubble/dew interpolation inside the 293.13-298.142 K Petropoulou ordinary VLE temperature bounds; fixed-composition critical solver and 303.15 K continuation remain diagnostic |
 | CO₂+CH₄ | Prior mis-mapped GERG-inherited record | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Superseded by CH₄ Table 4 mapping bug |
 
 The CO₂+Ar 3.08 mol% subset remains a useful diagnostic with worst density

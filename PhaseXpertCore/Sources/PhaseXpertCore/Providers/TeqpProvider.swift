@@ -71,6 +71,100 @@ public struct TeqpMixtureDensityResult: Equatable, Sendable {
     }
 }
 
+public struct TeqpMixtureThermodynamicResult: Equatable, Sendable {
+    public let densityKilogramsPerCubicMetre: Double
+    public let molarDensityMolesPerCubicMetre: Double
+    public let pressurePa: Double
+    public let pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double
+    public let pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: Double
+    public let isochoricHeatCapacityJoulesPerKilogramKelvin: Double
+    public let isobaricHeatCapacityJoulesPerKilogramKelvin: Double
+    public let heatCapacityRatio: Double
+    public let speedOfSoundMetresPerSecond: Double
+    public let speedOfSoundSquaredMetresSquaredPerSecondSquared: Double
+    public let minimumStabilityEigenvalue: Double
+    public let densityRootCount: Int
+    public let converged: Bool
+    public let phaseIdentifier: String
+    public let formulationID: String
+
+    public init(
+        densityKilogramsPerCubicMetre: Double,
+        molarDensityMolesPerCubicMetre: Double,
+        pressurePa: Double,
+        pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double,
+        pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: Double,
+        isochoricHeatCapacityJoulesPerKilogramKelvin: Double,
+        isobaricHeatCapacityJoulesPerKilogramKelvin: Double,
+        heatCapacityRatio: Double,
+        speedOfSoundMetresPerSecond: Double,
+        speedOfSoundSquaredMetresSquaredPerSecondSquared: Double,
+        minimumStabilityEigenvalue: Double,
+        densityRootCount: Int,
+        converged: Bool,
+        phaseIdentifier: String,
+        formulationID: String
+    ) {
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.pressurePa = pressurePa
+        self.pressureDerivativeWithRespectToMolarDensityJoulesPerMole =
+            pressureDerivativeWithRespectToMolarDensityJoulesPerMole
+        self.pressureDerivativeWithRespectToTemperaturePascalsPerKelvin =
+            pressureDerivativeWithRespectToTemperaturePascalsPerKelvin
+        self.isochoricHeatCapacityJoulesPerKilogramKelvin =
+            isochoricHeatCapacityJoulesPerKilogramKelvin
+        self.isobaricHeatCapacityJoulesPerKilogramKelvin =
+            isobaricHeatCapacityJoulesPerKilogramKelvin
+        self.heatCapacityRatio = heatCapacityRatio
+        self.speedOfSoundMetresPerSecond = speedOfSoundMetresPerSecond
+        self.speedOfSoundSquaredMetresSquaredPerSecondSquared =
+            speedOfSoundSquaredMetresSquaredPerSecondSquared
+        self.minimumStabilityEigenvalue = minimumStabilityEigenvalue
+        self.densityRootCount = densityRootCount
+        self.converged = converged
+        self.phaseIdentifier = phaseIdentifier
+        self.formulationID = formulationID
+    }
+}
+
+public struct TeqpBinaryCriticalResult: Equatable, Sendable {
+    public let converged: Bool
+    public let iterationCount: Int
+    public let temperatureK: Double
+    public let pressurePa: Double
+    public let molarDensityMolesPerCubicMetre: Double
+    public let densityKilogramsPerCubicMetre: Double
+    public let component2MoleFraction: Double
+    public let minimumStabilityEigenvalue: Double
+    public let thirdOrderResidual: Double
+    public let formulationID: String
+
+    public init(
+        converged: Bool,
+        iterationCount: Int,
+        temperatureK: Double,
+        pressurePa: Double,
+        molarDensityMolesPerCubicMetre: Double,
+        densityKilogramsPerCubicMetre: Double,
+        component2MoleFraction: Double,
+        minimumStabilityEigenvalue: Double,
+        thirdOrderResidual: Double,
+        formulationID: String
+    ) {
+        self.converged = converged
+        self.iterationCount = iterationCount
+        self.temperatureK = temperatureK
+        self.pressurePa = pressurePa
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.component2MoleFraction = component2MoleFraction
+        self.minimumStabilityEigenvalue = minimumStabilityEigenvalue
+        self.thirdOrderResidual = thirdOrderResidual
+        self.formulationID = formulationID
+    }
+}
+
 public enum TeqpBinaryFormulationID: Sendable {
     case carbonDioxideNitrogen
     case eoscgCarbonDioxideHydrogen
@@ -164,6 +258,18 @@ public protocol TeqpEngine: Sendable {
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult
 
+    func calculateBinaryThermodynamicState(
+        formulation: TeqpBinaryFormulationID,
+        pressurePa: Double,
+        temperatureK: Double,
+        component2MoleFraction: Double
+    ) async throws -> TeqpMixtureThermodynamicResult
+
+    func calculateBinaryCriticalPoint(
+        formulation: TeqpBinaryFormulationID,
+        component2MoleFraction: Double
+    ) async throws -> TeqpBinaryCriticalResult
+
     func calculateBinaryVLE(
         formulation: TeqpBinaryFormulationID,
         temperatureK: Double,
@@ -225,6 +331,26 @@ public struct UnavailableTeqpEngine: TeqpEngine {
             "The teqp native XCFramework has not been linked."
         )
     }
+
+    public func calculateBinaryThermodynamicState(
+        formulation: TeqpBinaryFormulationID,
+        pressurePa: Double,
+        temperatureK: Double,
+        component2MoleFraction: Double
+    ) async throws -> TeqpMixtureThermodynamicResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
+    public func calculateBinaryCriticalPoint(
+        formulation: TeqpBinaryFormulationID,
+        component2MoleFraction: Double
+    ) async throws -> TeqpBinaryCriticalResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
 }
 
 public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
@@ -260,13 +386,13 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Pure CO₂ is supported for density, Cv, Cp, Cp/Cv, speed of sound and pure saturation.",
                 "CO₂+H₂ is supported only for homogeneous gas density at xH₂ = 0.05362, on the validated 273.15 K, 293.15 K and 323.15 K isotherms, within the observed gas-pressure ranges.",
                 "CO₂+CH₄ is supported only for homogeneous density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 gas and high-temperature supercritical validation slices.",
-                "CO₂+CH₄ VLE phase classification and phase-envelope points are validation-gated to xCH₄ = 0.05 on the ordinary Petropoulou et al. 2018 isotherms; two-phase bulk density is unavailable.",
+                "CO₂+CH₄ VLE phase classification and continuous bubble/dew phase-envelope points are validation-gated to xCH₄ = 0.05 from 293.13 K to 298.142 K inside the ordinary Petropoulou et al. 2018 temperature bounds; two-phase bulk density is unavailable.",
                 "N₂, O₂, Ar and simultaneous impurity mixtures remain unsupported and never fall back to CoolProp.",
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
                 "Phase classification is limited to pure-CO₂ stable vapor/liquid/supercritical states and the validated CO₂+CH₄ VLE gate; otherwise the phase remains unknown or unavailable.",
                 "Pure-CO₂ phase-envelope generation is available; CO₂+CH₄ phase-envelope points are available only inside the validated VLE gate.",
-                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cv, Cp and speed of sound remain unavailable pending validation.",
+                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cv, Cp and speed of sound are implemented only as hidden diagnostics because no independent production validation gate has passed.",
                 "Absolute h, u and s remain unavailable pending reference-state validation."
             ],
             references: [
@@ -363,11 +489,11 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             if methaneDensityTemperatureGateContains(request.temperatureK) {
                 return try await calculateMethaneGasDensity(request)
             }
-            if methaneVLETemperatureDomainContains(request.temperatureK) {
+            if methaneVLEProductionTemperatureContains(request.temperatureK) {
                 return try await calculateMethaneVLEClassification(request)
             }
             throw ProviderError.invalidRequest(
-                "CO₂+CH₄ teqp support at xCH₄ = 0.05 is limited to the Ghafri density slices and the Petropoulou 2018 ordinary VLE isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C)."
+                "CO₂+CH₄ teqp support at xCH₄ = 0.05 is limited to the Ghafri density slices and the Petropoulou 2018 ordinary VLE temperature interval 293.13 K (19.98 °C) to 298.142 K (24.99 °C)."
             )
         }
         guard isPureCarbonDioxide(request.composition) else {
@@ -654,7 +780,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     value: nil,
                     unit: "",
                     status: .unavailable,
-                    message: "This property is not validated for the CO₂+H₂ EOS-CG-2021 gas-density domain; no CoolProp fallback is used."
+                    message: unsupportedHydrogenPropertyMessage(for: property)
                 )
             }
 
@@ -732,7 +858,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     value: nil,
                     unit: "",
                     status: .unavailable,
-                    message: "This property is not validated for the CO₂+CH₄ EOS-CG-2021 density domain; no CoolProp fallback is used."
+                    message: unsupportedMethanePropertyMessage(for: property)
                 )
             }
 
@@ -792,7 +918,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     status: .unavailable,
                     message: property == .density
                         ? "CO₂+CH₄ VLE phase classification is available here, but homogeneous bulk density is not validated for this two-phase/phase-boundary domain."
-                        : "This property is not validated for the CO₂+CH₄ EOS-CG-2021 VLE domain; no CoolProp fallback is used."
+                        : unsupportedMethaneVLEPropertyMessage(for: property)
                 )
             }
 
@@ -811,7 +937,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             ),
             warnings: [
-                "LIMITED PASS — CO₂+CH₄ VLE classification only at xCH₄ = 0.05 on validated ordinary Petropoulou et al. 2018 isotherms.",
+                "LIMITED PASS — CO₂+CH₄ VLE classification at xCH₄ = 0.05 from 293.13 K to 298.142 K, calculated with EOS-CG-2021 inside the experimentally validated Petropoulou et al. 2018 ordinary VLE temperature bounds.",
                 "Bulk density, phase fraction, heat capacities, speed of sound, h/u/s and transport are unavailable in this VLE domain.",
                 "No CoolProp fallback is used."
             ],
@@ -828,13 +954,26 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         temperatureK: Double,
         methaneMoleFraction: Double
     ) async throws -> MethaneVLEBoundary {
-        let isotherm = try methaneVLEIsotherm(for: temperatureK)
-        let bubble = try await methaneBubblePoint(
+        let isotherm = try methaneVLEProductionTemperature(for: temperatureK)
+        return try await methaneVLEBoundaryAtTemperature(
             temperatureK: isotherm,
-            liquidMethaneMoleFraction: methaneMoleFraction
+            methaneMoleFraction: methaneMoleFraction,
+            bubbleInitialGuess: nil
+        )
+    }
+
+    private func methaneVLEBoundaryAtTemperature(
+        temperatureK: Double,
+        methaneMoleFraction: Double,
+        bubbleInitialGuess: TeqpBinaryVLEInitialGuess?
+    ) async throws -> MethaneVLEBoundary {
+        let bubble = try await methaneBubblePoint(
+            temperatureK: temperatureK,
+            liquidMethaneMoleFraction: methaneMoleFraction,
+            initialGuess: bubbleInitialGuess
         )
         let dew = try await methaneDewPoint(
-            temperatureK: isotherm,
+            temperatureK: temperatureK,
             vaporMethaneMoleFraction: methaneMoleFraction
         )
         guard bubble.liquidMolarDensityMolesPerCubicMetre
@@ -865,22 +1004,43 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             )
         }
 
-        var points: [PhaseEnvelopePoint] = []
-        points.reserveCapacity(methaneVLEProductionIsotherms.count * 2)
-        for isotherm in methaneVLEProductionIsotherms {
+        var bubblePoints: [PhaseEnvelopePoint] = []
+        var dewPoints: [PhaseEnvelopePoint] = []
+        var failedTemperatures: [Double] = []
+        var previousBubbleGuess: TeqpBinaryVLEInitialGuess?
+        let temperatures = methaneProductionEnvelopeTemperatures()
+        bubblePoints.reserveCapacity(temperatures.count)
+        dewPoints.reserveCapacity(temperatures.count)
+        for isotherm in temperatures {
             try Task.checkCancellation()
-            let boundary = try await methaneVLEBoundary(
-                temperatureK: isotherm,
-                methaneMoleFraction: methaneMoleFraction
+            let boundary: MethaneVLEBoundary
+            do {
+                boundary = try await methaneVLEBoundaryAtTemperature(
+                    temperatureK: isotherm,
+                    methaneMoleFraction: methaneMoleFraction,
+                    bubbleInitialGuess: previousBubbleGuess
+                )
+            } catch {
+                failedTemperatures.append(isotherm)
+                previousBubbleGuess = nil
+                continue
+            }
+            previousBubbleGuess = TeqpBinaryVLEInitialGuess(
+                liquidMolarDensityMolesPerCubicMetre:
+                    boundary.bubble.liquidMolarDensityMolesPerCubicMetre,
+                vaporMolarDensityMolesPerCubicMetre:
+                    boundary.bubble.vaporMolarDensityMolesPerCubicMetre,
+                vaporComponent2MoleFraction:
+                    boundary.bubble.vaporComponent2MoleFraction
             )
-            points.append(
+            bubblePoints.append(
                 PhaseEnvelopePoint(
                     temperatureK: isotherm,
                     pressurePa: boundary.bubble.pressurePa,
                     branch: .bubble
                 )
             )
-            points.append(
+            dewPoints.append(
                 PhaseEnvelopePoint(
                     temperatureK: isotherm,
                     pressurePa: boundary.dew.pressurePa,
@@ -888,22 +1048,40 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 )
             )
         }
+        guard failedTemperatures.isEmpty,
+              bubblePoints.count == temperatures.count,
+              dewPoints.count == temperatures.count
+        else {
+            throw ProviderError.malformedResponse(
+                "teqp CO₂+CH₄ production VLE continuation did not converge at every validated interpolation temperature."
+            )
+        }
+        let bubblePressures = bubblePoints.map(\.pressurePa)
+        let dewPressures = dewPoints.map(\.pressurePa)
+        guard methanePressuresAreMonotonic(bubblePressures),
+              methanePressuresAreMonotonic(dewPressures)
+        else {
+            throw ProviderError.malformedResponse(
+                "teqp CO₂+CH₄ production VLE continuation returned a non-monotonic pressure branch."
+            )
+        }
 
         return PhaseEnvelopeResponse(
             requestID: request.requestID,
-            points: points,
+            points: bubblePoints + dewPoints,
             warnings: [
-                "LIMITED PASS — CO₂+CH₄ phase-envelope points are validation-gated to xCH₄ = 0.05 and ordinary Petropoulou et al. 2018 isotherms.",
+                "LIMITED PASS — CO₂+CH₄ continuous bubble/dew envelope is production-enabled only at xCH₄ = 0.05 from 293.13 K to 298.142 K.",
+                "Curve points between 293.13 K and 298.142 K are EOS-CG-2021 calculations inside the experimentally validated Petropoulou et al. 2018 ordinary VLE temperature bounds; only the anchor isotherms are direct experimental validation rows.",
                 "Critical termination is not drawn for xCH₄ = 0.05 because the Petropoulou critical-region rows do not validate this composition; PhaseXpert does not interpolate to a critical endpoint.",
-                "No failed or missing VLE points are connected by interpolation; no CoolProp fallback is used."
+                "No failed or missing VLE points are connected; all \(temperatures.count) production temperature samples converged and no CoolProp fallback is used."
             ],
             isAvailable: true,
             boundaryKind: .mixtureEnvelope,
             model: descriptor,
             generatedAt: Date(),
             solver: SolverMetadata(
-                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ binary VLE phase-envelope points; validation artifact Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
-                converged: true,
+                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ production VLE interpolation with previous-solution warm starts; \(bubblePoints.count + dewPoints.count) plotted points from \(temperatures.count) temperatures over 293.13 K to 298.142 K; \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.accuracySummary) validation artifact \(TeqpFormulationCatalog.co2MethaneEOSCGVLE.validationArtifact)",
+                converged: failedTemperatures.isEmpty,
                 iterationCount: nil,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             )
@@ -912,13 +1090,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
 
     private func methaneBubblePoint(
         temperatureK: Double,
-        liquidMethaneMoleFraction: Double
+        liquidMethaneMoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess? = nil
     ) async throws -> TeqpBinaryVLEResult {
         try await engine.calculateBinaryVLE(
             formulation: .eoscgCarbonDioxideMethane,
             temperatureK: temperatureK,
             liquidComponent2MoleFraction: liquidMethaneMoleFraction,
-            initialGuess: methaneInitialGuess(
+            initialGuess: initialGuess ?? methaneInitialGuess(
                 temperatureK: temperatureK,
                 pressurePa: methanePressureGuess(for: temperatureK),
                 vaporMethaneMoleFraction: min(
@@ -927,6 +1106,26 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 )
             )
         )
+    }
+
+    private func methaneProductionEnvelopeTemperatures() -> [Double] {
+        let count = methaneVLEProductionEnvelopeTemperatureCount
+        let lower = methaneVLEProductionTemperatureRange.lowerBound
+        let upper = methaneVLEProductionTemperatureRange.upperBound
+        let increment = (upper - lower) / Double(count - 1)
+
+        return (0..<count).map { index in
+            if index == count - 1 {
+                return upper
+            }
+            return lower + Double(index) * increment
+        }
+    }
+
+    private func methanePressuresAreMonotonic(_ pressures: [Double]) -> Bool {
+        zip(pressures, pressures.dropFirst()).allSatisfy { previous, next in
+            next > previous
+        }
     }
 
     private func methaneDewPoint(
@@ -1078,8 +1277,8 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         }
     }
 
-    private func methaneVLETemperatureDomainContains(_ temperatureK: Double) -> Bool {
-        (try? methaneVLEIsotherm(for: temperatureK)) != nil
+    private func methaneVLEProductionTemperatureContains(_ temperatureK: Double) -> Bool {
+        (try? methaneVLEProductionTemperature(for: temperatureK)) != nil
     }
 
     private func methaneVLECompositionSupported(_ methaneMoleFraction: Double) -> Bool {
@@ -1087,15 +1286,17 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             <= CalculationValidator.compositionTolerance
     }
 
-    private func methaneVLEIsotherm(for temperatureK: Double) throws -> Double {
-        guard let isotherm = methaneVLEProductionIsotherms.first(where: {
-            abs(temperatureK - $0) <= 0.02
-        }) else {
+    private func methaneVLEProductionTemperature(for temperatureK: Double) throws -> Double {
+        let lower = methaneVLEProductionTemperatureRange.lowerBound
+        let upper = methaneVLEProductionTemperatureRange.upperBound
+        guard temperatureK >= lower - methaneVLETemperatureTolerance,
+              temperatureK <= upper + methaneVLETemperatureTolerance
+        else {
             throw ProviderError.invalidRequest(
-                "CO₂+CH₄ VLE is validated only at the ordinary Petropoulou et al. 2018 isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C) for xCH₄ = 0.05."
+                "CO₂+CH₄ VLE is production-enabled only inside the ordinary Petropoulou et al. 2018 temperature interval 293.13 K (19.98 °C) to 298.142 K (24.99 °C) for xCH₄ = 0.05."
             )
         }
-        return isotherm
+        return min(max(temperatureK, lower), upper)
     }
 
     private func methaneInitialGuess(
@@ -1165,6 +1366,68 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             status: .calculated,
             message: message
         )
+    }
+
+    private func unsupportedHydrogenPropertyMessage(
+        for property: PropertyID
+    ) -> String {
+        guard let capability = try? supportedHydrogenCapability() else {
+            return "This property is not validated for CO₂+H₂; no CoolProp fallback is used."
+        }
+        return unsupportedPropertyMessage(
+            property: property,
+            system: "CO₂+H₂",
+            enabledCapability: capability,
+            unavailableDetail: "mixture Cv, Cp, speed of sound, VLE, phase envelope, h/u/s and transport remain unavailable"
+        )
+    }
+
+    private func unsupportedMethanePropertyMessage(
+        for property: PropertyID
+    ) -> String {
+        guard let capability = try? supportedMethaneCapability() else {
+            return "This property is not validated for CO₂+CH₄; no CoolProp fallback is used."
+        }
+        return unsupportedPropertyMessage(
+            property: property,
+            system: "CO₂+CH₄",
+            enabledCapability: capability,
+            unavailableDetail: "mixture Cv, Cp, speed of sound, h/u/s and transport remain unavailable"
+        )
+    }
+
+    private func unsupportedMethaneVLEPropertyMessage(
+        for property: PropertyID
+    ) -> String {
+        let capability = TeqpFormulationCatalog.co2MethaneEOSCGVLE
+        let propertyName = displayName(for: property)
+        return "\(propertyName) for CO₂+CH₄ is not production-validated in the VLE gate; \(capability.validationSummary) enables phase classification and bubble/dew points only. \(capability.accuracySummary) No CoolProp fallback is used."
+    }
+
+    private func unsupportedPropertyMessage(
+        property: PropertyID,
+        system: String,
+        enabledCapability: TeqpPropertyCapability,
+        unavailableDetail: String
+    ) -> String {
+        let propertyName = displayName(for: property)
+        let accuracy = enabledCapability.accuracySummary.map { " \($0)" } ?? ""
+        return "\(propertyName) for \(system) is not production-validated; the enabled gate is \(enabledCapability.validationSummary)\(accuracy) \(unavailableDetail). No CoolProp fallback is used."
+    }
+
+    private func displayName(for property: PropertyID) -> String {
+        switch property {
+        case .isobaricHeatCapacity:
+            "Cp"
+        case .isochoricHeatCapacity:
+            "Cv"
+        case .speedOfSound:
+            "Speed of sound"
+        case .heatCapacityRatio:
+            "Cp/Cv"
+        default:
+            property.rawValue
+        }
     }
 
     private func temperatureDomainSummary(
@@ -1257,4 +1520,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     private var methaneVLEMaximumLiquidMethaneMoleFraction: Double { 0.06165 }
     private var methaneVLEMaximumVaporMethaneMoleFraction: Double { 0.13134 }
     private var methaneVLEProductionIsotherms: [Double] { [293.13, 298.142] }
+    private var methaneVLEProductionTemperatureRange: ClosedRange<Double> { 293.13...298.142 }
+    private var methaneVLETemperatureTolerance: Double { 0.02 }
+    private var methaneVLEProductionEnvelopeTemperatureCount: Int { 41 }
 }

@@ -98,6 +98,10 @@ pipeline states, points on both sides of the critical region and explicit
 single-/two-phase classification checks. Mixture viscosity remains disabled.
 Mixture phase envelopes remain explicitly preliminary until independently
 sourced bubble/dew cases, uncertainties and acceptance criteria are approved.
+Native mixture Cv, Cp and speed-of-sound diagnostics must first pass analytic
+derivative and finite-difference implementation checks, then separate
+property-specific experimental validation; finite-difference agreement alone is
+not a production validation gate.
 
 
 ## Expanded pure-CO₂ property validation plan

@@ -66,6 +66,8 @@ public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
     public let compositionLimits: [TeqpCompositionLimit]
     public let isothermPressureLimits: [TeqpTemperaturePressureLimit]
     public let validationArtifact: String
+    public let validationSummary: String
+    public let accuracySummary: String?
     public let notes: [String]
 
     public init(
@@ -74,6 +76,8 @@ public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
         compositionLimits: [TeqpCompositionLimit],
         isothermPressureLimits: [TeqpTemperaturePressureLimit],
         validationArtifact: String,
+        validationSummary: String,
+        accuracySummary: String? = nil,
         notes: [String]
     ) {
         self.property = property
@@ -81,6 +85,45 @@ public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
         self.compositionLimits = compositionLimits
         self.isothermPressureLimits = isothermPressureLimits
         self.validationArtifact = validationArtifact
+        self.validationSummary = validationSummary
+        self.accuracySummary = accuracySummary
+        self.notes = notes
+    }
+}
+
+public struct TeqpPhaseEquilibriumCapability: Codable, Equatable, Sendable {
+    public let components: Set<ComponentID>
+    public let phaseDomain: TeqpPhaseDomain
+    public let compositionLimits: [TeqpCompositionLimit]
+    public let isothermPressureLimits: [TeqpTemperaturePressureLimit]
+    public let validationArtifact: String
+    public let validationSummary: String
+    public let accuracySummary: String
+    public let supportsContinuousEnvelope: Bool
+    public let supportsCriticalPoint: Bool
+    public let notes: [String]
+
+    public init(
+        components: Set<ComponentID>,
+        phaseDomain: TeqpPhaseDomain,
+        compositionLimits: [TeqpCompositionLimit],
+        isothermPressureLimits: [TeqpTemperaturePressureLimit],
+        validationArtifact: String,
+        validationSummary: String,
+        accuracySummary: String,
+        supportsContinuousEnvelope: Bool,
+        supportsCriticalPoint: Bool,
+        notes: [String]
+    ) {
+        self.components = components
+        self.phaseDomain = phaseDomain
+        self.compositionLimits = compositionLimits
+        self.isothermPressureLimits = isothermPressureLimits
+        self.validationArtifact = validationArtifact
+        self.validationSummary = validationSummary
+        self.accuracySummary = accuracySummary
+        self.supportsContinuousEnvelope = supportsContinuousEnvelope
+        self.supportsCriticalPoint = supportsCriticalPoint
         self.notes = notes
     }
 }
@@ -222,6 +265,8 @@ public enum TeqpFormulationCatalog {
                     )
                 ],
                 validationArtifact: "Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json",
+                validationSummary: "Souissi et al. 2017 NIST ThermoML gas-density validation, exact xH₂ = 0.05362.",
+                accuracySummary: "19 points; AARD 0.189492%; worst relative deviation 0.370799%.",
                 notes: [
                     "Validated only for homogeneous gas density at the exact Souissi et al. 2017 ThermoML H₂ mole fraction.",
                     "No interpolation between isotherms is claimed.",
@@ -336,6 +381,8 @@ public enum TeqpFormulationCatalog {
                     )
                 ],
                 validationArtifact: "Documentation/Validation/MethaneDensityDomainExpansion2026-08-15.json",
+                validationSummary: "Ghafri et al. 2016 NIST ThermoML density validation, exact xCH₄ = 0.05.",
+                accuracySummary: "65-point expanded production subset; AARD 1.1254775%; worst relative deviation 1.99333%.",
                 notes: [
                     "Validated for homogeneous gas density in the Ghafri et al. 2016 ThermoML gas block.",
                     "Also validated for a high-temperature supercritical density slice at xCH₄ = 0.05 from 308.15 K through 313.15 K within the encoded isotherm pressure ranges.",
@@ -344,7 +391,7 @@ public enum TeqpFormulationCatalog {
                 ]
             )
         ],
-        supportsPhaseEnvelope: false,
+        supportsPhaseEnvelope: true,
         provenance: "EOS-CG-2021 inherited GERG CH₄+CO₂ reducing parameters and GERG-2008 departure function evaluated through teqp v0.23.1 \(teqpCommit); gas-density validation against Ghafri et al. 2016 NIST ThermoML after static Clapeyron EOS_CG identity audit.",
         limitations: [
             "LIMITED PASS — homogeneous gas density only at xCH₄ = 0.05.",
@@ -366,6 +413,41 @@ public enum TeqpFormulationCatalog {
                 year: 2016,
                 doiOrURL: "https://doi.org/10.1016/j.fluid.2015.08.029"
             )
+        ]
+    )
+
+    public static let co2MethaneEOSCGVLE = TeqpPhaseEquilibriumCapability(
+        components: [.carbonDioxide, .methane],
+        phaseDomain: .phaseEquilibrium,
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .methane,
+                minimumMoleFraction: 0.05,
+                maximumMoleFraction: 0.05
+            )
+        ],
+        isothermPressureLimits: [
+            TeqpTemperaturePressureLimit(
+                temperatureK: 293.13,
+                minimumPressurePa: 5_727_300,
+                maximumPressurePa: 7_930_800
+            ),
+            TeqpTemperaturePressureLimit(
+                temperatureK: 298.142,
+                minimumPressurePa: 6_431_600,
+                maximumPressurePa: 7_697_750
+            )
+        ],
+        validationArtifact: "Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
+        validationSummary: "Petropoulou et al. 2018 NIST ThermoML ordinary VLE rows, exact xCH₄ = 0.05; production envelope points between anchors are EOS-CG-2021 calculations inside the validated temperature bounds.",
+        accuracySummary: "24 accepted rows; pressure AARD 0.608899%; worst pressure deviation 1.787018%; worst absolute yCH₄ deviation 0.026258.",
+        supportsContinuousEnvelope: true,
+        supportsCriticalPoint: false,
+        notes: [
+            "Production support includes calculated bubble/dew phase classification and a continuous envelope segment from 293.13 K to 298.142 K at exact xCH₄ = 0.05.",
+            "Intermediate curve points are EOS-CG-2021 interpolation within the experimentally validated Petropoulou ordinary VLE temperature bounds; they are not direct experimental rows.",
+            "The 303.15 K Petropoulou critical-region rows remain diagnostic only.",
+            "No validated critical endpoint or arbitrary composition interpolation is exposed."
         ]
     )
 

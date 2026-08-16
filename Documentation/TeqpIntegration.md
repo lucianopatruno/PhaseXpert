@@ -6,8 +6,10 @@ This is a deliberately narrow experimental native-provider milestone. It adds
 an optional local teqp bridge for pure CO₂, a property-specific CO₂+H₂
 homogeneous gas-density production domain, a property-specific CO₂+CH₄
 homogeneous gas/supercritical density production domain, a limited corrected
-CO₂+CH₄ VLE/phase-classification gate, and validation-gated CO₂+N₂ research
-infrastructure. CoolProp remains the default provider, and no existing
+CO₂+CH₄ VLE/phase-classification gate, diagnostic EOS-CG CO₂+H₂/CO₂+CH₄
+mixture derivative calculations, diagnostic CO₂+CH₄ continuous-envelope and
+critical calculations, and validation-gated CO₂+N₂ research infrastructure.
+CoolProp remains the default provider, and no existing
 calculation is routed to teqp unless the user explicitly selects `Advanced CCS
 Properties`.
 
@@ -63,6 +65,26 @@ on one hard-coded pure-CO₂ seed. The implementation deliberately avoids the
 broader `teqpcpp` wrapper path because that path still encounters the
 AppleClang issue described below.
 
+The bridge also exposes `px_teqp_calculate_binary_thermodynamic_state` for
+EOS-CG CO₂+H₂ and CO₂+CH₄. It solves homogeneous density at the requested
+`P, T, z`, evaluates teqp analytic residual Helmholtz derivatives and pinned
+ideal-gas Helmholtz derivatives, and returns density, molar density,
+`dp/drho|T,z`, `dp/dT|rho,z`, Cv, Cp, Cp/Cv and fixed-composition homogeneous
+speed of sound. The convention is frozen composition at the EOS composition
+vector, on a molar Helmholtz basis with mass-specific output units for Cv, Cp
+and speed. Results are rejected for nonfinite derivatives, negative stability
+eigenvalue, nonpositive Cv, nonpositive mechanical derivative, Cp below Cv or
+nonpositive sound-speed squared. The Swift provider keeps these values
+diagnostic-only until independent CO₂+H₂ or CO₂+CH₄ caloric/acoustic validation
+passes.
+
+`px_teqp_calculate_binary_critical_point` is a diagnostic fixed-composition
+critical solver for EOS-CG CO₂+H₂ and CO₂+CH₄. It solves for zero minimum
+stability-Hessian eigenvalue and zero third directional derivative along the
+least-stable eigenvector. PhaseXpert does not draw or claim a CH₄ critical
+endpoint because no exact xCH₄ = 0.05 independent critical validation is
+encoded.
+
 For the retained CO₂+N₂ diagnostic initialization, the bridge starts from
 teqp's pure-CO₂ saturation state and continues through intermediate
 liquid-phase N₂ compositions before solving the requested `T, x_liquid` point.
@@ -72,10 +94,13 @@ composition. CO₂+CH₄ Petropoulou diagnostics and the production gate use the
 generic initial-guess path because the inherited pure-CO₂ continuation seed is
 not robust enough for the ordinary 293 K and 298 K rows. The production
 provider gate is deliberately narrower than the diagnostic matrix: exact
-xCH₄ = 0.05, the accepted 293.13 K and 298.14 K ordinary isotherms, explicit
-vapor/dense/two-phase classification and bubble/dew phase-envelope points only.
-It does not report a two-phase bulk density, phase fraction, arbitrary
-composition interpolation or a validated critical termination.
+xCH₄ = 0.05, explicit vapor/dense/two-phase classification and a continuous
+bubble/dew phase-envelope segment from 293.13 K to 298.142 K. The endpoints are
+the accepted Petropoulou ordinary isotherm validation anchors, and intermediate
+curve samples are EOS-CG-2021 calculations inside those experimentally
+validated temperature bounds rather than measured rows. It does not report a
+two-phase bulk density, phase fraction, arbitrary composition interpolation or
+a validated critical termination.
 
 The native point classifier is retained only as research infrastructure. For a
 requested subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at

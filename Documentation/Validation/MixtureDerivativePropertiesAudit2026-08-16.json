@@ -1,15 +1,82 @@
 {
   "artifactID": "eoscg2021-mixture-caloric-speed-audit-2026-08-16",
-  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "createdFor": "agent/ccs-full-thermodynamics",
   "implementationAudit": {
-    "nativeBridgeSupport": "The production native binary bridge currently returns density, phase-equilibrium pressure, liquid/vapor molar densities, compositions and residual metadata. It does not yet expose complete mixture Helmholtz derivative outputs for Cv, Cp or speed of sound.",
-    "providerSupport": "TeqpProvider exposes mixture density plus derived molar mass, specific volume and compressibility factor only, and reports mixture Cv, Cp and speed of sound as unavailable.",
-    "result": "NOT ENABLED"
+    "nativeBridgeSupport": "IMPLEMENTED DIAGNOSTICALLY. PhaseXpertTeqpBridge now exposes px_teqp_calculate_binary_thermodynamic_state for EOS-CG CO2+H2 and CO2+CH4. The ABI returns homogeneous density, molar density, pressure, analytic dp/drho|T,z, analytic dp/dT|rho,z, Cv, Cp, Cp/Cv, frozen-composition homogeneous speed of sound, stability eigenvalue, density-root count, phase/status and formulation ID.",
+    "derivativeSource": "teqp v0.23.1 analytic residual Helmholtz derivatives through TDXDerivatives plus teqp IdealHelmholtz ideal-gas derivatives reconstructed from the pinned component JSON alpha0 terms.",
+    "formulaConvention": "Fixed-composition homogeneous Helmholtz convention on a molar basis: cv/R = -(alpha00_tt + alphar_tt); cp/R = cv/R + (1 + alphar_delta - alphar_delta_tau)^2 / (1 + 2 alphar_delta + alphar_delta_delta); w^2 = (R T / M) * [(1 + 2 alphar_delta + alphar_delta_delta) + (1 + alphar_delta - alphar_delta_tau)^2 / (cv/R)]. Pressure derivatives are dp/drho_molar|T,z = R T (1 + 2 alphar_delta + alphar_delta_delta) and dp/dT|rho,z = rho_molar R (1 + alphar_delta - alphar_delta_tau). These are evaluated at fixed composition for the teqp multifluid reducing functions.",
+    "rejectionRules": "Rejects nonfinite results, nonpositive Cv, nonpositive dp/drho, nonpositive stability eigenvalue, Cp < Cv, nonpositive speed squared and nonfinite density roots.",
+    "providerSupport": "TeqpEngine and NativeTeqpEngine expose diagnostic binary thermodynamic-state and critical-state contracts. TeqpProvider still reports mixture Cv, Cp and speed of sound as unavailable for user calculations because no independently validated production matrix was encoded.",
+    "result": "IMPLEMENTED_DIAGNOSTIC_ONLY"
+  },
+  "implementationVerification": {
+    "swiftPackageContractTests": "TeqpProviderTests include finite diagnostic contract coverage for EOS-CG CO2+H2 and CO2+CH4 thermodynamic states plus fixed-composition critical result mapping.",
+    "nativeBridgeTests": "PhaseXpertTests/TeqpNativeBridgeValidationTests adds iOS native ABI smoke coverage for CO2+CH4 and CO2+H2 thermodynamic diagnostics and CO2+CH4 fixed-composition critical diagnostics. These require the Xcode/iOS test runner and linked native XCFramework.",
+    "macOSThrowawayProbe": {
+      "status": "PASS_IMPLEMENTATION_SMOKE_ONLY",
+      "method": "Compiled Native/TeqpBridge/src/PhaseXpertTeqpBridge.cpp with the same generated teqp headers into a temporary macOS command-line probe and called the exported C ABI directly.",
+      "co2MethaneState": {
+        "xCH4": 0.05,
+        "temperatureK": 308.15,
+        "pressurePa": 8000000.0,
+        "densityKgM3": 272.883155196,
+        "molarDensityMolM3": 6403.98660914,
+        "dpdrhoMolarJMol": 400.448868895,
+        "dpdtPaK": 93181.2279724,
+        "cvJkgK": 1053.24859415,
+        "cpJkgK": 4876.60528666,
+        "speedOfSoundMS": 208.594924848,
+        "minimumStabilityEigenvalue": 0.0596704669884,
+        "densityRootCount": 1
+      },
+      "co2HydrogenState": {
+        "xH2": 0.05362,
+        "temperatureK": 293.15,
+        "pressurePa": 3000000.0,
+        "densityKgM3": 61.2681310548,
+        "molarDensityMolM3": 1467.21597922,
+        "dpdrhoMolarJMol": 1679.81969766,
+        "dpdtPaK": 14957.2180915,
+        "cvJkgK": 770.064983567,
+        "cpJkgK": 1204.37535494,
+        "speedOfSoundMS": 250.829310728,
+        "minimumStabilityEigenvalue": 1.186227445,
+        "densityRootCount": 1
+      },
+      "finiteDifferencePressureDerivativeChecks": [
+        {
+          "system": "CO2+CH4",
+          "xCH4": 0.05,
+          "temperatureK": 308.15,
+          "molarDensityMolM3": 6403.98660914,
+          "finiteDifferenceDpdrhoMolarJMol": 400.448868835,
+          "analyticDpdrhoMolarJMol": 400.448868894,
+          "relativeDifferencePercent": 0.00000001469,
+          "finiteDifferenceDpdtPaK": 93181.2280019,
+          "analyticDpdtPaK": 93181.2279725,
+          "relativeDifferenceDpdtPercent": 0.0000000316271
+        },
+        {
+          "system": "CO2+H2",
+          "xH2": 0.05362,
+          "temperatureK": 293.15,
+          "molarDensityMolM3": 1467.21597922,
+          "finiteDifferenceDpdrhoMolarJMol": 1679.81969762,
+          "analyticDpdrhoMolarJMol": 1679.81969766,
+          "relativeDifferencePercent": 0.00000000227498,
+          "finiteDifferenceDpdtPaK": 14957.2180918,
+          "analyticDpdtPaK": 14957.2180916,
+          "relativeDifferenceDpdtPercent": 0.00000000164379
+        }
+      ],
+      "scientificMeaning": "Implementation smoke only. These numbers are not experimental validation and are not production gates."
+    },
+    "xcodeSnippetStatus": "RunCodeSnippet in the package target failed because the snippet harness did not link CoolProp bridge symbols; RunCodeSnippet in the app target was blocked by a Release/-O preview configuration. These are recorded as snippet infrastructure limitations, not scientific validation passes."
   },
   "productionDecision": {
     "cv": "unavailable for CO2+H2 and CO2+CH4",
     "cp": "unavailable for CO2+H2 and CO2+CH4",
     "speedOfSound": "unavailable for CO2+H2 and CO2+CH4",
-    "reason": "Complete ideal/residual derivative implementation, reducing-function derivative verification and independent numerical validation were not completed in this checkpoint. The properties remain independently gated and unavailable rather than being exposed from unvalidated formulas."
+    "reason": "The native implementation exists and is exercised diagnostically, but the bounded source search did not acquire open, independently traceable numerical CO2+CH4 or CO2+H2 Cp/Cv/speed matrices at the production compositions. The properties remain hidden rather than being exposed from unvalidated formulas."
   }
 }

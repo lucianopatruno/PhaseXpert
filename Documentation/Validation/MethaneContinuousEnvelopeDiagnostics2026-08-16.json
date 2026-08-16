@@ -1,0 +1,45 @@
+{
+  "artifactID": "eoscg2021-co2-ch4-continuous-envelope-production-segment-2026-08-16",
+  "createdFor": "agent/ccs-full-thermodynamics",
+  "system": "CO2+CH4",
+  "composition": {
+    "methaneMoleFraction": 0.05,
+    "carbonDioxideMoleFraction": 0.95,
+    "basis": "overall/fixed production composition"
+  },
+  "implementation": {
+    "status": "PRODUCTION_ENABLED_LIMITED_INTERVAL_WITH_DIAGNOSTIC_EXTENSION_RETAINED",
+    "providerPath": "TeqpProvider.methanePhaseEnvelope",
+    "nativeBridge": "Existing EOS-CG binary VLE ABI with previous-solution bubble warm starts",
+    "continuationMethod": "deterministic temperature continuation across the experimentally validated Petropoulou ordinary VLE temperature bounds, exact insertion of 293.13 K and 298.142 K, previous bubble solution used as the next initial guess, all samples required to converge for production display",
+    "branchIdentityChecks": [
+      "liquid molar density must exceed vapor molar density",
+      "bubble and dew pressure must be finite and positive",
+      "bubble pressure must exceed dew pressure at each fixed overall composition sample",
+      "bubble and dew branch pressures must progress monotonically with temperature",
+      "provider output is grouped by branch so the app draws continuous branch lines rather than alternating isolated points"
+    ],
+    "pointPlan": {
+      "temperatureSamples": 41,
+      "bubblePoints": 41,
+      "dewPoints": 41,
+      "totalPlottedPoints": 82,
+      "temperatureRangeK": [293.13, 298.142]
+    },
+    "failedPointPolicy": "Any failed production sample rejects the production envelope response; no failed or missing point is connected graphically."
+  },
+  "validationStatus": {
+    "productionVisibleStatus": "continuous bubble/dew phase-envelope segment production-enabled for exact xCH4 = 0.05 and 293.13 K <= T <= 298.142 K",
+    "experimentalAnchors": "Petropoulou ordinary VLE rows at 293.13 K and 298.142 K are direct validation anchors; intermediate points are EOS-CG-2021 calculations inside those experimentally validated bounds.",
+    "diagnosticStatus": "303.145 K continuation and fixed-composition critical termination remain diagnostic only and are not drawn as production envelope points",
+    "criticalMarker": "not shown because no fixed xCH4 = 0.05 critical endpoint validation has been encoded"
+  },
+  "petropoulou303KReassessment": {
+    "status": "DIAGNOSTIC_ONLY",
+    "priorBakeoffArtifact": "Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json",
+    "ordinary303KPressureAARDPercent": 0.0697158635284,
+    "ordinary303KWorstPressureRelativeDeviationPercent": 0.156641626016,
+    "ordinary303KWorstVaporCompositionAbsoluteDeviation": 0.0021341235255,
+    "decision": "The EOS agreement is numerically good for ordinary 303.145 K rows, but the isotherm is treated as critical-region evidence in the Petropoulou source and is not promoted to a production fixed-composition envelope without a validated critical termination model."
+  }
+}

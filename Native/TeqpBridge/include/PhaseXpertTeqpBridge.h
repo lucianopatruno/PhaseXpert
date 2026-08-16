@@ -96,6 +96,35 @@ typedef struct PXTeqpMixtureDensityResult {
     PXTeqpPhase phase;
 } PXTeqpMixtureDensityResult;
 
+typedef struct PXTeqpMixtureThermodynamicResult {
+    double density_kg_m3;
+    double molar_density_mol_m3;
+    double pressure_pa;
+    double dp_drho_molar_j_mol;
+    double dp_dt_pa_k;
+    double isochoric_heat_capacity_j_kg_k;
+    double isobaric_heat_capacity_j_kg_k;
+    double heat_capacity_ratio;
+    double speed_of_sound_m_s;
+    double speed_of_sound_squared_m2_s2;
+    double minimum_stability_eigenvalue;
+    int density_root_count;
+    int converged;
+    PXTeqpPhase phase;
+} PXTeqpMixtureThermodynamicResult;
+
+typedef struct PXTeqpBinaryCriticalResult {
+    int converged;
+    int iteration_count;
+    double temperature_k;
+    double pressure_pa;
+    double molar_density_mol_m3;
+    double density_kg_m3;
+    double component2_mole_fraction;
+    double minimum_stability_eigenvalue;
+    double third_order_residual;
+} PXTeqpBinaryCriticalResult;
+
 int px_teqp_calculate_pure_co2(
     double pressure_pa,
     double temperature_k,
@@ -166,6 +195,24 @@ int px_teqp_calculate_eoscg_co2_ch4_gas_density(
     double temperature_k,
     double methane_mole_fraction,
     PXTeqpMixtureDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_binary_thermodynamic_state(
+    PXTeqpBinaryFormulation formulation,
+    double pressure_pa,
+    double temperature_k,
+    double component2_mole_fraction,
+    PXTeqpMixtureThermodynamicResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_binary_critical_point(
+    PXTeqpBinaryFormulation formulation,
+    double component2_mole_fraction,
+    PXTeqpBinaryCriticalResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

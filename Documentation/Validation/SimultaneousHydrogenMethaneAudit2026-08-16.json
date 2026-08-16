@@ -1,13 +1,14 @@
 {
   "artifactID": "eoscg2021-co2-h2-ch4-simultaneous-impurity-audit-2026-08-16",
-  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "createdFor": "agent/ccs-full-thermodynamics",
   "implementationAudit": {
-    "binaryPrerequisites": "CO2+H2 remains density-only; CO2+CH4 now has expanded density slices plus a narrow VLE/phase-classification gate, but H2 VLE and mixture derivative-property gates remain unavailable.",
-    "nativeBridgeSupport": "No ternary CO2+H2+CH4 production entry point exists in PhaseXpertTeqpBridge.xcframework.",
+    "binaryPrerequisites": "CO2+H2 and CO2+CH4 now have diagnostic native homogeneous derivative-property ABI support. Production remains density-only for H2 and density plus limited VLE classification for CH4 because caloric/acoustic and H2 VLE validation gates remain unpassed.",
+    "crossInteractionAudit": "PhaseXpert's encoded EOSCG2021TargetModelData includes explicit CO2+H2 and CH4+CO2 entries but no encoded H2+CH4 reducing-parameter/departure-function pair. No silent default H2+CH4 interaction is allowed.",
+    "nativeBridgeSupport": "No ternary CO2+H2+CH4 production or diagnostic entry point exists in PhaseXpertTeqpBridge.xcframework.",
     "result": "NOT ENABLED"
   },
   "productionDecision": {
     "simultaneousHydrogenMethane": "unavailable",
-    "reason": "The H2 binary VLE prerequisite is unavailable and no independent ternary CO2+H2+CH4 validation matrix was encoded. Simultaneous impurities remain blocked from user input."
+    "reason": "The H2 binary VLE prerequisite is unavailable, the encoded EOS-CG target data do not define an H2+CH4 cross interaction, and no independent ternary CO2+H2+CH4 validation matrix was encoded. Simultaneous impurities remain blocked from user input."
   }
 }

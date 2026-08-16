@@ -257,3 +257,27 @@
   without fabricating two-phase bulk density. Critical termination, arbitrary
   composition interpolation, H₂ VLE, mixture Cp/Cv/speed, simultaneous
   impurities, h/u/s and transport remain unavailable.
+- Added the CCS full-thermodynamics milestone decision artifact and tightened
+  Advanced CCS Properties capability metadata. CO₂+CH₄ VLE support is now
+  represented as a production phase-equilibrium gate with validation metrics,
+  while continuous CH₄ envelope tracing, CH₄ critical termination, Petropoulou
+  303.15 K production use, CO₂+H₂ VLE, simultaneous H₂+CH₄, mixture Cp/Cv/speed
+  and h/u/s remain explicitly unavailable because the required native derivative
+  ABI and independent primary validation matrices are not present.
+- Added the diagnostic native EOS-CG binary thermodynamic derivative ABI for
+  CO₂+H₂ and CO₂+CH₄, returning homogeneous density, analytic pressure
+  derivatives, Cv, Cp, Cp/Cv, fixed-composition speed of sound and stability
+  metadata below the production gate. Added diagnostic CO₂+CH₄ continuous
+  bubble/dew continuation across 293.13-303.145 K and a fixed-composition
+  critical solver; production user-visible support remains unchanged because no
+  independent caloric/acoustic matrices or exact xCH₄ = 0.05 critical validation
+  were acquired.
+- Production-enabled a continuous CO₂+CH₄ bubble/dew phase-envelope segment for
+  Advanced CCS Properties at exact xCH₄ = 0.05 from 293.13 K to 298.142 K. The
+  provider returns 41 bubble and 41 dew samples grouped as continuous chart
+  branches, requires every sample to converge with valid branch ordering and
+  monotonic pressure progression, and labels intermediate points as
+  EOS-CG-2021 calculations inside the experimentally validated Petropoulou 2018
+  ordinary VLE temperature bounds. The 303.15 K Petropoulou rows remain
+  model-validation evidence only, and the fixed-composition critical point
+  remains diagnostic-only.
