@@ -72,7 +72,7 @@ final class TeqpProviderTests: XCTestCase {
                 converged: true,
                 iterationCount: 6,
                 returnCode: 1,
-                pressurePa: 7_000_000,
+                pressurePa: 6_000_000 + 20_000_000 * liquidComponent2MoleFraction,
                 liquidMolarDensityMolesPerCubicMetre: 20_000,
                 vaporMolarDensityMolesPerCubicMetre: 1_000,
                 liquidComponent2MoleFraction: liquidComponent2MoleFraction,
@@ -810,10 +810,68 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "The experimental teqp provider supports phase-envelope generation only for exactly 100 mol% CO₂. No CoolProp fallback is used."
+                    "Advanced CCS Properties phase diagrams are available only for pure CO₂ or the validated CO₂+CH₄ VLE gate at xCH₄ = 0.05. H₂ phase envelopes remain unavailable and no CoolProp fallback is used."
                 )
             )
         })
+    }
+
+    func testMethaneVLEPhaseClassificationReportsTwoPhaseWithoutDensity() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let response = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 6_750_000,
+                temperatureK: 293.13,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.95),
+                    .init(component: .methane, moleFraction: 0.05)
+                ],
+                requestedProperties: [.density, .molarMass],
+                clientVersion: "test"
+            )
+        )
+
+        XCTAssertEqual(response.phase, .twoPhase)
+        XCTAssertEqual(
+            response.properties.first(where: { $0.property == .density })?.status,
+            .unavailable
+        )
+        XCTAssertTrue(
+            response.solver.method.contains("CO₂+CH₄ binary VLE classification")
+        )
+        XCTAssertTrue(
+            response.warnings.contains {
+                $0.contains("Bulk density, phase fraction")
+            }
+        )
+    }
+
+    func testMethanePhaseEnvelopeUsesValidatedVLEGate() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let response = try await provider.phaseEnvelope(
+            PhaseEnvelopeRequest(
+                modelID: provider.descriptor.id,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.95),
+                    .init(component: .methane, moleFraction: 0.05)
+                ]
+            )
+        )
+
+        XCTAssertTrue(response.isAvailable)
+        XCTAssertEqual(response.boundaryKind, .mixtureEnvelope)
+        XCTAssertEqual(response.points.count, 4)
+        XCTAssertEqual(response.points.filter { $0.branch == .bubble }.count, 2)
+        XCTAssertEqual(response.points.filter { $0.branch == .dew }.count, 2)
+        XCTAssertTrue(
+            response.warnings.contains {
+                $0.contains("Critical termination is not drawn")
+            }
+        )
+        XCTAssertTrue(
+            response.solver?.method.contains("CO₂+CH₄ binary VLE phase-envelope") == true
+        )
     }
 
     func testStableSelectedResultWithMultipleMathematicalRootsIsAccepted() async throws {

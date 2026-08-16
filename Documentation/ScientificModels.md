@@ -38,7 +38,7 @@ establish a defensible user-facing N₂ range for that pinned binary model.
 | Option | Strengths | Principal limitations for this app |
 |---|---|---|
 | CoolProp HEOS | Offline, open source, broad property API, C++ core | Mixture-pair/transport coverage varies; iOS build and validation work required |
-| teqp | Offline C++ equation-of-state framework with native pure-CO₂ support, EOS-CG-2021 property-specific H₂/CH₄ density slices and validation-gated generic binary VLE research bridge code in PhaseXpert | Experimental in PhaseXpert; user-facing mixture scope is limited to explicitly validated homogeneous density slices, with impurity VLE, phase envelopes, mixture heat capacities, mixture speed of sound, transport and reference-state properties unavailable; corrected CO₂+CH₄ VLE is diagnostic-only until production continuation and capability gating are completed |
+| teqp | Offline C++ equation-of-state framework with native pure-CO₂ support, EOS-CG-2021 property-specific H₂/CH₄ density slices and validation-gated generic binary VLE code in PhaseXpert | Experimental in PhaseXpert; user-facing mixture scope is limited to explicitly validated density slices and a narrow corrected CO₂+CH₄ VLE/phase-classification gate; mixture heat capacities, mixture speed of sound, transport and reference-state properties remain unavailable |
 
 ## Advanced CCS capability table
 
@@ -46,7 +46,7 @@ establish a defensible user-facing N₂ range for that pinned binary model.
 | ------- | ------- | -- | -- | ----- | --- | -------------- | ---------------- |
 | Pure CO₂ | yes | yes | yes | yes | pure saturation only | pure saturation only | Span-Wagner pure-fluid teqp path; preliminary until independently accepted |
 | CO₂+H₂ | yes | no | no | no | no | no | xH₂ = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; encoded Souissi 2017 gas-pressure bounds |
-| CO₂+CH₄ | yes | no | no | no | diagnostic only | no | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE bake-off is not user-facing support |
+| CO₂+CH₄ | yes | no | no | no | limited yes | limited bubble/dew points | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE phase classification at 293.13 K and 298.14 K only |
 | CO₂+H₂+CH₄ | no | no | no | no | no | no | no validated simultaneous impurity domain |
 | REFPROP | Strong reference implementation and broad property coverage | Proprietary licence; redistribution and iOS embedding require explicit NIST permission/terms |
 | GERG-2008 implementation | Strong basis for natural-gas-like mixtures and phase behaviour | Component set and CO₂-rich impurity coverage are limited; implementation/data licensing and edge-domain validation required |

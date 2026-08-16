@@ -5,10 +5,11 @@
 This is a deliberately narrow experimental native-provider milestone. It adds
 an optional local teqp bridge for pure CO₂, a property-specific CO₂+H₂
 homogeneous gas-density production domain, a property-specific CO₂+CH₄
-homogeneous gas/supercritical density production domain, and validation-gated
-CO₂+N₂ research infrastructure. CoolProp remains the default provider, and no
-existing calculation is routed to teqp unless the user explicitly selects
-`Advanced CCS Properties`.
+homogeneous gas/supercritical density production domain, a limited corrected
+CO₂+CH₄ VLE/phase-classification gate, and validation-gated CO₂+N₂ research
+infrastructure. CoolProp remains the default provider, and no existing
+calculation is routed to teqp unless the user explicitly selects `Advanced CCS
+Properties`.
 
 Future CCS impurity formulations are documented separately in
 `Documentation/EOSCG2021Integration.md`. teqp is treated as a native
@@ -67,9 +68,14 @@ teqp's pure-CO₂ saturation state and continues through intermediate
 liquid-phase N₂ compositions before solving the requested `T, x_liquid` point.
 A companion dew solve uses the same VLE primitive and brackets liquid
 composition until the vapor-phase N₂ composition matches the requested bulk
-composition. CO₂+CH₄ Petropoulou diagnostics use the generic initial-guess path
-because the inherited pure-CO₂ continuation seed is not robust enough for the
-ordinary 293 K and 298 K rows.
+composition. CO₂+CH₄ Petropoulou diagnostics and the production gate use the
+generic initial-guess path because the inherited pure-CO₂ continuation seed is
+not robust enough for the ordinary 293 K and 298 K rows. The production
+provider gate is deliberately narrower than the diagnostic matrix: exact
+xCH₄ = 0.05, the accepted 293.13 K and 298.14 K ordinary isotherms, explicit
+vapor/dense/two-phase classification and bubble/dew phase-envelope points only.
+It does not report a two-phase bulk density, phase fraction, arbitrary
+composition interpolation or a validated critical termination.
 
 The native point classifier is retained only as research infrastructure. For a
 requested subcritical `P, T, z` CO₂/N₂ state, it calculates bubble pressure at

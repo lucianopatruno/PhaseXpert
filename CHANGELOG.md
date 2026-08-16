@@ -248,3 +248,12 @@
   unavailable until production continuation, critical handling and capability
   gating are completed. The targeted H₂ VLE pass found no suitable open binary
   CO₂+H₂ x/y/P/T matrix, so H₂ VLE remains unavailable.
+- Promoted a limited corrected CO₂+CH₄ VLE gate to Advanced CCS Properties for
+  exact xCH₄ = 0.05. The production validation artifact accepts 24 ordinary
+  Petropoulou 2018 rows on the 293.13 K and 298.14 K isotherms with 0.608899%
+  pressure AARD, 1.787018% worst pressure deviation and 0.026258 worst absolute
+  yCH₄ deviation. The provider can classify vapor, dense and two-phase states
+  inside that gate and can return explicit bubble/dew phase-envelope points
+  without fabricating two-phase bulk density. Critical termination, arbitrary
+  composition interpolation, H₂ VLE, mixture Cp/Cv/speed, simultaneous
+  impurities, h/u/s and transport remain unavailable.
