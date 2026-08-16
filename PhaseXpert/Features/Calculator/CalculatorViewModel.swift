@@ -98,12 +98,16 @@ final class CalculatorViewModel {
     private(set) var calculationError: String?
     private(set) var isCalculating = false
 
-    let registry = ProviderRegistry()
+    let registry: ProviderRegistry
     private let validator = CalculationValidator()
     private var compositionBeforeNormalization: [CompositionInputSnapshot]?
     private var lastNormalizedComposition: [MixtureComponent]?
     private var lastValidPressurePa = PressureUnit.bar.toPascal(150)
     private var lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
+
+    init(registry: ProviderRegistry = ProviderRegistry()) {
+        self.registry = registry
+    }
 
     var descriptors: [ModelDescriptor] { registry.descriptors }
 

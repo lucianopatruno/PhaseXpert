@@ -19,8 +19,10 @@ flowchart TD
 
 The calculator, provider registry, local saved-case store, reporting exports
 and preliminary pure/dry-mixture phase diagrams are implemented. An optional
-experimental teqp pure-CO₂ provider can also be linked through the same local
-provider abstraction without changing SwiftUI or the default CoolProp path.
+experimental teqp provider can also be linked through the same local provider
+abstraction without changing SwiftUI or the default CoolProp path. Its H₂/CH₄
+mixture domains are metadata-gated per property and per validation slice inside
+the core provider layer, not in SwiftUI.
 
 ## Concurrency
 

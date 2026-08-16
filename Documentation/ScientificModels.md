@@ -27,9 +27,9 @@ An experimental native teqp provider is also available. It is not the default
 provider. It solves density locally through teqp's pinned pure-CO₂ multifluid
 model, exposes pure-CO₂ saturation for the Phase Diagram workflow, and reports
 unsupported properties as unavailable rather than borrowing them from CoolProp.
-Its impurity support is property-specific: EOS-CG-2021 CO₂+H₂ and CO₂+CH₄
-homogeneous gas-density slices are enabled only inside their encoded ThermoML
-validation domains. The native bridge also contains validation-gated CO₂+N₂
+Its impurity support is property-specific: EOS-CG-2021 CO₂+H₂ homogeneous
+gas-density slices and CO₂+CH₄ homogeneous gas/supercritical density slices
+are enabled only inside their encoded ThermoML validation domains. The native bridge also contains validation-gated CO₂+N₂
 research infrastructure built from pinned upstream teqp data. Gate C did not
 establish a defensible user-facing N₂ range for that pinned binary model.
 
@@ -38,7 +38,16 @@ establish a defensible user-facing N₂ range for that pinned binary model.
 | Option | Strengths | Principal limitations for this app |
 |---|---|---|
 | CoolProp HEOS | Offline, open source, broad property API, C++ core | Mixture-pair/transport coverage varies; iOS build and validation work required |
-| teqp | Offline C++ equation-of-state framework with native pure-CO₂ support, EOS-CG-2021 property-specific H₂/CH₄ gas-density slices and validation-gated CO₂+N₂ research bridge code in PhaseXpert | Experimental in PhaseXpert; user-facing mixture scope is limited to explicitly validated homogeneous gas density slices, with impurity VLE, phase envelopes, mixture heat capacities, mixture speed of sound, transport and reference-state properties unavailable; the pinned CO₂+N₂ model failed Gate C for user-facing support |
+| teqp | Offline C++ equation-of-state framework with native pure-CO₂ support, EOS-CG-2021 property-specific H₂/CH₄ density slices and validation-gated generic binary VLE code in PhaseXpert | Experimental in PhaseXpert; user-facing mixture scope is limited to explicitly validated density slices and a narrow corrected CO₂+CH₄ VLE/phase-classification gate; mixture heat capacities, mixture speed of sound, transport and reference-state properties remain unavailable |
+
+## Advanced CCS capability table
+
+| Mixture | Density | Cp | Cv | Speed | VLE | Phase envelope | Validated domain |
+| ------- | ------- | -- | -- | ----- | --- | -------------- | ---------------- |
+| Pure CO₂ | yes | yes | yes | yes | pure saturation only | pure saturation only | Span-Wagner pure-fluid teqp path; preliminary until independently accepted |
+| CO₂+H₂ | yes | no | no | no | no | no | xH₂ = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; encoded Souissi 2017 gas-pressure bounds |
+| CO₂+CH₄ | yes | no | no | no | limited yes | limited bubble/dew points | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE phase classification at 293.13 K and 298.14 K only |
+| CO₂+H₂+CH₄ | no | no | no | no | no | no | no validated simultaneous impurity domain |
 | REFPROP | Strong reference implementation and broad property coverage | Proprietary licence; redistribution and iOS embedding require explicit NIST permission/terms |
 | GERG-2008 implementation | Strong basis for natural-gas-like mixtures and phase behaviour | Component set and CO₂-rich impurity coverage are limited; implementation/data licensing and edge-domain validation required |
 | Cubic EOS such as Peng–Robinson | Compact, offline and phase-equilibrium capable | Needs sourced pure-component data and binary interaction parameters; density and transport accuracy may be inadequate without validated corrections |

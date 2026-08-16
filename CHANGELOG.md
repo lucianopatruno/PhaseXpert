@@ -230,3 +230,30 @@
   CO₂+CH₄ homogeneous gas density only at xCH₄ = 0.05, 301.14 K ± 0.02 K and
   1.99046-6.976 MPa. CH₄ VLE, phase envelope, mixture Cp/Cv/speed, h/u/s and
   transport remain unavailable.
+- Expanded the CO₂+CH₄ teqp density gate with a physically interpretable
+  high-temperature supercritical Ghafri 2016 slice: xCH₄ = 0.05, 65 points
+  from 308.137 K to 313.182 K and 7.97159-9.96937 MPa, 1.1254775% AARD and
+  1.99333% worst relative deviation. The lower-temperature near-critical and
+  dense/liquid-like rows remain diagnostic only. CO₂+H₂ remains limited to the
+  Souissi 2017 gas-density slice because no additional authoritative numerical
+  CO₂-rich H₂ density table was acquired. H₂/CH₄ VLE, impurity phase
+  envelopes, mixture Cp/Cv/speed, simultaneous H₂+CH₄, h/u/s and transport
+  remain unavailable.
+- Added a generic native binary VLE diagnostic bridge for pinned teqp
+  formulations with pressure equality, component chemical-potential equality
+  and optional initial guesses. The corrected EOS-CG/GERG CO₂+CH₄ bake-off
+  against Petropoulou et al. 2018 NIST ThermoML converged 37/37 rows; ordinary
+  rows give 0.585602% pressure AARD and 1.787018% worst pressure deviation.
+  This is diagnostic evidence only: CH₄ VLE and impurity phase envelopes remain
+  unavailable until production continuation, critical handling and capability
+  gating are completed. The targeted H₂ VLE pass found no suitable open binary
+  CO₂+H₂ x/y/P/T matrix, so H₂ VLE remains unavailable.
+- Promoted a limited corrected CO₂+CH₄ VLE gate to Advanced CCS Properties for
+  exact xCH₄ = 0.05. The production validation artifact accepts 24 ordinary
+  Petropoulou 2018 rows on the 293.13 K and 298.14 K isotherms with 0.608899%
+  pressure AARD, 1.787018% worst pressure deviation and 0.026258 worst absolute
+  yCH₄ deviation. The provider can classify vapor, dense and two-phase states
+  inside that gate and can return explicit bubble/dew phase-envelope points
+  without fabricating two-phase bulk density. Critical termination, arbitrary
+  composition interpolation, H₂ VLE, mixture Cp/Cv/speed, simultaneous
+  impurities, h/u/s and transport remain unavailable.

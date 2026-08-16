@@ -11,9 +11,10 @@ This milestone separates three concepts:
 The production advanced provider now supports pure CO₂ plus two
 property-specific impurity domains: CO₂+H₂ homogeneous gas density at the exact
 Souissi et al. 2017 ThermoML composition and isotherm pressure ranges, and
-CO₂+CH₄ homogeneous gas density at the exact Ghafri et al. 2016 ThermoML gas
-composition and pressure range. No other impurity, phase equilibrium, phase
-envelope, mixture heat capacity, mixture speed of sound, reference-state
+CO₂+CH₄ homogeneous density at the exact Ghafri et al. 2016 ThermoML gas
+composition/pressure range plus the encoded 308.15 K through 313.15 K
+high-temperature supercritical density slices. No other impurity, phase
+equilibrium, phase envelope, mixture heat capacity, mixture speed of sound, reference-state
 property or transport property is enabled by this document or by the extracted
 parameter artifact alone.
 
@@ -102,7 +103,8 @@ CO₂+O₂ and CO₂+Ar rows is recorded in
 | CO₂+O₂ | Table 4 reducing parameters, `Fij = 0`, no departure function | 6 | 7.3878% | 14.8035% | Fail |
 | CO₂+Ar | Table 4 reducing parameters plus Table 5 Løvseth departure function | 6 | 3.40533% | 9.99102% | Fail |
 | CO₂+H₂ | Table 4 reducing parameters plus Table 5 Beckmüller departure function | 19 gas-density points | 0.189492% | 0.370799% | Limited homogeneous gas-density pass; production-enabled only for the encoded domain |
-| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 180 homogeneous density rows; 6-row gas block production subset | 1.3981775% overall; 0.2034228% gas block | 5.15195% overall; 0.413175% gas block | Limited homogeneous gas-density pass for the gas block only |
+| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 180 homogeneous density rows; 6-row gas block plus 65-row high-temperature supercritical production subset | 1.3981775% overall; 0.2034228% gas block; 1.1254775% supercritical slice | 5.15195% overall; 0.413175% gas block; 1.99333% supercritical slice | Expanded homogeneous density pass for encoded gas and high-temperature supercritical slices only |
+| CO₂+CH₄ | Corrected GERG-inherited reducing parameters plus GERG-2008 departure function | 37 Petropoulou 2018 VLE rows; 24 ordinary rows accepted for the fixed production gate | 0.416664% pressure overall; 0.608899% pressure for accepted ordinary production rows | 1.787018% pressure; 0.026258 absolute yCH₄ | Limited VLE production gate for exact xCH₄ = 0.05 at 293.13 K and 298.14 K; critical termination and arbitrary composition interpolation unavailable |
 | CO₂+CH₄ | Prior mis-mapped GERG-inherited record | 5 VLE points | n/a | 47.3955% pressure; 0.01705 absolute yCH₄ | Superseded by CH₄ Table 4 mapping bug |
 
 The CO₂+Ar 3.08 mol% subset remains a useful diagnostic with worst density
@@ -111,12 +113,17 @@ only three Mantovani density points and does not define a robust independent
 property-specific production domain.
 
 The CO₂+CH₄ direct VLE probe used the NIST ThermoML encoding of Petropoulou
-et al. 2018. That historical result is now superseded: a pinned Clapeyron
-EOS_CG database audit found that PhaseXpert's CH₄+CO₂ Table 4 values had been
+et al. 2018. The original failure is superseded: a pinned Clapeyron EOS_CG
+database audit found that PhaseXpert's CH₄+CO₂ Table 4 values had been
 mis-mapped. The corrected CH₄+CO₂ values are recorded in
-`Documentation/Validation/EOSCG2021TargetModelData.json`, and the prior VLE
-deviation must not be cited as an EOS-CG model failure until the corrected
-implementation is rerun.
+`Documentation/Validation/EOSCG2021TargetModelData.json`. The corrected generic
+native VLE bridge now converges 37/37 Petropoulou rows with the summary in
+`Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json`. The limited
+production gate in
+`Documentation/Validation/MethaneVLEProductionGate2026-08-16.json` accepts the
+ordinary 293.13 K and 298.14 K rows for exact xCH₄ = 0.05 phase
+classification and bubble/dew phase-envelope points; near-critical rows remain
+diagnostic and no arbitrary composition interpolation is enabled.
 
 A corrected direct-teqp homogeneous gas-density probe is recorded in
 `Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json`. It gives:
@@ -125,13 +132,17 @@ A corrected direct-teqp homogeneous gas-density probe is recorded in
 |---|---|---:|---:|---:|
 | CO₂+H₂ gas, xH₂ = 0.05362 | Souissi et al. 2017 NIST ThermoML | 19 | 0.189492% | 0.370799% |
 | CO₂+CH₄ gas, zCO₂ = 0.95 | Ghafri et al. 2016 NIST ThermoML gas block | 6 | 0.203422% | 0.413173% |
+| CO₂+CH₄ high-temperature supercritical, zCO₂ = 0.95 | Ghafri et al. 2016 NIST ThermoML | 65 | 1.1254775% | 1.99333% |
 
 The CO₂+H₂ gas-density result is production-enabled only for the exact
-validated domain. The CO₂+CH₄ gas subset is also production-enabled only for
-the exact validated Ghafri gas-block domain: xCH₄ = 0.05, 301.14 K ± 0.02 K
-and 1.99046-6.976 MPa. The full 180-row Ghafri matrix converges, but dense and
-near-critical deviations are diagnostic only and do not justify broader CH₄
-support.
+validated domain. CO₂+CH₄ is production-enabled only for the exact encoded
+Ghafri density slices: xCH₄ = 0.05, the observed 301.14 K gas block from
+1.99046 MPa to 6.976 MPa, and high-temperature supercritical isotherm slices
+from 308.15 K through 313.15 K with per-isotherm pressure bounds recorded in
+`Documentation/Validation/MethaneDensityDomainExpansion2026-08-15.json`. The
+full 180-row Ghafri matrix converges, but lower-temperature dense,
+liquid-like and near-critical deviations are diagnostic only and do not justify
+broader CH₄ support.
 
 A runnable Clapeyron EOS_CG oracle was not available in the managed
 Xcode/Codex environment. Instead,
@@ -169,9 +180,9 @@ CO₂+CH₄ beta/gamma order bug found in the earlier implementation.
   or plots.
 - CO₂+CH₄: EOS-CG-2021 inherits GERG; the first direct Petropoulou/ThermoML VLE
   probe is superseded by the CH₄ beta/gamma mapping correction. The corrected
-  Ghafri 2016 full-matrix diagnostic converges but is not a broad pass, while
-  the 6-row gas-density block establishes a limited homogeneous gas-density
-  production domain.
+  Ghafri 2016 full-matrix diagnostic converges but is not a broad pass. The
+  6-row gas-density block and 65-row high-temperature supercritical slice
+  establish a bounded homogeneous density production domain.
 - Simultaneous impurity support is not implied by binary construction. The
   EOS-CG-2021 authors report that multicomponent validation data remain
   comparatively scarce, so PhaseXpert must keep multicomponent impurity entry

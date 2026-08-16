@@ -1,0 +1,39 @@
+{
+  "artifactID": "eoscg2021-co2-h2-vle-audit-2026-08-16",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "targetedSearch": {
+    "scope": "one targeted pass for accessible binary CO2+H2 x/y/P/T VLE data in the CCS temperature/pressure domain",
+    "queries": [
+      "CO2 H2 vapor liquid equilibrium ThermoML binary hydrogen carbon dioxide x y P T",
+      "carbon dioxide hydrogen vapor liquid equilibrium CO2-rich x y P T table",
+      "site:trc.nist.gov ThermoML carbon dioxide hydrogen vapor liquid equilibrium"
+    ],
+    "result": "No open machine-readable binary CO2+H2 matrix suitable for immediate production encoding was found in this pass."
+  },
+  "candidateSources": [
+    {
+      "title": "Vapor-liquid equilibrium for binary systems of carbon dioxide + methanol, hydrogen + methanol, and hydrogen + carbon dioxide at high pressures",
+      "doi": "10.1021/je010278m",
+      "status": "identified but not encoded",
+      "reason": "The search surfaced metadata and non-authoritative mirrors, but no authoritative machine-readable table was acquired during the targeted pass."
+    },
+    {
+      "title": "Vapor-liquid equilibrium data for the ternary system carbon dioxide + hydrogen + methanol",
+      "doi": "10.1021/je0301491",
+      "status": "rejected",
+      "reason": "NIST ThermoML entry is ternary CO2+H2+methanol, not binary CO2+H2 validation."
+    },
+    {
+      "title": "Phase behavior of (CO2 + H2) and (CO2 + N2) at temperatures between (218.15 and 303.15) K at pressures up to 15 MPa",
+      "doi": "10.1016/j.ijggc.2015.02.018",
+      "status": "not encoded",
+      "reason": "Retained as a candidate from the prior audit, but no open numerical machine-readable artifact was acquired in this pass."
+    }
+  ],
+  "productionDecision": {
+    "vle": "unavailable",
+    "phaseClassification": "unavailable",
+    "phaseEnvelope": "unavailable",
+    "reason": "No audited open binary CO2+H2 x/y/P/T matrix was encoded, so the generic VLE bridge is not production-enabled for H2."
+  }
+}

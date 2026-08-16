@@ -40,15 +40,21 @@ public enum TeqpPhaseDomain: String, Codable, Equatable, Sendable {
 
 public struct TeqpTemperaturePressureLimit: Codable, Equatable, Sendable {
     public let temperatureK: Double
+    public let minimumTemperatureK: Double
+    public let maximumTemperatureK: Double
     public let minimumPressurePa: Double
     public let maximumPressurePa: Double
 
     public init(
         temperatureK: Double,
+        minimumTemperatureK: Double? = nil,
+        maximumTemperatureK: Double? = nil,
         minimumPressurePa: Double,
         maximumPressurePa: Double
     ) {
         self.temperatureK = temperatureK
+        self.minimumTemperatureK = minimumTemperatureK ?? temperatureK
+        self.maximumTemperatureK = maximumTemperatureK ?? temperatureK
         self.minimumPressurePa = minimumPressurePa
         self.maximumPressurePa = maximumPressurePa
     }
@@ -281,14 +287,59 @@ public enum TeqpFormulationCatalog {
                 isothermPressureLimits: [
                     TeqpTemperaturePressureLimit(
                         temperatureK: 301.14,
+                        minimumTemperatureK: 301.133,
+                        maximumTemperatureK: 301.153,
                         minimumPressurePa: 1_990_460,
                         maximumPressurePa: 6_976_000
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 308.15,
+                        minimumTemperatureK: 308.137,
+                        maximumTemperatureK: 308.177,
+                        minimumPressurePa: 7_971_800,
+                        maximumPressurePa: 9_967_260
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 309.15,
+                        minimumTemperatureK: 309.133,
+                        maximumTemperatureK: 309.179,
+                        minimumPressurePa: 7_971_980,
+                        maximumPressurePa: 9_967_340
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 310.15,
+                        minimumTemperatureK: 310.135,
+                        maximumTemperatureK: 310.183,
+                        minimumPressurePa: 7_971_590,
+                        maximumPressurePa: 9_969_370
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 311.15,
+                        minimumTemperatureK: 311.134,
+                        maximumTemperatureK: 311.192,
+                        minimumPressurePa: 7_972_680,
+                        maximumPressurePa: 9_967_760
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 312.15,
+                        minimumTemperatureK: 312.131,
+                        maximumTemperatureK: 312.193,
+                        minimumPressurePa: 7_972_370,
+                        maximumPressurePa: 9_967_680
+                    ),
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 313.15,
+                        minimumTemperatureK: 313.140,
+                        maximumTemperatureK: 313.182,
+                        minimumPressurePa: 7_973_280,
+                        maximumPressurePa: 9_768_430
                     )
                 ],
-                validationArtifact: "Documentation/Validation/MethaneFullDensityValidationSummary.json",
+                validationArtifact: "Documentation/Validation/MethaneDensityDomainExpansion2026-08-15.json",
                 notes: [
-                    "Validated only for homogeneous gas density in the Ghafri et al. 2016 ThermoML gas block.",
-                    "The full 180-row Ghafri dataset converged but did not justify dense or near-critical production support.",
+                    "Validated for homogeneous gas density in the Ghafri et al. 2016 ThermoML gas block.",
+                    "Also validated for a high-temperature supercritical density slice at xCH₄ = 0.05 from 308.15 K through 313.15 K within the encoded isotherm pressure ranges.",
+                    "The broader full 180-row Ghafri dataset converged but does not justify dense, liquid-like or near-critical production support.",
                     "VLE, phase envelope, Cp, Cv, speed of sound, h, u, s and transport are unavailable for this mixture."
                 ]
             )
@@ -297,9 +348,8 @@ public enum TeqpFormulationCatalog {
         provenance: "EOS-CG-2021 inherited GERG CH₄+CO₂ reducing parameters and GERG-2008 departure function evaluated through teqp v0.23.1 \(teqpCommit); gas-density validation against Ghafri et al. 2016 NIST ThermoML after static Clapeyron EOS_CG identity audit.",
         limitations: [
             "LIMITED PASS — homogeneous gas density only at xCH₄ = 0.05.",
-            "Temperature must remain within the Ghafri et al. gas-block span represented as 301.14 K ± 0.02 K.",
-            "Pressure must remain between 1.99046 MPa and 6.976 MPa.",
-            "Dense, near-critical and liquid-like rows in the full Ghafri matrix are diagnostic only and are not production-enabled.",
+            "Temperature and pressure must remain inside one of the encoded Ghafri et al. 2016 validation slices: the 301.14 K gas block or the 308.15 K through 313.15 K high-temperature supercritical density slice.",
+            "Dense, liquid-like and near-critical rows outside the high-temperature slice are diagnostic only and are not production-enabled.",
             "Phase equilibrium, phase envelope, heat capacities, speed of sound, reference-state properties and transport are unavailable.",
             "No CoolProp fallback is used."
         ],

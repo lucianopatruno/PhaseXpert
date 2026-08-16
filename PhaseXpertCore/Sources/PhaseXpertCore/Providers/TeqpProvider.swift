@@ -71,6 +71,74 @@ public struct TeqpMixtureDensityResult: Equatable, Sendable {
     }
 }
 
+public enum TeqpBinaryFormulationID: Sendable {
+    case carbonDioxideNitrogen
+    case eoscgCarbonDioxideHydrogen
+    case eoscgCarbonDioxideMethane
+}
+
+public struct TeqpBinaryVLEResult: Equatable, Sendable {
+    public let converged: Bool
+    public let iterationCount: Int
+    public let returnCode: Int
+    public let pressurePa: Double
+    public let liquidMolarDensityMolesPerCubicMetre: Double
+    public let vaporMolarDensityMolesPerCubicMetre: Double
+    public let liquidComponent2MoleFraction: Double
+    public let vaporComponent2MoleFraction: Double
+    public let pressureResidualPa: Double
+    public let component1ChemicalPotentialResidual: Double
+    public let component2ChemicalPotentialResidual: Double
+
+    public init(
+        converged: Bool,
+        iterationCount: Int,
+        returnCode: Int,
+        pressurePa: Double,
+        liquidMolarDensityMolesPerCubicMetre: Double,
+        vaporMolarDensityMolesPerCubicMetre: Double,
+        liquidComponent2MoleFraction: Double,
+        vaporComponent2MoleFraction: Double,
+        pressureResidualPa: Double,
+        component1ChemicalPotentialResidual: Double,
+        component2ChemicalPotentialResidual: Double
+    ) {
+        self.converged = converged
+        self.iterationCount = iterationCount
+        self.returnCode = returnCode
+        self.pressurePa = pressurePa
+        self.liquidMolarDensityMolesPerCubicMetre =
+            liquidMolarDensityMolesPerCubicMetre
+        self.vaporMolarDensityMolesPerCubicMetre =
+            vaporMolarDensityMolesPerCubicMetre
+        self.liquidComponent2MoleFraction = liquidComponent2MoleFraction
+        self.vaporComponent2MoleFraction = vaporComponent2MoleFraction
+        self.pressureResidualPa = pressureResidualPa
+        self.component1ChemicalPotentialResidual =
+            component1ChemicalPotentialResidual
+        self.component2ChemicalPotentialResidual =
+            component2ChemicalPotentialResidual
+    }
+}
+
+public struct TeqpBinaryVLEInitialGuess: Equatable, Sendable {
+    public let liquidMolarDensityMolesPerCubicMetre: Double
+    public let vaporMolarDensityMolesPerCubicMetre: Double
+    public let vaporComponent2MoleFraction: Double
+
+    public init(
+        liquidMolarDensityMolesPerCubicMetre: Double,
+        vaporMolarDensityMolesPerCubicMetre: Double,
+        vaporComponent2MoleFraction: Double
+    ) {
+        self.liquidMolarDensityMolesPerCubicMetre =
+            liquidMolarDensityMolesPerCubicMetre
+        self.vaporMolarDensityMolesPerCubicMetre =
+            vaporMolarDensityMolesPerCubicMetre
+        self.vaporComponent2MoleFraction = vaporComponent2MoleFraction
+    }
+}
+
 public protocol TeqpEngine: Sendable {
     var isAvailable: Bool { get }
     var libraryVersion: String { get }
@@ -95,6 +163,13 @@ public protocol TeqpEngine: Sendable {
         temperatureK: Double,
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult
+
+    func calculateBinaryVLE(
+        formulation: TeqpBinaryFormulationID,
+        temperatureK: Double,
+        liquidComponent2MoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess?
+    ) async throws -> TeqpBinaryVLEResult
 }
 
 public struct UnavailableTeqpEngine: TeqpEngine {
@@ -139,6 +214,17 @@ public struct UnavailableTeqpEngine: TeqpEngine {
             "The teqp native XCFramework has not been linked."
         )
     }
+
+    public func calculateBinaryVLE(
+        formulation: TeqpBinaryFormulationID,
+        temperatureK: Double,
+        liquidComponent2MoleFraction: Double,
+        initialGuess: TeqpBinaryVLEInitialGuess? = nil
+    ) async throws -> TeqpBinaryVLEResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
 }
 
 public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
@@ -166,19 +252,20 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "Native teqp Helmholtz engine with validation-gated pure CO₂ and property-specific CCS mixture formulations.",
-            equationOrMethod: "Pure CO₂ uses the pinned upstream CarbonDioxide.json multifluid model. CO₂+H₂ and CO₂+CH₄ homogeneous gas density use EOS-CG-2021 model data at the exact validated ThermoML gas-density domains. Unsupported properties and domains do not fall back to CoolProp.",
+            equationOrMethod: "Pure CO₂ uses the pinned upstream CarbonDioxide.json multifluid model. CO₂+H₂ and CO₂+CH₄ homogeneous density use EOS-CG-2021 model data at the exact validated ThermoML density domains. Unsupported properties and domains do not fall back to CoolProp.",
             coefficientSetVersion: TeqpFormulationCatalog.pureCarbonDioxide.provenance,
             requiredResources: ["PhaseXpertTeqpBridge.xcframework"],
             limitations: [
                 "Experimental local provider; no production accuracy claim.",
                 "Pure CO₂ is supported for density, Cv, Cp, Cp/Cv, speed of sound and pure saturation.",
                 "CO₂+H₂ is supported only for homogeneous gas density at xH₂ = 0.05362, on the validated 273.15 K, 293.15 K and 323.15 K isotherms, within the observed gas-pressure ranges.",
-                "CO₂+CH₄ is supported only for homogeneous gas density at xCH₄ = 0.05, around 301.14 K, within the observed Ghafri et al. 2016 gas-pressure range.",
+                "CO₂+CH₄ is supported only for homogeneous density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 gas and high-temperature supercritical validation slices.",
+                "CO₂+CH₄ VLE phase classification and phase-envelope points are validation-gated to xCH₄ = 0.05 on the ordinary Petropoulou et al. 2018 isotherms; two-phase bulk density is unavailable.",
                 "N₂, O₂, Ar and simultaneous impurity mixtures remain unsupported and never fall back to CoolProp.",
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
-                "Phase classification is limited to stable vapor, stable liquid, and supercritical states that the bridge can identify robustly; otherwise the phase remains unknown.",
-                "Pure-CO₂ phase-envelope generation is available; impurity phase envelopes remain validation-gated and unavailable.",
+                "Phase classification is limited to pure-CO₂ stable vapor/liquid/supercritical states and the validated CO₂+CH₄ VLE gate; otherwise the phase remains unknown or unavailable.",
+                "Pure-CO₂ phase-envelope generation is available; CO₂+CH₄ phase-envelope points are available only inside the validated VLE gate.",
                 "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cv, Cp and speed of sound remain unavailable pending validation.",
                 "Absolute h, u and s remain unavailable pending reference-state validation."
             ],
@@ -243,7 +330,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             ValidationIssue(
                 code: .componentOutsideModelRange,
                 severity: .error,
-                message: "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄ homogeneous gas-density validation domains only. This mixture is unsupported and is not routed to CoolProp."
+                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. This mixture is unsupported and is not routed to CoolProp."
             )
         ]
     }
@@ -273,11 +360,19 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             return try await calculateHydrogenGasDensity(request)
         }
         if isSupportedMethaneGasComposition(request.composition) {
-            return try await calculateMethaneGasDensity(request)
+            if methaneDensityTemperatureGateContains(request.temperatureK) {
+                return try await calculateMethaneGasDensity(request)
+            }
+            if methaneVLETemperatureDomainContains(request.temperatureK) {
+                return try await calculateMethaneVLEClassification(request)
+            }
+            throw ProviderError.invalidRequest(
+                "CO₂+CH₄ teqp support at xCH₄ = 0.05 is limited to the Ghafri density slices and the Petropoulou 2018 ordinary VLE isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C)."
+            )
         }
         guard isPureCarbonDioxide(request.composition) else {
             throw ProviderError.invalidRequest(
-                "Advanced CCS Properties supports pure CO₂ plus narrow CO₂+H₂ and CO₂+CH₄ homogeneous gas-density validation domains only. No CoolProp fallback is used."
+                "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. No CoolProp fallback is used."
             )
         }
 
@@ -363,9 +458,12 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "The phase-envelope request model ID does not match teqp."
             )
         }
+        if isSupportedMethaneGasComposition(request.composition) {
+            return try await methanePhaseEnvelope(request, startedAt: startedAt)
+        }
         guard isPureCarbonDioxide(request.composition) else {
             throw ProviderError.invalidRequest(
-                "The experimental teqp provider supports phase-envelope generation only for exactly 100 mol% CO₂. No CoolProp fallback is used."
+                "Advanced CCS Properties phase diagrams are available only for pure CO₂ or the validated CO₂+CH₄ VLE gate at xCH₄ = 0.05. H₂ phase envelopes remain unavailable and no CoolProp fallback is used."
             )
         }
 
@@ -626,7 +724,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                         value: raw.densityKilogramsPerCubicMetre,
                         unit: "kg/m³",
                         status: .calculated,
-                        message: "Native teqp EOS-CG-2021 CO₂+CH₄ homogeneous gas density at the Ghafri et al. 2016 validated gas-density domain."
+                        message: "Native teqp EOS-CG-2021 CO₂+CH₄ homogeneous density at the Ghafri et al. 2016 validated density domain."
                     )
                 }
                 return PropertyValue(
@@ -634,28 +732,259 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     value: nil,
                     unit: "",
                     status: .unavailable,
-                    message: "This property is not validated for the CO₂+CH₄ EOS-CG-2021 gas-density domain; no CoolProp fallback is used."
+                    message: "This property is not validated for the CO₂+CH₄ EOS-CG-2021 density domain; no CoolProp fallback is used."
                 )
             }
 
         return CalculationResponse(
             requestID: request.requestID,
             model: descriptor,
-            phase: .gas,
+            phase: phaseRegion(for: raw.phaseIdentifier),
             properties: values,
             solver: SolverMetadata(
-                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ homogeneous gas-density solve; formulation \(raw.formulationID); validation artifact Documentation/Validation/MethaneFullDensityValidationSummary.json",
+                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ homogeneous density solve; formulation \(raw.formulationID); validation artifact Documentation/Validation/MethaneDensityDomainExpansion2026-08-15.json",
                 converged: true,
                 iterationCount: nil,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             ),
             warnings: [
-                "LIMITED PASS — CO₂+CH₄ homogeneous gas density only at xCH₄ = 0.05 and the validated Ghafri et al. 2016 gas-block T/P range.",
+                "LIMITED PASS — CO₂+CH₄ homogeneous density only at xCH₄ = 0.05 and the encoded Ghafri et al. 2016 gas/supercritical T/P slices.",
                 "Phase equilibrium, phase envelopes, heat capacities, speed of sound, reference-state properties and transport are unavailable for this mixture.",
                 "No CoolProp fallback is used."
             ],
             isScientificResult: true
         )
+    }
+
+    private func calculateMethaneVLEClassification(
+        _ request: CalculationRequest
+    ) async throws -> CalculationResponse {
+        let startedAt = Date()
+        let methaneMoleFraction = try methaneFraction(request.composition)
+        let boundary = try await methaneVLEBoundary(
+            temperatureK: request.temperatureK,
+            methaneMoleFraction: methaneMoleFraction
+        )
+        let tolerance = max(2_000.0, 5e-4 * boundary.bubble.pressurePa)
+        let phase: PhaseRegion
+        let phaseMessage: String
+        if abs(boundary.bubble.pressurePa - boundary.dew.pressurePa) <= tolerance {
+            phase = .unknown
+            phaseMessage = "CO₂+CH₄ state is too close to the validated VLE boundary for robust phase classification."
+        } else if request.pressurePa < boundary.dew.pressurePa - tolerance {
+            phase = .gas
+            phaseMessage = "CO₂+CH₄ state is below the validated dew pressure on the Petropoulou 2018 VLE gate."
+        } else if request.pressurePa > boundary.bubble.pressurePa + tolerance {
+            phase = .dense
+            phaseMessage = "CO₂+CH₄ state is above the validated bubble pressure on the Petropoulou 2018 VLE gate; homogeneous density remains unavailable outside the Ghafri density slices."
+        } else {
+            phase = .twoPhase
+            phaseMessage = "CO₂+CH₄ state lies inside the validated two-phase pressure interval; PhaseXpert does not fabricate a bulk two-phase density."
+        }
+
+        let values = request.requestedProperties
+            .sorted { $0.rawValue < $1.rawValue }
+            .map { property in
+                PropertyValue(
+                    property: property,
+                    value: nil,
+                    unit: property == .density ? "kg/m³" : "",
+                    status: .unavailable,
+                    message: property == .density
+                        ? "CO₂+CH₄ VLE phase classification is available here, but homogeneous bulk density is not validated for this two-phase/phase-boundary domain."
+                        : "This property is not validated for the CO₂+CH₄ EOS-CG-2021 VLE domain; no CoolProp fallback is used."
+                )
+            }
+
+        return CalculationResponse(
+            requestID: request.requestID,
+            model: descriptor,
+            phase: phase,
+            properties: values,
+            solver: SolverMetadata(
+                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ binary VLE classification; \(phaseMessage) validation artifact Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
+                converged: boundary.bubble.converged && boundary.dew.converged,
+                iterationCount: boundary.bubble.iterationCount
+                    + boundary.dew.iterationCount,
+                absoluteTolerance: tolerance,
+                relativeTolerance: 5e-4,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            warnings: [
+                "LIMITED PASS — CO₂+CH₄ VLE classification only at xCH₄ = 0.05 on validated ordinary Petropoulou et al. 2018 isotherms.",
+                "Bulk density, phase fraction, heat capacities, speed of sound, h/u/s and transport are unavailable in this VLE domain.",
+                "No CoolProp fallback is used."
+            ],
+            isScientificResult: true
+        )
+    }
+
+    private struct MethaneVLEBoundary {
+        let bubble: TeqpBinaryVLEResult
+        let dew: TeqpBinaryVLEResult
+    }
+
+    private func methaneVLEBoundary(
+        temperatureK: Double,
+        methaneMoleFraction: Double
+    ) async throws -> MethaneVLEBoundary {
+        let isotherm = try methaneVLEIsotherm(for: temperatureK)
+        let bubble = try await methaneBubblePoint(
+            temperatureK: isotherm,
+            liquidMethaneMoleFraction: methaneMoleFraction
+        )
+        let dew = try await methaneDewPoint(
+            temperatureK: isotherm,
+            vaporMethaneMoleFraction: methaneMoleFraction
+        )
+        guard bubble.liquidMolarDensityMolesPerCubicMetre
+            > bubble.vaporMolarDensityMolesPerCubicMetre,
+              dew.liquidMolarDensityMolesPerCubicMetre
+            > dew.vaporMolarDensityMolesPerCubicMetre
+        else {
+            throw ProviderError.malformedResponse(
+                "teqp CO₂+CH₄ VLE solve did not preserve liquid/vapor density identity."
+            )
+        }
+        guard bubble.pressurePa > dew.pressurePa else {
+            throw ProviderError.malformedResponse(
+                "teqp CO₂+CH₄ VLE solve returned a nonphysical bubble/dew pressure ordering."
+            )
+        }
+        return MethaneVLEBoundary(bubble: bubble, dew: dew)
+    }
+
+    private func methanePhaseEnvelope(
+        _ request: PhaseEnvelopeRequest,
+        startedAt: Date
+    ) async throws -> PhaseEnvelopeResponse {
+        let methaneMoleFraction = try methaneFraction(request.composition)
+        guard methaneVLECompositionSupported(methaneMoleFraction) else {
+            throw ProviderError.invalidRequest(
+                "CO₂+CH₄ phase-envelope generation is validated only at xCH₄ = 0.05."
+            )
+        }
+
+        var points: [PhaseEnvelopePoint] = []
+        points.reserveCapacity(methaneVLEProductionIsotherms.count * 2)
+        for isotherm in methaneVLEProductionIsotherms {
+            try Task.checkCancellation()
+            let boundary = try await methaneVLEBoundary(
+                temperatureK: isotherm,
+                methaneMoleFraction: methaneMoleFraction
+            )
+            points.append(
+                PhaseEnvelopePoint(
+                    temperatureK: isotherm,
+                    pressurePa: boundary.bubble.pressurePa,
+                    branch: .bubble
+                )
+            )
+            points.append(
+                PhaseEnvelopePoint(
+                    temperatureK: isotherm,
+                    pressurePa: boundary.dew.pressurePa,
+                    branch: .dew
+                )
+            )
+        }
+
+        return PhaseEnvelopeResponse(
+            requestID: request.requestID,
+            points: points,
+            warnings: [
+                "LIMITED PASS — CO₂+CH₄ phase-envelope points are validation-gated to xCH₄ = 0.05 and ordinary Petropoulou et al. 2018 isotherms.",
+                "Critical termination is not drawn for xCH₄ = 0.05 because the Petropoulou critical-region rows do not validate this composition; PhaseXpert does not interpolate to a critical endpoint.",
+                "No failed or missing VLE points are connected by interpolation; no CoolProp fallback is used."
+            ],
+            isAvailable: true,
+            boundaryKind: .mixtureEnvelope,
+            model: descriptor,
+            generatedAt: Date(),
+            solver: SolverMetadata(
+                method: "teqp v0.23.1 EOS-CG-2021 CO₂+CH₄ binary VLE phase-envelope points; validation artifact Documentation/Validation/MethaneVLEProductionGate2026-08-16.json",
+                converged: true,
+                iterationCount: nil,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            )
+        )
+    }
+
+    private func methaneBubblePoint(
+        temperatureK: Double,
+        liquidMethaneMoleFraction: Double
+    ) async throws -> TeqpBinaryVLEResult {
+        try await engine.calculateBinaryVLE(
+            formulation: .eoscgCarbonDioxideMethane,
+            temperatureK: temperatureK,
+            liquidComponent2MoleFraction: liquidMethaneMoleFraction,
+            initialGuess: methaneInitialGuess(
+                temperatureK: temperatureK,
+                pressurePa: methanePressureGuess(for: temperatureK),
+                vaporMethaneMoleFraction: min(
+                    methaneVLEMaximumVaporMethaneMoleFraction,
+                    max(2 * liquidMethaneMoleFraction, 1e-5)
+                )
+            )
+        )
+    }
+
+    private func methaneDewPoint(
+        temperatureK: Double,
+        vaporMethaneMoleFraction: Double
+    ) async throws -> TeqpBinaryVLEResult {
+        var lower = methaneVLEMinimumMethaneMoleFraction
+        var upper = min(vaporMethaneMoleFraction, methaneVLEMaximumLiquidMethaneMoleFraction)
+        var lowerResult = try await methaneBubblePoint(
+            temperatureK: temperatureK,
+            liquidMethaneMoleFraction: lower
+        )
+        var upperResult = try await methaneBubblePoint(
+            temperatureK: temperatureK,
+            liquidMethaneMoleFraction: upper
+        )
+
+        while upperResult.vaporComponent2MoleFraction < vaporMethaneMoleFraction
+                && upper < methaneVLEMaximumLiquidMethaneMoleFraction {
+            try Task.checkCancellation()
+            lower = upper
+            lowerResult = upperResult
+            upper = min(methaneVLEMaximumLiquidMethaneMoleFraction, upper * 1.35)
+            upperResult = try await methaneBubblePoint(
+                temperatureK: temperatureK,
+                liquidMethaneMoleFraction: upper
+            )
+        }
+
+        guard lowerResult.vaporComponent2MoleFraction <= vaporMethaneMoleFraction,
+              upperResult.vaporComponent2MoleFraction >= vaporMethaneMoleFraction
+        else {
+            throw ProviderError.invalidRequest(
+                "CO₂+CH₄ dew solve could not bracket the requested vapor composition inside the validated Petropoulou VLE domain."
+            )
+        }
+
+        var best = upperResult
+        for _ in 0..<36 {
+            try Task.checkCancellation()
+            let mid = 0.5 * (lower + upper)
+            let result = try await methaneBubblePoint(
+                temperatureK: temperatureK,
+                liquidMethaneMoleFraction: mid
+            )
+            best = result
+            let deviation = result.vaporComponent2MoleFraction
+                - vaporMethaneMoleFraction
+            if abs(deviation) <= 1e-7 {
+                return result
+            }
+            if deviation < 0 {
+                lower = mid
+            } else {
+                upper = mid
+            }
+        }
+        return best
     }
 
     private func validateHydrogenGasDomain(_ request: CalculationRequest) throws {
@@ -705,19 +1034,91 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             )
         }
         guard let gasBlock = supported.isothermPressureLimits.first(where: {
-            abs(request.temperatureK - $0.temperatureK) <= 0.020_000_1
+            request.temperatureK >= $0.minimumTemperatureK
+                && request.temperatureK <= $0.maximumTemperatureK
         }) else {
             throw ProviderError.invalidRequest(
-                "CO₂+CH₄ teqp density is validated only within the Ghafri et al. gas-block temperature span around 301.14 K."
+                "CO₂+CH₄ teqp density is validated only within these Ghafri et al. 2016 temperature slices: \(temperatureDomainSummary(for: supported))."
             )
         }
         guard request.pressurePa >= gasBlock.minimumPressurePa,
               request.pressurePa <= gasBlock.maximumPressurePa
         else {
             throw ProviderError.invalidRequest(
-                "CO₂+CH₄ teqp density pressure is outside the validated gas range."
+                "CO₂+CH₄ teqp density pressure is outside the validated range for this Ghafri et al. 2016 isotherm slice."
             )
         }
+    }
+
+    private func methaneDensityDomainContains(_ request: CalculationRequest) -> Bool {
+        guard let supported = try? supportedMethaneCapability(),
+              let methaneMoleFraction = try? methaneFraction(request.composition),
+              let compositionLimit = supported.compositionLimits
+                .first(where: { $0.component == .methane }),
+              abs(methaneMoleFraction - compositionLimit.minimumMoleFraction)
+                <= CalculationValidator.compositionTolerance
+        else {
+            return false
+        }
+        return supported.isothermPressureLimits.contains {
+            request.temperatureK >= $0.minimumTemperatureK
+                && request.temperatureK <= $0.maximumTemperatureK
+                && request.pressurePa >= $0.minimumPressurePa
+                && request.pressurePa <= $0.maximumPressurePa
+        }
+    }
+
+    private func methaneDensityTemperatureGateContains(_ temperatureK: Double) -> Bool {
+        guard let supported = try? supportedMethaneCapability() else {
+            return false
+        }
+        return supported.isothermPressureLimits.contains {
+            temperatureK >= $0.minimumTemperatureK - 0.05
+                && temperatureK <= $0.maximumTemperatureK + 0.05
+        }
+    }
+
+    private func methaneVLETemperatureDomainContains(_ temperatureK: Double) -> Bool {
+        (try? methaneVLEIsotherm(for: temperatureK)) != nil
+    }
+
+    private func methaneVLECompositionSupported(_ methaneMoleFraction: Double) -> Bool {
+        abs(methaneMoleFraction - methaneVLEProductionMethaneMoleFraction)
+            <= CalculationValidator.compositionTolerance
+    }
+
+    private func methaneVLEIsotherm(for temperatureK: Double) throws -> Double {
+        guard let isotherm = methaneVLEProductionIsotherms.first(where: {
+            abs(temperatureK - $0) <= 0.02
+        }) else {
+            throw ProviderError.invalidRequest(
+                "CO₂+CH₄ VLE is validated only at the ordinary Petropoulou et al. 2018 isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C) for xCH₄ = 0.05."
+            )
+        }
+        return isotherm
+    }
+
+    private func methaneInitialGuess(
+        temperatureK: Double,
+        pressurePa: Double,
+        vaporMethaneMoleFraction: Double
+    ) -> TeqpBinaryVLEInitialGuess {
+        TeqpBinaryVLEInitialGuess(
+            liquidMolarDensityMolesPerCubicMetre: 19_000,
+            vaporMolarDensityMolesPerCubicMetre:
+                pressurePa / (8.314_462_618_153_24 * temperatureK),
+            vaporComponent2MoleFraction: vaporMethaneMoleFraction
+        )
+    }
+
+    private func methanePressureGuess(for temperatureK: Double) -> Double {
+        if abs(temperatureK - 293.13) <= 0.02 {
+            return 6_975_550
+        }
+        if abs(temperatureK - 298.142) <= 0.02 {
+            return 7_507_850
+        }
+        return 7_000_000
     }
 
     private func supportedHydrogenCapability() throws -> TeqpPropertyCapability {
@@ -764,6 +1165,19 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             status: .calculated,
             message: message
         )
+    }
+
+    private func temperatureDomainSummary(
+        for capability: TeqpPropertyCapability
+    ) -> String {
+        capability.isothermPressureLimits
+            .map { limit in
+                if limit.minimumTemperatureK == limit.maximumTemperatureK {
+                    return "\(limit.temperatureK) K"
+                }
+                return "\(limit.minimumTemperatureK)-\(limit.maximumTemperatureK) K"
+            }
+            .joined(separator: ", ")
     }
 
     private func phaseRegion(for identifier: String) -> PhaseRegion {
@@ -837,4 +1251,10 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         }
         return methane.moleFraction
     }
+
+    private var methaneVLEProductionMethaneMoleFraction: Double { 0.05 }
+    private var methaneVLEMinimumMethaneMoleFraction: Double { 0.00001 }
+    private var methaneVLEMaximumLiquidMethaneMoleFraction: Double { 0.06165 }
+    private var methaneVLEMaximumVaporMethaneMoleFraction: Double { 0.13134 }
+    private var methaneVLEProductionIsotherms: [Double] { [293.13, 298.142] }
 }

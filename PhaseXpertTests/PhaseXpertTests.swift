@@ -114,6 +114,100 @@ final class PhaseXpertTests: XCTestCase {
         }
     }
 
+    private struct AdvancedPhaseEnvelopeProvider: ThermodynamicModelProvider {
+        let descriptor: ModelDescriptor
+        let supportsMethaneEnvelope: Bool
+
+        init(supportsMethaneEnvelope: Bool) {
+            self.supportsMethaneEnvelope = supportsMethaneEnvelope
+            descriptor = ModelDescriptor(
+                id: "teqp-pure-co2-experimental",
+                name: "Advanced CCS Properties",
+                modelVersion: "teqp v0.23.1",
+                providerVersion: "test",
+                availability: .preliminary,
+                calculationMode: .local,
+                supportedComponents: [.carbonDioxide, .methane, .hydrogen],
+                supportedProperties: [.density],
+                domain: .initialCO2Transport,
+                scientificBasis: "Test Advanced CCS descriptor.",
+                equationOrMethod: "EOS-CG-2021",
+                limitations: [],
+                references: []
+            )
+        }
+
+        func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+            guard abs(request.temperatureK - 293.13) <= 0.02
+                    || abs(request.temperatureK - 298.142) <= 0.02
+            else {
+                throw ProviderError.invalidRequest(
+                    "CO₂+CH₄ VLE is validated only at the ordinary Petropoulou et al. 2018 isotherms 293.13 K (19.98 °C) and 298.14 K (24.99 °C) for xCH₄ = 0.05."
+                )
+            }
+            return CalculationResponse(
+                requestID: request.requestID,
+                model: descriptor,
+                phase: .twoPhase,
+                properties: [
+                    PropertyValue(
+                        property: .density,
+                        value: nil,
+                        unit: "kg/m³",
+                        status: .unavailable,
+                        message: "No bulk two-phase density."
+                    ),
+                    PropertyValue(
+                        property: .vapourFraction,
+                        value: nil,
+                        unit: "",
+                        status: .unavailable,
+                        message: "No fabricated phase fraction."
+                    )
+                ],
+                solver: SolverMetadata(
+                    method: "CO₂+CH₄ binary VLE classification",
+                    converged: true,
+                    durationMilliseconds: 1
+                ),
+                warnings: ["Bulk density, phase fraction and critical termination unavailable."],
+                isScientificResult: true
+            )
+        }
+
+        func phaseEnvelope(
+            _ request: PhaseEnvelopeRequest
+        ) async throws -> PhaseEnvelopeResponse {
+            if supportsMethaneEnvelope {
+                return PhaseEnvelopeResponse(
+                    requestID: request.requestID,
+                    points: [
+                        .init(temperatureK: 293.13, pressurePa: 6_500_000, branch: .dew),
+                        .init(temperatureK: 293.13, pressurePa: 7_000_000, branch: .bubble),
+                        .init(temperatureK: .nan, pressurePa: 7_100_000, branch: .bubble),
+                        .init(temperatureK: 298.142, pressurePa: 6_900_000, branch: .dew),
+                        .init(temperatureK: 298.142, pressurePa: 7_500_000, branch: .bubble)
+                    ],
+                    warnings: [
+                        "Critical termination is not drawn for xCH₄ = 0.05."
+                    ],
+                    isAvailable: true,
+                    boundaryKind: .mixtureEnvelope,
+                    model: descriptor,
+                    generatedAt: Date(timeIntervalSince1970: 1_800_000_000),
+                    solver: .init(
+                        method: "CO₂+CH₄ binary VLE phase-envelope points",
+                        converged: true,
+                        durationMilliseconds: 1
+                    )
+                )
+            }
+            throw ProviderError.invalidRequest(
+                "Advanced CCS Properties phase diagrams are available only for pure CO₂ or the validated CO₂+CH₄ VLE gate at xCH₄ = 0.05. H₂ phase envelopes remain unavailable and no CoolProp fallback is used."
+            )
+        }
+    }
+
     private struct DelayedPhaseEnvelopeProvider: ThermodynamicModelProvider {
         let descriptor = PhaseXpertTests.testDescriptor
         let delayNanoseconds: UInt64
@@ -290,8 +384,90 @@ final class PhaseXpertTests: XCTestCase {
             .unavailable
         )
         XCTAssertTrue(record.response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
-        XCTAssertTrue(record.response.solver.method.contains("MethaneFullDensityValidationSummary"))
+        XCTAssertTrue(record.response.solver.method.contains("MethaneDensityDomainExpansion2026-08-15"))
         XCTAssertTrue(record.response.warnings.contains { $0.contains("Ghafri") })
+    }
+
+    @MainActor
+    func testAdvancedCCSMethaneVLERejectsMinusZeroPointZeroTwoCelsiusBecauseItIs273K() async throws {
+        let provider = AdvancedPhaseEnvelopeProvider(supportsMethaneEnvelope: true)
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [provider])
+        )
+        viewModel.selectedModelID = provider.descriptor.id
+        viewModel.pressureText = "66"
+        viewModel.temperatureText = "-0.02"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "950000"),
+            .init(component: .methane, value: "50000")
+        ]
+
+        await viewModel.calculate()
+
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertTrue(
+            viewModel.calculationError?.contains("293.13 K (19.98 °C)") == true,
+            viewModel.calculationError ?? "nil"
+        )
+    }
+
+    @MainActor
+    func testAdvancedCCSMethaneVLEAcceptsDisplayCelsiusEquivalentToSupportedIsotherms() async throws {
+        for input in [
+            (celsius: "19.98", expectedKelvin: 293.13),
+            (celsius: "19.999", expectedKelvin: 293.149),
+            (celsius: "24.99", expectedKelvin: 298.14)
+        ] {
+            let provider = AdvancedPhaseEnvelopeProvider(supportsMethaneEnvelope: true)
+            let viewModel = CalculatorViewModel(
+                registry: ProviderRegistry(providers: [provider])
+            )
+            viewModel.selectedModelID = provider.descriptor.id
+            viewModel.pressureText = "66"
+            viewModel.temperatureText = input.celsius
+            viewModel.compositionBasis = .partsPerMillion
+            viewModel.composition = [
+                .init(component: .carbonDioxide, value: "950000"),
+                .init(component: .methane, value: "50000")
+            ]
+
+            await viewModel.calculate()
+
+            let record = try XCTUnwrap(viewModel.calculationRecord)
+            XCTAssertNil(viewModel.calculationError)
+            XCTAssertEqual(record.request.temperatureK, input.expectedKelvin, accuracy: 1e-12)
+            XCTAssertEqual(record.response.phase, .twoPhase)
+            XCTAssertEqual(
+                record.response.properties.first { $0.property == .density }?.status,
+                .unavailable
+            )
+            XCTAssertTrue(record.response.solver.method.contains("CO₂+CH₄ binary VLE"))
+        }
+    }
+
+    @MainActor
+    func testAdvancedCCSMethaneVLERejectsDisplayCelsiusOutsideIsothermTolerance() async throws {
+        let provider = AdvancedPhaseEnvelopeProvider(supportsMethaneEnvelope: true)
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [provider])
+        )
+        viewModel.selectedModelID = provider.descriptor.id
+        viewModel.pressureText = "66"
+        viewModel.temperatureText = "20.01"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "950000"),
+            .init(component: .methane, value: "50000")
+        ]
+
+        await viewModel.calculate()
+
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertTrue(
+            viewModel.calculationError?.contains("298.14 K (24.99 °C)") == true,
+            viewModel.calculationError ?? "nil"
+        )
     }
 
     @MainActor
@@ -319,7 +495,7 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
-    func testAdvancedCCSPropertiesMixtureDoesNotExposePhaseDiagram() async throws {
+    func testAdvancedCCSHydrogenMixtureReportsProviderPhaseDiagramUnavailable() async throws {
         let descriptor = try XCTUnwrap(
             ProviderRegistry().descriptors.first {
                 $0.id == "teqp-pure-co2-experimental"
@@ -333,15 +509,58 @@ final class PhaseXpertTests: XCTestCase {
                 .init(component: .hydrogen, moleFraction: 0.05362)
             ]
         )
-        let viewModel = PhaseDiagramViewModel()
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [
+                AdvancedPhaseEnvelopeProvider(supportsMethaneEnvelope: false)
+            ])
+        )
 
         viewModel.load(for: record)
+        try await waitUntil { viewModel.errorMessage != nil }
 
         XCTAssertFalse(viewModel.isLoading)
         XCTAssertNil(viewModel.response)
         XCTAssertNil(viewModel.phaseMapRecord)
         XCTAssertTrue(
-            viewModel.scopeMessage?.contains("Phase equilibrium is not validated") == true
+            viewModel.errorMessage?.contains("H₂ phase envelopes remain unavailable") == true
+        )
+    }
+
+    @MainActor
+    func testAdvancedCCSMethaneMixtureLoadsProviderPhaseEnvelope() async throws {
+        let provider = AdvancedPhaseEnvelopeProvider(supportsMethaneEnvelope: true)
+        let record = try await makeRecord(
+            modelID: provider.descriptor.id,
+            modelDescriptor: provider.descriptor,
+            pressureValue: 67,
+            pressurePa: 6_700_000,
+            temperatureValue: -0.02,
+            temperatureK: 293.13,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .methane, moleFraction: 0.05)
+            ]
+        )
+        let viewModel = PhaseDiagramViewModel(
+            registry: ProviderRegistry(providers: [provider])
+        )
+
+        viewModel.load(for: record)
+        try await waitUntil { viewModel.response != nil }
+
+        XCTAssertFalse(viewModel.isLoading)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertNil(viewModel.scopeMessage)
+        XCTAssertNil(viewModel.phaseMapRecord)
+        XCTAssertEqual(viewModel.response?.boundaryKind, .mixtureEnvelope)
+        XCTAssertEqual(viewModel.response?.points.filter { $0.branch == .bubble }.count, 2)
+        XCTAssertEqual(viewModel.response?.points.filter { $0.branch == .dew }.count, 2)
+        XCTAssertTrue(viewModel.response?.points.contains { !$0.temperatureK.isFinite } == true)
+        XCTAssertFalse(viewModel.response?.points.contains { $0.branch == .critical } == true)
+        XCTAssertTrue(
+            viewModel.response?.warnings.contains {
+                $0.contains("Critical termination is not drawn")
+            } == true
         )
     }
 

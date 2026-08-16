@@ -1,0 +1,22 @@
+{
+  "artifactID": "eoscg2021-co2-h2-vle-audit-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "candidateSources": [
+    {
+      "title": "Phase behavior of (CO2 + H2) and (CO2 + N2) at temperatures between (218.15 and 303.15) K at pressures up to 15 MPa",
+      "doi": "10.1016/j.ijggc.2015.02.018",
+      "accessibleMetadata": "VLE data are reported for CO2+H2 and CO2+N2 over 218.15 K to 303.15 K up to 15 MPa."
+    }
+  ],
+  "implementationAudit": {
+    "nativeBridgeSupport": "A generic diagnostic binary VLE bridge now accepts the EOS-CG CO2+H2 formulation, fixed liquid component-2 composition and optional initial guesses.",
+    "providerSupport": "TeqpProvider exposes only density for CO2+H2 mixtures.",
+    "result": "NOT ENABLED"
+  },
+  "productionDecision": {
+    "vle": "unavailable",
+    "phaseClassification": "unchanged",
+    "phaseEnvelope": "unavailable",
+    "reason": "No audited open numerical binary CO2+H2 x/y/P/T matrix was encoded. The targeted pass found ThermoML ternary CO2+H2+methanol data and unrelated systems, but no CCS-relevant binary validation artifact suitable for production gating."
+  }
+}

@@ -93,5 +93,22 @@ Current teqp impurity validation references under audit:
   methane) at the vicinity of the critical point in the supercritical state by
   a single-sinker densimeter," *Fluid Phase Equilibria* 418, 94-99, 2016.
   [DOI 10.1016/j.fluid.2015.08.029](https://doi.org/10.1016/j.fluid.2015.08.029).
+- Y. Sánchez-Vicente, T. C. Drage, M. Poliakoff, J. Ke and M. W. George,
+  "Densities of the carbon dioxide + hydrogen, a system of relevance to carbon
+  capture and storage," *International Journal of Greenhouse Gas Control* 13,
+  78-86, 2013.
+  [DOI 10.1016/j.ijggc.2012.12.002](https://doi.org/10.1016/j.ijggc.2012.12.002).
+- O. Fandiño, J. P. M. Trusler and D. Vega-Maza, "Phase behavior of (CO₂ +
+  H₂) and (CO₂ + N₂) at temperatures between 218.15 and 303.15 K at pressures
+  up to 15 MPa," *International Journal of Greenhouse Gas Control* 36, 78-92,
+  2015.
+  [DOI 10.1016/j.ijggc.2015.02.018](https://doi.org/10.1016/j.ijggc.2015.02.018).
+- E. Petropoulou, E. Voutsas, S. F. Westman, A. Austegard, H. G. J. Stang and
+  S. W. Løvseth, "Vapor-liquid equilibrium of the carbon dioxide/methane
+  mixture at three isotherms," *Fluid Phase Equilibria* 462, 44-58, 2018.
+  [DOI 10.1016/j.fluid.2018.01.011](https://doi.org/10.1016/j.fluid.2018.01.011).
+- J. Owuna and coauthors, "Densities and Viscosities of Carbon Dioxide and
+  Hydrogen Mixtures," *Journal of Chemical & Engineering Data*, 2025.
+  [DOI 10.1021/acs.jced.4c00666](https://doi.org/10.1021/acs.jced.4c00666).
 
 These references are validation inputs, not production-accuracy claims.

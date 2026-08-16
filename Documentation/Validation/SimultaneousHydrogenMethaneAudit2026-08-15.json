@@ -1,0 +1,13 @@
+{
+  "artifactID": "eoscg2021-co2-h2-ch4-simultaneous-impurity-audit-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "implementationAudit": {
+    "binaryPrerequisites": "CO2+H2 remains narrow density-only; CO2+CH4 has expanded density-only slices; neither binary has passed VLE, phase-envelope or mixture derivative-property gates.",
+    "nativeBridgeSupport": "No ternary CO2+H2+CH4 production entry point exists in PhaseXpertTeqpBridge.xcframework.",
+    "result": "NOT ENABLED"
+  },
+  "productionDecision": {
+    "simultaneousHydrogenMethane": "unavailable",
+    "reason": "The binary validation prerequisites are incomplete and no independent ternary validation matrix was encoded."
+  }
+}

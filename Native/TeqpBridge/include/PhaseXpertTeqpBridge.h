@@ -50,6 +50,34 @@ typedef struct PXTeqpBinaryVLEResult {
     double n2_chemical_potential_residual;
 } PXTeqpBinaryVLEResult;
 
+typedef enum PXTeqpBinaryFormulation {
+    PXTeqpBinaryFormulationCO2N2 = 1,
+    PXTeqpBinaryFormulationEOSCGCO2H2 = 2,
+    PXTeqpBinaryFormulationEOSCGCO2CH4 = 3
+} PXTeqpBinaryFormulation;
+
+typedef struct PXTeqpGenericBinaryVLEResult {
+    int converged;
+    int iteration_count;
+    int return_code;
+    double pressure_pa;
+    double liquid_molar_density_mol_m3;
+    double vapor_molar_density_mol_m3;
+    double liquid_component1_mole_fraction;
+    double liquid_component2_mole_fraction;
+    double vapor_component1_mole_fraction;
+    double vapor_component2_mole_fraction;
+    double pressure_residual_pa;
+    double component1_chemical_potential_residual;
+    double component2_chemical_potential_residual;
+} PXTeqpGenericBinaryVLEResult;
+
+typedef struct PXTeqpBinaryVLEInitialGuess {
+    double liquid_molar_density_mol_m3;
+    double vapor_molar_density_mol_m3;
+    double vapor_component2_mole_fraction;
+} PXTeqpBinaryVLEInitialGuess;
+
 typedef struct PXTeqpBinaryPointResult {
     double density_kg_m3;
     double molar_density_mol_m3;
@@ -92,6 +120,25 @@ int px_teqp_calculate_co2_n2_vle_tx(
     double temperature_k,
     double liquid_nitrogen_mole_fraction,
     PXTeqpBinaryVLEResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_binary_vle_tx(
+    PXTeqpBinaryFormulation formulation,
+    double temperature_k,
+    double liquid_component2_mole_fraction,
+    PXTeqpGenericBinaryVLEResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_binary_vle_tx_with_initial_guess(
+    PXTeqpBinaryFormulation formulation,
+    double temperature_k,
+    double liquid_component2_mole_fraction,
+    PXTeqpBinaryVLEInitialGuess initial_guess,
+    PXTeqpGenericBinaryVLEResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

@@ -1,0 +1,80 @@
+{
+  "artifactVersion": "2026-08-16",
+  "decision": "production_enabled_limited",
+  "provider": "Advanced CCS Properties",
+  "stableProviderID": "teqp-pure-co2-experimental",
+  "engine": "teqp v0.23.1 native bridge",
+  "formulation": "EOS-CG-2021 CO2+CH4 inherited GERG pair with corrected beta/gamma mapping",
+  "validationSource": {
+    "citation": "Petropoulou et al. 2018, Vapor-liquid equilibrium of the carbon dioxide/methane mixture at three isotherms, Fluid Phase Equilibria 462, 44-58",
+    "doi": "10.1016/j.fluid.2018.01.011",
+    "machineReadableSource": "NIST ThermoML",
+    "encodedRows": "Documentation/Validation/Petropoulou2018MethaneVLERows.json",
+    "diagnosticBakeoff": "Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json"
+  },
+  "productionDomain": {
+    "mixture": "CO2 + CH4",
+    "methaneMoleFraction": {
+      "type": "exact_slice",
+      "value": 0.05,
+      "tolerance": 1e-6
+    },
+    "temperatureK": {
+      "type": "validated_isotherms",
+      "values": [
+        293.13,
+        298.142
+      ],
+      "toleranceK": 0.02
+    },
+    "pressure": "Provider-calculated bubble/dew bounds at the accepted isotherm and exact xCH4 slice; outside that interval the state is classified as vapor or dense rather than two-phase.",
+    "criticalHandling": "Petropoulou near-critical rows are retained as diagnostic evidence but excluded from the ordinary production acceptance metric and from the fixed-composition phase-envelope critical termination.",
+    "unsupported": [
+      "bulk two-phase density",
+      "phase fraction",
+      "mixture Cp",
+      "mixture Cv",
+      "mixture speed of sound",
+      "transport",
+      "h/u/s reference-state properties"
+    ]
+  },
+  "acceptedValidationRows": {
+    "selection": "ordinary Petropoulou rows on the 293.13 K and 298.14 K isotherms, excluding near-critical rows and excluding the 303.15 K critical-region isotherm for the fixed xCH4 = 0.05 production slice",
+    "pointCount": 24,
+    "convergedPointCount": 24,
+    "nonconvergenceCount": 0,
+    "pressureAARDPercent": 0.6088990489559084,
+    "worstPressureRelativeDeviationPercent": 1.78701766827,
+    "averageLiquidCompositionAbsoluteDeviation": 5.695675412791708e-17,
+    "worstLiquidCompositionAbsoluteDeviation": 1.66533453694e-16,
+    "averageVaporCompositionAbsoluteDeviation": 0.009515859085231516,
+    "worstVaporCompositionAbsoluteDeviation": 0.0262579747323,
+    "maximumIterationCount": 10,
+    "maximumAbsolutePressureResidualPa": 0.00498121604323,
+    "maximumAbsoluteComponent1ChemicalPotentialResidual": 1.0571347957e-6,
+    "maximumAbsoluteComponent2ChemicalPotentialResidual": 7.97896063887e-7
+  },
+  "allPetropoulouRowsDiagnosticSummary": {
+    "pointCount": 37,
+    "convergedPointCount": 37,
+    "pressureAARDPercent": 0.4166638624569919,
+    "ordinaryRowPressureAARDPercent": 0.585602458987648,
+    "worstPressureRelativeDeviationPercent": 1.78701766827,
+    "worstVaporCompositionAbsoluteDeviation": 0.0262579747323
+  },
+  "productionCapabilitiesEnabled": [
+    "CH4 phase classification inside the validated VLE gate",
+    "CH4 bubble/dew phase-envelope points at the validated fixed composition and isotherms",
+    "explicit two-phase status without fabricated bulk density"
+  ],
+  "productionCapabilitiesNotEnabled": [
+    "critical termination for the xCH4 = 0.05 phase envelope",
+    "arbitrary CH4 composition interpolation",
+    "H2 VLE",
+    "H2 phase envelope",
+    "simultaneous H2 + CH4",
+    "mixture caloric or acoustic properties"
+  ],
+  "acceptanceBasis": "The corrected EOS-CG/GERG pair converges deterministically for the accepted ordinary rows, maintains liquid/vapor density and composition identity, reports small equilibrium residuals, and gives sub-1% pressure AARD over the accepted ordinary production row set. The fixed production composition is restricted to the existing validated density slice and does not infer arbitrary CH4 compositions from the Petropoulou matrix."
+}

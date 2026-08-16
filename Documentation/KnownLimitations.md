@@ -26,23 +26,28 @@
   existing transparent derived properties; CO₂+H₂ supports only homogeneous
   gas density plus derived molar mass, specific volume and Z at xH₂ = 0.05362
   and the encoded Souissi et al. 2017 isotherm pressure ranges; CO₂+CH₄
-  supports only homogeneous gas density plus derived molar mass, specific
-  volume and Z at xCH₄ = 0.05, 301.14 K ± 0.02 K and 1.99046-6.976 MPa.
+  supports only homogeneous density plus derived molar mass, specific volume
+  and Z at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 301.14 K gas
+  block and 308.15-313.15 K high-temperature supercritical slices. CO₂+CH₄
+  VLE phase classification and bubble/dew phase-envelope points are enabled
+  only for exact xCH₄ = 0.05 on the 293.13 K and 298.14 K Petropoulou 2018
+  ordinary isotherms.
   Viscosity, transport properties, enthalpy, entropy, internal energy, N₂,
   O₂, Ar, simultaneous impurities, impurity heat capacities, impurity speed of
   sound and impurity phase-equilibrium outputs are unavailable. Pure-CO₂
   phase-envelope generation is available through the native teqp saturation
-  calculation; impurity phase envelopes remain unavailable. Subcritical multiple-root pure-CO₂
+  calculation; CH₄ impurity phase-envelope support is limited to the validated
+  bubble/dew points above, without critical termination or interpolation across
+  unconverged regions. Subcritical multiple-root pure-CO₂
   density states use teqp pure-fluid saturation equilibrium to select a stable
   vapor or liquid branch when the state is clearly away from saturation. States
   on or too close to saturation remain explicitly unavailable because a unique
   homogeneous bulk density is not reported. The native bridge now embeds pinned
-  teqp v0.23.1 CO₂+N₂ multifluid data and exposes validation-gated research
-  primitives for binary VLE and point classification using fixed-composition
-  mixture critical conditions rather than pure-CO₂ critical temperature. The
-  corrected independent Gate C density and VLE audit failed to establish a
-  supported CO₂+N₂ teqp operating range for the pinned Gernert/GERG binary
-  model, so the enabled teqp N₂ range is empty.
+  teqp v0.23.1 binary diagnostic data and exposes validation-gated research
+  primitives for generic binary VLE plus CO₂+N₂ point classification. Corrected
+  CO₂+CH₄ Petropoulou VLE now has a limited production gate; two-phase bulk
+  density, phase fraction and near-critical envelope termination remain
+  unavailable.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

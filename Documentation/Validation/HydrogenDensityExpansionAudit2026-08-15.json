@@ -1,0 +1,34 @@
+{
+  "artifactID": "eoscg2021-co2-h2-density-expansion-audit-2026-08-15",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "targetSource": {
+    "title": "Densities of the carbon dioxide + hydrogen, a system of relevance to carbon capture and storage",
+    "doi": "10.1016/j.ijggc.2012.12.002",
+    "reportedDomainFromAccessibleMetadata": "xH2 = 0.020, 0.075 and 0.100; T = 288.15 K to 333.15 K; pressure up to approximately 23 MPa"
+  },
+  "routesChecked": [
+    {
+      "route": "ScienceDirect metadata page",
+      "result": "Article metadata and abstract domain were accessible, but tabulated numerical PVT rows were not exposed to this agent."
+    },
+    {
+      "route": "NIST ThermoML search by title/DOI/authors",
+      "result": "No ThermoML record was found for DOI 10.1016/j.ijggc.2012.12.002."
+    },
+    {
+      "route": "General web search for supplementary data and machine-readable tables",
+      "result": "No authoritative accessible table was found. Snippets, plot images and secondary summaries were not used."
+    },
+    {
+      "route": "Owuna et al. 2025 ACS JC&ED metadata",
+      "result": "The source appears relevant for CO2-rich H2 densities up to higher pressure, but the numerical tables/supplementary material were not accessible to this agent through a legitimate non-paywalled route."
+    }
+  ],
+  "productionDecision": {
+    "result": "NO EXPANDED H2 DENSITY DOMAIN ENABLED",
+    "reason": "No additional authoritative numerical CO2-rich H2 density matrix was acquired. Existing Souissi et al. 2017 gas-density support remains unchanged.",
+    "preservedDomain": "xH2 = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; pressure inside the encoded Souissi gas-density isotherm bounds.",
+    "noGraphDigitization": true,
+    "noInferredRows": true
+  }
+}

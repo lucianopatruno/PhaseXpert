@@ -1,0 +1,15 @@
+{
+  "artifactID": "eoscg2021-mixture-caloric-speed-audit-2026-08-16",
+  "createdFor": "agent/ccs-mixture-domain-expansion",
+  "implementationAudit": {
+    "nativeBridgeSupport": "The production native binary bridge currently returns density, phase-equilibrium pressure, liquid/vapor molar densities, compositions and residual metadata. It does not yet expose complete mixture Helmholtz derivative outputs for Cv, Cp or speed of sound.",
+    "providerSupport": "TeqpProvider exposes mixture density plus derived molar mass, specific volume and compressibility factor only, and reports mixture Cv, Cp and speed of sound as unavailable.",
+    "result": "NOT ENABLED"
+  },
+  "productionDecision": {
+    "cv": "unavailable for CO2+H2 and CO2+CH4",
+    "cp": "unavailable for CO2+H2 and CO2+CH4",
+    "speedOfSound": "unavailable for CO2+H2 and CO2+CH4",
+    "reason": "Complete ideal/residual derivative implementation, reducing-function derivative verification and independent numerical validation were not completed in this checkpoint. The properties remain independently gated and unavailable rather than being exposed from unvalidated formulas."
+  }
+}
