@@ -162,6 +162,26 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.buttons["CH₄ impurity menu"].waitForExistence(timeout: 3))
     }
 
+    func testAdvancedCCSPropertiesShowsValidatedRangeGuidanceBeforeCalculation() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let advanced = app.buttons["model-teqp-pure-co2-experimental"]
+        XCTAssertTrue(advanced.waitForExistence(timeout: 3))
+        advanced.tap()
+        addImpurity(in: app)
+
+        for _ in 0..<5 where !app.otherElements["validated-range-guidance"].waitForExistence(timeout: 0.5) {
+            app.swipeUp()
+        }
+
+        XCTAssertTrue(app.otherElements["validated-range-guidance"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["CH₄ validated composition"].exists)
+        XCTAssertTrue(app.staticTexts["50000 ppm"].exists)
+        XCTAssertTrue(app.staticTexts["Phase diagram"].exists)
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "19.98 °C to 24.99 °C")).element.exists)
+    }
+
     func testOperatingPointUnitsAreSeparateAndAdaptive() {
         let app = XCUIApplication()
         app.launch()

@@ -93,6 +93,9 @@ Current teqp impurity validation references under audit:
   methane) at the vicinity of the critical point in the supercritical state by
   a single-sinker densimeter," *Fluid Phase Equilibria* 418, 94-99, 2016.
   [DOI 10.1016/j.fluid.2015.08.029](https://doi.org/10.1016/j.fluid.2015.08.029).
+- S. Liu and coauthors, CO₂+CH₄ density ThermoML lead, *Journal of Chemical
+  Thermodynamics* 106, 1-9, 2017.
+  [DOI 10.1016/j.jct.2016.11.009](https://doi.org/10.1016/j.jct.2016.11.009).
 - Y. Sánchez-Vicente, T. C. Drage, M. Poliakoff, J. Ke and M. W. George,
   "Densities of the carbon dioxide + hydrogen, a system of relevance to carbon
   capture and storage," *International Journal of Greenhouse Gas Control* 13,

@@ -24,6 +24,21 @@ abstraction without changing SwiftUI or the default CoolProp path. Its H₂/CH�
 mixture domains are metadata-gated per property and per validation slice inside
 the core provider layer, not in SwiftUI.
 
+## Operating range guidance
+
+`ThermodynamicModelProvider.operatingRangeGuidance(for:)` exposes compact,
+UI-consumable production-domain metadata without running an equation-of-state
+calculation. The context carries SI pressure, SI temperature, mole-fraction
+composition and requested properties. Providers return display-ready guidance
+lines and explicit suggestion actions, but the authoritative limits remain in
+the provider/catalog capability records that also enforce calculation gates.
+
+The Calculator and Phase Diagram views consume this provider API for Advanced
+CCS Properties only. SwiftUI does not duplicate H₂/CH₄ ppm, temperature,
+pressure or phase-envelope limits in hard-coded strings. Suggestions are
+user-triggered actions; PhaseXpert never silently snaps composition or
+temperature to a validated value.
+
 ## Concurrency
 
 Providers are `Sendable` and expose asynchronous, throwing functions.

@@ -57,6 +57,10 @@
   encoded; fixed-composition CH₄ critical termination, 303.15 K production VLE,
   H₂ VLE and simultaneous H₂+CH₄ remain unavailable. CH₄ critical calculations
   are retained as diagnostic implementation artifacts only.
+- Advanced CCS limits are now visible before calculation, but this does not
+  expand the validated scientific domain. The visible range guidance is bound
+  to provider capability metadata and should be treated as the production gate,
+  not as a statement that arbitrary EOS-CG states are validated.
 - The broad input envelope is a test-planning domain, not a validated range.
 - Components other than the explicitly restricted dry CO₂-rich mixture pair have no
   executable mixture support. Their identifiers remain future scaffolding.

@@ -119,6 +119,23 @@ final class CalculatorViewModel {
         descriptors.filter { $0.availability != .unavailable }
     }
 
+    var operatingRangeGuidance: OperatingRangeGuidance? {
+        guard
+            let provider = registry.provider(id: selectedModelID),
+            let descriptor = selectedDescriptor,
+            descriptor.id == "teqp-pure-co2-experimental"
+        else {
+            return nil
+        }
+        return provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: parsedPressurePa,
+                temperatureK: parsedTemperatureK,
+                composition: domainComposition()
+            )
+        )
+    }
+
     var canNormalize: Bool {
         false
     }
@@ -388,6 +405,20 @@ final class CalculatorViewModel {
         validate()
     }
 
+    func applyGuidanceSuggestion(_ suggestion: OperatingGuidanceSuggestion) {
+        switch suggestion.action {
+        case let .setComposition(component, moleFraction):
+            setComposition(component: component, moleFraction: moleFraction)
+        case let .setTemperature(kelvin):
+            lastValidTemperatureK = kelvin
+            temperatureText = Self.format(
+                temperatureDisplayUnit.displayValue(from: kelvin),
+                for: temperatureDisplayUnit
+            )
+        }
+        validate()
+    }
+
     var impurityEnteredTotal: Double {
         composition
             .filter { $0.component != .carbonDioxide }
@@ -478,6 +509,25 @@ final class CalculatorViewModel {
                 moleFraction: enteredValue / (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
             )
         }
+    }
+
+    private func setComposition(component: ComponentID, moleFraction: Double) {
+        guard component != .carbonDioxide else { return }
+        let displayedValue = moleFraction * (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
+        let value = String(
+            format: compositionBasis == .partsPerMillion ? "%.12g" : "%.8g",
+            displayedValue
+        )
+        if let index = composition.firstIndex(where: { $0.component == component }) {
+            composition[index].value = value
+        } else if let index = composition.firstIndex(where: { $0.component != .carbonDioxide }) {
+            composition[index].component = component
+            composition[index].value = value
+        } else {
+            composition.append(CompositionInput(component: component, value: value))
+        }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
     }
 
     private func compositionSnapshot() -> [CompositionInputSnapshot] {

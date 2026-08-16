@@ -461,6 +461,41 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         ]
     }
 
+    public func operatingRangeGuidance(
+        for context: OperatingGuidanceContext
+    ) -> OperatingRangeGuidance? {
+        guard engine.isAvailable else { return nil }
+        guard !isPureCarbonDioxide(context.composition) else { return nil }
+
+        if let hydrogen = context.composition.first(where: { $0.component == .hydrogen }) {
+            return hydrogenOperatingRangeGuidance(
+                hydrogenMoleFraction: hydrogen.moleFraction,
+                temperatureK: context.temperatureK,
+                requestedProperties: context.requestedProperties
+            )
+        }
+        if let methane = context.composition.first(where: { $0.component == .methane }) {
+            return methaneOperatingRangeGuidance(
+                methaneMoleFraction: methane.moleFraction,
+                temperatureK: context.temperatureK,
+                requestedProperties: context.requestedProperties
+            )
+        }
+        if context.composition.contains(where: { $0.component != .carbonDioxide }) {
+            return OperatingRangeGuidance(
+                title: "Model limits",
+                summary: [
+                    .init(
+                        severity: .unsupported,
+                        title: "Mixture unsupported",
+                        detail: "Advanced CCS Properties is production-enabled only for pure CO₂, CO₂+H₂ density, and CO₂+CH₄ density/VLE gates. No CoolProp fallback is used."
+                    )
+                ]
+            )
+        }
+        return nil
+    }
+
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
         try Task.checkCancellation()
         guard engine.isAvailable else {
@@ -1342,6 +1377,290 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             throw ProviderError.invalidRequest("CO₂+CH₄ validation metadata is incomplete.")
         }
         return capability
+    }
+
+    private func hydrogenOperatingRangeGuidance(
+        hydrogenMoleFraction: Double,
+        temperatureK: Double?,
+        requestedProperties: Set<PropertyID>
+    ) -> OperatingRangeGuidance {
+        let capability = try? supportedHydrogenCapability()
+        let limits = capability?.isothermPressureLimits ?? []
+        let supportedMoleFraction = capability?.compositionLimits
+            .first(where: { $0.component == .hydrogen })?
+            .minimumMoleFraction ?? 0.05362
+        var issues: [OperatingGuidanceLine] = []
+        var summary: [OperatingGuidanceLine] = [
+            .init(
+                severity: .information,
+                title: "H₂ validated composition",
+                detail: "\(ppmString(supportedMoleFraction)) ppm"
+            ),
+            .init(
+                severity: .information,
+                title: "Temperature",
+                detail: exactTemperatureList(limits)
+            )
+        ]
+
+        if let temperatureK {
+            if let isotherm = limits.first(where: {
+                abs(temperatureK - $0.temperatureK) <= 0.02
+            }) {
+                summary.append(.init(
+                    severity: .information,
+                    title: "Validated pressure",
+                    detail: pressureRangeString(isotherm)
+                ))
+            } else {
+                issues.append(.init(
+                    severity: .unsupported,
+                    title: "Temperature outside validation set",
+                    detail: "\(celsiusString(temperatureK)) °C is outside the validated H₂ temperature set. Use \(exactTemperatureList(limits))."
+                ))
+            }
+        } else {
+            summary.append(.init(
+                severity: .information,
+                title: "Pressure",
+                detail: "Validated range depends on the selected temperature."
+            ))
+        }
+
+        if abs(hydrogenMoleFraction - supportedMoleFraction)
+            > CalculationValidator.compositionTolerance {
+            issues.append(.init(
+                severity: .unsupported,
+                title: "Composition outside validated value",
+                detail: "Entered \(ppmString(hydrogenMoleFraction)) ppm H₂; validated H₂ composition is \(ppmString(supportedMoleFraction)) ppm."
+            ))
+        }
+
+        return OperatingRangeGuidance(
+            title: "Validated range",
+            summary: summary,
+            currentInputIssues: issues,
+            propertyAvailability: propertyAvailabilityLines(
+                requestedProperties: requestedProperties,
+                supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume],
+                system: "CO₂+H₂"
+            ),
+            phaseDiagram: [
+                .init(
+                    severity: .unsupported,
+                    title: "Phase diagram",
+                    detail: "Phase diagram not yet validated for CO₂+H₂."
+                )
+            ],
+            suggestions: hydrogenSuggestions(
+                currentMoleFraction: hydrogenMoleFraction,
+                supportedMoleFraction: supportedMoleFraction,
+                limits: limits
+            )
+        )
+    }
+
+    private func methaneOperatingRangeGuidance(
+        methaneMoleFraction: Double,
+        temperatureK: Double?,
+        requestedProperties: Set<PropertyID>
+    ) -> OperatingRangeGuidance {
+        let density = try? supportedMethaneCapability()
+        let densityLimits = density?.isothermPressureLimits ?? []
+        let vle = TeqpFormulationCatalog.co2MethaneEOSCGVLE
+        let supportedMoleFraction = density?.compositionLimits
+            .first(where: { $0.component == .methane })?
+            .minimumMoleFraction ?? 0.05
+        var summary: [OperatingGuidanceLine] = [
+            .init(
+                severity: .information,
+                title: "CH₄ validated composition",
+                detail: "\(ppmString(supportedMoleFraction)) ppm"
+            ),
+            .init(
+                severity: .information,
+                title: "Density temperature",
+                detail: "28.0 °C gas block; 35.0–40.0 °C high-temperature slices"
+            ),
+            .init(
+                severity: .information,
+                title: "Phase equilibrium",
+                detail: "19.98–24.99 °C at \(ppmString(supportedMoleFraction)) ppm CH₄"
+            )
+        ]
+        var issues: [OperatingGuidanceLine] = []
+
+        if let temperatureK {
+            if let densityLimit = densityLimits.first(where: {
+                temperatureK >= $0.minimumTemperatureK
+                    && temperatureK <= $0.maximumTemperatureK
+            }) {
+                summary.append(.init(
+                    severity: .information,
+                    title: "Validated density pressure",
+                    detail: pressureRangeString(densityLimit)
+                ))
+            } else if methaneVLEProductionTemperatureContains(temperatureK) {
+                summary.append(.init(
+                    severity: .information,
+                    title: "VLE pressure",
+                    detail: "Bubble/dew pressure is calculated inside the Petropoulou validation interval; bulk density is unavailable here."
+                ))
+            } else {
+                issues.append(.init(
+                    severity: .unsupported,
+                    title: "Temperature outside CH₄ gates",
+                    detail: "\(celsiusString(temperatureK)) °C is outside the CH₄ density slices and VLE interval."
+                ))
+            }
+        }
+
+        if abs(methaneMoleFraction - supportedMoleFraction)
+            > CalculationValidator.compositionTolerance {
+            issues.append(.init(
+                severity: .unsupported,
+                title: "Composition outside validated value",
+                detail: "Entered \(ppmString(methaneMoleFraction)) ppm CH₄; validated CH₄ composition is \(ppmString(supportedMoleFraction)) ppm."
+            ))
+        }
+
+        return OperatingRangeGuidance(
+            title: "Validated range",
+            summary: summary,
+            currentInputIssues: issues,
+            propertyAvailability: propertyAvailabilityLines(
+                requestedProperties: requestedProperties,
+                supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume],
+                system: "CO₂+CH₄"
+            ),
+            phaseDiagram: [
+                .init(
+                    severity: vle.supportsContinuousEnvelope ? .information : .unsupported,
+                    title: "Phase diagram",
+                    detail: "Continuous bubble/dew envelope is production-enabled only at \(ppmString(supportedMoleFraction)) ppm CH₄ from 19.98 °C to 24.99 °C; no validated critical marker."
+                )
+            ],
+            suggestions: methaneSuggestions(
+                currentMoleFraction: methaneMoleFraction,
+                supportedMoleFraction: supportedMoleFraction
+            )
+        )
+    }
+
+    private func propertyAvailabilityLines(
+        requestedProperties: Set<PropertyID>,
+        supportedProperties: Set<PropertyID>,
+        system: String
+    ) -> [OperatingGuidanceLine] {
+        let unavailable = requestedProperties.subtracting(supportedProperties)
+        var lines: [OperatingGuidanceLine] = []
+        if !unavailable.isDisjoint(with: [
+            .isobaricHeatCapacity,
+            .isochoricHeatCapacity,
+            .heatCapacityRatio,
+            .speedOfSound
+        ]) {
+            lines.append(.init(
+                severity: .unsupported,
+                title: "Cp/Cv/speed",
+                detail: "Mixture heat capacities and speed of sound are not production-validated for \(system)."
+            ))
+        }
+        if !unavailable.isDisjoint(with: [.dynamicViscosity, .thermalConductivity]) {
+            lines.append(.init(
+                severity: .unsupported,
+                title: "Transport",
+                detail: "Viscosity and thermal conductivity are unavailable for \(system); no fallback calculation is used."
+            ))
+        }
+        if !unavailable.isDisjoint(with: [.enthalpy, .entropy, .internalEnergy]) {
+            lines.append(.init(
+                severity: .unsupported,
+                title: "h/u/s",
+                detail: "Reference-state properties are unavailable for \(system)."
+            ))
+        }
+        return lines
+    }
+
+    private func hydrogenSuggestions(
+        currentMoleFraction: Double,
+        supportedMoleFraction: Double,
+        limits: [TeqpTemperaturePressureLimit]
+    ) -> [OperatingGuidanceSuggestion] {
+        var suggestions: [OperatingGuidanceSuggestion] = []
+        if abs(currentMoleFraction - supportedMoleFraction)
+            > CalculationValidator.compositionTolerance {
+            suggestions.append(.init(
+                id: "use-h2-\(supportedMoleFraction)",
+                label: "Use \(ppmString(supportedMoleFraction)) ppm H₂",
+                action: .setComposition(
+                    component: .hydrogen,
+                    moleFraction: supportedMoleFraction
+                )
+            ))
+        }
+        suggestions.append(contentsOf: limits.map {
+            OperatingGuidanceSuggestion(
+                id: "use-h2-temperature-\($0.temperatureK)",
+                label: "\(celsiusString($0.temperatureK)) °C",
+                action: .setTemperature(kelvin: $0.temperatureK)
+            )
+        })
+        return suggestions
+    }
+
+    private func methaneSuggestions(
+        currentMoleFraction: Double,
+        supportedMoleFraction: Double
+    ) -> [OperatingGuidanceSuggestion] {
+        guard abs(currentMoleFraction - supportedMoleFraction)
+            > CalculationValidator.compositionTolerance
+        else { return [] }
+        return [
+            OperatingGuidanceSuggestion(
+                id: "use-ch4-\(supportedMoleFraction)",
+                label: "Use \(ppmString(supportedMoleFraction)) ppm CH₄",
+                action: .setComposition(
+                    component: .methane,
+                    moleFraction: supportedMoleFraction
+                )
+            )
+        ]
+    }
+
+    private func exactTemperatureList(
+        _ limits: [TeqpTemperaturePressureLimit]
+    ) -> String {
+        let values = limits.map { "\(celsiusString($0.temperatureK)) °C" }
+        guard values.count > 1 else { return values.first ?? "Unavailable" }
+        return values.dropLast().joined(separator: ", ")
+            + " or "
+            + (values.last ?? "")
+    }
+
+    private func pressureRangeString(_ limit: TeqpTemperaturePressureLimit) -> String {
+        "\(barString(limit.minimumPressurePa))–\(barString(limit.maximumPressurePa)) bar(a)"
+    }
+
+    private func ppmString(_ moleFraction: Double) -> String {
+        let ppm = moleFraction * 1_000_000
+        if abs(ppm.rounded() - ppm) < 0.05 {
+            return "\(Int(ppm.rounded()))"
+        }
+        return String(format: "%.0f", ppm)
+    }
+
+    private func celsiusString(_ kelvin: Double) -> String {
+        let celsius = TemperatureUnit.celsius.fromKelvin(kelvin)
+        return abs(celsius.rounded() - celsius) < 0.005
+            ? String(format: "%.0f", celsius)
+            : String(format: "%.2f", celsius)
+    }
+
+    private func barString(_ pascal: Double) -> String {
+        let bar = PressureUnit.bara.fromPascal(pascal)
+        return String(format: "%.1f", bar)
     }
 
     private func guardedPropertyValue(

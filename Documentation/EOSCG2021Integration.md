@@ -147,6 +147,19 @@ full 180-row Ghafri matrix converges, but lower-temperature dense,
 liquid-like and near-critical deviations are diagnostic only and do not justify
 broader CH₄ support.
 
+## Current expansion audit
+
+The operating-range expansion work did not production-enable any additional
+CH₄ or H₂ composition interval. Search/audit leads identified potentially
+useful primary numerical sources, including the NIST ThermoML CO₂+CH₄ density
+entry for Liu et al. 2017 (`10.1016/j.jct.2016.11.009`), the Petropoulou et
+al. 2018 CO₂+CH₄ VLE source (`10.1016/j.fluid.2018.01.011`), Sánchez-Vicente
+et al. CO₂+H₂ density context (`10.1016/j.ijggc.2012.12.002`) and newer
+CO₂+H₂ density/viscosity work (`10.1021/acs.jced.4c00666`). These are not
+encoded production validation artifacts in this repository. No composition
+range, interpolation authority, critical marker, caloric/acoustic property, or
+simultaneous H₂+CH₄ support is inferred from them.
+
 A runnable Clapeyron EOS_CG oracle was not available in the managed
 Xcode/Codex environment. Instead,
 `Documentation/Validation/EOSCGStaticIdentityAudit.json` compares the pinned

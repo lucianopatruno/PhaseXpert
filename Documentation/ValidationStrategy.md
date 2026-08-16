@@ -103,6 +103,16 @@ derivative and finite-difference implementation checks, then separate
 property-specific experimental validation; finite-difference agreement alone is
 not a production validation gate.
 
+## Range-guidance synchronization
+
+Advanced CCS range guidance is tested as part of provider validation. Tests
+assert that advertised H₂ temperatures are accepted by the provider gate,
+unsupported H₂ temperatures are flagged before calculation, CH₄ density
+pressure guidance matches the encoded Ghafri slices, and advertised CH₄ phase
+diagram support matches the Petropoulou phase-envelope gate. Future scientific
+expansions must update provider capability metadata first, then prove that UI
+guidance and provider enforcement remain synchronized.
+
 
 ## Expanded pure-CO₂ property validation plan
 
