@@ -12,7 +12,40 @@
   "implementationVerification": {
     "swiftPackageContractTests": "TeqpProviderTests include finite diagnostic contract coverage for EOS-CG CO2+H2 and CO2+CH4 thermodynamic states plus fixed-composition critical result mapping.",
     "nativeBridgeTests": "PhaseXpertTests/TeqpNativeBridgeValidationTests adds iOS native ABI smoke coverage for CO2+CH4 and CO2+H2 thermodynamic diagnostics and CO2+CH4 fixed-composition critical diagnostics. These require the Xcode/iOS test runner and linked native XCFramework.",
-    "xcodeSnippetStatus": "RunCodeSnippet reached compilation after removing async RunLoop usage but failed at runtime linking in the snippet harness; this is recorded as an infrastructure limitation of snippet execution, not a scientific validation pass."
+    "macOSThrowawayProbe": {
+      "status": "PASS_IMPLEMENTATION_SMOKE_ONLY",
+      "method": "Compiled Native/TeqpBridge/src/PhaseXpertTeqpBridge.cpp with the same generated teqp headers into a temporary macOS command-line probe and called the exported C ABI directly.",
+      "co2MethaneState": {
+        "xCH4": 0.05,
+        "temperatureK": 308.15,
+        "pressurePa": 8000000.0,
+        "densityKgM3": 272.883155196,
+        "molarDensityMolM3": 6403.98660914,
+        "dpdrhoMolarJMol": 400.448868895,
+        "dpdtPaK": 93181.2279724,
+        "cvJkgK": 1053.24859415,
+        "cpJkgK": 4876.60528666,
+        "speedOfSoundMS": 208.594924848,
+        "minimumStabilityEigenvalue": 0.0596704669884,
+        "densityRootCount": 1
+      },
+      "co2HydrogenState": {
+        "xH2": 0.05362,
+        "temperatureK": 293.15,
+        "pressurePa": 3000000.0,
+        "densityKgM3": 61.2681310548,
+        "molarDensityMolM3": 1467.21597922,
+        "dpdrhoMolarJMol": 1679.81969766,
+        "dpdtPaK": 14957.2180915,
+        "cvJkgK": 770.064983567,
+        "cpJkgK": 1204.37535494,
+        "speedOfSoundMS": 250.829310728,
+        "minimumStabilityEigenvalue": 1.186227445,
+        "densityRootCount": 1
+      },
+      "scientificMeaning": "Implementation smoke only. These numbers are not experimental validation and are not production gates."
+    },
+    "xcodeSnippetStatus": "RunCodeSnippet in the package target failed because the snippet harness did not link CoolProp bridge symbols; RunCodeSnippet in the app target was blocked by a Release/-O preview configuration. These are recorded as snippet infrastructure limitations, not scientific validation passes."
   },
   "productionDecision": {
     "cv": "unavailable for CO2+H2 and CO2+CH4",

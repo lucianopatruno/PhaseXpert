@@ -19,6 +19,18 @@
       "Native iOS smoke coverage calls the critical ABI and verifies finite critical-state fields and residual thresholds when the linked XCFramework is available."
     ]
   },
+  "diagnosticResult": {
+    "status": "CONVERGED_DIAGNOSTIC_ONLY",
+    "temperatureK": 300.742258754,
+    "pressurePa": 7774308.83659,
+    "pressureBarA": 77.7430883659,
+    "molarDensityMolM3": 10457.8029742,
+    "densityKgM3": 445.622148545,
+    "minimumStabilityEigenvalue": -5.13835969209e-16,
+    "thirdOrderResidual": -2.78165619878e-18,
+    "iterationCount": 7,
+    "source": "Temporary macOS C++ probe compiled from the native bridge source against the pinned teqp v0.23.1 generated headers. This is implementation diagnostics, not independent validation."
+  },
   "productionDecision": {
     "criticalEndpoint": "diagnostic_only",
     "reason": "The Petropoulou critical-region rows do not provide an exact independent critical endpoint validation at fixed zCH4 = 0.05. PhaseXpert therefore keeps the calculated critical state out of the production-visible phase diagram.",

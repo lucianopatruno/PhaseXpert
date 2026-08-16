@@ -411,6 +411,26 @@ struct BinaryThermodynamicProperties {
     double minimum_stability_eigenvalue;
 };
 
+template<typename Operation>
+auto derivative_step(const char *label, Operation operation) {
+    try {
+        return operation();
+    } catch (const std::exception &error) {
+        std::string message = label;
+        if (std::string(error.what()).empty()) {
+            message += " failed with empty native exception.";
+        } else {
+            message += " failed: ";
+            message += error.what();
+        }
+        throw std::runtime_error(message);
+    } catch (...) {
+        std::string message = label;
+        message += " failed with unknown native exception.";
+        throw std::runtime_error(message);
+    }
+}
+
 struct BinaryCriticalPoint {
     bool converged;
     int iteration_count;
@@ -962,36 +982,52 @@ private:
             teqp::TDXDerivatives<Model, double, Eigen::ArrayXd>;
         using IdealDerivatives =
             teqp::TDXDerivatives<teqp::IdealHelmholtz, double, Eigen::ArrayXd>;
-        const auto residual_density_derivatives =
-            ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
+        const auto residual_density_derivatives = derivative_step(
+            "residual density derivatives",
+            [&]() {
+                return ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
                 model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
+                );
+            }
+        );
         const double ar01 = residual_density_derivatives[1];
         const double ar02 = residual_density_derivatives[2];
-        const double ar11 =
-            ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
+        const double ar11 = derivative_step(
+            "residual mixed temperature-density derivative",
+            [&]() {
+                return ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
                 model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
-        const double ar20 =
-            ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                );
+            }
+        );
+        const double ar20 = derivative_step(
+            "residual second temperature derivative",
+            [&]() {
+                return ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
                 model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
-        const double a020 =
-            IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                );
+            }
+        );
+        const double a020 = derivative_step(
+            "ideal second temperature derivative",
+            [&]() {
+                return IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
                 ideal_model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
+                );
+            }
+        );
 
         const double cv_over_r = -(a020 + ar20);
         const double pressure_derivative_dimensionless = 1.0 + 2.0 * ar01 + ar02;
@@ -1362,36 +1398,52 @@ private:
             teqp::TDXDerivatives<Model, double, Eigen::ArrayXd>;
         using IdealDerivatives =
             teqp::TDXDerivatives<teqp::IdealHelmholtz, double, Eigen::ArrayXd>;
-        const auto residual_density_derivatives =
-            ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
+        const auto residual_density_derivatives = derivative_step(
+            "residual density derivatives",
+            [&]() {
+                return ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
                 model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
+                );
+            }
+        );
         const double ar01 = residual_density_derivatives[1];
         const double ar02 = residual_density_derivatives[2];
-        const double ar11 =
-            ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
+        const double ar11 = derivative_step(
+            "residual mixed temperature-density derivative",
+            [&]() {
+                return ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
                 model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
-        const double ar20 =
-            ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                );
+            }
+        );
+        const double ar20 = derivative_step(
+            "residual second temperature derivative",
+            [&]() {
+                return ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
                 model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
-        const double a020 =
-            IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                );
+            }
+        );
+        const double a020 = derivative_step(
+            "ideal second temperature derivative",
+            [&]() {
+                return IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
                 ideal_model_,
                 temperature_k,
                 total_molar_density_mol_m3,
                 molefractions
-            );
+                );
+            }
+        );
 
         const double cv_over_r = -(a020 + ar20);
         const double pressure_derivative_dimensionless = 1.0 + 2.0 * ar01 + ar02;
@@ -2229,10 +2281,15 @@ void fill_binary_thermodynamic_result(
         throw std::runtime_error("teqp did not find a finite EOS-CG mixture density root.");
     }
     const auto selected = lowest_density_root(roots);
-    const auto properties = model.thermodynamicProperties(
-        temperature_k,
-        selected.molar_density_mol_m3,
-        component2_mole_fraction
+    const auto properties = derivative_step(
+        "binary thermodynamic-property evaluation",
+        [&]() {
+            return model.thermodynamicProperties(
+                temperature_k,
+                selected.molar_density_mol_m3,
+                component2_mole_fraction
+            );
+        }
     );
     const double density = selected.molar_density_mol_m3
         * model.mixtureMolarMassKgMol(component2_mole_fraction);
