@@ -62,6 +62,10 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
 - composition and model-domain validation with explicit normalization
 - default molar-ppm impurity entry with mol% as an alternative; in both bases,
   impurities are entered explicitly and CO₂ is displayed as the exact remainder
+- Advanced CCS mixture limits are shown before calculation from provider
+  capability metadata: validated ppm, exact or bounded temperatures, contextual
+  pressure ranges in bar(a), phase-diagram availability and explicit
+  user-triggered validated-value suggestions
 - provider-independent request, response, metadata and phase-envelope contracts
 - a CoolProp 8.0.0 provider with expanded pure-CO₂ thermodynamic, acoustic and
   transport outputs plus restricted dry CO₂-rich mixture density/phase calculations; molar mass,
@@ -181,6 +185,9 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   fixed-composition homogeneous Cv, Cp and speed of sound for CO₂+H₂ and
   CO₂+CH₄. CH₄ critical-region and 303.15 K VLE calculations remain diagnostic
   and are not drawn as production critical termination.
+- Advanced CCS guidance is generated from the same capability metadata used by
+  provider validation. It does not broaden support, does not snap inputs, and
+  does not expose diagnostic-only EOS-computable regions as production domains.
 
 ## Documentation
 

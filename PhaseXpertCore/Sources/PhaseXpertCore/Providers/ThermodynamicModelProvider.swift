@@ -147,6 +147,9 @@ public struct PhaseEnvelopeResponse: Codable, Equatable, Sendable {
 public protocol ThermodynamicModelProvider: Sendable {
     var descriptor: ModelDescriptor { get }
     func applicabilityIssues(for composition: [MixtureComponent]) -> [ValidationIssue]
+    func operatingRangeGuidance(
+        for context: OperatingGuidanceContext
+    ) -> OperatingRangeGuidance?
     func calculate(_ request: CalculationRequest) async throws -> CalculationResponse
     func phaseEnvelope(_ request: PhaseEnvelopeRequest) async throws -> PhaseEnvelopeResponse
 }
@@ -158,6 +161,12 @@ public extension ThermodynamicModelProvider {
     /// calculator can block an unsupported request before model execution.
     func applicabilityIssues(for composition: [MixtureComponent]) -> [ValidationIssue] {
         []
+    }
+
+    func operatingRangeGuidance(
+        for context: OperatingGuidanceContext
+    ) -> OperatingRangeGuidance? {
+        nil
     }
 }
 

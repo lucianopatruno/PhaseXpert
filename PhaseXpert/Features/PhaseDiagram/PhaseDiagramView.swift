@@ -418,46 +418,104 @@ struct PhaseDiagramView: View {
 
     @ViewBuilder
     private func diagramContent(for record: CalculationRecord) -> some View {
-        if viewModel.phaseMapRecord != nil {
-            PhaseMapContent(record: record, viewModel: viewModel)
-        } else if let scopeMessage = viewModel.scopeMessage {
-            ContentUnavailableView {
-                Label(PhaseDiagramEligibility.title, systemImage: "chart.xyaxis.line")
-            } description: {
-                VStack(spacing: IFESpacing.small) {
-                    Text(scopeMessage)
-                    Text(PhaseDiagramEligibility.mixturePropertySupportMessage)
+        VStack(spacing: 0) {
+            if let guidance = phaseDiagramGuidance(for: record) {
+                IFECard {
+                    VStack(alignment: .leading, spacing: IFESpacing.small) {
+                        Text("Phase diagram limits")
+                            .font(.headline)
+                        ForEach(guidance) { line in
+                            Label {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(line.title)
+                                        .font(.subheadline.weight(.semibold))
+                                    Text(line.detail)
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+                            } icon: {
+                                Image(
+                                    systemName: line.severity == .unsupported
+                                        ? "xmark.octagon.fill"
+                                        : "checkmark.circle.fill"
+                                )
+                                .foregroundStyle(
+                                    line.severity == .unsupported
+                                        ? Color.pxError
+                                        : Color.pxSuccess
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding([.horizontal, .top], IFESpacing.medium)
+                .accessibilityIdentifier("phase-diagram-limits")
+            }
+
+            Group {
+                if viewModel.phaseMapRecord != nil {
+                    PhaseMapContent(record: record, viewModel: viewModel)
+                } else if let scopeMessage = viewModel.scopeMessage {
+                    ContentUnavailableView {
+                        Label(PhaseDiagramEligibility.title, systemImage: "chart.xyaxis.line")
+                    } description: {
+                        VStack(spacing: IFESpacing.small) {
+                            Text(scopeMessage)
+                            Text(PhaseDiagramEligibility.mixturePropertySupportMessage)
+                        }
+                    }
+                    .accessibilityIdentifier("phase-diagram-pure-co2-scope")
+                } else if viewModel.isLoading {
+                    VStack(spacing: IFESpacing.medium) {
+                        ProgressView()
+                        Text("Calculating CO₂ phase diagram…")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityIdentifier("phase-diagram-loading")
+                } else if let error = viewModel.errorMessage {
+                    ContentUnavailableView(
+                        PhaseDiagramEligibility.title,
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(error)
+                    )
+                    .accessibilityIdentifier("phase-diagram-error")
+                } else if let response = viewModel.response, response.isAvailable {
+                    PhaseBoundaryChart(record: record, response: response)
+                } else {
+                    ContentUnavailableView(
+                        PhaseDiagramEligibility.title,
+                        systemImage: "chart.xyaxis.line",
+                        description: Text(
+                            viewModel.response?.warnings.joined(separator: " ")
+                                ?? "Run a pure CO₂ calculation to view the CO₂ phase diagram."
+                        )
+                    )
+                    .accessibilityIdentifier("phase-diagram-empty")
                 }
             }
-            .accessibilityIdentifier("phase-diagram-pure-co2-scope")
-        } else if viewModel.isLoading {
-            VStack(spacing: IFESpacing.medium) {
-                ProgressView()
-                Text("Calculating CO₂ phase diagram…")
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .accessibilityIdentifier("phase-diagram-loading")
-        } else if let error = viewModel.errorMessage {
-            ContentUnavailableView(
-                PhaseDiagramEligibility.title,
-                systemImage: "exclamationmark.triangle",
-                description: Text(error)
-            )
-            .accessibilityIdentifier("phase-diagram-error")
-        } else if let response = viewModel.response, response.isAvailable {
-            PhaseBoundaryChart(record: record, response: response)
-        } else {
-            ContentUnavailableView(
-                PhaseDiagramEligibility.title,
-                systemImage: "chart.xyaxis.line",
-                description: Text(
-                    viewModel.response?.warnings.joined(separator: " ")
-                        ?? "Run a pure CO₂ calculation to view the CO₂ phase diagram."
-                )
-            )
-            .accessibilityIdentifier("phase-diagram-empty")
         }
+    }
+
+    private func phaseDiagramGuidance(
+        for record: CalculationRecord
+    ) -> [OperatingGuidanceLine]? {
+        guard
+            record.request.modelID == "teqp-pure-co2-experimental",
+            let provider = ProviderRegistry().provider(id: record.request.modelID)
+        else {
+            return nil
+        }
+        let guidance = provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: record.request.pressurePa,
+                temperatureK: record.request.temperatureK,
+                composition: record.request.composition,
+                requestedProperties: record.request.requestedProperties
+            )
+        )
+        guard let lines = guidance?.phaseDiagram, !lines.isEmpty else { return nil }
+        return lines
     }
 }
 

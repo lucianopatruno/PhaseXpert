@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-16",
+  "purpose": "Scientific decision record for PR #47 after executing additional CCS mixture validation bake-offs.",
+  "densityExpansion": {
+    "methaneSourceArtifact": "Documentation/Validation/Liu2017MethaneDensityExpansionBakeoff.json",
+    "methaneCompositionSummaries": [
+      {
+        "methaneMoleFraction": 0.1012,
+        "methanePpm": 101200.0,
+        "pointCount": 44,
+        "convergedPointCount": 44,
+        "temperatureRangeK": [
+          299.95,
+          308.34
+        ],
+        "pressureRangeMPa": [
+          3.998,
+          18.003
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "densityAARDPercent": 1.7674606647817912,
+        "worstRelativeDeviationPercent": 7.675086784634123,
+        "worstRelativeDeviationRow": 244,
+        "productionDecision": "rejectedForProduction",
+        "decisionRationale": "Full composition slice is not production-enabled because the worst density deviation exceeds the existing methane production-gate precedent of approximately 2% and the source itself identifies high-CO2 near-critical disagreement; retain as quantitative diagnostic evidence."
+      },
+      {
+        "methaneMoleFraction": 0.2015,
+        "methanePpm": 201500.0,
+        "pointCount": 44,
+        "convergedPointCount": 44,
+        "temperatureRangeK": [
+          299.97,
+          308.22
+        ],
+        "pressureRangeMPa": [
+          3.997,
+          18.071
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "densityAARDPercent": 1.2240352870124627,
+        "worstRelativeDeviationPercent": 2.2295099216588365,
+        "worstRelativeDeviationRow": 191,
+        "productionDecision": "rejectedForProduction",
+        "decisionRationale": "Full composition slice is not production-enabled because the worst density deviation exceeds the existing methane production-gate precedent of approximately 2% and the source itself identifies high-CO2 near-critical disagreement; retain as quantitative diagnostic evidence."
+      },
+      {
+        "methaneMoleFraction": 0.3985,
+        "methanePpm": 398500.0,
+        "pointCount": 44,
+        "convergedPointCount": 44,
+        "temperatureRangeK": [
+          299.61,
+          308.22
+        ],
+        "pressureRangeMPa": [
+          3.979,
+          18.0
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "densityAARDPercent": 1.3108135947097752,
+        "worstRelativeDeviationPercent": 2.2417261013926453,
+        "worstRelativeDeviationRow": 171,
+        "productionDecision": "rejectedForProduction",
+        "decisionRationale": "Full composition slice is not production-enabled because the worst density deviation exceeds the existing methane production-gate precedent of approximately 2% and the source itself identifies high-CO2 near-critical disagreement; retain as quantitative diagnostic evidence."
+      },
+      {
+        "methaneMoleFraction": 0.6003,
+        "methanePpm": 600300.0,
+        "pointCount": 44,
+        "convergedPointCount": 44,
+        "temperatureRangeK": [
+          299.93,
+          308.26
+        ],
+        "pressureRangeMPa": [
+          4.001,
+          18.002
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "densityAARDPercent": 0.3372719925972978,
+        "worstRelativeDeviationPercent": 0.5309068878603573,
+        "worstRelativeDeviationRow": 117,
+        "productionDecision": "diagnosticOnlyCompositionNotCCSCO2Rich",
+        "decisionRationale": "The full slice is below the prior 2% worst-deviation precedent, but it is methane-rich rather than CO2-rich CCS service, so it is not promoted to a production Advanced CCS operating domain."
+      },
+      {
+        "methaneMoleFraction": 0.7983,
+        "methanePpm": 798300.0,
+        "pointCount": 45,
+        "convergedPointCount": 45,
+        "temperatureRangeK": [
+          299.95,
+          308.2
+        ],
+        "pressureRangeMPa": [
+          3.662,
+          18.001
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "densityAARDPercent": 0.11369682954917373,
+        "worstRelativeDeviationPercent": 0.3191453384860011,
+        "worstRelativeDeviationRow": 85,
+        "productionDecision": "diagnosticOnlyCompositionNotCCSCO2Rich",
+        "decisionRationale": "The full slice is below the prior 2% worst-deviation precedent, but it is methane-rich rather than CO2-rich CCS service, so it is not promoted to a production Advanced CCS operating domain."
+      },
+      {
+        "methaneMoleFraction": 0.9002,
+        "methanePpm": 900200.0,
+        "pointCount": 50,
+        "convergedPointCount": 50,
+        "temperatureRangeK": [
+          299.97,
+          308.24
+        ],
+        "pressureRangeMPa": [
+          2.118,
+          18.004
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "densityAARDPercent": 0.06346722086403107,
+        "worstRelativeDeviationPercent": 0.14603911329276423,
+        "worstRelativeDeviationRow": 38,
+        "productionDecision": "diagnosticOnlyCompositionNotCCSCO2Rich",
+        "decisionRationale": "The full slice is below the prior 2% worst-deviation precedent, but it is methane-rich rather than CO2-rich CCS service, so it is not promoted to a production Advanced CCS operating domain."
+      }
+    ],
+    "methaneDecision": "No new CO2-rich CO2+CH4 density production slice enabled. xCH4=0.1012 and 0.2015 are the CCS-relevant additional Liu slices, but worst deviations are 7.675087% and 2.229510%, exceeding the existing approximately 2% worst-error precedent. Higher methane fractions with lower errors are not CO2-rich CCS operating domains.",
+    "hydrogenSourceArtifact": "Documentation/Validation/Cheng2019HydrogenDensityExpansionBakeoff.json",
+    "hydrogenCompositionSummaries": [
+      {
+        "hydrogenMoleFraction": 0.6005,
+        "hydrogenPpm": 600500.0,
+        "carbonDioxideMoleFraction": 0.3995,
+        "pointCount": 8,
+        "convergedPointCount": 8,
+        "temperatureRangeK": [
+          673.1,
+          673.1
+        ],
+        "pressureRangeMPa": [
+          0.609,
+          22.59
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "molarDensityAARDPercent": 0.4255320010928021,
+        "worstRelativeDeviationPercent": 1.5006696825520887,
+        "worstRelativeDeviationRow": 1,
+        "productionDecision": "rejectedForProduction",
+        "decisionRationale": "Not production-enabled for Advanced CCS Properties because the rows are hydrogen-rich high-temperature gasification conditions, not CO2-rich CCS pipeline/storage conditions, and they do not support expanding the existing CO2-rich xH2 = 0.05362 production gate."
+      },
+      {
+        "hydrogenMoleFraction": 0.6992,
+        "hydrogenPpm": 699200.0,
+        "carbonDioxideMoleFraction": 0.3008,
+        "pointCount": 8,
+        "convergedPointCount": 8,
+        "temperatureRangeK": [
+          673.1,
+          673.1
+        ],
+        "pressureRangeMPa": [
+          0.672,
+          25.05
+        ],
+        "bridgePhaseCodes": [
+          2
+        ],
+        "molarDensityAARDPercent": 0.49357781952141105,
+        "worstRelativeDeviationPercent": 1.9421224468085099,
+        "worstRelativeDeviationRow": 9,
+        "productionDecision": "rejectedForProduction",
+        "decisionRationale": "Not production-enabled for Advanced CCS Properties because the rows are hydrogen-rich high-temperature gasification conditions, not CO2-rich CCS pipeline/storage conditions, and they do not support expanding the existing CO2-rich xH2 = 0.05362 production gate."
+      }
+    ],
+    "hydrogenDecision": "No new CO2-rich CO2+H2 density production slice enabled. Cheng 2019 validates EOS-CG numerics at xH2=0.6005 and 0.6992, but these hydrogen-rich 673 K gasification states do not support expanding the current CO2-rich xH2=0.05362 CCS domain."
+  },
+  "methaneVLEAdditionalComposition": {
+    "sourceArtifact": "Documentation/Validation/Petropoulou2018MethaneVLEBakeoff.json",
+    "allRows": {
+      "averageLiquidCompositionDeviation": 4.799329886151703e-17,
+      "averageVaporCompositionDeviation": 0.006489560518030755,
+      "converged": 37,
+      "nonconverged": 0,
+      "points": 37,
+      "pressureAARDPercent": 0.4166638624569919,
+      "worstLiquidCompositionDeviation": 1.66533453694e-16,
+      "worstPressureRelativeDeviationPercent": 1.78701766827,
+      "worstVaporCompositionDeviation": 0.0262579747323
+    },
+    "ordinaryRows": {
+      "averageLiquidCompositionDeviation": 5.4990734188476395e-17,
+      "averageVaporCompositionDeviation": 0.009146336413153976,
+      "converged": 25,
+      "nonconverged": 0,
+      "points": 25,
+      "pressureAARDPercent": 0.585602458987648,
+      "worstLiquidCompositionDeviation": 1.66533453694e-16,
+      "worstPressureRelativeDeviationPercent": 1.78701766827,
+      "worstVaporCompositionDeviation": 0.0262579747323
+    },
+    "nonFivePercentLiquidMethaneRows": {
+      "pointCount": 36,
+      "pressureAARDPercent": 0.41599262819879723,
+      "worstPressureRelativeDeviationPercent": 1.78701766827,
+      "averageVaporCompositionDeviation": 0.006664767267715193,
+      "worstVaporCompositionDeviation": 0.0262579747323,
+      "liquidMethaneRange": [
+        1e-05,
+        0.11218
+      ],
+      "vaporMethaneRange": [
+        1e-05,
+        0.13134
+      ]
+    },
+    "nearFivePercentLiquidMethaneRows": {
+      "pointCount": 1,
+      "pressureAARDPercent": 0.440828295752,
+      "worstPressureRelativeDeviationPercent": 0.440828295752,
+      "averageVaporCompositionDeviation": 0.000182117529391,
+      "worstVaporCompositionDeviation": 0.000182117529391,
+      "liquidMethaneRange": [
+        0.04982,
+        0.04982
+      ],
+      "vaporMethaneRange": [
+        0.10137,
+        0.10137
+      ]
+    },
+    "decision": "No additional fixed-composition phase-envelope production gate enabled. Petropoulou rows validate saturated liquid/vapor branch points across liquid xCH4 approximately 0.00001-0.11218, but they do not provide an independent fixed-overall-composition envelope domain beyond the existing xCH4=0.05 production gate. The 303.145 K near-critical continuation remains diagnostic."
+  },
+  "hydrogenTemperatureInterpolation": {
+    "sourceArtifact": "Documentation/Validation/EOSCGDirectTeqpDensityProbeResults.json",
+    "isothermSummaries": [
+      {
+        "temperatureK": 273.15,
+        "temperatureC": 0.0,
+        "pointCount": 6,
+        "pressureRangeMPa": [
+          0.51352,
+          3.03596
+        ],
+        "densityAARDPercent": 0.24292011666666666,
+        "worstRelativeDeviationPercent": 0.370799
+      },
+      {
+        "temperatureK": 293.15,
+        "temperatureC": 20.0,
+        "pointCount": 6,
+        "pressureRangeMPa": [
+          0.50316,
+          4.98489
+        ],
+        "densityAARDPercent": 0.1941727666666667,
+        "worstRelativeDeviationPercent": 0.31999
+      },
+      {
+        "temperatureK": 323.15,
+        "temperatureC": 50.0,
+        "pointCount": 7,
+        "pressureRangeMPa": [
+          0.54921,
+          5.99737
+        ],
+        "densityAARDPercent": 0.1396846142857143,
+        "worstRelativeDeviationPercent": 0.213092
+      }
+    ],
+    "decision": "Discrete H2 temperatures retained. The Souissi production evidence contains only three experimental isotherms, with no intermediate-temperature numerical rows; smooth endpoint errors alone are insufficient authority to expose continuous interpolation between 273.15 K, 293.15 K and 323.15 K."
+  },
+  "caloricProperties": {
+    "sourceArtifact": "Documentation/Validation/MixtureDerivativePropertiesAudit2026-08-16.json",
+    "decision": "CO2+CH4 and CO2+H2 mixture Cv, Cp and speed of sound remain diagnostic/unavailable to users. The implementation exists, but this bounded pass did not acquire independent primary numerical matrices for production validation."
+  },
+  "productionCapabilitiesAfterMilestone": {
+    "hydrogenDensity": "unchanged: xH2 = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; Souissi per-isotherm gas pressure ranges only",
+    "methaneDensity": "unchanged: xCH4 = 0.05 exactly; Ghafri 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical slices",
+    "methaneVLE": "unchanged: xCH4 = 0.05 fixed production gate; 293.13-298.142 K ordinary Petropoulou continuous bubble/dew segment",
+    "criticalLocus": "diagnostic only; no production critical marker enabled",
+    "mixtureCaloricProperties": "diagnostic only; not user-visible"
+  }
+}

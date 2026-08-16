@@ -247,6 +247,25 @@ struct CalculatorView: View {
                     }
                 }
 
+                if let guidance = viewModel.operatingRangeGuidance, !guidance.isEmpty {
+                    Section {
+                        ValidatedRangeGuidanceView(guidance: guidance) { suggestion in
+                            focusedField = nil
+                            viewModel.applyGuidanceSuggestion(suggestion)
+                        }
+                    } header: {
+                        IFESectionHeader(
+                            step: 4,
+                            title: guidance.title,
+                            subtitle: "Production validation limits before calculation."
+                        )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                focusedField = nil
+                            }
+                    }
+                }
+
                 if !viewModel.validationReport.issues.isEmpty {
                     Section {
                         ForEach(viewModel.validationReport.issues) { issue in
@@ -265,7 +284,7 @@ struct CalculatorView: View {
                             }
                         }
                     } header: {
-                        IFESectionHeader(step: 4, title: "Validation and capability state")
+                        IFESectionHeader(step: 5, title: "Validation and capability state")
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 focusedField = nil
@@ -295,7 +314,7 @@ struct CalculatorView: View {
                     .disabled(viewModel.isCalculating || !viewModel.validationReport.canCalculate)
                     .accessibilityIdentifier("run-calculation")
                 } header: {
-                    IFESectionHeader(step: 5, title: "Run calculation")
+                    IFESectionHeader(step: 6, title: "Run calculation")
                 }
 
                 if let record = viewModel.calculationRecord {
@@ -681,6 +700,91 @@ struct CalculatorView: View {
             "Operational local model. Full provenance is available in Calculation Details."
         case .unavailable:
             "This model is not available in this version."
+        }
+    }
+}
+
+private struct ValidatedRangeGuidanceView: View {
+    let guidance: OperatingRangeGuidance
+    let applySuggestion: (OperatingGuidanceSuggestion) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            ForEach(guidance.summary) { line in
+                GuidanceLineView(line: line)
+            }
+
+            ForEach(guidance.currentInputIssues) { line in
+                GuidanceLineView(line: line)
+            }
+
+            ForEach(guidance.propertyAvailability) { line in
+                GuidanceLineView(line: line)
+            }
+
+            ForEach(guidance.phaseDiagram) { line in
+                GuidanceLineView(line: line)
+            }
+
+            if !guidance.suggestions.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: IFESpacing.small) {
+                        ForEach(guidance.suggestions) { suggestion in
+                            Button(suggestion.label) {
+                                applySuggestion(suggestion)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .accessibilityIdentifier("guidance-suggestion-\(suggestion.id)")
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+        .padding(.vertical, IFESpacing.xSmall)
+        .accessibilityIdentifier("validated-range-guidance")
+    }
+}
+
+private struct GuidanceLineView: View {
+    let line: OperatingGuidanceLine
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(line.title)
+                    .font(.subheadline.weight(.semibold))
+                Text(line.detail)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: iconName)
+                .foregroundStyle(iconColor)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var iconName: String {
+        switch line.severity {
+        case .information:
+            "checkmark.circle.fill"
+        case .warning:
+            "exclamationmark.triangle.fill"
+        case .unsupported:
+            "xmark.octagon.fill"
+        }
+    }
+
+    private var iconColor: Color {
+        switch line.severity {
+        case .information:
+            Color.pxSuccess
+        case .warning:
+            Color.pxWarning
+        case .unsupported:
+            Color.pxError
         }
     }
 }

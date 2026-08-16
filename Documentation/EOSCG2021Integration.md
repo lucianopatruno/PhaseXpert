@@ -147,6 +147,25 @@ full 180-row Ghafri matrix converges, but lower-temperature dense,
 liquid-like and near-critical deviations are diagnostic only and do not justify
 broader CH₄ support.
 
+## Current expansion audit
+
+The operating-range expansion work did not production-enable any additional
+CH₄ or H₂ composition interval. `Documentation/Validation/Liu2017MethaneDensityExpansionBakeoff.json`
+encodes 271 NIST ThermoML CO₂+CH₄ density rows from Liu et al. 2017 at six
+non-5% CH₄ compositions. The CO₂-rich additional slices were rejected for
+production: xCH₄ = 0.1012 gives 1.767461% AARD and 7.675087% worst density
+deviation, and xCH₄ = 0.2015 gives 1.224035% AARD and 2.229510% worst density
+deviation. Higher-CH₄ slices converge with smaller deviations but are not
+CO₂-rich CCS operating domains. `Documentation/Validation/Cheng2019HydrogenDensityExpansionBakeoff.json`
+encodes 16 NIST ThermoML CO₂+H₂ density rows from Cheng et al. 2019 at
+xH₂ = 0.6005 and 0.6992; those hydrogen-rich 673 K gasification states are
+diagnostic only and do not expand the current CO₂-rich Souissi gate. The
+combined decision record is
+`Documentation/Validation/CCSMixtureCompositionExpansionDecision2026-08-16.json`.
+No composition range, interpolation authority, critical marker,
+caloric/acoustic property, or simultaneous H₂+CH₄ support is inferred from
+these diagnostic artifacts.
+
 A runnable Clapeyron EOS_CG oracle was not available in the managed
 Xcode/Codex environment. Instead,
 `Documentation/Validation/EOSCGStaticIdentityAudit.json` compares the pinned

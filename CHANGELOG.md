@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Added a provider-facing operating-range guidance API for Advanced CCS
+  Properties so the app can display production-validated composition,
+  temperature, pressure, property and phase-diagram limits before calculation.
+- Added dynamic Calculator guidance for CO₂+H₂ and CO₂+CH₄ mixtures, including
+  contextual H₂ isotherm pressure ranges, unsupported-temperature and
+  unsupported-composition notices, unsupported-property notices, and explicit
+  user-triggered validated ppm/temperature suggestions.
+- Added Phase Diagram preflight guidance for Advanced CCS mixtures: CH₄ shows
+  the exact 50,000 ppm and 19.98-24.99 °C bubble/dew envelope gate; H₂ states
+  that phase diagrams are not yet validated.
+- Added provider tests proving advertised H₂/CH₄ guidance remains synchronized
+  with the production validation gates. No new CH₄/H₂ composition, VLE,
+  critical, caloric/acoustic, or simultaneous-impurity production domain was
+  enabled because no new audited numerical validation matrix was integrated.
+
 ## 0.1.0 — Foundation
 
 - Created the native SwiftUI iOS project and local `PhaseXpertCore` package.

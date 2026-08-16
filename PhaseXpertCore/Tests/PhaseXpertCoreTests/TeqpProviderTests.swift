@@ -1275,6 +1275,235 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertNil(registry.provider(id: "ife-model"))
     }
 
+    func testHydrogenGuidanceAdvertisesOnlyAcceptedProductionGate() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.94638),
+            MixtureComponent(component: .hydrogen, moleFraction: 0.05362)
+        ]
+
+        let guidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 2_000_000,
+                temperatureK: 293.15,
+                composition: composition,
+                requestedProperties: [.density, .speedOfSound]
+            )
+        ))
+
+        XCTAssertTrue(guidance.summary.contains {
+            $0.title == "H₂ validated composition" && $0.detail == "53620 ppm"
+        })
+        XCTAssertTrue(guidance.summary.contains {
+            $0.title == "Validated temperature" && $0.detail.contains("0 °C, 20 °C or 50 °C")
+        })
+        XCTAssertTrue(guidance.summary.contains {
+            $0.title == "Validated pressure" && $0.detail == "5.0–49.8 bar(a)"
+        })
+        XCTAssertTrue(guidance.phaseDiagram.contains {
+            $0.detail == "Phase diagram not yet validated for CO₂+H₂."
+        })
+        XCTAssertTrue(guidance.propertyAvailability.contains {
+            $0.title == "Cp/Cv/speed"
+                && $0.detail.contains("not production-validated for CO₂+H₂")
+        })
+
+        let acceptedTemperatures = [273.15, 293.15, 323.15]
+        for temperature in acceptedTemperatures {
+            let capability = try XCTUnwrap(
+                TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity
+                    .propertyCapabilities
+                    .first?
+                    .isothermPressureLimits
+                    .first(where: { $0.temperatureK == temperature })
+            )
+            let response = try await provider.calculate(hydrogenRequest(
+                pressurePa: 0.5 * (capability.minimumPressurePa + capability.maximumPressurePa),
+                temperatureK: temperature,
+                hydrogenMoleFraction: 0.05362
+            ))
+            XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated)
+        }
+    }
+
+    func testHydrogenGuidancePressureRangeUpdatesForEachValidatedIsotherm() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let composition = hydrogenComposition(hydrogenMoleFraction: 0.05362)
+        let expectedPressureRanges: [(temperatureK: Double, detail: String)] = [
+            (273.15, "5.1–30.4 bar(a)"),
+            (293.15, "5.0–49.8 bar(a)"),
+            (323.15, "5.5–60.0 bar(a)")
+        ]
+
+        for expected in expectedPressureRanges {
+            let capability = try XCTUnwrap(
+                TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity
+                    .propertyCapabilities
+                    .first?
+                    .isothermPressureLimits
+                    .first(where: { $0.temperatureK == expected.temperatureK })
+            )
+            let pressurePa = 0.5 * (capability.minimumPressurePa + capability.maximumPressurePa)
+            let guidance = try XCTUnwrap(provider.operatingRangeGuidance(
+                for: OperatingGuidanceContext(
+                    pressurePa: pressurePa,
+                    temperatureK: expected.temperatureK,
+                    composition: composition,
+                    requestedProperties: [.density]
+                )
+            ))
+
+            XCTAssertTrue(guidance.summary.contains {
+                $0.title == "Validated pressure" && $0.detail == expected.detail
+            }, "Missing \(expected.detail) for \(expected.temperatureK) K")
+            XCTAssertFalse(guidance.currentInputIssues.contains {
+                $0.title == "Pressure outside validated range"
+            })
+
+            let response = try await provider.calculate(hydrogenRequest(
+                pressurePa: pressurePa,
+                temperatureK: expected.temperatureK,
+                hydrogenMoleFraction: 0.05362
+            ))
+            XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated)
+        }
+    }
+
+    func testHydrogenGuidanceFlagsPressureOutsideResolvedIsothermRange() async throws {
+        let provider = TeqpProvider(engine: FailingEngine())
+        let capability = try XCTUnwrap(
+            TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity
+                .propertyCapabilities
+                .first?
+                .isothermPressureLimits
+                .first(where: { $0.temperatureK == 293.15 })
+        )
+        let pressurePa = capability.maximumPressurePa + 100_000
+
+        let guidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: pressurePa,
+                temperatureK: 293.15,
+                composition: hydrogenComposition(hydrogenMoleFraction: 0.05362),
+                requestedProperties: [.density]
+            )
+        ))
+
+        XCTAssertTrue(guidance.summary.contains {
+            $0.title == "Validated pressure" && $0.detail == "5.0–49.8 bar(a)"
+        })
+        XCTAssertTrue(guidance.currentInputIssues.contains {
+            $0.title == "Pressure outside validated range"
+                && $0.detail.contains("50.8 bar(a)")
+                && $0.detail.contains("5.0–49.8 bar(a)")
+        })
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.calculate(hydrogenRequest(
+                pressurePa: pressurePa,
+                temperatureK: 293.15,
+                hydrogenMoleFraction: 0.05362
+            ))
+        }, { error in
+            XCTAssertEqual(
+                error as? ProviderError,
+                .invalidRequest(
+                    "CO₂+H₂ teqp density pressure is outside the validated gas range for this isotherm."
+                )
+            )
+        })
+    }
+
+    func testHydrogenGuidanceFlagsUnsupportedTemperatureBeforeCalculation() {
+        let provider = TeqpProvider(engine: MockEngine())
+        let guidance = provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 2_000_000,
+                temperatureK: 298.15,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.94638),
+                    .init(component: .hydrogen, moleFraction: 0.05362)
+                ]
+            )
+        )
+
+        XCTAssertTrue(guidance?.currentInputIssues.contains {
+            $0.title == "Temperature outside validation set"
+                && $0.detail.contains("25 °C is outside")
+        } == true)
+        XCTAssertFalse(guidance?.summary.contains { $0.title == "Validated pressure" } == true)
+    }
+
+    func testMethaneGuidanceMatchesDensityAndPhaseEnvelopeGates() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
+            MixtureComponent(component: .methane, moleFraction: 0.05)
+        ]
+
+        let densityGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 8_500_000,
+                temperatureK: 310.15,
+                composition: composition,
+                requestedProperties: [.density, .isobaricHeatCapacity]
+            )
+        ))
+
+        XCTAssertTrue(densityGuidance.summary.contains {
+            $0.title == "CH₄ validated composition" && $0.detail == "50000 ppm"
+        })
+        XCTAssertTrue(densityGuidance.summary.contains {
+            $0.title == "Validated density pressure" && $0.detail == "79.7–99.7 bar(a)"
+        })
+        XCTAssertTrue(densityGuidance.propertyAvailability.contains {
+            $0.title == "Cp/Cv/speed"
+                && $0.detail.contains("not production-validated for CO₂+CH₄")
+        })
+        XCTAssertTrue(densityGuidance.phaseDiagram.contains {
+            $0.detail.contains("19.98 °C to 24.99 °C")
+                && $0.detail.contains("no validated critical marker")
+        })
+
+        let densityResponse = try await provider.calculate(methaneRequest(
+            pressurePa: 8_500_000,
+            temperatureK: 310.15,
+            methaneMoleFraction: 0.05
+        ))
+        XCTAssertEqual(densityResponse.properties.first { $0.property == .density }?.status, .calculated)
+
+        let envelope = try await provider.phaseEnvelope(
+            PhaseEnvelopeRequest(
+                modelID: provider.descriptor.id,
+                composition: composition
+            )
+        )
+        XCTAssertTrue(envelope.isAvailable)
+        XCTAssertEqual(envelope.boundaryKind, .mixtureEnvelope)
+        XCTAssertEqual(envelope.points.count, 82)
+    }
+
+    func testMethaneGuidanceFlagsUnsupportedCompositionBeforeCalculation() {
+        let provider = TeqpProvider(engine: MockEngine())
+        let guidance = provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 8_500_000,
+                temperatureK: 310.15,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.948),
+                    .init(component: .methane, moleFraction: 0.052)
+                ]
+            )
+        )
+
+        XCTAssertTrue(guidance?.currentInputIssues.contains {
+            $0.title == "Composition outside validated value"
+                && $0.detail.contains("Entered 52000 ppm CH₄")
+                && $0.detail.contains("50000 ppm")
+        } == true)
+        XCTAssertEqual(guidance?.suggestions.first?.label, "Use 50000 ppm CH₄")
+    }
+
     private func hydrogenRequest(
         pressurePa: Double,
         temperatureK: Double,
@@ -1291,6 +1520,15 @@ final class TeqpProviderTests: XCTestCase {
             requestedProperties: [.density],
             clientVersion: "test"
         )
+    }
+
+    private func hydrogenComposition(
+        hydrogenMoleFraction: Double
+    ) -> [MixtureComponent] {
+        [
+            .init(component: .carbonDioxide, moleFraction: 1 - hydrogenMoleFraction),
+            .init(component: .hydrogen, moleFraction: hydrogenMoleFraction)
+        ]
     }
 
     private func methaneRequest(
