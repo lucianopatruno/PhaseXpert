@@ -96,6 +96,11 @@ Current teqp impurity validation references under audit:
 - S. Liu and coauthors, CO₂+CH₄ density ThermoML lead, *Journal of Chemical
   Thermodynamics* 106, 1-9, 2017.
   [DOI 10.1016/j.jct.2016.11.009](https://doi.org/10.1016/j.jct.2016.11.009).
+- S. Cheng, F. Shang, W. Ma, H. Jin, N. Sakoda, X. Zhang and L. Guo,
+  "Density Data of Two (H₂ + CO₂) Mixtures and a (H₂ + CO₂ + CH₄) Mixture by
+  a Modified Burnett Method at Temperature 673 K and Pressures up to 25 MPa,"
+  *Journal of Chemical & Engineering Data* 64, 1693-1704, 2019.
+  [DOI 10.1021/acs.jced.8b01206](https://doi.org/10.1021/acs.jced.8b01206).
 - Y. Sánchez-Vicente, T. C. Drage, M. Poliakoff, J. Ke and M. W. George,
   "Densities of the carbon dioxide + hydrogen, a system of relevance to carbon
   capture and storage," *International Journal of Greenhouse Gas Control* 13,
