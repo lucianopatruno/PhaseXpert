@@ -43,6 +43,32 @@
         "minimumStabilityEigenvalue": 1.186227445,
         "densityRootCount": 1
       },
+      "finiteDifferencePressureDerivativeChecks": [
+        {
+          "system": "CO2+CH4",
+          "xCH4": 0.05,
+          "temperatureK": 308.15,
+          "molarDensityMolM3": 6403.98660914,
+          "finiteDifferenceDpdrhoMolarJMol": 400.448868835,
+          "analyticDpdrhoMolarJMol": 400.448868894,
+          "relativeDifferencePercent": 0.00000001469,
+          "finiteDifferenceDpdtPaK": 93181.2280019,
+          "analyticDpdtPaK": 93181.2279725,
+          "relativeDifferenceDpdtPercent": 0.0000000316271
+        },
+        {
+          "system": "CO2+H2",
+          "xH2": 0.05362,
+          "temperatureK": 293.15,
+          "molarDensityMolM3": 1467.21597922,
+          "finiteDifferenceDpdrhoMolarJMol": 1679.81969762,
+          "analyticDpdrhoMolarJMol": 1679.81969766,
+          "relativeDifferencePercent": 0.00000000227498,
+          "finiteDifferenceDpdtPaK": 14957.2180918,
+          "analyticDpdtPaK": 14957.2180916,
+          "relativeDifferenceDpdtPercent": 0.00000000164379
+        }
+      ],
       "scientificMeaning": "Implementation smoke only. These numbers are not experimental validation and are not production gates."
     },
     "xcodeSnippetStatus": "RunCodeSnippet in the package target failed because the snippet harness did not link CoolProp bridge symbols; RunCodeSnippet in the app target was blocked by a Release/-O preview configuration. These are recorded as snippet infrastructure limitations, not scientific validation passes."
