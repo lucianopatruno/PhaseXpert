@@ -2779,4 +2779,42 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertFalse(viewModel.statusMessage.localizedCaseInsensitiveContains("provider"))
         XCTAssertFalse(viewModel.statusMessage.localizedCaseInsensitiveContains("CoolProp"))
     }
+
+    @MainActor
+    func testHydrogenTemperatureSuggestionUpdatesGuidanceWithoutChangingPressureInput() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "150"
+        viewModel.temperatureText = "0"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "946380"),
+            CompositionInput(component: .hydrogen, value: "53620")
+        ]
+        viewModel.validate()
+
+        let initialGuidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+        XCTAssertTrue(initialGuidance.summary.contains {
+            $0.title == "Validated pressure" && $0.detail == "5.1–30.4 bar(a)"
+        })
+        XCTAssertTrue(initialGuidance.currentInputIssues.contains {
+            $0.title == "Pressure outside validated range"
+        })
+
+        let twentyCelsiusSuggestion = try XCTUnwrap(initialGuidance.suggestions.first {
+            $0.label == "20 °C"
+        })
+        viewModel.applyGuidanceSuggestion(twentyCelsiusSuggestion)
+
+        XCTAssertEqual(viewModel.pressureText, "150")
+        XCTAssertEqual(viewModel.temperatureText, "20")
+        let updatedGuidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+        XCTAssertTrue(updatedGuidance.summary.contains {
+            $0.title == "Validated pressure" && $0.detail == "5.0–49.8 bar(a)"
+        })
+        XCTAssertTrue(updatedGuidance.currentInputIssues.contains {
+            $0.title == "Pressure outside validated range"
+                && $0.detail.contains("150.0 bar(a)")
+        })
+    }
 }

@@ -470,6 +470,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         if let hydrogen = context.composition.first(where: { $0.component == .hydrogen }) {
             return hydrogenOperatingRangeGuidance(
                 hydrogenMoleFraction: hydrogen.moleFraction,
+                pressurePa: context.pressurePa,
                 temperatureK: context.temperatureK,
                 requestedProperties: context.requestedProperties
             )
@@ -477,6 +478,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         if let methane = context.composition.first(where: { $0.component == .methane }) {
             return methaneOperatingRangeGuidance(
                 methaneMoleFraction: methane.moleFraction,
+                pressurePa: context.pressurePa,
                 temperatureK: context.temperatureK,
                 requestedProperties: context.requestedProperties
             )
@@ -1381,6 +1383,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
 
     private func hydrogenOperatingRangeGuidance(
         hydrogenMoleFraction: Double,
+        pressurePa: Double?,
         temperatureK: Double?,
         requestedProperties: Set<PropertyID>
     ) -> OperatingRangeGuidance {
@@ -1398,7 +1401,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             ),
             .init(
                 severity: .information,
-                title: "Temperature",
+                title: "Validated temperature",
                 detail: exactTemperatureList(limits)
             )
         ]
@@ -1412,6 +1415,15 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     title: "Validated pressure",
                     detail: pressureRangeString(isotherm)
                 ))
+                if let pressurePa,
+                   pressurePa < isotherm.minimumPressurePa
+                    || pressurePa > isotherm.maximumPressurePa {
+                    issues.append(.init(
+                        severity: .warning,
+                        title: "Pressure outside validated range",
+                        detail: "\(barString(pressurePa)) bar(a) is outside the validated H₂ pressure range for \(celsiusString(isotherm.temperatureK)) °C: \(pressureRangeString(isotherm))."
+                    ))
+                }
             } else {
                 issues.append(.init(
                     severity: .unsupported,
@@ -1462,6 +1474,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
 
     private func methaneOperatingRangeGuidance(
         methaneMoleFraction: Double,
+        pressurePa: Double?,
         temperatureK: Double?,
         requestedProperties: Set<PropertyID>
     ) -> OperatingRangeGuidance {
@@ -1500,6 +1513,15 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     title: "Validated density pressure",
                     detail: pressureRangeString(densityLimit)
                 ))
+                if let pressurePa,
+                   pressurePa < densityLimit.minimumPressurePa
+                    || pressurePa > densityLimit.maximumPressurePa {
+                    issues.append(.init(
+                        severity: .warning,
+                        title: "Pressure outside validated density range",
+                        detail: "\(barString(pressurePa)) bar(a) is outside the validated CH₄ density pressure range for \(celsiusString(densityLimit.temperatureK)) °C: \(pressureRangeString(densityLimit))."
+                    ))
+                }
             } else if methaneVLEProductionTemperatureContains(temperatureK) {
                 summary.append(.init(
                     severity: .information,
