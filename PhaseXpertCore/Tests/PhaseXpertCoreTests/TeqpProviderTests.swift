@@ -847,6 +847,113 @@ final class TeqpProviderTests: XCTestCase {
         )
     }
 
+    func testMethaneVLEPhaseClassificationReportsVaporDenseAndBoundaryStates() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
+            MixtureComponent(component: .methane, moleFraction: 0.05)
+        ]
+
+        let vapor = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 6_000_000,
+                temperatureK: 293.13,
+                composition: composition,
+                requestedProperties: [.density],
+                clientVersion: "test"
+            )
+        )
+        XCTAssertEqual(vapor.phase, .gas)
+        XCTAssertEqual(vapor.properties.first?.status, .unavailable)
+        XCTAssertTrue(vapor.solver.method.contains("below the validated dew pressure"))
+
+        let dense = try await provider.calculate(
+            CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 7_500_000,
+                temperatureK: 293.13,
+                composition: composition,
+                requestedProperties: [.density],
+                clientVersion: "test"
+            )
+        )
+        XCTAssertEqual(dense.phase, .dense)
+        XCTAssertEqual(dense.properties.first?.status, .unavailable)
+        XCTAssertTrue(dense.solver.method.contains("above the validated bubble pressure"))
+
+        for boundaryPressure in [6_500_000.0, 7_000_000.0, 6_501_000.0, 6_499_000.0] {
+            let boundary = try await provider.calculate(
+                CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: boundaryPressure,
+                    temperatureK: 293.13,
+                    composition: composition,
+                    requestedProperties: [.density, .vapourFraction],
+                    clientVersion: "test"
+                )
+            )
+            XCTAssertEqual(boundary.phase, .twoPhase)
+            XCTAssertEqual(
+                boundary.properties.first { $0.property == .density }?.status,
+                .unavailable
+            )
+            XCTAssertEqual(
+                boundary.properties.first { $0.property == .vapourFraction }?.status,
+                .unavailable
+            )
+            XCTAssertNil(boundary.properties.first { $0.property == .density }?.value)
+            XCTAssertNil(
+                boundary.properties.first { $0.property == .vapourFraction }?.value
+            )
+        }
+    }
+
+    func testMethaneVLEPhaseClassificationRejectsUnsupportedTemperatureAndComposition() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.calculate(
+                CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: 7_000_000,
+                    temperatureK: 303.15,
+                    composition: [
+                        .init(component: .carbonDioxide, moleFraction: 0.95),
+                        .init(component: .methane, moleFraction: 0.05)
+                    ],
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                )
+            )
+        }, { error in
+            guard case let ProviderError.invalidRequest(message) = error else {
+                return XCTFail("Expected invalidRequest, got \(error).")
+            }
+            XCTAssertTrue(message.contains("Ghafri density slices"))
+            XCTAssertTrue(message.contains("Petropoulou 2018 ordinary VLE isotherms"))
+        })
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.phaseEnvelope(
+                PhaseEnvelopeRequest(
+                    modelID: provider.descriptor.id,
+                    composition: [
+                        .init(component: .carbonDioxide, moleFraction: 0.96),
+                        .init(component: .methane, moleFraction: 0.04)
+                    ]
+                )
+            )
+        }, { error in
+            guard case let ProviderError.invalidRequest(message) = error else {
+                return XCTFail("Expected invalidRequest, got \(error).")
+            }
+            XCTAssertTrue(
+                message.contains("pure CO₂ or the validated CO₂+CH₄ VLE gate")
+            )
+        })
+    }
+
     func testMethanePhaseEnvelopeUsesValidatedVLEGate() async throws {
         let provider = TeqpProvider(engine: MockEngine())
         let response = try await provider.phaseEnvelope(

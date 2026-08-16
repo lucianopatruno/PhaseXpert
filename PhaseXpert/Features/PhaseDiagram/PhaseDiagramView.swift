@@ -80,8 +80,7 @@ final class PhaseDiagramViewModel {
             break
         case .multicomponent:
             if record.request.modelID == "teqp-pure-co2-experimental" {
-                scopeMessage = "Phase equilibrium is not validated for Advanced CCS Properties mixtures. Pure CO₂ teqp phase diagrams remain available."
-                return
+                break
             }
             configurePhaseMap(for: record)
             return
