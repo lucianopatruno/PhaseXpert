@@ -63,6 +63,8 @@ public enum ComponentID: String, CaseIterable, Codable, Hashable, Sendable, Iden
         case .argon: 0.039_948
         case .methane: 0.016_042_5
         case .hydrogen: 0.002_015_88
+        case .carbonMonoxide: 0.028_010_1
+        case .hydrogenSulfide: 0.034_081
         default: nil
         }
     }
