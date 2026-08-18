@@ -257,7 +257,10 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     private static var maximumTotalImpurityMoleFraction: Double { 0.10 }
     private static var mixtureCompositionSumTolerance: Double { 1e-10 }
     private static var supportedDryComponents: Set<ComponentID> {
-        [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
+        [
+            .carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen,
+            .carbonMonoxide, .hydrogenSulfide
+        ]
     }
 
     private enum SupportedComposition {
@@ -285,11 +288,14 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "General Properties (CoolProp)",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.8.2",
+            providerVersion: "0.8.3",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
-                ? [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
+                ? [
+                    .carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen,
+                    .carbonMonoxide, .hydrogenSulfide
+                ]
                 : [],
             supportedProperties: engine.isAvailable
                 ? [
@@ -316,7 +322,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
                 "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties.",
-                "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄ and H₂ with total impurity in (0, 10] mol%; this temporary product guardrail is not a validated accuracy range.",
+                "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄, H₂, CO and H₂S with total impurity in (0, 10] mol%; this temporary product guardrail is not a validated accuracy range.",
                 "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.",
                 "Preliminary integration; no production accuracy claim.",
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
