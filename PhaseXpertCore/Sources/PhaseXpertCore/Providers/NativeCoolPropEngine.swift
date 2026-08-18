@@ -109,6 +109,8 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let argon = fractions[.argon] ?? 0
         let methane = fractions[.methane] ?? 0
         let hydrogen = fractions[.hydrogen] ?? 0
+        let carbonMonoxide = fractions[.carbonMonoxide] ?? 0
+        let hydrogenSulfide = fractions[.hydrogenSulfide] ?? 0
 
         let result = try await Task.detached(priority: .userInitiated) {
             var nativeResult = PXCoolPropBinaryResult()
@@ -122,6 +124,8 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 argon,
                 methane,
                 hydrogen,
+                carbonMonoxide,
+                hydrogenSulfide,
                 &nativeResult,
                 &errorBuffer,
                 errorBuffer.count
@@ -212,6 +216,8 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 fractions[.argon] ?? 0,
                 fractions[.methane] ?? 0,
                 fractions[.hydrogen] ?? 0,
+                fractions[.carbonMonoxide] ?? 0,
+                fractions[.hydrogenSulfide] ?? 0,
                 &points,
                 points.count,
                 &pointCount,
