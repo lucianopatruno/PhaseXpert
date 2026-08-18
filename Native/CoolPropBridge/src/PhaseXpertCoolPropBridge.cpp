@@ -86,6 +86,27 @@ PXCoolPropPhase map_phase(const std::string &phase) {
     return PXCoolPropPhaseUnknown;
 }
 
+PXCoolPropPhase map_phase(CoolProp::phases phase) {
+    switch (phase) {
+        case CoolProp::iphase_gas:
+        case CoolProp::iphase_supercritical_gas:
+            return PXCoolPropPhaseGas;
+        case CoolProp::iphase_liquid:
+            return PXCoolPropPhaseLiquid;
+        case CoolProp::iphase_supercritical_liquid:
+            return PXCoolPropPhaseDense;
+        case CoolProp::iphase_supercritical:
+        case CoolProp::iphase_critical_point:
+            return PXCoolPropPhaseSupercritical;
+        case CoolProp::iphase_twophase:
+            return PXCoolPropPhaseTwoPhase;
+        case CoolProp::iphase_unknown:
+        case CoolProp::iphase_not_imposed:
+            return PXCoolPropPhaseUnknown;
+    }
+    return PXCoolPropPhaseUnknown;
+}
+
 }  // namespace
 
 int px_coolprop_calculate_pure_co2(
@@ -236,45 +257,39 @@ int px_coolprop_calculate_dry_co2_mixture(
             "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
             "CarbonMonoxide", "HydrogenSulfide"
         };
-        std::string fluid = "HEOS::";
-        bool first = true;
-        char component[96];
+        std::vector<std::string> active_names;
+        std::vector<double> active_fractions;
+        active_names.reserve(fractions.size());
+        active_fractions.reserve(fractions.size());
         for (size_t index = 0; index < fractions.size(); ++index) {
             if (fractions[index] <= 1e-14) {
                 continue;
             }
-            const int length = std::snprintf(
-                component,
-                sizeof(component),
-                "%s%s[%.17g]",
-                first ? "" : "&",
-                names[index],
-                fractions[index]
-            );
-            if (length <= 0 || static_cast<size_t>(length) >= sizeof(component)) {
-                copy_text("Could not construct the bounded dry-mixture identifier.", error_buffer, error_buffer_size);
-                return 5;
-            }
-            fluid += component;
-            first = false;
+            active_names.emplace_back(names[index]);
+            active_fractions.push_back(fractions[index]);
+        }
+        if (active_names.empty()) {
+            copy_text("Could not construct the bounded dry-mixture component list.", error_buffer, error_buffer_size);
+            return 5;
         }
 
         // CoolProp resolves only interaction entries shipped in version 8.0.0.
         // This bridge never calls apply_simple_mixing_rule and never mutates
         // binary interaction parameters.
-        const double density = CoolProp::PropsSI(
-            "Dmass", "P", pressure_pa, "T", temperature_k, fluid
+        std::shared_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory("HEOS", active_names)
         );
-        const std::string phase = CoolProp::PhaseSI(
-            "P", pressure_pa, "T", temperature_k, fluid
-        );
+        state->set_mole_fractions(active_fractions);
+        state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
+
+        const double density = state->rhomass();
         if (!std::isfinite(density) || density <= 0) {
             copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
             return 6;
         }
 
         result->density_kg_m3 = density;
-        result->phase = map_phase(phase);
+        result->phase = map_phase(state->phase());
         copy_text("", error_buffer, error_buffer_size);
         return 0;
     } catch (const std::exception &error) {
