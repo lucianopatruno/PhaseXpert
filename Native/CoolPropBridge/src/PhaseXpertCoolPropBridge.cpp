@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -276,6 +277,65 @@ int calculate_dry_mixture_state(
     }
 }
 
+int calculate_dry_mixture_high_level_state(
+    double pressure_pa,
+    double temperature_k,
+    const std::array<double, 8> &fractions,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    const int validation_status = validate_dry_mixture(
+        fractions,
+        error_buffer,
+        error_buffer_size
+    );
+    if (validation_status != 0) {
+        return validation_status;
+    }
+
+    try {
+        ActiveDryMixture mixture;
+        if (!active_dry_mixture(fractions, &mixture, error_buffer, error_buffer_size)) {
+            return 5;
+        }
+
+        // Phase Map reference behavior uses CoolProp's high-level dry-mixture
+        // flash path. This preserves CoolProp's own twophase classification
+        // without routing through the iOS-crashing direct AbstractState PT
+        // update introduced by the CO/H2S bridge expansion.
+        const double density = CoolProp::PropsSI(
+            "Dmass", "P", pressure_pa, "T", temperature_k, mixture.fluid_identifier
+        );
+        const std::string phase = CoolProp::PhaseSI(
+            "P", pressure_pa, "T", temperature_k, mixture.fluid_identifier
+        );
+        if (!std::isfinite(density) || density <= 0) {
+            copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        result->density_kg_m3 = density;
+        result->density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+        result->reducing_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+        result->gibbs_molar_j_mol = std::numeric_limits<double>::quiet_NaN();
+        result->phase = map_phase(phase);
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp dry-mixture calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
+    }
+}
+
 }  // namespace
 
 int px_coolprop_calculate_pure_co2(
@@ -379,7 +439,7 @@ int px_coolprop_calculate_dry_co2_mixture(
         return 1;
     }
 
-    return calculate_dry_mixture_state(
+    return calculate_dry_mixture_high_level_state(
         pressure_pa,
         temperature_k,
         {
@@ -392,7 +452,6 @@ int px_coolprop_calculate_dry_co2_mixture(
             carbon_monoxide_mole_fraction,
             hydrogen_sulfide_mole_fraction
         },
-        CoolProp::iphase_not_imposed,
         result,
         error_buffer,
         error_buffer_size

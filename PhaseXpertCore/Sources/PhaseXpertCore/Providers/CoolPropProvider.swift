@@ -307,8 +307,7 @@ private actor PureCarbonDioxideEnvelopeCache {
 ///
 /// Availability does not imply scientific validation. Every successful result
 /// carries an explicit validation-pending warning.
-public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider,
-    PhaseMapProvidingModelProvider {
+public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider {
     private let engine: Engine
     private let envelopeCache: PureCarbonDioxideEnvelopeCache
 

@@ -6,18 +6,16 @@ import XCTest
 /// These assert executable crash resistance for validation-pending provider
 /// calls. They are not independent thermodynamic accuracy validation.
 final class CoolPropPhaseMapNativeTests: XCTestCase {
-    func testHistoricalCO2NitrogenPhaseMapCompletesWithUsefulCoverage() async throws {
-        let provider = try requireNativeCoolPropProvider()
+    func testHistoricalCO2NitrogenFiveByFiveMatchesReference() async throws {
+        try await assertHistoricalCO2NitrogenReference(resolution: .five)
+    }
 
-        for resolution in [PhaseMapResolution.five, .ten, .twenty] {
-            let request = historicalCO2NitrogenRequest(
-                provider: provider,
-                resolution: resolution
-            )
-            let result = try await PhaseMapRunner(provider: provider).run(request)
+    func testHistoricalCO2NitrogenTenByTenMatchesReference() async throws {
+        try await assertHistoricalCO2NitrogenReference(resolution: .ten)
+    }
 
-            try assertHistoricalCO2NitrogenResult(result, request: request)
-        }
+    func testHistoricalCO2NitrogenTwentyByTwentyMatchesReference() async throws {
+        try await assertHistoricalCO2NitrogenReference(resolution: .twenty)
     }
 
     func testBuiltInCasePhaseMapsCompleteWithoutProcessTermination() async throws {
@@ -84,6 +82,24 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
         )
     }
 
+    private func assertHistoricalCO2NitrogenReference(
+        resolution: PhaseMapResolution
+    ) async throws {
+        let provider = try requireNativeCoolPropProvider()
+        let request = historicalCO2NitrogenRequest(
+            provider: provider,
+            resolution: resolution
+        )
+        let startedAt = Date()
+        let result = try await PhaseMapRunner(provider: provider).run(request)
+        let elapsed = Date().timeIntervalSince(startedAt)
+        print(
+            "CO2_N2_REFERENCE resolution=\(resolution.rawValue) evaluations=\(result.evaluations.count) elapsed=\(elapsed)"
+        )
+
+        try assertHistoricalCO2NitrogenResult(result, request: request)
+    }
+
     private func assertHistoricalCO2NitrogenResult(
         _ result: PhaseMapResult,
         request: PhaseMapRequest
@@ -129,6 +145,25 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             XCTAssertTrue(result.evaluations.dropFirst(firstFailureIndex + 1).contains {
                 $0.classification.classification != .failed
             })
+        }
+
+        let counts = Dictionary(grouping: result.evaluations) {
+            $0.classification.classification
+        }.mapValues(\.count)
+        let expected: [PhaseMapClassification: Int] = switch request.resolution {
+        case .five:
+            [.failed: 1, .gas: 2, .liquid: 21, .multiphase: 1]
+        case .ten:
+            [.failed: 2, .gas: 8, .liquid: 88, .multiphase: 3]
+        case .twenty:
+            [.failed: 1, .gas: 25, .liquid: 365, .multiphase: 10]
+        }
+        for classification in PhaseMapClassification.allCases {
+            XCTAssertEqual(
+                counts[classification, default: 0],
+                expected[classification, default: 0],
+                "Unexpected historical CO2/N2 \(request.resolution.rawValue)x\(request.resolution.rawValue) \(classification.rawValue) count."
+            )
         }
     }
 }
