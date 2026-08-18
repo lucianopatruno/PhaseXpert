@@ -65,8 +65,8 @@ final class BuiltInCaseNativeCoolPropTests: XCTestCase {
 
             XCTAssertNotEqual(
                 response.phase,
-                .failed,
-                "\(builtInCase.name) returned a failed phase classification."
+                .unavailable,
+                "\(builtInCase.name) returned an unavailable phase after a successful state calculation."
             )
         }
     }
