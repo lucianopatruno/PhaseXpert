@@ -246,6 +246,13 @@ public struct PhaseMapResult: Codable, Equatable, Sendable {
     }
 }
 
+public protocol PhaseMapProvidingModelProvider: ThermodynamicModelProvider {
+    func phaseMap(
+        _ request: PhaseMapRequest,
+        progress: (@Sendable (PhaseMapProgress) async -> Void)?
+    ) async throws -> PhaseMapResult
+}
+
 public enum PhaseMapGridBuilder {
     public static func validationIssues(for request: PhaseMapRequest) -> [PhaseMapValidationIssue] {
         var issues: [PhaseMapValidationIssue] = []
@@ -401,6 +408,9 @@ public struct PhaseMapRunner: Sendable {
         _ request: PhaseMapRequest,
         progress: (@Sendable (PhaseMapProgress) async -> Void)? = nil
     ) async throws -> PhaseMapResult {
+        if let phaseMapProvider = provider as? any PhaseMapProvidingModelProvider {
+            return try await phaseMapProvider.phaseMap(request, progress: progress)
+        }
         guard provider.descriptor.availability != .unavailable else {
             throw ProviderError.modelUnavailable("The selected provider is not available.")
         }

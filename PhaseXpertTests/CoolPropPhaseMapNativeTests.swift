@@ -6,7 +6,7 @@ import XCTest
 /// These assert executable crash resistance for validation-pending provider
 /// calls. They are not independent thermodynamic accuracy validation.
 final class CoolPropPhaseMapNativeTests: XCTestCase {
-    func testHistoricalCO2NitrogenFiveByFivePhaseMapCompletesAndContinuesAfterRecoverableFailure() async throws {
+    func testHistoricalCO2NitrogenFiveByFivePhaseMapCompletesAndContinuesAfterGuardedPoint() async throws {
         let provider = try requireNativeCoolPropProvider()
         let request = PhaseMapRequest(
             modelID: provider.descriptor.id,
@@ -25,20 +25,22 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
 
         XCTAssertEqual(result.evaluations.count, PhaseMapResolution.five.expectedEvaluationCount)
         XCTAssertEqual(result.request.composition, request.composition)
-        XCTAssertEqual(result.evaluations[5].point.pressurePa, 7_500_000)
-        XCTAssertEqual(result.evaluations[5].point.temperatureK, 280.65, accuracy: 1e-9)
-        XCTAssertEqual(result.evaluations[5].classification.classification, .failed)
-        XCTAssertNotNil(result.evaluations[5].failureReason)
-        XCTAssertTrue(result.evaluations.dropFirst(6).contains { $0.failureReason == nil })
+        let guardedIndex = try XCTUnwrap(result.evaluations.firstIndex {
+            $0.point.pressurePa == 7_500_000
+                && abs($0.point.temperatureK - 280.65) <= 1e-9
+        })
+        XCTAssertTrue(result.evaluations.dropFirst(guardedIndex + 1).contains {
+            $0.failureReason == nil
+        })
     }
 
     func testBuiltInCasePhaseMapsCompleteWithoutProcessTermination() async throws {
         let provider = try requireNativeCoolPropProvider()
-        let cases: [(id: String, resolution: PhaseMapResolution, expectedCount: Int)] = [
-            ("northern-lights-cargo-specification-example", .ten, 100),
-            ("brevik-ccs-conditioned-export-example", .five, 25),
-            ("porthos-pipeline-specification-example", .five, 25),
-            ("aramis-ship-specification-example", .five, 25)
+        let cases: [(id: String, resolution: PhaseMapResolution)] = [
+            ("northern-lights-cargo-specification-example", .ten),
+            ("brevik-ccs-conditioned-export-example", .five),
+            ("porthos-pipeline-specification-example", .five),
+            ("aramis-ship-specification-example", .five)
         ]
 
         for entry in cases {
@@ -58,7 +60,8 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
 
             let result = try await PhaseMapRunner(provider: provider).run(request)
 
-            XCTAssertEqual(result.evaluations.count, entry.expectedCount, builtInCase.name)
+            let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+            XCTAssertEqual(result.evaluations.count, expectedCount, builtInCase.name)
             XCTAssertEqual(result.request.composition, builtInCase.composition, builtInCase.name)
         }
     }

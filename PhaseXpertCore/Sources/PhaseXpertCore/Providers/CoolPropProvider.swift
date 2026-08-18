@@ -75,6 +75,21 @@ public struct CoolPropBinaryEngineResult: Equatable, Sendable {
     }
 }
 
+public enum CoolPropSinglePhaseHint: Equatable, Sendable {
+    case gas
+    case liquid
+}
+
+public struct CoolPropMixtureSaturationPressures: Equatable, Sendable {
+    public let bubblePressurePa: Double
+    public let dewPressurePa: Double
+
+    public init(bubblePressurePa: Double, dewPressurePa: Double) {
+        self.bubblePressurePa = bubblePressurePa
+        self.dewPressurePa = dewPressurePa
+    }
+}
+
 /// Pure-fluid limits needed to sample the CO₂ saturation boundary safely.
 public struct CoolPropSaturationLimits: Equatable, Sendable {
     public let triplePointTemperatureK: Double
@@ -138,6 +153,18 @@ public protocol CoolPropEngine: Sendable {
         composition: [MixtureComponent]
     ) async throws -> CoolPropBinaryEngineResult
 
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult
+
+    func dryCarbonDioxideMixtureSaturationPressures(
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropMixtureSaturationPressures
+
     func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits
 
     func pureCarbonDioxideSaturationPressure(
@@ -183,6 +210,28 @@ public extension CoolPropEngine {
     ) async throws -> CoolPropBinaryEngineResult {
         throw ProviderError.modelUnavailable(
             "The CoolProp engine does not expose the restricted CO₂-N₂ bridge."
+        )
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult {
+        try await calculateDryCarbonDioxideMixture(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: composition
+        )
+    }
+
+    func dryCarbonDioxideMixtureSaturationPressures(
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropMixtureSaturationPressures {
+        throw ProviderError.modelUnavailable(
+            "The CoolProp engine does not expose the dry-mixture saturation-pressure bridge."
         )
     }
 
@@ -249,7 +298,8 @@ private actor PureCarbonDioxideEnvelopeCache {
 ///
 /// Availability does not imply scientific validation. Every successful result
 /// carries an explicit validation-pending warning.
-public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider {
+public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider,
+    PhaseMapProvidingModelProvider {
     private let engine: Engine
     private let envelopeCache: PureCarbonDioxideEnvelopeCache
 
@@ -539,6 +589,112 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "PRELIMINARY — VALIDATION PENDING: do not use this result for engineering, safety, commercial, or regulatory decisions."
             ] + state.warnings,
             isScientificResult: true
+        )
+    }
+
+    public func phaseMap(
+        _ request: PhaseMapRequest,
+        progress: (@Sendable (PhaseMapProgress) async -> Void)? = nil
+    ) async throws -> PhaseMapResult {
+        guard engine.isAvailable else {
+            throw ProviderError.modelUnavailable(
+                "CoolProp is not available in this build."
+            )
+        }
+        guard request.modelID == descriptor.id else {
+            throw ProviderError.invalidRequest("The phase-map request model ID does not match CoolProp.")
+        }
+        let points = try PhaseMapGridBuilder.points(for: request)
+        let supported = try supportedComposition(request.composition)
+        guard case let .dryMixture(activeComposition) = supported else {
+            throw ProviderError.invalidRequest(
+                "CoolProp phase-map guarding is available only for supported dry mixtures."
+            )
+        }
+
+        let startedAt = Date()
+        var saturationByTemperature: [Double: SaturationLookup] = [:]
+        var evaluations: [PhaseMapEvaluation] = []
+        evaluations.reserveCapacity(points.count)
+
+        for (index, point) in points.enumerated() {
+            try Task.checkCancellation()
+            let saturation: SaturationLookup
+            if let cached = saturationByTemperature[point.temperatureK] {
+                saturation = cached
+            } else {
+                do {
+                    debugLogPhaseMapNativeCall(
+                        index: index,
+                        point: point,
+                        composition: request.composition,
+                        providerPath: "CoolProp dry-mixture T,Q saturation guard"
+                    )
+                    let pressures = try await engine.dryCarbonDioxideMixtureSaturationPressures(
+                        temperatureK: point.temperatureK,
+                        composition: activeComposition
+                    )
+                    saturation = .pressures(pressures)
+                } catch {
+                    saturation = .failure(userMessage(for: error))
+                }
+                saturationByTemperature[point.temperatureK] = saturation
+            }
+
+            switch saturation {
+            case let .failure(message):
+                evaluations.append(failedEvaluation(
+                    point: point,
+                    message: message
+                ))
+            case let .pressures(pressures):
+                switch phaseMapDecision(point: point, saturation: pressures) {
+                case .gas:
+                    evaluations.append(try await imposedPhaseEvaluation(
+                        point: point,
+                        index: index,
+                        request: request,
+                        composition: activeComposition,
+                        imposedPhase: .gas
+                    ))
+                case .liquid:
+                    evaluations.append(try await imposedPhaseEvaluation(
+                        point: point,
+                        index: index,
+                        request: request,
+                        composition: activeComposition,
+                        imposedPhase: .liquid
+                    ))
+                case .multiphase:
+                    evaluations.append(PhaseMapEvaluation(
+                        point: point,
+                        classification: PhaseMapClassificationAdapter.map(.twoPhase),
+                        solver: SolverMetadata(
+                            method: "CoolProp T,Q bubble/dew saturation guard; PT flash suppressed inside the two-phase interval",
+                            converged: true,
+                            durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+                        ),
+                        failureReason: nil
+                    ))
+                case let .boundaryAmbiguous(message):
+                    evaluations.append(failedEvaluation(
+                        point: point,
+                        message: message
+                    ))
+                }
+            }
+            await progress?(PhaseMapProgress(completedCount: evaluations.count, totalCount: points.count))
+        }
+
+        return PhaseMapResult(
+            request: request,
+            model: descriptor,
+            evaluations: evaluations,
+            warnings: [
+                "Phase Map classifies discrete provider flash points only; it is not a phase envelope and does not trace bubble or dew boundaries.",
+                "CoolProp dry-mixture Phase Map uses exact-temperature bubble/dew guard points to avoid native PT flashes in unsafe two-phase or boundary-ambiguous regions.",
+                "Narrow phase regions can be missed between evaluated grid points."
+            ]
         )
     }
 
@@ -954,6 +1110,135 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ? "The pure-CO₂ engine did not return this advertised property."
                 : mixtureMessage
         )
+    }
+
+    private enum SaturationLookup {
+        case pressures(CoolPropMixtureSaturationPressures)
+        case failure(String)
+    }
+
+    private enum PhaseMapDecision {
+        case gas
+        case liquid
+        case multiphase
+        case boundaryAmbiguous(String)
+    }
+
+    private func phaseMapDecision(
+        point: PhaseMapGridPoint,
+        saturation: CoolPropMixtureSaturationPressures
+    ) -> PhaseMapDecision {
+        let lowerPressure = min(saturation.bubblePressurePa, saturation.dewPressurePa)
+        let upperPressure = max(saturation.bubblePressurePa, saturation.dewPressurePa)
+        guard lowerPressure.isFinite, lowerPressure > 0,
+              upperPressure.isFinite, upperPressure > lowerPressure else {
+            return .boundaryAmbiguous(
+                "CoolProp returned invalid dry-mixture bubble/dew guard pressures at this temperature."
+            )
+        }
+        let tolerance = max(
+            max(abs(point.pressurePa), max(abs(lowerPressure), abs(upperPressure))) * 1e-5,
+            1_000
+        )
+        if abs(point.pressurePa - lowerPressure) <= tolerance
+            || abs(point.pressurePa - upperPressure) <= tolerance {
+            return .boundaryAmbiguous(
+                "CoolProp bubble/dew guard marks this point as boundary-ambiguous; native PT flash was suppressed."
+            )
+        }
+        if point.pressurePa > lowerPressure && point.pressurePa < upperPressure {
+            return .multiphase
+        }
+        if point.pressurePa < lowerPressure {
+            return .gas
+        }
+        return .liquid
+    }
+
+    private func imposedPhaseEvaluation(
+        point: PhaseMapGridPoint,
+        index: Int,
+        request: PhaseMapRequest,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> PhaseMapEvaluation {
+        let startedAt = Date()
+        debugLogPhaseMapNativeCall(
+            index: index,
+            point: point,
+            composition: request.composition,
+            providerPath: "CoolProp dry-mixture phase-imposed PT update (\(imposedPhase))"
+        )
+        let raw = try await engine.calculateDryCarbonDioxideMixture(
+            pressurePa: point.pressurePa,
+            temperatureK: point.temperatureK,
+            composition: composition,
+            imposedPhase: imposedPhase
+        )
+        return PhaseMapEvaluation(
+            point: point,
+            classification: PhaseMapClassificationAdapter.map(
+                phaseRegion(for: raw.phaseIdentifier)
+            ),
+            solver: SolverMetadata(
+                method: "CoolProp AbstractState(HEOS) phase-imposed PT update after exact-temperature T,Q saturation guard",
+                converged: true,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            failureReason: nil
+        )
+    }
+
+    private func failedEvaluation(
+        point: PhaseMapGridPoint,
+        message: String
+    ) -> PhaseMapEvaluation {
+        PhaseMapEvaluation(
+            point: point,
+            classification: PhaseMapClassificationResult(
+                classification: .failed,
+                displayName: "Failed",
+                isSupported: false,
+                detail: message
+            ),
+            solver: nil,
+            failureReason: message
+        )
+    }
+
+    private func userMessage(for error: Error) -> String {
+        guard let providerError = error as? ProviderError else {
+            return "The provider failed at this point."
+        }
+        switch providerError {
+        case let .modelUnavailable(message),
+             let .invalidRequest(message),
+             let .malformedResponse(message):
+            return message
+        case let .unsupportedComponent(component):
+            return "\(component.symbol) is not supported by the selected provider."
+        case .timeout:
+            return "The provider timed out at this point."
+        case .cancelled:
+            return "The point evaluation was cancelled."
+        }
+    }
+
+    private func debugLogPhaseMapNativeCall(
+        index: Int,
+        point: PhaseMapGridPoint,
+        composition: [MixtureComponent],
+        providerPath: String
+    ) {
+        #if DEBUG
+        let compositionSummary = composition
+            .map { "\($0.component.symbol)=\($0.moleFraction)" }
+            .joined(separator: ",")
+        print(
+            "PX_PHASE_MAP_NATIVE index=\(index) P=\(point.pressurePa) T=\(point.temperatureK) composition=\(compositionSummary) path=\(providerPath)"
+        )
+        fflush(stdout)
+        #endif
     }
 
     private func phaseRegion(for identifier: String) -> PhaseRegion {
