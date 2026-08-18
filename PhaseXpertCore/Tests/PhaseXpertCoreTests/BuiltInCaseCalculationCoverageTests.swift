@@ -56,10 +56,11 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
                 .flatMap(\.composition)
                 .map(\.component)
         )
+        let advertised = Set(provider.descriptor.supportedComponents)
 
-        XCTAssertTrue(required.isSubset(of: provider.descriptor.supportedComponents))
-        XCTAssertTrue(provider.descriptor.supportedComponents.contains(.carbonMonoxide))
-        XCTAssertTrue(provider.descriptor.supportedComponents.contains(.hydrogenSulfide))
+        XCTAssertTrue(required.isSubset(of: advertised))
+        XCTAssertTrue(advertised.contains(.carbonMonoxide))
+        XCTAssertTrue(advertised.contains(.hydrogenSulfide))
         XCTAssertEqual(provider.descriptor.providerVersion, "0.8.3")
     }
 
@@ -106,16 +107,15 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
         }
     }
 
-    func testBuiltInCaseTraceComponentsHaveReviewedMolarMasses() {
-        XCTAssertEqual(
-            ComponentID.carbonMonoxide.molarMassKilogramsPerMole,
-            0.028_010_1,
-            accuracy: 1e-12
+    func testBuiltInCaseTraceComponentsHaveReviewedMolarMasses() throws {
+        let carbonMonoxide = try XCTUnwrap(
+            ComponentID.carbonMonoxide.molarMassKilogramsPerMole
         )
-        XCTAssertEqual(
-            ComponentID.hydrogenSulfide.molarMassKilogramsPerMole,
-            0.034_081,
-            accuracy: 1e-12
+        let hydrogenSulfide = try XCTUnwrap(
+            ComponentID.hydrogenSulfide.molarMassKilogramsPerMole
         )
+
+        XCTAssertEqual(carbonMonoxide, 0.028_010_1, accuracy: 1e-12)
+        XCTAssertEqual(hydrogenSulfide, 0.034_081, accuracy: 1e-12)
     }
 }
