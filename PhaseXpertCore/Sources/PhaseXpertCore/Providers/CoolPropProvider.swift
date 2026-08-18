@@ -64,13 +64,16 @@ public struct CoolPropEngineResult: Equatable, Sendable {
 /// separate transport-property validation is completed.
 public struct CoolPropBinaryEngineResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
+    public let gibbsMolarJoulesPerMole: Double?
     public let phaseIdentifier: String
 
     public init(
         densityKilogramsPerCubicMetre: Double,
+        gibbsMolarJoulesPerMole: Double? = nil,
         phaseIdentifier: String
     ) {
         self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.gibbsMolarJoulesPerMole = gibbsMolarJoulesPerMole
         self.phaseIdentifier = phaseIdentifier
     }
 }
@@ -643,9 +646,12 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
 
             switch saturation {
             case let .failure(message):
-                evaluations.append(failedEvaluation(
+                evaluations.append(try await saturationUnavailableEvaluation(
                     point: point,
-                    message: message
+                    index: index,
+                    request: request,
+                    composition: activeComposition,
+                    saturationErrorMessage: message
                 ))
             case let .pressures(pressures):
                 switch phaseMapDecision(point: point, saturation: pressures) {
@@ -1124,6 +1130,16 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         case boundaryAmbiguous(String)
     }
 
+    private struct PhaseMapSinglePhaseCandidate {
+        let phase: CoolPropSinglePhaseHint
+        let result: CoolPropBinaryEngineResult
+    }
+
+    private static var gibbsTieRelativeTolerance: Double { 1e-10 }
+    private static var gibbsTieAbsoluteToleranceJoulesPerMole: Double { 1e-6 }
+    private static var densityEqualityRelativeTolerance: Double { 1e-10 }
+    private static var densityEqualityAbsoluteToleranceKilogramsPerCubicMetre: Double { 1e-9 }
+
     private func phaseMapDecision(
         point: PhaseMapGridPoint,
         saturation: CoolPropMixtureSaturationPressures
@@ -1163,6 +1179,128 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         imposedPhase: CoolPropSinglePhaseHint
     ) async throws -> PhaseMapEvaluation {
         let startedAt = Date()
+        let candidate = try await imposedPhaseCandidate(
+            point: point,
+            index: index,
+            request: request,
+            composition: composition,
+            imposedPhase: imposedPhase
+        )
+        return singlePhaseEvaluation(
+            point: point,
+            startedAt: startedAt,
+            candidate: candidate,
+            method: "CoolProp AbstractState(HEOS) phase-imposed PT update after exact-temperature T,Q saturation guard"
+        )
+    }
+
+    private func saturationUnavailableEvaluation(
+        point: PhaseMapGridPoint,
+        index: Int,
+        request: PhaseMapRequest,
+        composition: [MixtureComponent],
+        saturationErrorMessage: String
+    ) async throws -> PhaseMapEvaluation {
+        let startedAt = Date()
+        let gas = await candidateResult(
+            point: point,
+            index: index,
+            request: request,
+            composition: composition,
+            imposedPhase: .gas
+        )
+        let liquid = await candidateResult(
+            point: point,
+            index: index,
+            request: request,
+            composition: composition,
+            imposedPhase: .liquid
+        )
+
+        switch (gas, liquid) {
+        case let (.success(gasCandidate), .success(liquidCandidate)):
+            guard let gasGibbs = gasCandidate.result.gibbsMolarJoulesPerMole,
+                  let liquidGibbs = liquidCandidate.result.gibbsMolarJoulesPerMole,
+                  gasGibbs.isFinite,
+                  liquidGibbs.isFinite else {
+                return failedEvaluation(
+                    point: point,
+                    message: "CoolProp T,Q saturation lookup failed (\(saturationErrorMessage)); imposed gas and liquid states converged but did not return finite molar Gibbs energies."
+                )
+            }
+            let tolerance = max(
+                max(abs(gasGibbs), abs(liquidGibbs)) * Self.gibbsTieRelativeTolerance,
+                Self.gibbsTieAbsoluteToleranceJoulesPerMole
+            )
+            let difference = gasGibbs - liquidGibbs
+            if abs(difference) <= tolerance {
+                if equivalentDensity(gasCandidate.result, liquidCandidate.result) {
+                    return identicalStateEvaluation(
+                        point: point,
+                        startedAt: startedAt,
+                        method: "CoolProp AbstractState(HEOS) imposed gas/liquid PT updates converged to the same density and molar Gibbs energy because exact-temperature T,Q saturation lookup was unavailable"
+                    )
+                }
+                return failedEvaluation(
+                    point: point,
+                    message: "CoolProp T,Q saturation lookup failed (\(saturationErrorMessage)); imposed gas/liquid molar Gibbs energies are numerically indistinguishable at fixed P,T."
+                )
+            }
+            return singlePhaseEvaluation(
+                point: point,
+                startedAt: startedAt,
+                candidate: difference < 0 ? gasCandidate : liquidCandidate,
+                method: "CoolProp AbstractState(HEOS) imposed gas/liquid PT updates; lower molar Gibbs energy selected because exact-temperature T,Q saturation lookup was unavailable"
+            )
+        case let (.success(candidate), .failure(error)):
+            return singlePhaseEvaluation(
+                point: point,
+                startedAt: startedAt,
+                candidate: candidate,
+                method: "CoolProp AbstractState(HEOS) imposed \(candidate.phase) PT update selected because exact-temperature T,Q saturation lookup and the other imposed phase were unavailable (\(userMessage(for: error)))"
+            )
+        case let (.failure(error), .success(candidate)):
+            return singlePhaseEvaluation(
+                point: point,
+                startedAt: startedAt,
+                candidate: candidate,
+                method: "CoolProp AbstractState(HEOS) imposed \(candidate.phase) PT update selected because exact-temperature T,Q saturation lookup and the other imposed phase were unavailable (\(userMessage(for: error)))"
+            )
+        case let (.failure(gasError), .failure(liquidError)):
+            return failedEvaluation(
+                point: point,
+                message: "CoolProp T,Q saturation lookup failed (\(saturationErrorMessage)); imposed gas failed (\(userMessage(for: gasError))) and imposed liquid failed (\(userMessage(for: liquidError)))."
+            )
+        }
+    }
+
+    private func candidateResult(
+        point: PhaseMapGridPoint,
+        index: Int,
+        request: PhaseMapRequest,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async -> Result<PhaseMapSinglePhaseCandidate, Error> {
+        do {
+            return .success(try await imposedPhaseCandidate(
+                point: point,
+                index: index,
+                request: request,
+                composition: composition,
+                imposedPhase: imposedPhase
+            ))
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func imposedPhaseCandidate(
+        point: PhaseMapGridPoint,
+        index: Int,
+        request: PhaseMapRequest,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> PhaseMapSinglePhaseCandidate {
         debugLogPhaseMapNativeCall(
             index: index,
             point: point,
@@ -1175,18 +1313,61 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             composition: composition,
             imposedPhase: imposedPhase
         )
+        return PhaseMapSinglePhaseCandidate(phase: imposedPhase, result: raw)
+    }
+
+    private func singlePhaseEvaluation(
+        point: PhaseMapGridPoint,
+        startedAt: Date,
+        candidate: PhaseMapSinglePhaseCandidate,
+        method: String
+    ) -> PhaseMapEvaluation {
         return PhaseMapEvaluation(
             point: point,
             classification: PhaseMapClassificationAdapter.map(
-                phaseRegion(for: raw.phaseIdentifier)
+                candidate.phase == .gas ? .gas : .liquid
             ),
             solver: SolverMetadata(
-                method: "CoolProp AbstractState(HEOS) phase-imposed PT update after exact-temperature T,Q saturation guard",
+                method: method + "; phase label reflects the imposed single-phase branch and does not claim an unconstrained CoolProp phase classification",
                 converged: true,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             ),
             failureReason: nil
         )
+    }
+
+    private func identicalStateEvaluation(
+        point: PhaseMapGridPoint,
+        startedAt: Date,
+        method: String
+    ) -> PhaseMapEvaluation {
+        PhaseMapEvaluation(
+            point: point,
+            classification: PhaseMapClassificationAdapter.map(.unknown),
+            solver: SolverMetadata(
+                method: method + "; phase label is unknown because imposed gas/liquid branch labels are not independent phase classifications",
+                converged: true,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            failureReason: nil
+        )
+    }
+
+    private func equivalentDensity(
+        _ first: CoolPropBinaryEngineResult,
+        _ second: CoolPropBinaryEngineResult
+    ) -> Bool {
+        let difference = abs(
+            first.densityKilogramsPerCubicMetre - second.densityKilogramsPerCubicMetre
+        )
+        let tolerance = max(
+            max(
+                abs(first.densityKilogramsPerCubicMetre),
+                abs(second.densityKilogramsPerCubicMetre)
+            ) * Self.densityEqualityRelativeTolerance,
+            Self.densityEqualityAbsoluteToleranceKilogramsPerCubicMetre
+        )
+        return difference <= tolerance
     }
 
     private func failedEvaluation(

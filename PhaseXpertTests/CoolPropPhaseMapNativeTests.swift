@@ -6,32 +6,18 @@ import XCTest
 /// These assert executable crash resistance for validation-pending provider
 /// calls. They are not independent thermodynamic accuracy validation.
 final class CoolPropPhaseMapNativeTests: XCTestCase {
-    func testHistoricalCO2NitrogenFiveByFivePhaseMapCompletesAndContinuesAfterGuardedPoint() async throws {
+    func testHistoricalCO2NitrogenPhaseMapCompletesWithUsefulCoverage() async throws {
         let provider = try requireNativeCoolPropProvider()
-        let request = PhaseMapRequest(
-            modelID: provider.descriptor.id,
-            pressurePa: 15_000_000,
-            temperatureK: 293.15,
-            composition: [
-                MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
-                MixtureComponent(component: .nitrogen, moleFraction: 0.05)
-            ],
-            range: .automatic(pressurePa: 15_000_000, temperatureK: 293.15),
-            resolution: .five,
-            clientVersion: "coolprop-phase-map-native-regression"
-        )
 
-        let result = try await PhaseMapRunner(provider: provider).run(request)
+        for resolution in [PhaseMapResolution.five, .ten, .twenty] {
+            let request = historicalCO2NitrogenRequest(
+                provider: provider,
+                resolution: resolution
+            )
+            let result = try await PhaseMapRunner(provider: provider).run(request)
 
-        XCTAssertEqual(result.evaluations.count, PhaseMapResolution.five.expectedEvaluationCount)
-        XCTAssertEqual(result.request.composition, request.composition)
-        let guardedIndex = try XCTUnwrap(result.evaluations.firstIndex {
-            $0.point.pressurePa == 7_500_000
-                && abs($0.point.temperatureK - 280.65) <= 1e-9
-        })
-        XCTAssertTrue(result.evaluations.dropFirst(guardedIndex + 1).contains {
-            $0.failureReason == nil
-        })
+            try assertHistoricalCO2NitrogenResult(result, request: request)
+        }
     }
 
     func testBuiltInCasePhaseMapsCompleteWithoutProcessTermination() async throws {
@@ -78,5 +64,63 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             )
         }
         return provider
+    }
+
+    private func historicalCO2NitrogenRequest(
+        provider: any ThermodynamicModelProvider,
+        resolution: PhaseMapResolution
+    ) -> PhaseMapRequest {
+        PhaseMapRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [
+                MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
+                MixtureComponent(component: .nitrogen, moleFraction: 0.05)
+            ],
+            range: .automatic(pressurePa: 15_000_000, temperatureK: 293.15),
+            resolution: resolution,
+            clientVersion: "coolprop-phase-map-native-regression"
+        )
+    }
+
+    private func assertHistoricalCO2NitrogenResult(
+        _ result: PhaseMapResult,
+        request: PhaseMapRequest
+    ) throws {
+        let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+        XCTAssertEqual(result.evaluations.count, expectedCount)
+        XCTAssertEqual(result.request.composition, request.composition)
+
+        let failed = result.evaluations.filter {
+            $0.classification.classification == .failed
+        }
+        XCTAssertLessThanOrEqual(
+            Double(failed.count) / Double(result.evaluations.count),
+            0.10,
+            "Historical CO2/N2 Phase Map failed more than 10% of points: \(failed.count)/\(result.evaluations.count)"
+        )
+
+        let rows = Dictionary(grouping: result.evaluations) { evaluation in
+            evaluation.point.temperatureK
+        }
+        for (temperature, row) in rows {
+            let rowFailures = row.filter {
+                $0.classification.classification == .failed
+            }
+            XCTAssertLessThan(
+                rowFailures.count,
+                row.count,
+                "Entire historical CO2/N2 row failed at T=\(temperature) K"
+            )
+        }
+
+        if let firstFailureIndex = result.evaluations.firstIndex(where: {
+            $0.classification.classification == .failed
+        }) {
+            XCTAssertTrue(result.evaluations.dropFirst(firstFailureIndex + 1).contains {
+                $0.classification.classification != .failed
+            })
+        }
     }
 }

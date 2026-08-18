@@ -242,12 +242,18 @@ int calculate_dry_mixture_state(
         state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
 
         const double density = state->rhomass();
+        const double gibbs_molar = state->gibbsmolar();
         if (!std::isfinite(density) || density <= 0) {
             copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
             return 6;
         }
+        if (!std::isfinite(gibbs_molar)) {
+            copy_text("CoolProp returned an invalid dry-mixture molar Gibbs energy.", error_buffer, error_buffer_size);
+            return 6;
+        }
 
         result->density_kg_m3 = density;
+        result->gibbs_molar_j_mol = gibbs_molar;
         result->phase = map_phase(state->phase());
         copy_text("", error_buffer, error_buffer_size);
         return 0;

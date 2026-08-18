@@ -87,6 +87,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             }
             return CoolPropBinaryEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
         }.value
@@ -138,6 +139,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             }
             return CoolPropBinaryEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
         }.value
@@ -189,6 +191,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             }
             return CoolPropBinaryEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
         }.value

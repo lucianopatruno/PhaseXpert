@@ -33,6 +33,7 @@ typedef struct PXCoolPropResult {
 
 typedef struct PXCoolPropBinaryResult {
     double density_kg_m3;
+    double gibbs_molar_j_mol;
     PXCoolPropPhase phase;
 } PXCoolPropBinaryResult;
 
