@@ -820,22 +820,26 @@ final class CoolPropProviderTests: XCTestCase {
         })
     }
 
-    func testPhaseMapSaturationUnavailableReturnsUnknownWhenImposedStatesAreIdentical() async throws {
+    func testPhaseMapSaturationUnavailableClassifiesIdenticalStateWithReducingDensity() async throws {
         let result = try await phaseMapResult(
             gasResult: .success(binaryResult(
                 densityKilogramsPerCubicMetre: 700,
+                densityMolesPerCubicMetre: 12_000,
+                reducingDensityMolesPerCubicMetre: 10_000,
                 gibbsMolarJoulesPerMole: 100,
                 phaseIdentifier: "gas"
             )),
             liquidResult: .success(binaryResult(
                 densityKilogramsPerCubicMetre: 700,
+                densityMolesPerCubicMetre: 12_000,
+                reducingDensityMolesPerCubicMetre: 10_000,
                 gibbsMolarJoulesPerMole: 100 + 1e-9,
                 phaseIdentifier: "liquid"
             ))
         )
 
         XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .unknown
+            $0.classification.classification == .liquid
         })
         XCTAssertTrue(result.evaluations.allSatisfy { $0.failureReason == nil })
     }
@@ -888,11 +892,15 @@ final class CoolPropProviderTests: XCTestCase {
 
     private func binaryResult(
         densityKilogramsPerCubicMetre: Double = 700,
+        densityMolesPerCubicMetre: Double = 9_000,
+        reducingDensityMolesPerCubicMetre: Double = 10_000,
         gibbsMolarJoulesPerMole: Double,
         phaseIdentifier: String
     ) -> CoolPropBinaryEngineResult {
         CoolPropBinaryEngineResult(
             densityKilogramsPerCubicMetre: densityKilogramsPerCubicMetre,
+            densityMolesPerCubicMetre: densityMolesPerCubicMetre,
+            reducingDensityMolesPerCubicMetre: reducingDensityMolesPerCubicMetre,
             gibbsMolarJoulesPerMole: gibbsMolarJoulesPerMole,
             phaseIdentifier: phaseIdentifier
         )

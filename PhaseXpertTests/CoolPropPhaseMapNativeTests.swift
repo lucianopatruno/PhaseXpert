@@ -100,6 +100,14 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             0.10,
             "Historical CO2/N2 Phase Map failed more than 10% of points: \(failed.count)/\(result.evaluations.count)"
         )
+        let unknown = result.evaluations.filter {
+            $0.classification.classification == .unknown
+        }
+        XCTAssertLessThanOrEqual(
+            Double(unknown.count) / Double(result.evaluations.count),
+            0.01,
+            "Historical CO2/N2 Phase Map returned more than 1% unknown points: \(unknown.count)/\(result.evaluations.count)"
+        )
 
         let rows = Dictionary(grouping: result.evaluations) { evaluation in
             evaluation.point.temperatureK

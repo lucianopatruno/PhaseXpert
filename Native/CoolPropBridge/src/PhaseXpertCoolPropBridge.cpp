@@ -242,9 +242,17 @@ int calculate_dry_mixture_state(
         state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
 
         const double density = state->rhomass();
+        const double density_molar = state->rhomolar();
+        const double reducing_density_molar = state->rhomolar_reducing();
         const double gibbs_molar = state->gibbsmolar();
         if (!std::isfinite(density) || density <= 0) {
             copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        if (!std::isfinite(density_molar) || density_molar <= 0
+            || !std::isfinite(reducing_density_molar)
+            || reducing_density_molar <= 0) {
+            copy_text("CoolProp returned an invalid dry-mixture molar or reducing density.", error_buffer, error_buffer_size);
             return 6;
         }
         if (!std::isfinite(gibbs_molar)) {
@@ -253,6 +261,8 @@ int calculate_dry_mixture_state(
         }
 
         result->density_kg_m3 = density;
+        result->density_mol_m3 = density_molar;
+        result->reducing_density_mol_m3 = reducing_density_molar;
         result->gibbs_molar_j_mol = gibbs_molar;
         result->phase = map_phase(state->phase());
         copy_text("", error_buffer, error_buffer_size);

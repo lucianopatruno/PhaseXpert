@@ -230,7 +230,22 @@ public struct PhaseMapResult: Codable, Equatable, Sendable {
     }
 
     public var successfulCount: Int {
-        evaluations.filter { $0.failureReason == nil && $0.solver?.converged != false }.count
+        classifiedCount
+    }
+
+    public var classifiedCount: Int {
+        evaluations.filter {
+            $0.failureReason == nil
+                && $0.solver?.converged != false
+                && $0.classification.classification != .unknown
+        }.count
+    }
+
+    public var unknownCount: Int {
+        evaluations.filter {
+            $0.failureReason == nil
+                && $0.classification.classification == .unknown
+        }.count
     }
 
     public var failedCount: Int {

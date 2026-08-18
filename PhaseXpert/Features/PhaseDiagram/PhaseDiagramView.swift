@@ -199,7 +199,7 @@ final class PhaseDiagramViewModel {
                 await MainActor.run {
                     guard self?.phaseMapRunID == runID else { return }
                     self?.phaseMapResult = result
-                    self?.phaseMapStatusMessage = "Phase Map complete: \(result.successfulCount) successful, \(result.failedCount) failed, \(result.nonConvergedCount) non-converged."
+                    self?.phaseMapStatusMessage = "Phase Map complete: \(result.classifiedCount) classified, \(result.unknownCount) unknown, \(result.failedCount) failed, \(result.nonConvergedCount) non-converged."
                     self?.isPhaseMapLoading = false
                     self?.isPhaseMapResultStale = false
                 }
@@ -742,7 +742,8 @@ private struct PhaseMapResultsSection: View {
                         .font(.headline)
                     LabeledContent("Resolution", value: "\(result.request.resolution.rawValue)×\(result.request.resolution.rawValue)")
                     LabeledContent("Evaluations", value: "\(result.evaluations.count)")
-                    LabeledContent("Successful", value: "\(result.successfulCount)")
+                    LabeledContent("Classified", value: "\(result.classifiedCount)")
+                    LabeledContent("Unknown", value: "\(result.unknownCount)")
                     LabeledContent("Failed", value: "\(result.failedCount)")
                     LabeledContent("Non-converged", value: "\(result.nonConvergedCount)")
                 }
@@ -752,7 +753,7 @@ private struct PhaseMapResultsSection: View {
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
                     Text("Pressure-temperature classification")
                         .font(.headline)
-                    Text("Markers use both color and shape; gray points are failed, non-converged, unknown or unsupported.")
+                    Text("Markers use both color and shape; gray points are unknown, failed, non-converged or unsupported.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -882,7 +883,8 @@ private struct PhaseMapLegend: View {
         ("Multiphase", .style(for: .multiphase)),
         ("Dense", .style(for: .dense)),
         ("Supercritical", .style(for: .supercritical)),
-        ("Failed/non-converged/unknown/unsupported", .failed)
+        ("Unknown", .unknown),
+        ("Failed/non-converged/unsupported", .failed)
     ]
 
     var body: some View {
@@ -934,10 +936,20 @@ struct PhaseMapMarkerStyle {
         chartSymbol: .circle,
         systemImage: "circle.fill",
         color: .pxUnavailable,
-        accessibilityDescription: "Solid gray circle for failed, non-converged, unknown or unsupported flash points"
+        accessibilityDescription: "Solid gray circle for failed, non-converged or unsupported flash points"
+    )
+
+    static let unknown = PhaseMapMarkerStyle(
+        chartSymbol: .diamond,
+        systemImage: "questionmark.diamond",
+        color: .pxUnavailable,
+        accessibilityDescription: "Gray diamond for unknown flash points"
     )
 
     static func style(for evaluation: PhaseMapEvaluation) -> PhaseMapMarkerStyle {
+        if evaluation.classification.classification == .unknown {
+            return unknown
+        }
         if evaluation.failureReason != nil || !evaluation.classification.isSupported {
             return failed
         }
@@ -988,7 +1000,9 @@ struct PhaseMapMarkerStyle {
                 color: .purple,
                 accessibilityDescription: "Purple triangle for Supercritical"
             )
-        case .unknown, .failed:
+        case .unknown:
+            unknown
+        case .failed:
             failed
         }
     }

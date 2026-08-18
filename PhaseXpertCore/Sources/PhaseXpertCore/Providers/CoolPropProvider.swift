@@ -64,15 +64,21 @@ public struct CoolPropEngineResult: Equatable, Sendable {
 /// separate transport-property validation is completed.
 public struct CoolPropBinaryEngineResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
+    public let densityMolesPerCubicMetre: Double?
+    public let reducingDensityMolesPerCubicMetre: Double?
     public let gibbsMolarJoulesPerMole: Double?
     public let phaseIdentifier: String
 
     public init(
         densityKilogramsPerCubicMetre: Double,
+        densityMolesPerCubicMetre: Double? = nil,
+        reducingDensityMolesPerCubicMetre: Double? = nil,
         gibbsMolarJoulesPerMole: Double? = nil,
         phaseIdentifier: String
     ) {
         self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.densityMolesPerCubicMetre = densityMolesPerCubicMetre
+        self.reducingDensityMolesPerCubicMetre = reducingDensityMolesPerCubicMetre
         self.gibbsMolarJoulesPerMole = gibbsMolarJoulesPerMole
         self.phaseIdentifier = phaseIdentifier
     }
@@ -1235,10 +1241,20 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             let difference = gasGibbs - liquidGibbs
             if abs(difference) <= tolerance {
                 if equivalentDensity(gasCandidate.result, liquidCandidate.result) {
-                    return identicalStateEvaluation(
+                    if let phase = mixtureSinglePhase(for: gasCandidate.result) {
+                        return singlePhaseEvaluation(
+                            point: point,
+                            startedAt: startedAt,
+                            candidate: PhaseMapSinglePhaseCandidate(
+                                phase: phase,
+                                result: gasCandidate.result
+                            ),
+                            method: "CoolProp AbstractState(HEOS) imposed gas/liquid PT updates converged to the same density and molar Gibbs energy; classified with CoolProp's mixture single-phase reducing-density criterion because exact-temperature T,Q saturation lookup was unavailable"
+                        )
+                    }
+                    return failedEvaluation(
                         point: point,
-                        startedAt: startedAt,
-                        method: "CoolProp AbstractState(HEOS) imposed gas/liquid PT updates converged to the same density and molar Gibbs energy because exact-temperature T,Q saturation lookup was unavailable"
+                        message: "CoolProp T,Q saturation lookup failed (\(saturationErrorMessage)); imposed gas/liquid states converged to the same density and molar Gibbs energy but did not return finite molar and reducing densities for mixture phase classification."
                     )
                 }
                 return failedEvaluation(
@@ -1336,23 +1352,6 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         )
     }
 
-    private func identicalStateEvaluation(
-        point: PhaseMapGridPoint,
-        startedAt: Date,
-        method: String
-    ) -> PhaseMapEvaluation {
-        PhaseMapEvaluation(
-            point: point,
-            classification: PhaseMapClassificationAdapter.map(.unknown),
-            solver: SolverMetadata(
-                method: method + "; phase label is unknown because imposed gas/liquid branch labels are not independent phase classifications",
-                converged: true,
-                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
-            ),
-            failureReason: nil
-        )
-    }
-
     private func equivalentDensity(
         _ first: CoolPropBinaryEngineResult,
         _ second: CoolPropBinaryEngineResult
@@ -1368,6 +1367,20 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             Self.densityEqualityAbsoluteToleranceKilogramsPerCubicMetre
         )
         return difference <= tolerance
+    }
+
+    private func mixtureSinglePhase(
+        for result: CoolPropBinaryEngineResult
+    ) -> CoolPropSinglePhaseHint? {
+        guard let density = result.densityMolesPerCubicMetre,
+              let reducingDensity = result.reducingDensityMolesPerCubicMetre,
+              density.isFinite,
+              reducingDensity.isFinite,
+              density > 0,
+              reducingDensity > 0 else {
+            return nil
+        }
+        return density > reducingDensity ? .liquid : .gas
     }
 
     private func failedEvaluation(
