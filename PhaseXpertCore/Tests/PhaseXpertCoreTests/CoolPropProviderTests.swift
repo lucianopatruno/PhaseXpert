@@ -273,7 +273,16 @@ final class CoolPropProviderTests: XCTestCase {
         let provider = CoolPropProvider(engine: MockEngine())
         XCTAssertEqual(
             provider.descriptor.supportedComponents,
-            [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
+            [
+                .carbonDioxide,
+                .nitrogen,
+                .oxygen,
+                .argon,
+                .methane,
+                .hydrogen,
+                .carbonMonoxide,
+                .hydrogenSulfide
+            ]
         )
         let request = CalculationRequest(
             modelID: provider.descriptor.id,

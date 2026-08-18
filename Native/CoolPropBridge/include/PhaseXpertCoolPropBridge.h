@@ -69,8 +69,8 @@ int px_coolprop_calculate_pure_co2(
 
 /// Calculates a restricted dry CO2-rich state using only interaction entries
 /// shipped by the pinned CoolProp release. No estimated mixing rule is applied.
-/// Fractions are ordered CO2, N2, O2, Ar, CH4 and H2. Total impurity is
-/// temporarily capped at 10 mol%; this product guardrail is not an accuracy
+/// Fractions are ordered CO2, N2, O2, Ar, CH4, H2, CO and H2S. Total impurity
+/// is temporarily capped at 10 mol%; this product guardrail is not an accuracy
 /// or validation claim.
 int px_coolprop_calculate_dry_co2_mixture(
     double pressure_pa,
@@ -81,6 +81,8 @@ int px_coolprop_calculate_dry_co2_mixture(
     double argon_mole_fraction,
     double methane_mole_fraction,
     double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
     PXCoolPropBinaryResult *result,
     char *error_buffer,
     size_t error_buffer_size
@@ -128,6 +130,8 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     double argon_mole_fraction,
     double methane_mole_fraction,
     double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
     PXCoolPropEnvelopePoint *points,
     size_t point_capacity,
     size_t *point_count,

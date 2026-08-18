@@ -178,6 +178,8 @@ int px_coolprop_calculate_dry_co2_mixture(
     double argon_mole_fraction,
     double methane_mole_fraction,
     double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
     PXCoolPropBinaryResult *result,
     char *error_buffer,
     size_t error_buffer_size
@@ -187,13 +189,15 @@ int px_coolprop_calculate_dry_co2_mixture(
         return 1;
     }
 
-    const std::array<double, 6> fractions = {
+    const std::array<double, 8> fractions = {
         carbon_dioxide_mole_fraction,
         nitrogen_mole_fraction,
         oxygen_mole_fraction,
         argon_mole_fraction,
         methane_mole_fraction,
-        hydrogen_mole_fraction
+        hydrogen_mole_fraction,
+        carbon_monoxide_mole_fraction,
+        hydrogen_sulfide_mole_fraction
     };
     if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
         || pressure_pa <= 0 || temperature_k <= 0) {
@@ -228,8 +232,9 @@ int px_coolprop_calculate_dry_co2_mixture(
     }
 
     try {
-        constexpr std::array<const char *, 6> names = {
-            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen"
+        constexpr std::array<const char *, 8> names = {
+            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
+            "CarbonMonoxide", "HydrogenSulfide"
         };
         std::string fluid = "HEOS::";
         bool first = true;
@@ -295,6 +300,8 @@ int px_coolprop_calculate_co2_n2(
         temperature_k,
         carbon_dioxide_mole_fraction,
         nitrogen_mole_fraction,
+        0,
+        0,
         0,
         0,
         0,
@@ -390,6 +397,8 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     double argon_mole_fraction,
     double methane_mole_fraction,
     double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
     PXCoolPropEnvelopePoint *points,
     size_t point_capacity,
     size_t *point_count,
@@ -407,13 +416,15 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     *is_complete = 0;
     *is_closed = 0;
 
-    const std::array<double, 6> fractions = {
+    const std::array<double, 8> fractions = {
         carbon_dioxide_mole_fraction,
         nitrogen_mole_fraction,
         oxygen_mole_fraction,
         argon_mole_fraction,
         methane_mole_fraction,
-        hydrogen_mole_fraction
+        hydrogen_mole_fraction,
+        carbon_monoxide_mole_fraction,
+        hydrogen_sulfide_mole_fraction
     };
     double total = 0;
     for (const double fraction : fractions) {
@@ -442,8 +453,9 @@ int px_coolprop_dry_co2_mixture_phase_envelope(
     }
 
     try {
-        constexpr std::array<const char *, 6> names = {
-            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen"
+        constexpr std::array<const char *, 8> names = {
+            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
+            "CarbonMonoxide", "HydrogenSulfide"
         };
         std::vector<std::string> active_names;
         std::vector<double> active_fractions;
