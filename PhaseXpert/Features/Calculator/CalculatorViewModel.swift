@@ -84,7 +84,7 @@ enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CalculatorViewModel {
-    var pressureText = "150"
+    var pressureText = "50"
     var temperatureText = "20"
     var pressureDisplayUnit: PressureDisplayUnit = .barAbsolute
     var temperatureDisplayUnit: TemperatureDisplayUnit = .celsius
@@ -102,7 +102,7 @@ final class CalculatorViewModel {
     private let validator = CalculationValidator()
     private var compositionBeforeNormalization: [CompositionInputSnapshot]?
     private var lastNormalizedComposition: [MixtureComponent]?
-    private var lastValidPressurePa = PressureUnit.bar.toPascal(150)
+    private var lastValidPressurePa = PressureUnit.bar.toPascal(50)
     private var lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
 
     init(registry: ProviderRegistry = ProviderRegistry()) {
@@ -290,6 +290,23 @@ final class CalculatorViewModel {
             issues: issues,
             normalizedComposition: coreReport.normalizedComposition
         )
+    }
+
+    func reset() {
+        pressureDisplayUnit = .barAbsolute
+        temperatureDisplayUnit = .celsius
+        pressureText = "50"
+        temperatureText = "20"
+        lastValidPressurePa = PressureUnit.bar.toPascal(50)
+        lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
+        selectedModelID = "coolprop-heos"
+        compositionBasis = .partsPerMillion
+        composition = [CompositionInput(component: .carbonDioxide, value: "1000000")]
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
+        validate()
     }
 
     func normalizeComposition() {

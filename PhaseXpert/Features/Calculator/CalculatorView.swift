@@ -397,6 +397,25 @@ struct CalculatorView: View {
             }
             .onSubmit { viewModel.validate() }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset", systemImage: "arrow.counterclockwise") {
+                        focusedField = nil
+                        pressureSelection = nil
+                        temperatureSelection = nil
+                        compositionSelections.removeAll()
+                        recordToSave = nil
+                        saveConfirmation = nil
+                        saveError = nil
+                        navigationState.pendingCalculationRecord = nil
+                        navigationState.pendingBuiltInCase = nil
+                        navigationState.latestCalculationRecord = nil
+                        viewModel.reset()
+                    }
+                    .disabled(viewModel.isCalculating)
+                    .accessibilityIdentifier("reset-calculator")
+                    .accessibilityHint("Restores the clean calculator defaults and clears results.")
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Scientific traceability", systemImage: "checkmark.shield") {
                         viewModel.validate()
@@ -671,7 +690,9 @@ struct CalculatorView: View {
         } else if viewModel.temperatureText.hasPrefix("−") {
             viewModel.temperatureText.removeFirst()
         } else {
-            viewModel.temperatureText.insert("-", at: viewModel.temperatureText.startIndex)
+            // The dedicated key starts a new negative entry, matching the
+            // calculator's replace-on-focus behavior for numeric fields.
+            viewModel.temperatureText = "-"
         }
     }
 
@@ -1675,8 +1696,8 @@ private struct ModelSelectionRow: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .top, spacing: IFESpacing.regular) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : statusIcon)
-                    .foregroundStyle(statusColor)
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? Color.ifePrimary : Color.secondary)
                     .font(.title3)
                     .accessibilityHidden(true)
 

@@ -47,12 +47,12 @@ struct RootView: View {
                 CalculatorView()
             }
 
-            Tab("Saved Cases", systemImage: "tray.full", value: .savedCases) {
-                SavedCasesView()
-            }
-
             Tab("Phase Diagram", systemImage: "chart.xyaxis.line", value: .phaseDiagram) {
                 PhaseDiagramView()
+            }
+
+            Tab("Saved Cases", systemImage: "tray.full", value: .savedCases) {
+                SavedCasesView()
             }
 
             Tab("More", systemImage: "ellipsis", value: .more) {
@@ -70,29 +70,55 @@ private struct MoreView: View {
     var body: some View {
         NavigationStack {
             List {
-                NavigationLink {
-                    StreamMixingView(
-                        viewModel: state.streamMixingViewModel,
-                        wrapsInNavigationStack: false
-                    )
-                } label: {
-                    Label("Stream Mixing", systemImage: "arrow.triangle.merge")
+                Section("Tools") {
+                    NavigationLink {
+                        StreamMixingView(
+                            viewModel: state.streamMixingViewModel,
+                            wrapsInNavigationStack: false
+                        )
+                    } label: {
+                        Label("Stream Mixing", systemImage: "arrow.triangle.merge")
+                    }
+                    .accessibilityIdentifier("more-stream-mixing")
                 }
-                .accessibilityIdentifier("more-stream-mixing")
 
-                NavigationLink {
-                    ModelInformationView(wrapsInNavigationStack: false)
-                } label: {
-                    Label("Models", systemImage: "books.vertical")
-                }
-                .accessibilityIdentifier("more-models")
+                Section("Models & Information") {
+                    NavigationLink {
+                        ModelInformationView(
+                            wrapsInNavigationStack: false,
+                            modelID: "coolprop-heos"
+                        )
+                    } label: {
+                        Label("General Properties / CoolProp", systemImage: "function")
+                    }
+                    .accessibilityIdentifier("more-general-model")
 
-                NavigationLink {
-                    AboutView(wrapsInNavigationStack: false)
-                } label: {
-                    Label("About", systemImage: "info.circle")
+                    NavigationLink {
+                        ModelInformationView(
+                            wrapsInNavigationStack: false,
+                            modelID: "teqp-pure-co2-experimental"
+                        )
+                    } label: {
+                        Label("Advanced CCS / teqp / EOS-CG", systemImage: "atom")
+                    }
+                    .accessibilityIdentifier("more-advanced-model")
+
+                    NavigationLink {
+                        AboutView(wrapsInNavigationStack: false)
+                    } label: {
+                        Label("About", systemImage: "info.circle")
+                    }
+                    .accessibilityIdentifier("more-about")
                 }
-                .accessibilityIdentifier("more-about")
+
+                Section("Research Infrastructure") {
+                    NavigationLink {
+                        FalconView()
+                    } label: {
+                        Label("FALCON", systemImage: "building.2")
+                    }
+                    .accessibilityIdentifier("more-falcon")
+                }
             }
             .navigationTitle("More")
         }

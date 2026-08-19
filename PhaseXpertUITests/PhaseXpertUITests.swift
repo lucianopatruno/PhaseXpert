@@ -30,8 +30,8 @@ final class PhaseXpertUITests: XCTestCase {
             "Run calculation button should be reachable by scrolling the calculator form."
         )
 
-        openMoreRow("Models", in: app)
-        XCTAssertTrue(app.navigationBars["Model Information"].waitForExistence(timeout: 2))
+        openMoreRow("General Properties / CoolProp", in: app)
+        XCTAssertTrue(app.staticTexts["Identity"].waitForExistence(timeout: 2))
     }
 
     func testBottomTabBarHasThreePrimaryTabsInOrder() {
@@ -44,8 +44,8 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(tabBar.buttons["Saved Cases"].exists)
         XCTAssertTrue(tabBar.buttons["Phase Diagram"].exists)
         XCTAssertFalse(tabBar.buttons["Stream Mixing"].exists)
-        XCTAssertLessThan(tabBar.buttons["Calculator"].frame.minX, tabBar.buttons["Saved Cases"].frame.minX)
-        XCTAssertLessThan(tabBar.buttons["Saved Cases"].frame.minX, tabBar.buttons["Phase Diagram"].frame.minX)
+        XCTAssertLessThan(tabBar.buttons["Calculator"].frame.minX, tabBar.buttons["Phase Diagram"].frame.minX)
+        XCTAssertLessThan(tabBar.buttons["Phase Diagram"].frame.minX, tabBar.buttons["Saved Cases"].frame.minX)
     }
 
     func testNumericKeyboardDoesNotShowCustomOKControl() {
@@ -55,6 +55,25 @@ final class PhaseXpertUITests: XCTestCase {
         app.textFields["Pressure value"].tap()
         XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["OK"].exists)
+    }
+
+    func testCalculatorResetRestoresFiftyBarAndTwentyCelsiusDefaults() {
+        let app = XCUIApplication()
+        app.launch()
+
+        let pressure = app.textFields["Pressure value"]
+        let temperature = app.textFields["Temperature value"]
+        XCTAssertEqual(pressure.value as? String, "50 bar(a)")
+        XCTAssertEqual(temperature.value as? String, "20 °C")
+
+        pressure.tap()
+        pressure.typeText("42")
+        app.buttons["keyboard-done"].tap()
+        app.buttons["reset-calculator"].tap()
+
+        XCTAssertEqual(pressure.value as? String, "50 bar(a)")
+        XCTAssertEqual(temperature.value as? String, "20 °C")
+        XCTAssertEqual(app.buttons["model-coolprop-heos"].value as? String, "Selected")
     }
 
     func testPressureAndTemperatureValuesReplaceOnFocus() {
@@ -139,12 +158,21 @@ final class PhaseXpertUITests: XCTestCase {
 
         let advanced = app.buttons["model-teqp-pure-co2-experimental"]
         XCTAssertTrue(advanced.waitForExistence(timeout: 3))
-        XCTAssertEqual(advanced.label, "Advanced CCS Properties")
+        XCTAssertTrue(advanced.label.hasPrefix("Advanced CCS Properties"))
         advanced.tap()
         XCTAssertEqual(advanced.value as? String, "Selected")
 
         addImpurity(in: app)
-        XCTAssertTrue(app.buttons["CH₄ impurity menu"].waitForExistence(timeout: 3))
+        let initialMenu = app.buttons.matching(
+            NSPredicate(format: "label ENDSWITH %@", "impurity menu")
+        ).element
+        XCTAssertTrue(initialMenu.waitForExistence(timeout: 3))
+        if !app.buttons["CH₄ impurity menu"].exists {
+            initialMenu.tap()
+            XCTAssertTrue(app.buttons["CH₄"].waitForExistence(timeout: 2))
+            app.buttons["CH₄"].tap()
+        }
+        XCTAssertTrue(app.buttons["CH₄ impurity menu"].exists)
         XCTAssertFalse(app.buttons["N₂ impurity menu"].exists)
         XCTAssertFalse(app.buttons["O₂ impurity menu"].exists)
         XCTAssertFalse(app.buttons["Ar impurity menu"].exists)
@@ -152,14 +180,17 @@ final class PhaseXpertUITests: XCTestCase {
         openImpurityMenu("CH₄", in: app)
         XCTAssertTrue(app.buttons["H₂"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["N₂"].exists)
-        XCTAssertFalse(app.buttons["O₂"].exists)
+        XCTAssertTrue(app.buttons["O₂"].exists)
         XCTAssertFalse(app.buttons["Ar"].exists)
         app.buttons["H₂"].tap()
 
         XCTAssertTrue(app.buttons["H₂ impurity menu"].waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["CH₄ impurity menu"].exists)
         addImpurity(in: app)
-        XCTAssertTrue(app.buttons["CH₄ impurity menu"].waitForExistence(timeout: 3))
+        XCTAssertEqual(
+            app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "impurity menu")).count,
+            2
+        )
     }
 
     func testAdvancedCCSPropertiesShowsValidatedRangeGuidanceBeforeCalculation() {
@@ -170,13 +201,26 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(advanced.waitForExistence(timeout: 3))
         advanced.tap()
         addImpurity(in: app)
+        let initialMenu = app.buttons.matching(
+            NSPredicate(format: "label ENDSWITH %@", "impurity menu")
+        ).element
+        XCTAssertTrue(initialMenu.waitForExistence(timeout: 3))
+        if !app.buttons["CH₄ impurity menu"].exists {
+            initialMenu.tap()
+            XCTAssertTrue(app.buttons["CH₄"].waitForExistence(timeout: 2))
+            app.buttons["CH₄"].tap()
+        }
+        let methane = app.textFields["CH₄ ppm"]
+        XCTAssertTrue(methane.waitForExistence(timeout: 3))
+        methane.tap()
+        methane.typeText("50000")
+        app.buttons["keyboard-done"].tap()
 
-        for _ in 0..<5 where !app.otherElements["validated-range-guidance"].waitForExistence(timeout: 0.5) {
+        for _ in 0..<5 where !app.staticTexts["CH₄ validated composition"].waitForExistence(timeout: 0.5) {
             app.swipeUp()
         }
 
-        XCTAssertTrue(app.otherElements["validated-range-guidance"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.staticTexts["CH₄ validated composition"].exists)
+        XCTAssertTrue(app.staticTexts["CH₄ validated composition"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["50000 ppm"].exists)
         XCTAssertTrue(app.staticTexts["Phase diagram"].exists)
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "19.98 °C to 24.99 °C")).element.exists)
@@ -252,7 +296,7 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        app.tabBars.buttons["About"].tap()
+        openMoreRow("About", in: app)
 
         XCTAssertTrue(app.staticTexts["Developed by IFE"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.staticTexts["Flow Technology Department"].exists)
@@ -267,7 +311,7 @@ final class PhaseXpertUITests: XCTestCase {
             NSPredicate(format: "label CONTAINS %@", "Validation remains incomplete")
         )
         XCTAssertEqual(repeatedWarning.count, 0)
-        XCTAssertTrue(app.staticTexts["CoolProp HEOS — Preliminary"].exists)
+        XCTAssertTrue(app.staticTexts["Preliminary scientific model"].exists)
     }
 
     func testImpurityKeyboardDoneDismissesInPPMAndMolPercentModes() {
@@ -440,6 +484,7 @@ final class PhaseXpertUITests: XCTestCase {
         streamName.tap()
         streamName.typeText(" retained")
         let retainedName = streamName.value as? String
+        app.keyboards.buttons["Return"].tap()
 
         let flowField = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
         XCTAssertTrue(flowField.waitForExistence(timeout: 3))

@@ -2869,4 +2869,30 @@ final class PhaseXpertTests: XCTestCase {
                 && $0.detail.contains("150.0 bar(a)")
         })
     }
+
+    @MainActor
+    func testCalculatorResetRestoresCleanDefaultsAndClearsResultState() async {
+        let viewModel = CalculatorViewModel()
+        viewModel.pressureText = "42"
+        viewModel.temperatureText = "80"
+        viewModel.composition.append(
+            CompositionInput(component: .nitrogen, value: "1000")
+        )
+        viewModel.validate()
+
+        viewModel.reset()
+
+        XCTAssertEqual(viewModel.pressureText, "50")
+        XCTAssertEqual(viewModel.temperatureText, "20")
+        XCTAssertEqual(viewModel.pressureDisplayUnit, .barAbsolute)
+        XCTAssertEqual(viewModel.temperatureDisplayUnit, .celsius)
+        XCTAssertEqual(viewModel.selectedModelID, "coolprop-heos")
+        XCTAssertEqual(viewModel.compositionBasis, .partsPerMillion)
+        XCTAssertEqual(viewModel.composition.count, 1)
+        XCTAssertEqual(viewModel.composition.first?.component, .carbonDioxide)
+        XCTAssertEqual(viewModel.composition.first?.value, "1000000")
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertNil(viewModel.calculationError)
+        XCTAssertTrue(viewModel.validationReport.canCalculate)
+    }
 }
