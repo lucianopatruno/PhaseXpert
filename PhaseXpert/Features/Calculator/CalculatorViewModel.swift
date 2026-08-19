@@ -122,8 +122,7 @@ final class CalculatorViewModel {
     var operatingRangeGuidance: OperatingRangeGuidance? {
         guard
             let provider = registry.provider(id: selectedModelID),
-            let descriptor = selectedDescriptor,
-            descriptor.id == "teqp-pure-co2-experimental"
+            selectedDescriptor != nil
         else {
             return nil
         }
@@ -133,6 +132,24 @@ final class CalculatorViewModel {
                 temperatureK: parsedTemperatureK,
                 composition: domainComposition()
             )
+        )
+    }
+
+    /// Independent binary pure-water equilibrium preview. This intentionally
+    /// does not depend on, or broaden, the homogeneous CoolProp property gate.
+    var waterEquilibriumPreview: CarbonDioxideWaterEquilibriumResult? {
+        guard let pressurePa = parsedPressurePa,
+              let temperatureK = parsedTemperatureK else { return nil }
+        let active = domainComposition().filter { $0.moleFraction > 0 }
+        guard active.count == 2,
+              active.contains(where: { $0.component == .carbonDioxide }),
+              let water = active.first(where: { $0.component == .water }) else {
+            return nil
+        }
+        return try? SpycherPruess2003WaterEquilibrium().equilibrium(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            currentWaterMoleFraction: water.moleFraction
         )
     }
 

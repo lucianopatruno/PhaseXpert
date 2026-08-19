@@ -392,7 +392,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "General Properties (CoolProp)",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.9.0",
+            providerVersion: "0.10.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
@@ -431,7 +431,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Preliminary integration; no production accuracy claim.",
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
                 "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation.",
-                "H₂O support is preliminary homogeneous gas density only for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa; it does not represent aqueous equilibrium, mutual solubility, dew, dropout or pH."
+                "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa.",
+                "Binary pure-water equilibrium is separately limited-production at 373.15–373.30 K and 4.70–15.09 MPa; brine, wet multicomponent equilibrium, dropout temperature and pH are unsupported."
             ],
             references: [
                 SourceReference(
@@ -487,6 +488,18 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     title: "The IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use",
                     year: 2002,
                     doiOrURL: "https://doi.org/10.1063/1.1461829"
+                ),
+                SourceReference(
+                    authors: "Spycher, Pruess and Ennis-King",
+                    title: "CO₂-H₂O mixtures in the geological sequestration of CO₂. I. Assessment and calculation of mutual solubilities from 12 to 100 °C and up to 600 bar",
+                    year: 2003,
+                    doiOrURL: "https://doi.org/10.1016/S0016-7037(03)00273-4"
+                ),
+                SourceReference(
+                    authors: "Sanchez-Vicente and Trusler",
+                    title: "Measurements and Modelling of Vapour-Liquid Equilibrium for (H₂O + N₂) and (CO₂ + H₂O + N₂) Systems",
+                    year: 2022,
+                    doiOrURL: "https://doi.org/10.3390/en15113936"
                 )
             ]
         )
@@ -504,6 +517,20 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             .reduce(0) { $0 + $1.moleFraction }
 
         var issues: [ValidationIssue] = []
+        let active = composition.filter { $0.moleFraction.isFinite && $0.moleFraction > 0 }
+        if let water = active.first(where: { $0.component == .water }),
+           active.count != 2
+            || !active.contains(where: { $0.component == .carbonDioxide })
+            || water.moleFraction < 1e-6
+            || water.moleFraction > 0.001 {
+            issues.append(
+                ValidationIssue(
+                    code: .componentOutsideModelRange,
+                    severity: .error,
+                    message: "Homogeneous H₂O properties require binary CO₂/H₂O with 1–1000 ppm H₂O. The separate equilibrium preview never drops additional components."
+                )
+            )
+        }
         if totalImpurity > Self.maximumTotalImpurityMoleFraction {
             issues.append(
                 ValidationIssue(
@@ -559,12 +586,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             title: "Preliminary homogeneous wet-gas range",
             summary: [
                 .init(severity: .information, title: "Composition", detail: "Binary CO₂/H₂O; xH₂O = 1–1000 ppm (mole basis)"),
-                .init(severity: .information, title: "Properties", detail: "Density plus derived molar mass, specific volume and compressibility factor")
+                .init(severity: .information, title: "Homogeneous properties", detail: "Density plus derived molar mass, specific volume and compressibility factor"),
+                .init(severity: .information, title: "Water equilibrium", detail: "Limited-production binary pure-water equilibrium at 373.15–373.30 K and 47.0–150.9 bar(a)")
             ],
             currentInputIssues: issues,
             propertyAvailability: [
                 .init(severity: .information, title: "Available", detail: "Homogeneous gas density, M, v and Z"),
-                .init(severity: .unsupported, title: "Unavailable", detail: "Cp/Cv, sound speed, transport, mutual solubility, aqueous equilibrium, water dew/dropout and pH")
+                .init(severity: .unsupported, title: "Unavailable", detail: "Cp/Cv, sound speed, transport, brine equilibrium, wet multicomponent equilibrium, water-dropout temperature and pH")
             ],
             phaseDiagram: [
                 .init(severity: .unsupported, title: "Phase Map", detail: "Unavailable for H₂O-containing mixtures; dry-mixture safety routing remains unchanged.")
@@ -662,7 +690,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 solverMethod: "CoolProp AbstractState(HEOS, CO₂/H₂O), imposed homogeneous gas phase; Gernert CO₂-Water pair",
                 warnings: [
                     "WET GAS — PRELIMINARY / VALIDATION PENDING: only homogeneous density and derived M, v and Z are available.",
-                    "This result does not calculate water dew, dropout, mutual solubility, an aqueous phase or pH."
+                    "The homogeneous CoolProp state does not itself determine aqueous equilibrium, water dropout or pH."
                 ]
             )
         }
@@ -704,6 +732,24 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             ? ""
             : "; derived M=ΣxᵢMᵢ, v=1/ρ, Z=pM/(ρRT)"
 
+        let waterEquilibrium: CarbonDioxideWaterEquilibriumResult?
+        if case .wetCarbonDioxideGas = composition {
+            let currentWater = request.composition.first {
+                $0.component == .water
+            }?.moleFraction
+            waterEquilibrium = try? SpycherPruess2003WaterEquilibrium().equilibrium(
+                pressurePa: request.pressurePa,
+                temperatureK: request.temperatureK,
+                currentWaterMoleFraction: currentWater
+            )
+        } else {
+            waterEquilibrium = nil
+        }
+        let equilibriumWarnings = waterEquilibrium == nil ? [] : [
+            "WATER EQUILIBRIUM — LIMITED PRODUCTION: binary CO₂ + pure H₂O only, independently validated on the nominal 373 K isotherm from 4.70 to 15.09 MPa.",
+            "Water-dropout temperature is unavailable; dropout pressure is returned only when a bounded root exists inside the validated isotherm."
+        ]
+
         return CalculationResponse(
             requestID: request.requestID,
             model: descriptor,
@@ -715,9 +761,10 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             ),
             warnings: [
-                "PRELIMINARY — VALIDATION PENDING: do not use this result for engineering, safety, commercial, or regulatory decisions."
-            ] + state.warnings,
-            isScientificResult: true
+                "HOMOGENEOUS PROPERTIES — PRELIMINARY / VALIDATION PENDING: do not use those property values for engineering, safety, commercial, or regulatory decisions."
+            ] + state.warnings + equilibriumWarnings,
+            isScientificResult: true,
+            waterEquilibrium: waterEquilibrium
         )
     }
 

@@ -1,0 +1,39 @@
+{
+  "artifactVersion": 1,
+  "system": ["CO2", "H2O"],
+  "source": {
+    "authors": "Yolanda Sanchez-Vicente and J. P. Martin Trusler",
+    "title": "Measurements and Modelling of Vapour-Liquid Equilibrium for (H2O + N2) and (CO2 + H2O + N2) Systems at Temperatures between 323 and 473 K and Pressures up to 20 MPa",
+    "journal": "Energies 15 (2022) 3936",
+    "doi": "10.3390/en15113936",
+    "provenance": "Table 6, binary CO2(1) + H2O(2) calibration/validation measurements at nominal 373 K",
+    "access": "Open-access publisher article; numerical rows transcribed from Table 6 and cross-checked against the article's machine-readable HTML table."
+  },
+  "notes": [
+    "x1 is CO2 mole fraction in the H2O-rich liquid phase; y1 is CO2 mole fraction in the CO2-rich vapour phase.",
+    "The liquid- and vapour-phase samples are separate reported rows and are not forcibly paired when their measured pressures differ.",
+    "Standard uncertainties are reported by the source. Pressure is absolute."
+  ],
+  "waterRichPhaseRows": [
+    {"row": "Table 6 L1", "temperatureK": 373.28, "temperatureStandardUncertaintyK": 0.02, "pressureMPa": 4.71, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.00780, "compositionStandardUncertainty": 0.000158},
+    {"row": "Table 6 L2", "temperatureK": 373.26, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 5.45, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.00899, "compositionStandardUncertainty": 0.000451},
+    {"row": "Table 6 L3", "temperatureK": 373.28, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 10.07, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.01434, "compositionStandardUncertainty": 0.000134},
+    {"row": "Table 6 L4", "temperatureK": 373.22, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 10.03, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.01393, "compositionStandardUncertainty": 0.000109},
+    {"row": "Table 6 L5", "temperatureK": 373.28, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 15.09, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.01784, "compositionStandardUncertainty": 0.000189},
+    {"row": "Table 6 L6", "temperatureK": 373.28, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 15.09, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.01822, "compositionStandardUncertainty": 0.000180}
+  ],
+  "carbonDioxideRichPhaseRows": [
+    {"row": "Table 6 V1", "temperatureK": 373.27, "temperatureStandardUncertaintyK": 0.02, "pressureMPa": 4.71, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.97323, "waterMoleFraction": 0.02677, "compositionStandardUncertainty": 0.00135},
+    {"row": "Table 6 V2", "temperatureK": 373.27, "temperatureStandardUncertaintyK": 0.02, "pressureMPa": 4.70, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.97370, "waterMoleFraction": 0.02630, "compositionStandardUncertainty": 0.00149},
+    {"row": "Table 6 V3", "temperatureK": 373.27, "temperatureStandardUncertaintyK": 0.02, "pressureMPa": 5.46, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.97644, "waterMoleFraction": 0.02356, "compositionStandardUncertainty": 0.00133},
+    {"row": "Table 6 V4", "temperatureK": 373.27, "temperatureStandardUncertaintyK": 0.02, "pressureMPa": 5.45, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.97444, "waterMoleFraction": 0.02556, "compositionStandardUncertainty": 0.00101},
+    {"row": "Table 6 V5", "temperatureK": 373.27, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 10.06, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.98064, "waterMoleFraction": 0.01936, "compositionStandardUncertainty": 0.000629},
+    {"row": "Table 6 V6", "temperatureK": 373.28, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 10.04, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.98141, "waterMoleFraction": 0.01859, "compositionStandardUncertainty": 0.000529},
+    {"row": "Table 6 V7", "temperatureK": 373.27, "temperatureStandardUncertaintyK": 0.01, "pressureMPa": 15.09, "pressureStandardUncertaintyMPa": 0.01, "carbonDioxideMoleFraction": 0.98390, "waterMoleFraction": 0.01610, "compositionStandardUncertainty": 0.000433}
+  ],
+  "validationResults": {
+    "model": "Spycher, Pruess & Ennis-King (2003), equations 11-14 and Appendix B",
+    "carbonDioxideRichWater": {"rows": 7, "converged": 7, "aardPercent": 4.710285, "meanSignedRelativeDeviationPercent": 0.514212, "rmsRelativeDeviationPercent": 5.308226, "worstAbsoluteRelativeDeviationPercent": 9.270172, "worstRow": "Table 6 V7", "worstTemperatureK": 373.27, "worstPressureMPa": 15.09},
+    "waterRichCarbonDioxide": {"rows": 6, "converged": 6, "aardPercent": 1.165421, "meanSignedRelativeDeviationPercent": -0.189465, "rmsRelativeDeviationPercent": 1.358951, "worstAbsoluteRelativeDeviationPercent": 2.256479, "worstRow": "Table 6 L6", "worstTemperatureK": 373.28, "worstPressureMPa": 15.09}
+  }
+}

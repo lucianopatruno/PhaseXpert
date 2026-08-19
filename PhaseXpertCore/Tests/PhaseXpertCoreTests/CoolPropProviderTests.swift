@@ -561,7 +561,28 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated)
         XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
         XCTAssertEqual(response.properties.first { $0.property == .isobaricHeatCapacity }?.status, .unavailable)
-        XCTAssertTrue(response.warnings.contains { $0.contains("does not calculate water dew") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("does not itself determine aqueous equilibrium") })
+    }
+
+    func testValidatedWaterEquilibriumIsAttachedWithoutReplacingHomogeneousProperties() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 4_710_000,
+            temperatureK: 373.27,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9995),
+                .init(component: .water, moleFraction: 0.0005)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        ))
+        XCTAssertEqual(response.properties.first?.value, 31.25)
+        let equilibrium = try XCTUnwrap(response.waterEquilibrium)
+        XCTAssertEqual(equilibrium.waterStatus, .belowSaturation)
+        XCTAssertGreaterThan(equilibrium.waterInCarbonDioxideRichPhasePPM, 20_000)
+        XCTAssertEqual(equilibrium.currentWaterPPM, 500)
+        XCTAssertNil(equilibrium.waterDropoutPressurePa)
     }
 
     func testWetGasRejectsStateOutsideTemperaturePressureGate() async {
