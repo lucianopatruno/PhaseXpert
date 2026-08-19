@@ -355,6 +355,7 @@ public struct UnavailableTeqpEngine: TeqpEngine {
 
 public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     private let engine: Engine
+    private let capabilityMatrix = AdvancedCCSCapabilityMatrix()
 
     public init(engine: Engine) {
         self.engine = engine
@@ -445,12 +446,34 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     public func applicabilityIssues(
         for composition: [MixtureComponent]
     ) -> [ValidationIssue] {
-        guard !isPureCarbonDioxide(composition) else { return [] }
+        guard let canonical = try? CanonicalComposition(composition) else {
+            return [
+                ValidationIssue(
+                    code: .compositionTotal,
+                    severity: .error,
+                    message: "Advanced CCS composition must be finite, duplicate-free, non-negative, and total exactly 100 mol% before provider routing."
+                )
+            ]
+        }
+        guard !isPureCarbonDioxide(canonical.components) else { return [] }
         if isSupportedHydrogenGasComposition(composition) {
             return []
         }
         if isSupportedMethaneGasComposition(composition) {
             return []
+        }
+        if canonical.components.count > 2 {
+            let decision = capabilityMatrix.decision(
+                for: canonical,
+                property: .density
+            )
+            return [
+                ValidationIssue(
+                    code: .componentOutsideModelRange,
+                    severity: .error,
+                    message: "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
+                )
+            ]
         }
         return [
             ValidationIssue(
@@ -509,6 +532,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         guard request.pressurePa.isFinite, request.temperatureK.isFinite else {
             throw ProviderError.invalidRequest("Pressure and temperature must be finite.")
         }
+        let canonical: CanonicalComposition
+        do {
+            canonical = try CanonicalComposition(request.composition)
+        } catch {
+            throw ProviderError.invalidRequest(
+                "Advanced CCS composition must be finite, duplicate-free, non-negative, and total exactly 100 mol% before provider routing."
+            )
+        }
         guard
             request.pressurePa >= descriptor.domain.minimumPressurePa,
             request.pressurePa <= descriptor.domain.maximumPressurePa,
@@ -517,6 +548,17 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         else {
             throw ProviderError.invalidRequest(
                 "The state point is outside the experimental teqp domain."
+            )
+        }
+        if canonical.components.count > 2 {
+            let decision = capabilityMatrix.decision(
+                for: canonical,
+                property: .density,
+                pressurePa: request.pressurePa,
+                temperatureK: request.temperatureK
+            )
+            throw ProviderError.invalidRequest(
+                "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
             )
         }
         if isSupportedHydrogenGasComposition(request.composition) {

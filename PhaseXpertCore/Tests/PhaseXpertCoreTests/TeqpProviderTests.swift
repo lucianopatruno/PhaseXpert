@@ -574,6 +574,38 @@ final class TeqpProviderTests: XCTestCase {
         })
     }
 
+    func testTernaryMixtureIsRejectedBeforeNativeEngineCall() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+        let composition = [
+            MixtureComponent(component: .methane, moleFraction: 0.03),
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.94),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.03)
+        ]
+
+        let issues = provider.applicabilityIssues(for: composition)
+        XCTAssertEqual(issues.first?.code, .componentOutsideModelRange)
+        XCTAssertTrue(issues.first?.message.contains("CO₂ + N₂ + CH₄") == true)
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.calculate(
+                CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: 10_000_000,
+                    temperatureK: 303.15,
+                    composition: composition,
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                )
+            )
+        }, { error in
+            guard case let ProviderError.invalidRequest(message) = error else {
+                return XCTFail("Expected invalidRequest, got \(error).")
+            }
+            XCTAssertTrue(message.contains("CO₂ + N₂ + CH₄"), message)
+            XCTAssertTrue(message.contains("No CoolProp fallback"), message)
+        })
+    }
+
     func testHydrogenGasDensityLimitedDomainIsCalculatedWithoutFallback() async throws {
         let provider = TeqpProvider(engine: MockEngine())
         XCTAssertEqual(provider.descriptor.name, "Advanced CCS Properties")
