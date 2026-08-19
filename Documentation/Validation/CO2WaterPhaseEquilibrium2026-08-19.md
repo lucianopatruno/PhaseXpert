@@ -22,9 +22,9 @@ The independent source is Sanchez-Vicente & Trusler, *Energies* 15 (2022) 3936, 
 | H₂O in CO₂-rich phase | 7 | 7 | 4.710285% | +0.514212% | 5.308226% | 9.270172% at 373.27 K, 15.09 MPa |
 | CO₂ in H₂O-rich phase | 6 | 6 | 1.165421% | -0.189465% | 1.358951% | 2.256479% at 373.28 K, 15.09 MPa, Table 6 L6 |
 
-The independently supported domain is binary CO₂ + pure H₂O, 373.15–373.30 K and 4.70–15.09 MPa(a). Within that narrow domain, both phase-composition outputs are **limited production** with the accuracy summary above. Aqueous-phase detection is **limited production** and uses the largest observed absolute H₂O-composition discrepancy (`0.0014924977` mole fraction) as an uncertainty-aware saturation band. This band is evidence-derived and is not a fitted parameter.
+This original validation established binary CO₂ + pure H₂O support at 373.15–373.30 K and 4.70–15.09 MPa(a). The later Meyer–Harvey expansion is recorded separately. Aqueous-phase detection remains **limited production** and now uses a conservative 10% relative saturation band that covers the worst independently observed relative model discrepancy across both validated blocks; it is a classification guard band, not a fitted parameter.
 
-Water-dropout pressure at fixed temperature is **preliminary / validation pending**. It is solved only when the specified water content brackets a root inside the validated pressure interval; the bounded bisection never extrapolates. No independent saturation-pressure rows were available beyond the phase-composition measurements, so this derived root is not promoted. Water-dropout temperature is **unsupported** because the independent validation covers only one nominal isotherm.
+Water-dropout pressure at fixed temperature remains **preliminary / validation pending**. The subsequent Meyer–Harvey 2015 validation expansion and bounded water-dropout-temperature capability are documented in `CO2WaterValidationExpansion2026-08-19.md`.
 
 ## Product behavior and boundaries
 

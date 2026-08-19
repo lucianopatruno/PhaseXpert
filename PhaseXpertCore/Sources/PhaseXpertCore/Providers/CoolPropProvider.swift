@@ -432,9 +432,15 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
                 "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation.",
                 "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa.",
-                "Binary pure-water equilibrium is separately limited-production at 373.15–373.30 K and 4.70–15.09 MPa; brine, wet multicomponent equilibrium, dropout temperature and pH are unsupported."
+                "Binary pure-water equilibrium is separately limited-production in explicit 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions; brine, wet multicomponent equilibrium and pH are unsupported."
             ],
             references: [
+                SourceReference(
+                    authors: "Meyer and Harvey",
+                    title: "Dew-Point Measurements for Water in Compressed Carbon Dioxide",
+                    year: 2015,
+                    doiOrURL: "https://doi.org/10.1002/aic.14818"
+                ),
                 SourceReference(
                     authors: "Span and Wagner",
                     title: "A New Equation of State for Carbon Dioxide Covering the Fluid Region from the Triple-Point Temperature to 1100 K at Pressures up to 800 MPa",
@@ -580,19 +586,31 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
         if let pressurePa = context.pressurePa,
            !(500_000...5_000_000).contains(pressurePa) {
-            issues.append(.init(severity: .unsupported, title: "Pressure outside preliminary range", detail: "CO₂/H₂O homogeneous gas is limited to 5–50 bar(a)."))
+            let equilibriumRemainsAvailable = context.temperatureK.map {
+                SpycherPruess2003WaterEquilibrium.isValidated(
+                    pressurePa: pressurePa,
+                    temperatureK: $0
+                )
+            } ?? false
+            issues.append(.init(
+                severity: .unsupported,
+                title: "Homogeneous properties outside preliminary range",
+                detail: equilibriumRemainsAvailable
+                    ? "Homogeneous wet-gas properties are limited to 5–50 bar(a). Water-equilibrium results remain available within their separate validated range."
+                    : "CO₂/H₂O homogeneous gas is limited to 5–50 bar(a)."
+            ))
         }
         return OperatingRangeGuidance(
             title: "Preliminary homogeneous wet-gas range",
             summary: [
                 .init(severity: .information, title: "Composition", detail: "Binary CO₂/H₂O; xH₂O = 1–1000 ppm (mole basis)"),
                 .init(severity: .information, title: "Homogeneous properties", detail: "Density plus derived molar mass, specific volume and compressibility factor"),
-                .init(severity: .information, title: "Water equilibrium", detail: "Limited-production binary pure-water equilibrium at 373.15–373.30 K and 47.0–150.9 bar(a)")
+                .init(severity: .information, title: "Water equilibrium", detail: "Limited-production binary pure-water equilibrium in separate 30–80 °C / 4.999–50.055 bar(a) and 100 °C / 47.0–150.9 bar(a) regions")
             ],
             currentInputIssues: issues,
             propertyAvailability: [
                 .init(severity: .information, title: "Available", detail: "Homogeneous gas density, M, v and Z"),
-                .init(severity: .unsupported, title: "Unavailable", detail: "Cp/Cv, sound speed, transport, brine equilibrium, wet multicomponent equilibrium, water-dropout temperature and pH")
+                .init(severity: .unsupported, title: "Unavailable", detail: "Cp/Cv, sound speed, transport, brine equilibrium, wet multicomponent equilibrium and pH")
             ],
             phaseDiagram: [
                 .init(severity: .unsupported, title: "Phase Map", detail: "Unavailable for H₂O-containing mixtures; dry-mixture safety routing remains unchanged.")
@@ -746,8 +764,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             waterEquilibrium = nil
         }
         let equilibriumWarnings = waterEquilibrium == nil ? [] : [
-            "WATER EQUILIBRIUM — LIMITED PRODUCTION: binary CO₂ + pure H₂O only, independently validated on the nominal 373 K isotherm from 4.70 to 15.09 MPa.",
-            "Water-dropout temperature is unavailable; dropout pressure is returned only when a bounded root exists inside the validated isotherm."
+            "WATER EQUILIBRIUM — LIMITED PRODUCTION: binary CO₂ + pure H₂O only, independently validated in separate 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions.",
+            "Water-dropout temperature is returned only from the bounded 30–80 °C validation region; dropout pressure is returned only when a root exists inside the applicable region."
         ]
 
         return CalculationResponse(

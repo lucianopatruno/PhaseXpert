@@ -27,6 +27,7 @@ public struct CarbonDioxideWaterEquilibriumResult: Codable, Equatable, Sendable 
     public let currentWaterMoleFraction: Double?
     public let waterStatus: WaterEquilibriumStatus
     public let waterDropoutPressurePa: Double?
+    public let waterDropoutTemperatureK: Double?
     public let modelIdentifier: String
     public let validationStatus: String
     public let durationMilliseconds: Double
@@ -42,6 +43,10 @@ public struct CarbonDioxideWaterEquilibriumResult: Codable, Equatable, Sendable 
     public var marginToSaturationPPM: Double? {
         currentWaterPPM.map { waterInCarbonDioxideRichPhasePPM - $0 }
     }
+
+    public var waterSaturationRatio: Double? {
+        currentWaterMoleFraction.map { $0 / waterInCarbonDioxideRichPhaseMoleFraction }
+    }
 }
 
 public enum CarbonDioxideWaterEquilibriumError: Error, Equatable, Sendable {
@@ -49,6 +54,7 @@ public enum CarbonDioxideWaterEquilibriumError: Error, Equatable, Sendable {
     case invalidInput
     case noPhysicalRoot
     case dropoutPressureUnavailable
+    case dropoutTemperatureUnavailable
 }
 
 /// Spycher, Pruess & Ennis-King (2003) binary pure-water model.
@@ -59,14 +65,29 @@ public enum CarbonDioxideWaterEquilibriumError: Error, Equatable, Sendable {
 public struct SpycherPruess2003WaterEquilibrium: Sendable {
     public static let modelIdentifier = "Spycher-Pruess-Ennis-King-2003-pure-water"
 
-    /// Independent Table 6 validation is nominally the 373 K isotherm.
-    public static let validatedTemperatureRangeK = 373.15...373.30
-    public static let validatedPressureRangePa = 4_700_000.0...15_090_000.0
+    public struct ValidatedRegion: Equatable, Sendable {
+        public let temperatureRangeK: ClosedRange<Double>
+        public let pressureRangePa: ClosedRange<Double>
+    }
+
+    /// Independent validation regions. Meyer & Harvey (2015) supplies four
+    /// isotherms spanning 30–80 °C below 5 MPa; Sánchez-Vicente & Trusler
+    /// (2022) supplies the separate 100 °C, 4.70–15.09 MPa region.
+    public static let validatedRegions = [
+        ValidatedRegion(
+            temperatureRangeK: 303.14...353.15,
+            pressureRangePa: 499_900.0...5_005_500.0
+        ),
+        ValidatedRegion(
+            temperatureRangeK: 373.15...373.30,
+            pressureRangePa: 4_700_000.0...15_090_000.0
+        )
+    ]
 
     // Largest absolute model/experiment discrepancy in the independently
     // encoded 2022 CO₂-rich-phase validation rows. It defines only the
     // uncertainty-aware classification band, not an adjustable fit tolerance.
-    public static let waterClassificationBandMoleFraction = 0.001_492_497_7
+    public static let waterClassificationRelativeBand = 0.10
 
     public init() {}
 
@@ -82,8 +103,7 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
               currentWaterMoleFraction.map({ (0...1).contains($0) }) != false else {
             throw CarbonDioxideWaterEquilibriumError.invalidInput
         }
-        guard Self.validatedTemperatureRangeK.contains(temperatureK),
-              Self.validatedPressureRangePa.contains(pressurePa) else {
+        guard Self.isValidated(pressurePa: pressurePa, temperatureK: temperatureK) else {
             throw CarbonDioxideWaterEquilibriumError.outsideValidatedDomain
         }
 
@@ -94,7 +114,7 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
         let status: WaterEquilibriumStatus
         if let currentWaterMoleFraction {
             let delta = currentWaterMoleFraction - composition.water
-            if abs(delta) <= Self.waterClassificationBandMoleFraction {
+            if abs(delta) <= composition.water * Self.waterClassificationRelativeBand {
                 status = .atSaturation
             } else if delta < 0 {
                 status = .belowSaturation
@@ -111,14 +131,21 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
                 waterMoleFraction: $0
             )
         }
+        let dropoutTemperature = currentWaterMoleFraction.flatMap {
+            try? waterDropoutTemperatureK(
+                pressurePa: pressurePa,
+                waterMoleFraction: $0
+            )
+        }
         return CarbonDioxideWaterEquilibriumResult(
             waterInCarbonDioxideRichPhaseMoleFraction: composition.water,
             carbonDioxideInWaterRichPhaseMoleFraction: composition.carbonDioxide,
             currentWaterMoleFraction: currentWaterMoleFraction,
             waterStatus: status,
             waterDropoutPressurePa: dropoutPressure,
+            waterDropoutTemperatureK: dropoutTemperature,
             modelIdentifier: Self.modelIdentifier,
-            validationStatus: "Limited production — independent 373 K binary pure-water validation",
+            validationStatus: "Limited production — independent 30–80 °C and 100 °C binary pure-water validation",
             durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
         )
     }
@@ -130,13 +157,19 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
         temperatureK: Double,
         waterMoleFraction: Double
     ) throws -> Double {
-        guard Self.validatedTemperatureRangeK.contains(temperatureK),
-              waterMoleFraction.isFinite,
-              (0...1).contains(waterMoleFraction) else {
+        guard waterMoleFraction.isFinite,
+              (0...1).contains(waterMoleFraction),
+              let region = Self.validatedRegions.first(where: {
+                  $0.temperatureRangeK.contains(temperatureK)
+              }) else {
             throw CarbonDioxideWaterEquilibriumError.invalidInput
         }
-        var lower = Self.validatedPressureRangePa.lowerBound
-        var upper = Self.validatedPressureRangePa.upperBound
+        var lower = region.pressureRangePa.lowerBound
+        var upper = region.pressureRangePa.upperBound
+        guard Self.isValidated(pressurePa: lower, temperatureK: temperatureK),
+              Self.isValidated(pressurePa: upper, temperatureK: temperatureK) else {
+            throw CarbonDioxideWaterEquilibriumError.dropoutPressureUnavailable
+        }
         var lowerResidual = try mutualSolubility(
             pressurePa: lower,
             temperatureK: temperatureK
@@ -170,7 +203,61 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
         return 0.5 * (lower + upper)
     }
 
-    private func mutualSolubility(
+    /// Solves water saturation at fixed pressure using only the contiguous
+    /// independently validated 30–80 °C region. The isolated 100 °C region is
+    /// deliberately not bridged by interpolation.
+    public func waterDropoutTemperatureK(
+        pressurePa: Double,
+        waterMoleFraction: Double
+    ) throws -> Double {
+        let region = Self.validatedRegions[0]
+        guard pressurePa.isFinite, waterMoleFraction.isFinite,
+              region.pressureRangePa.contains(pressurePa),
+              (0...1).contains(waterMoleFraction) else {
+            throw CarbonDioxideWaterEquilibriumError.invalidInput
+        }
+        var lower = region.temperatureRangeK.lowerBound
+        var upper = region.temperatureRangeK.upperBound
+        var lowerResidual = try mutualSolubility(
+            pressurePa: pressurePa,
+            temperatureK: lower
+        ).water - waterMoleFraction
+        let upperResidual = try mutualSolubility(
+            pressurePa: pressurePa,
+            temperatureK: upper
+        ).water - waterMoleFraction
+        guard lowerResidual == 0 || upperResidual == 0 || lowerResidual.sign != upperResidual.sign else {
+            throw CarbonDioxideWaterEquilibriumError.dropoutTemperatureUnavailable
+        }
+        if lowerResidual == 0 { return lower }
+        if upperResidual == 0 { return upper }
+        for _ in 0..<80 {
+            let midpoint = 0.5 * (lower + upper)
+            let residual = try mutualSolubility(
+                pressurePa: pressurePa,
+                temperatureK: midpoint
+            ).water - waterMoleFraction
+            if abs(residual) <= 1e-12 || upper - lower <= 1e-7 {
+                return midpoint
+            }
+            if residual.sign == lowerResidual.sign {
+                lower = midpoint
+                lowerResidual = residual
+            } else {
+                upper = midpoint
+            }
+        }
+        return 0.5 * (lower + upper)
+    }
+
+    public static func isValidated(pressurePa: Double, temperatureK: Double) -> Bool {
+        validatedRegions.contains {
+            $0.temperatureRangeK.contains(temperatureK)
+                && $0.pressureRangePa.contains(pressurePa)
+        }
+    }
+
+    func mutualSolubility(
         pressurePa: Double,
         temperatureK: Double
     ) throws -> (water: Double, carbonDioxide: Double) {

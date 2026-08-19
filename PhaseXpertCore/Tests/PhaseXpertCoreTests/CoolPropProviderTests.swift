@@ -607,6 +607,21 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
+    func testWaterGuidanceDistinguishesHomogeneousAndEquilibriumDomains() {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let guidance = provider.operatingRangeGuidance(for: .init(
+            pressurePa: 10_000_000,
+            temperatureK: 373.20,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9995),
+                .init(component: .water, moleFraction: 0.0005)
+            ]
+        ))
+        XCTAssertTrue(guidance?.currentInputIssues.contains {
+            $0.detail.contains("Water-equilibrium results remain available")
+        } == true)
+    }
+
     func testNonFinitePureDensityIsRejected() async {
         let invalidEngine = MockEngine(result: .init(
             densityKilogramsPerCubicMetre: .nan,

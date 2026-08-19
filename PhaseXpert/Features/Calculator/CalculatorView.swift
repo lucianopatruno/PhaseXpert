@@ -1897,6 +1897,9 @@ private struct WaterEquilibriumSection: View {
             if let margin = equilibrium.marginToSaturationPPM {
                 IFEValueRow(title: "Margin to saturation", value: number(margin), unit: "ppm (mole)")
             }
+            if let ratio = equilibrium.waterSaturationRatio {
+                IFEValueRow(title: "Water saturation ratio", value: number(ratio), unit: "current / saturation")
+            }
             IFEValueRow(
                 title: "CO₂ in H₂O-rich phase",
                 value: number(equilibrium.carbonDioxideInWaterRichPhaseMoleFraction * 100),
@@ -1907,7 +1910,15 @@ private struct WaterEquilibriumSection: View {
                     title: "Water-dropout pressure",
                     value: number(dropoutPressurePa / 100_000),
                     unit: "bar(a)",
-                    status: "Preliminary bounded solve on the validated 373 K isotherm"
+                    status: "Preliminary bounded solve; no extrapolation"
+                )
+            }
+            if let dropoutTemperatureK = equilibrium.waterDropoutTemperatureK {
+                IFEValueRow(
+                    title: "Water-dropout temperature",
+                    value: number(dropoutTemperatureK - 273.15),
+                    unit: "°C",
+                    status: "Directly validated bounded solve, 30–80 °C and 4.999–50.055 bar(a)"
                 )
             }
             IFEValueRow(

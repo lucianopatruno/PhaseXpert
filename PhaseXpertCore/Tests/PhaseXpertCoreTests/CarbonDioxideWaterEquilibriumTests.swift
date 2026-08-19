@@ -20,6 +20,8 @@ final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
 
     func testValidatedDomainBoundariesConvergeAndOutsideDomainIsRejected() throws {
         for (pressure, temperature) in [
+            (499_900.0, 303.14),
+            (5_005_500.0, 353.15),
             (4_700_000.0, 373.15),
             (15_090_000.0, 373.30)
         ] {
@@ -31,17 +33,99 @@ final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
             XCTAssertTrue(result.carbonDioxideInWaterRichPhaseMoleFraction.isFinite)
         }
         XCTAssertThrowsError(try model.equilibrium(
-            pressurePa: 4_699_999,
-            temperatureK: 373.20
+            pressurePa: 5_100_000,
+            temperatureK: 360
         )) { error in
             XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .outsideValidatedDomain)
         }
         XCTAssertThrowsError(try model.equilibrium(
-            pressurePa: 5_000_000,
+            pressurePa: 10_000_000,
             temperatureK: 373.31
         )) { error in
             XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .outsideValidatedDomain)
         }
+    }
+
+    func testIndependentMeyerHarvey2015ExpandedWaterValidation() throws {
+        let rows = try meyerHarveyRows()
+        XCTAssertEqual(rows.count, 50)
+        let allMetrics = try relativeMetrics(rows.map { row in
+            let calculated = try model.mutualSolubility(
+                pressurePa: row.pressureMPa * 1_000_000,
+                temperatureK: row.temperatureK
+            ).water
+            return (calculated, row.measuredWaterMoleFraction)
+        })
+        XCTAssertEqual(allMetrics.aardPercent, 3.297_874, accuracy: 1e-5)
+        XCTAssertEqual(allMetrics.biasPercent, -3.288_853, accuracy: 1e-5)
+        XCTAssertEqual(allMetrics.rmsPercent, 4.456_269, accuracy: 1e-5)
+        XCTAssertEqual(allMetrics.worstPercent, 12.487_875, accuracy: 1e-5)
+
+        let productionRows = rows.filter { $0.temperatureK >= 303.14 }
+        let productionMetrics = try relativeMetrics(productionRows.map { row in
+            let calculated = try model.equilibrium(
+                pressurePa: row.pressureMPa * 1_000_000,
+                temperatureK: row.temperatureK
+            ).waterInCarbonDioxideRichPhaseMoleFraction
+            return (calculated, row.measuredWaterMoleFraction)
+        })
+        XCTAssertEqual(productionMetrics.count, 40)
+        XCTAssertEqual(productionMetrics.aardPercent, 2.494_200, accuracy: 1e-5)
+        XCTAssertEqual(productionMetrics.biasPercent, -2.482_924, accuracy: 1e-5)
+        XCTAssertEqual(productionMetrics.rmsPercent, 3.303_999, accuracy: 1e-5)
+        XCTAssertEqual(productionMetrics.worstPercent, 7.708_346, accuracy: 1e-5)
+    }
+
+    func testWaterDropoutTemperatureUsesBoundedValidatedRegion() throws {
+        let referenceTemperature = 333.18
+        let pressure = 3_001_200.0
+        let water = try model.equilibrium(
+            pressurePa: pressure,
+            temperatureK: referenceTemperature
+        ).waterInCarbonDioxideRichPhaseMoleFraction
+        XCTAssertEqual(
+            try model.waterDropoutTemperatureK(
+                pressurePa: pressure,
+                waterMoleFraction: water
+            ),
+            referenceTemperature,
+            accuracy: 1e-6
+        )
+        XCTAssertThrowsError(try model.waterDropoutTemperatureK(
+            pressurePa: 10_000_000,
+            waterMoleFraction: water
+        ))
+        XCTAssertThrowsError(try model.waterDropoutTemperatureK(
+            pressurePa: pressure,
+            waterMoleFraction: 1e-7
+        )) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .dropoutTemperatureUnavailable)
+        }
+    }
+
+    func testDirectMeyerHarveyDropoutTemperatureValidation() throws {
+        let rows = try meyerHarveyRows().filter {
+            (303.14..<353.14).contains($0.temperatureK)
+        }
+        let evaluated = rows.compactMap { row -> (row: MeyerHarveyArtifact.Row, error: Double)? in
+            guard let predicted = try? model.waterDropoutTemperatureK(
+                pressurePa: row.pressureMPa * 1_000_000,
+                waterMoleFraction: row.measuredWaterMoleFraction
+            ) else { return nil }
+            return (row, predicted - row.temperatureK)
+        }
+        let errors = evaluated.map(\.error)
+        XCTAssertEqual(errors.count, 30)
+        let mae = errors.map(abs).reduce(0, +) / Double(errors.count)
+        let bias = errors.reduce(0, +) / Double(errors.count)
+        let rms = sqrt(errors.map { $0 * $0 }.reduce(0, +) / Double(errors.count))
+        XCTAssertEqual(mae, 0.610_548, accuracy: 1e-5)
+        XCTAssertEqual(bias, 0.610_548, accuracy: 1e-5)
+        XCTAssertEqual(rms, 0.749_815, accuracy: 1e-5)
+        XCTAssertEqual(try XCTUnwrap(errors.map(abs).max()), 1.520_787, accuracy: 1e-5)
+        let worst = try XCTUnwrap(evaluated.max { abs($0.error) < abs($1.error) })
+        XCTAssertEqual(worst.row.temperatureK, 303.14, accuracy: 1e-12)
+        XCTAssertEqual(worst.row.pressureMPa, 4.5020, accuracy: 1e-12)
     }
 
     func testWaterStatusClassificationUsesIndependentValidationErrorBand() throws {
@@ -184,7 +268,16 @@ final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
             waterMoleFraction: result.waterInCarbonDioxideRichPhaseMoleFraction
         )
         let dropoutDuration = dropoutStart.duration(to: .now)
-        print("CO2_H2O_EQUILIBRIUM_PERFORMANCE state_and_saturation=\(equilibriumDuration) dropout_pressure=\(dropoutDuration)")
+        let dropoutTemperatureStart = ContinuousClock.now
+        _ = try model.waterDropoutTemperatureK(
+            pressurePa: 3_001_200,
+            waterMoleFraction: try model.equilibrium(
+                pressurePa: 3_001_200,
+                temperatureK: 333.18
+            ).waterInCarbonDioxideRichPhaseMoleFraction
+        )
+        let dropoutTemperatureDuration = dropoutTemperatureStart.duration(to: .now)
+        print("CO2_H2O_EQUILIBRIUM_PERFORMANCE state_and_saturation=\(equilibriumDuration) dropout_pressure=\(dropoutDuration) dropout_temperature=\(dropoutTemperatureDuration)")
     }
 
     private func status(at water: Double) throws -> WaterEquilibriumStatus {
@@ -207,6 +300,30 @@ final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
             deviations.map(abs).max() ?? 0
         )
     }
+
+    private func meyerHarveyRows() throws -> [MeyerHarveyArtifact.Row] {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let url = repository.appendingPathComponent(
+            "Documentation/Validation/MeyerHarvey2015CO2WaterDewPoint.json"
+        )
+        return try JSONDecoder().decode(
+            MeyerHarveyArtifact.self,
+            from: Data(contentsOf: url)
+        ).rows
+    }
+}
+
+private struct MeyerHarveyArtifact: Decodable {
+    struct Row: Decodable {
+        let temperatureK: Double
+        let pressureMPa: Double
+        let measuredWaterMoleFraction: Double
+    }
+    let rows: [Row]
 }
 
 private struct WaterEquilibriumMockEngine: CoolPropEngine {

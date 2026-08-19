@@ -34,6 +34,22 @@ final class PhaseXpertTests: XCTestCase {
         )
         XCTAssertNil(viewModel.waterEquilibriumPreview)
     }
+
+    @MainActor
+    func testExpandedWaterEquilibriumPreviewIncludesDropoutTemperatureOutsideHomogeneousTemperatureGate() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "coolprop-heos"
+        viewModel.pressureText = "30.012"
+        viewModel.temperatureText = "60.03"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "991713"),
+            CompositionInput(component: .water, value: "8287")
+        ]
+        let equilibrium = try XCTUnwrap(viewModel.waterEquilibriumPreview)
+        XCTAssertEqual(try XCTUnwrap(equilibrium.waterDropoutTemperatureK), 333.46436, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(equilibrium.waterSaturationRatio), 1.012, accuracy: 0.002)
+    }
     private static let testDescriptor = ModelDescriptor(
         id: "test-calculation-provider",
         name: "Test calculation provider",
