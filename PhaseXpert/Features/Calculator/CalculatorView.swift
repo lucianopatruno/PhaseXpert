@@ -266,20 +266,36 @@ struct CalculatorView: View {
                     }
                 }
 
-                if let equilibrium = viewModel.waterEquilibriumPreview {
+                if let notice = viewModel.calculationNotice {
+                    Section {
+                        Label(notice, systemImage: "info.circle.fill")
+                            .foregroundStyle(Color.ifePrimary)
+                    } header: {
+                        Text("Independent capability result")
+                    }
+                }
+
+                if let equilibrium = viewModel.displayedWaterEquilibrium {
                     WaterEquilibriumSection(equilibrium: equilibrium)
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {
                     Section {
                         ForEach(viewModel.validationReport.issues) { issue in
+                            let isNonfatalHomogeneousIssue =
+                                issue.severity == .error
+                                && viewModel.homogeneousPropertiesUnavailableWhileEquilibriumAvailable
                             Label(
                                 issue.message,
-                                systemImage: issue.severity == .error
+                                systemImage: issue.severity == .error && !isNonfatalHomogeneousIssue
                                     ? "xmark.octagon.fill"
                                     : "exclamationmark.triangle.fill"
                             )
-                            .foregroundStyle(issue.severity == .error ? .red : Color.ifePrimary)
+                            .foregroundStyle(
+                                issue.severity == .error && !isNonfatalHomogeneousIssue
+                                    ? .red
+                                    : Color.ifePrimary
+                            )
                         }
 
                         if viewModel.canNormalize {
@@ -315,7 +331,7 @@ struct CalculatorView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isCalculating || !viewModel.validationReport.canCalculate)
+                    .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
                     .accessibilityIdentifier("run-calculation")
                 } header: {
                     IFESectionHeader(step: 6, title: "Run calculation")

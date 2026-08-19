@@ -5,6 +5,96 @@ import XCTest
 
 final class PhaseXpertTests: XCTestCase {
     @MainActor
+    func testPhoneCaseSixtyCelsiusFortyBarRunsEquilibriumWhenHomogeneousIsUnavailable() async throws {
+        let viewModel = wetGeneralViewModel(pressureBar: 40, temperatureCelsius: 60)
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertTrue(viewModel.canRunCalculation)
+        XCTAssertEqual(
+            viewModel.calculationNotice,
+            CalculatorViewModel.independentWaterEquilibriumNotice
+        )
+
+        await viewModel.calculate()
+
+        let result = try XCTUnwrap(viewModel.standaloneWaterEquilibriumResult)
+        XCTAssertEqual(result.waterStatus, .belowSaturation)
+        XCTAssertEqual(try XCTUnwrap(result.currentWaterPPM), 500, accuracy: 1e-9)
+        XCTAssertGreaterThan(result.waterInCarbonDioxideRichPhasePPM, 500)
+        XCTAssertGreaterThan(try XCTUnwrap(result.marginToSaturationPPM), 0)
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertNil(viewModel.calculationError)
+    }
+
+    @MainActor
+    func testPhoneCaseOneHundredCelsiusOneHundredBarRunsEquilibriumWhenHomogeneousIsUnavailable() async throws {
+        let viewModel = wetGeneralViewModel(pressureBar: 100, temperatureCelsius: 100)
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertTrue(viewModel.canRunCalculation)
+        await viewModel.calculate()
+
+        let result = try XCTUnwrap(viewModel.standaloneWaterEquilibriumResult)
+        XCTAssertEqual(result.waterStatus, .belowSaturation)
+        XCTAssertEqual(try XCTUnwrap(result.currentWaterPPM), 500, accuracy: 1e-9)
+        XCTAssertEqual(result.waterInCarbonDioxideRichPhasePPM, 17_914.32, accuracy: 0.1)
+        XCTAssertEqual(try XCTUnwrap(result.marginToSaturationPPM), 17_414.32, accuracy: 0.1)
+        XCTAssertEqual(result.carbonDioxideInWaterRichPhaseMoleFraction * 100, 1.410471, accuracy: 0.00001)
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertNil(viewModel.calculationError)
+    }
+
+    @MainActor
+    func testWetStateOutsideBothCapabilityDomainsReturnsNoFabricatedResult() async {
+        let viewModel = wetGeneralViewModel(pressureBar: 100, temperatureCelsius: 20)
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertFalse(viewModel.canRunCalculation)
+        XCTAssertNil(viewModel.waterEquilibriumPreview)
+        await viewModel.calculate()
+        XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertNotNil(viewModel.operatingRangeGuidance?.currentInputIssues.first {
+            $0.severity == .unsupported
+        })
+    }
+
+    @MainActor
+    func testHomogeneousWetPropertiesCanRunOutsideWaterEquilibriumDomain() async throws {
+        let viewModel = wetGeneralViewModel(pressureBar: 40, temperatureCelsius: 100)
+        viewModel.validate()
+
+        XCTAssertTrue(viewModel.validationReport.canCalculate)
+        XCTAssertTrue(viewModel.canRunCalculation)
+        XCTAssertTrue(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertNil(viewModel.waterEquilibriumPreview)
+        await viewModel.calculate()
+        XCTAssertNotNil(viewModel.calculationRecord)
+        XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
+        XCTAssertNil(viewModel.calculationRecord?.response.waterEquilibrium)
+    }
+
+    @MainActor
+    private func wetGeneralViewModel(
+        pressureBar: Double,
+        temperatureCelsius: Double
+    ) -> CalculatorViewModel {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "coolprop-heos"
+        viewModel.pressureText = String(pressureBar)
+        viewModel.temperatureText = String(temperatureCelsius)
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "999500"),
+            CompositionInput(component: .water, value: "500")
+        ]
+        return viewModel
+    }
+
+    @MainActor
     func testWaterEquilibriumPreviewIsBinaryOnlyAndIndependentOfHomogeneousGate() throws {
         let viewModel = CalculatorViewModel()
         viewModel.selectedModelID = "coolprop-heos"
