@@ -372,6 +372,103 @@ public struct NativeTeqpEngine: TeqpEngine {
         )
         #endif
     }
+
+    public func calculateNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition
+    ) async throws -> TeqpNComponentDensityResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let canonicalComponents = composition.components
+        let ids = try canonicalComponents.map { entry in
+            try nativeComponentID(for: entry.component)
+        }
+        let fractions = canonicalComponents.map(\.moleFraction)
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpNComponentDensityResult()
+            var errorBuffer = [CChar](repeating: 0, count: 768)
+            let status = ids.withUnsafeBufferPointer { idBuffer in
+                fractions.withUnsafeBufferPointer { fractionBuffer in
+                    px_teqp_calculate_ncomponent_density(
+                        idBuffer.baseAddress,
+                        fractionBuffer.baseAddress,
+                        idBuffer.count,
+                        pressurePa,
+                        temperatureK,
+                        &nativeResult,
+                        &errorBuffer,
+                        errorBuffer.count
+                    )
+                }
+            }
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty
+                        ? "teqp native N-component density calculation failed."
+                        : message
+                )
+            }
+            return TeqpNComponentDensityResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                molarDensityMolesPerCubicMetre: nativeResult.molar_density_mol_m3,
+                densityRootCount: Int(nativeResult.density_root_count),
+                converged: nativeResult.converged == 1,
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
+                formulationID: TeqpNComponentDiagnostic.formulationID,
+                composition: canonicalComponents
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
+
+    public func calculateCarbonDioxideOxygenGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        oxygenMoleFraction: Double
+    ) async throws -> TeqpMixtureDensityResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpMixtureDensityResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_eoscg_co2_o2_gas_density(
+                pressurePa,
+                temperatureK,
+                oxygenMoleFraction,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "teqp native CO₂+O₂ gas-density calculation failed." : message
+                )
+            }
+            return TeqpMixtureDensityResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                molarDensityMolesPerCubicMetre: nativeResult.molar_density_mol_m3,
+                densityRootCount: Int(nativeResult.density_root_count),
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
+                formulationID: TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
 }
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)
@@ -477,6 +574,33 @@ private func phaseIdentifier(forRawPhase phase: Int32) -> String {
         "twoPhase"
     default:
         "unknown"
+    }
+}
+
+private func nativeComponentID(for component: ComponentID) throws -> Int32 {
+    switch component {
+    case .carbonDioxide:
+        1
+    case .nitrogen:
+        2
+    case .methane:
+        3
+    case .hydrogen:
+        4
+    case .oxygen:
+        5
+    case .argon:
+        6
+    case .carbonMonoxide:
+        7
+    case .hydrogenSulfide:
+        8
+    case .water:
+        9
+    case .helium, .ethane, .propane:
+        throw ProviderError.invalidRequest(
+            "\(component.symbol) is not part of the audited teqp EOS-CG-2021 N-component subset."
+        )
     }
 }
 #endif

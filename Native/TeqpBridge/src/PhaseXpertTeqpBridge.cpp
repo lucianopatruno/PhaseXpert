@@ -15,6 +15,7 @@
 #include <limits>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -399,6 +400,114 @@ teqp::IdealHelmholtz ideal_terms_for_components(
     }
     return teqp::IdealHelmholtz(mixture_terms);
 }
+
+std::string component_json_for_id(int component_id) {
+    switch (component_id) {
+    case PXTeqpComponentCarbonDioxide:
+        return std::string(kPhaseXpertTeqpCarbonDioxideJson);
+    case PXTeqpComponentNitrogen:
+        return std::string(kPhaseXpertTeqpNitrogenJson);
+    case PXTeqpComponentMethane:
+        return std::string(kPhaseXpertTeqpMethaneJson);
+    case PXTeqpComponentHydrogen:
+        return std::string(kPhaseXpertTeqpHydrogenJson);
+    case PXTeqpComponentOxygen:
+        return std::string(kPhaseXpertTeqpOxygenJson);
+    case PXTeqpComponentArgon:
+        return std::string(kPhaseXpertTeqpArgonJson);
+    case PXTeqpComponentCarbonMonoxide:
+        return std::string(kPhaseXpertTeqpCarbonMonoxideJson);
+    case PXTeqpComponentHydrogenSulfide:
+        return std::string(kPhaseXpertTeqpHydrogenSulfideJson);
+    case PXTeqpComponentWater:
+        return std::string(kPhaseXpertTeqpWaterJson);
+    default:
+        throw std::invalid_argument("Unsupported teqp component identifier.");
+    }
+}
+
+double molar_mass_from_component_json(const std::string &component_json) {
+    const auto fluid_json = nlohmann::json::parse(component_json);
+    return fluid_json.at("EOS").at(0).at("molar_mass").get<double>();
+}
+
+class NComponentMultifluidModel {
+public:
+    using Model = decltype(teqp::build_multifluid_JSONstr(
+        std::vector<std::string>{std::string{}},
+        std::string{},
+        std::string{}
+    ));
+
+    explicit NComponentMultifluidModel(
+        const std::vector<int> &component_ids
+    ) : component_json_strings_(componentJsonStrings(component_ids)),
+        molar_masses_kg_mol_(molarMasses(component_json_strings_)),
+        model_(teqp::build_multifluid_JSONstr(
+            component_json_strings_,
+            std::string(kPhaseXpertTeqpBinaryPairsJson),
+            std::string(kPhaseXpertTeqpDepartureFunctionsJson)
+        )) {}
+
+    double pressurePa(
+        double temperature_k,
+        const Eigen::ArrayXd &molefractions,
+        double total_molar_density_mol_m3
+    ) const {
+        const Eigen::ArrayXd rhovec = total_molar_density_mol_m3 * molefractions;
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        auto derivatives = Derivatives::build_Psir_fgradHessian_autodiff(
+            model_,
+            temperature_k,
+            rhovec
+        );
+        const double residual_pressure =
+            -std::get<0>(derivatives)
+            + (rhovec * std::get<1>(derivatives).array()).sum();
+        return rhovec.sum() * model_.R(molefractions) * temperature_k
+            + residual_pressure;
+    }
+
+    double mixtureMolarMassKgMol(const Eigen::ArrayXd &molefractions) const {
+        if (molefractions.size()
+            != static_cast<Eigen::Index>(molar_masses_kg_mol_.size())) {
+            throw std::runtime_error("Mole-fraction vector does not match component count.");
+        }
+        double molar_mass = 0.0;
+        for (Eigen::Index index = 0; index < molefractions.size(); ++index) {
+            molar_mass += molefractions[index]
+                * molar_masses_kg_mol_[static_cast<std::size_t>(index)];
+        }
+        return molar_mass;
+    }
+
+private:
+    static std::vector<std::string> componentJsonStrings(
+        const std::vector<int> &component_ids
+    ) {
+        std::vector<std::string> strings;
+        strings.reserve(component_ids.size());
+        for (const int component_id : component_ids) {
+            strings.push_back(component_json_for_id(component_id));
+        }
+        return strings;
+    }
+
+    static std::vector<double> molarMasses(
+        const std::vector<std::string> &component_json_strings
+    ) {
+        std::vector<double> molar_masses;
+        molar_masses.reserve(component_json_strings.size());
+        for (const auto &component_json : component_json_strings) {
+            molar_masses.push_back(molar_mass_from_component_json(component_json));
+        }
+        return molar_masses;
+    }
+
+    std::vector<std::string> component_json_strings_;
+    std::vector<double> molar_masses_kg_mol_;
+    Model model_;
+};
 
 struct BinaryThermodynamicProperties {
     double cv_j_kg_k;
@@ -3005,6 +3114,167 @@ int px_teqp_calculate_binary_critical_point(
     } catch (...) {
         result->converged = 0;
         copy_text("teqp EOS-CG binary critical-point calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}
+
+int px_teqp_calculate_ncomponent_density(
+    const int *component_ids,
+    const double *mole_fractions,
+    size_t component_count,
+    double pressure_pa,
+    double temperature_k,
+    PXTeqpNComponentDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    result->density_kg_m3 = std::numeric_limits<double>::quiet_NaN();
+    result->molar_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+    result->density_root_count = 0;
+    result->converged = 0;
+    result->phase = PXTeqpPhaseUnknown;
+
+    if (component_ids == nullptr || mole_fractions == nullptr) {
+        copy_text("Component and mole-fraction pointers must be non-null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (component_count == 0 || component_count > 9) {
+        copy_text("N-component teqp density requires 1 to 9 components.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        std::vector<int> ids;
+        ids.reserve(component_count);
+        std::set<int> seen_ids;
+        Eigen::ArrayXd molefractions(static_cast<Eigen::Index>(component_count));
+        double total = 0.0;
+        for (size_t index = 0; index < component_count; ++index) {
+            const int component_id = component_ids[index];
+            component_json_for_id(component_id);
+            if (!seen_ids.insert(component_id).second) {
+                copy_text("Duplicate component identifier in N-component teqp density request.", error_buffer, error_buffer_size);
+                return 4;
+            }
+            const double fraction = mole_fractions[index];
+            if (!std::isfinite(fraction) || fraction <= 0.0) {
+                copy_text("N-component teqp density requires finite positive active-component mole fractions.", error_buffer, error_buffer_size);
+                return 5;
+            }
+            ids.push_back(component_id);
+            molefractions[static_cast<Eigen::Index>(index)] = fraction;
+            total += fraction;
+        }
+        if (std::abs(total - 1.0) > 1e-10) {
+            copy_text("N-component teqp density mole fractions must sum exactly to one.", error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        NComponentMultifluidModel model(ids);
+        const auto roots = density_roots_for_molefractions(
+            model,
+            pressure_pa,
+            temperature_k,
+            molefractions
+        );
+        result->density_root_count = static_cast<int>(roots.size());
+        if (roots.empty()) {
+            copy_text("teqp did not find a finite N-component density root.", error_buffer, error_buffer_size);
+            return 7;
+        }
+        if (roots.size() != 1) {
+            copy_text("teqp found multiple N-component density roots; homogeneous density is not unique.", error_buffer, error_buffer_size);
+            return 8;
+        }
+
+        result->molar_density_mol_m3 = roots[0].molar_density_mol_m3;
+        result->density_kg_m3 = roots[0].molar_density_mol_m3
+            * model.mixtureMolarMassKgMol(molefractions);
+        if (!std::isfinite(result->molar_density_mol_m3)
+            || !std::isfinite(result->density_kg_m3)
+            || result->molar_density_mol_m3 <= 0.0
+            || result->density_kg_m3 <= 0.0) {
+            copy_text("teqp returned invalid N-component density.", error_buffer, error_buffer_size);
+            return 9;
+        }
+
+        result->converged = 1;
+        result->phase = PXTeqpPhaseUnknown;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 10;
+    } catch (...) {
+        copy_text("teqp N-component density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 11;
+    }
+}
+
+int px_teqp_calculate_eoscg_co2_o2_gas_density(
+    double pressure_pa,
+    double temperature_k,
+    double oxygen_mole_fraction,
+    PXTeqpMixtureDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!std::isfinite(oxygen_mole_fraction)
+        || oxygen_mole_fraction <= 0.0
+        || oxygen_mole_fraction >= 1.0) {
+        copy_text("Oxygen mole fraction must be finite and in (0, 1).", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        const std::vector<int> ids = {
+            PXTeqpComponentCarbonDioxide,
+            PXTeqpComponentOxygen
+        };
+        NComponentMultifluidModel model(ids);
+        Eigen::ArrayXd molefractions(2);
+        molefractions << 1.0 - oxygen_mole_fraction, oxygen_mole_fraction;
+        const auto roots = density_roots_for_molefractions(
+            model,
+            pressure_pa,
+            temperature_k,
+            molefractions
+        );
+        if (roots.empty()) {
+            copy_text("teqp did not find a finite EOS-CG CO2/O2 gas-density root.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        const auto selected = lowest_density_root(roots);
+        result->molar_density_mol_m3 = selected.molar_density_mol_m3;
+        result->density_kg_m3 = selected.molar_density_mol_m3
+            * model.mixtureMolarMassKgMol(molefractions);
+        result->density_root_count = static_cast<int>(roots.size());
+        result->phase = PXTeqpPhaseGas;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("teqp EOS-CG CO2/O2 gas-density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 7;
     }
 }

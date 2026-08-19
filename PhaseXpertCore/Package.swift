@@ -2,6 +2,7 @@
 import Foundation
 import PackageDescription
 
+// Binary availability is evaluated when Xcode resolves this local package.
 let coolPropXCFrameworkPath = "../Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework"
 let teqpXCFrameworkPath = "../Vendor/teqp/PhaseXpertTeqpBridge.xcframework"
 let packageDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()

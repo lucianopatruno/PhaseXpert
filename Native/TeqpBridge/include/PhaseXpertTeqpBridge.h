@@ -56,6 +56,18 @@ typedef enum PXTeqpBinaryFormulation {
     PXTeqpBinaryFormulationEOSCGCO2CH4 = 3
 } PXTeqpBinaryFormulation;
 
+typedef enum PXTeqpComponentID {
+    PXTeqpComponentCarbonDioxide = 1,
+    PXTeqpComponentNitrogen = 2,
+    PXTeqpComponentMethane = 3,
+    PXTeqpComponentHydrogen = 4,
+    PXTeqpComponentOxygen = 5,
+    PXTeqpComponentArgon = 6,
+    PXTeqpComponentCarbonMonoxide = 7,
+    PXTeqpComponentHydrogenSulfide = 8,
+    PXTeqpComponentWater = 9
+} PXTeqpComponentID;
+
 typedef struct PXTeqpGenericBinaryVLEResult {
     int converged;
     int iteration_count;
@@ -95,6 +107,14 @@ typedef struct PXTeqpMixtureDensityResult {
     int density_root_count;
     PXTeqpPhase phase;
 } PXTeqpMixtureDensityResult;
+
+typedef struct PXTeqpNComponentDensityResult {
+    double density_kg_m3;
+    double molar_density_mol_m3;
+    int density_root_count;
+    int converged;
+    PXTeqpPhase phase;
+} PXTeqpNComponentDensityResult;
 
 typedef struct PXTeqpMixtureThermodynamicResult {
     double density_kg_m3;
@@ -213,6 +233,26 @@ int px_teqp_calculate_binary_critical_point(
     PXTeqpBinaryFormulation formulation,
     double component2_mole_fraction,
     PXTeqpBinaryCriticalResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_ncomponent_density(
+    const int *component_ids,
+    const double *mole_fractions,
+    size_t component_count,
+    double pressure_pa,
+    double temperature_k,
+    PXTeqpNComponentDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_eoscg_co2_o2_gas_density(
+    double pressure_pa,
+    double temperature_k,
+    double oxygen_mole_fraction,
+    PXTeqpMixtureDensityResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

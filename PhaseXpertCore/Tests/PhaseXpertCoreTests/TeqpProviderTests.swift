@@ -62,6 +62,20 @@ final class TeqpProviderTests: XCTestCase {
             )
         }
 
+        func calculateCarbonDioxideOxygenGasDensity(
+            pressurePa: Double,
+            temperatureK: Double,
+            oxygenMoleFraction: Double
+        ) async throws -> TeqpMixtureDensityResult {
+            TeqpMixtureDensityResult(
+                densityKilogramsPerCubicMetre: 109.300351603473,
+                molarDensityMolesPerCubicMetre: 2_510,
+                densityRootCount: 3,
+                phaseIdentifier: "gas",
+                formulationID: TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id
+            )
+        }
+
         func calculateBinaryVLE(
             formulation: TeqpBinaryFormulationID,
             temperatureK: Double,
@@ -133,6 +147,22 @@ final class TeqpProviderTests: XCTestCase {
                 formulationID: formulation == .eoscgCarbonDioxideMethane
                     ? TeqpFormulationCatalog.co2MethaneEOSCGDiagnostic.id
                     : TeqpFormulationCatalog.co2HydrogenEOSCGDiagnostic.id
+            )
+        }
+
+        func calculateNComponentDensity(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: CanonicalComposition
+        ) async throws -> TeqpNComponentDensityResult {
+            TeqpNComponentDensityResult(
+                densityKilogramsPerCubicMetre: 104.7,
+                molarDensityMolesPerCubicMetre: 2_900.4,
+                densityRootCount: 1,
+                converged: true,
+                phaseIdentifier: "unknown",
+                formulationID: TeqpNComponentDiagnostic.formulationID,
+                composition: composition.components
             )
         }
     }
@@ -208,6 +238,16 @@ final class TeqpProviderTests: XCTestCase {
                 "Engine should not be called for unsupported mixtures."
             )
         }
+
+        func calculateNComponentDensity(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: CanonicalComposition
+        ) async throws -> TeqpNComponentDensityResult {
+            throw ProviderError.malformedResponse(
+                "Engine should not be called for invalid diagnostic mixtures."
+            )
+        }
     }
 
     func testUnavailableEngineDoesNotClaimCapabilities() {
@@ -235,7 +275,8 @@ final class TeqpProviderTests: XCTestCase {
             [
                 "teqp-v0.23.1-pure-co2-span-wagner-density",
                 "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
-                "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016"
+                "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
+                "teqp-v0.23.1-eoscg2021-co2-o2-gas-density-lozano-martin2020"
             ]
         )
         XCTAssertTrue(TeqpFormulationCatalog.pureCarbonDioxide.supportsPhaseEnvelope)
@@ -249,7 +290,7 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
-            [.carbonDioxide, .methane, .hydrogen]
+            [.carbonDioxide, .oxygen, .methane, .hydrogen]
         )
         XCTAssertTrue(
             TeqpFormulationCatalog.productionSupportedProperties
@@ -298,12 +339,12 @@ final class TeqpProviderTests: XCTestCase {
                 $0.components.contains(.nitrogen)
             }
         )
-        XCTAssertFalse(
+        XCTAssertTrue(
             TeqpFormulationCatalog.productionFormulations.contains {
-                $0.components.contains(.oxygen)
-                    || $0.components.contains(.argon)
+                $0.components == [.carbonDioxide, .oxygen]
             }
         )
+        XCTAssertFalse(TeqpFormulationCatalog.productionFormulations.contains { $0.components.contains(.argon) })
         XCTAssertTrue(
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components == [.carbonDioxide, .hydrogen]
@@ -410,6 +451,136 @@ final class TeqpProviderTests: XCTestCase {
             TeqpFormulationCatalog.co2HydrogenEOSCGDiagnostic.id
         )
         XCTAssertGreaterThan(hydrogen.speedOfSoundSquaredMetresSquaredPerSecondSquared, 0)
+    }
+
+    func testDiagnosticNComponentDensityPreservesCanonicalOrderAndFractions() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+
+        let result = try await provider.diagnosticNComponentDensity(
+            pressurePa: 8_000_000,
+            temperatureK: 320,
+            composition: [
+                .init(component: .methane, moleFraction: 0.04),
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.06)
+            ]
+        )
+
+        XCTAssertEqual(
+            result.formulationID,
+            TeqpNComponentDiagnostic.formulationID
+        )
+        XCTAssertTrue(result.converged)
+        XCTAssertEqual(result.densityRootCount, 1)
+        XCTAssertEqual(
+            result.composition,
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.90),
+                .init(component: .nitrogen, moleFraction: 0.06),
+                .init(component: .methane, moleFraction: 0.04)
+            ]
+        )
+    }
+
+    func testDiagnosticNComponentDensityAcceptsAuditedTwoFourAndNineComponentSets() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+
+        let binaryWater = try await provider.diagnosticNComponentDensity(
+            pressurePa: 8_000_000,
+            temperatureK: 320,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.999),
+                .init(component: .water, moleFraction: 0.001)
+            ]
+        )
+        XCTAssertEqual(
+            binaryWater.composition.map(\.component),
+            [.carbonDioxide, .water]
+        )
+
+        let quaternary = try await provider.diagnosticNComponentDensity(
+            pressurePa: 8_000_000,
+            temperatureK: 320,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.88),
+                .init(component: .nitrogen, moleFraction: 0.06),
+                .init(component: .methane, moleFraction: 0.04),
+                .init(component: .hydrogen, moleFraction: 0.02)
+            ]
+        )
+        XCTAssertEqual(
+            quaternary.composition.map(\.component),
+            [.carbonDioxide, .nitrogen, .methane, .hydrogen]
+        )
+
+        let fullSubset = try await provider.diagnosticNComponentDensity(
+            pressurePa: 8_000_000,
+            temperatureK: 320,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.86),
+                .init(component: .nitrogen, moleFraction: 0.04),
+                .init(component: .methane, moleFraction: 0.03),
+                .init(component: .hydrogen, moleFraction: 0.02),
+                .init(component: .oxygen, moleFraction: 0.015),
+                .init(component: .argon, moleFraction: 0.01),
+                .init(component: .carbonMonoxide, moleFraction: 0.01),
+                .init(component: .hydrogenSulfide, moleFraction: 0.005),
+                .init(component: .water, moleFraction: 0.01)
+            ]
+        )
+        XCTAssertEqual(
+            fullSubset.composition.map(\.component),
+            [
+                .carbonDioxide,
+                .nitrogen,
+                .oxygen,
+                .argon,
+                .water,
+                .methane,
+                .hydrogen,
+                .carbonMonoxide,
+                .hydrogenSulfide
+            ]
+        )
+    }
+
+    func testDiagnosticNComponentDensityRejectsOffTotalBeforeEngine() async throws {
+        let provider = TeqpProvider(engine: FailingEngine())
+
+        do {
+            _ = try await provider.diagnosticNComponentDensity(
+                pressurePa: 8_000_000,
+                temperatureK: 320,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.90),
+                    .init(component: .nitrogen, moleFraction: 0.06),
+                    .init(component: .methane, moleFraction: 0.03)
+                ]
+            )
+            XCTFail("Expected off-total diagnostic composition to be rejected.")
+        } catch {
+            XCTAssertTrue(
+                String(describing: error).contains("never normalizes")
+            )
+        }
+    }
+
+    func testDiagnosticNComponentDensityRejectsUnsupportedComponentBeforeEngine() async throws {
+        let provider = TeqpProvider(engine: FailingEngine())
+
+        do {
+            _ = try await provider.diagnosticNComponentDensity(
+                pressurePa: 8_000_000,
+                temperatureK: 320,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.99),
+                    .init(component: .helium, moleFraction: 0.01)
+                ]
+            )
+            XCTFail("Expected unsupported diagnostic component to be rejected.")
+        } catch {
+            XCTAssertTrue(String(describing: error).contains("He"))
+        }
     }
 
     func testDiagnosticBinaryCriticalEngineContractReturnsFiniteResult() async throws {
@@ -533,7 +704,7 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. No CoolProp fallback is used."
+                    "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ homogeneous density domains only. No CoolProp fallback is used."
                 )
             )
         })
@@ -542,11 +713,11 @@ final class TeqpProviderTests: XCTestCase {
     func testCO2N2RemainsValidationGatedDespiteNativeDiagnosticBridge() async {
         let provider = TeqpProvider(engine: FailingEngine())
         let descriptor = provider.descriptor
-        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .methane, .hydrogen])
+        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .oxygen, .methane, .hydrogen])
         XCTAssertFalse(descriptor.supportedComponents.contains(.nitrogen))
         XCTAssertTrue(
             descriptor.limitations.contains {
-                $0.contains("N₂, O₂, Ar and simultaneous impurity mixtures remain unsupported")
+                $0.contains("N₂, Ar and simultaneous impurity mixtures remain unsupported")
             }
         )
 
@@ -568,9 +739,41 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. No CoolProp fallback is used."
+                    "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ homogeneous density domains only. No CoolProp fallback is used."
                 )
             )
+        })
+    }
+
+    func testTernaryMixtureIsRejectedBeforeNativeEngineCall() async {
+        let provider = TeqpProvider(engine: FailingEngine())
+        let composition = [
+            MixtureComponent(component: .methane, moleFraction: 0.03),
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.94),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.03)
+        ]
+
+        let issues = provider.applicabilityIssues(for: composition)
+        XCTAssertEqual(issues.first?.code, .componentOutsideModelRange)
+        XCTAssertTrue(issues.first?.message.contains("CO₂ + N₂ + CH₄") == true)
+
+        await XCTAssertThrowsErrorAsync({
+            try await provider.calculate(
+                CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: 10_000_000,
+                    temperatureK: 303.15,
+                    composition: composition,
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                )
+            )
+        }, { error in
+            guard case let ProviderError.invalidRequest(message) = error else {
+                return XCTFail("Expected invalidRequest, got \(error).")
+            }
+            XCTAssertTrue(message.contains("CO₂ + N₂ + CH₄"), message)
+            XCTAssertTrue(message.contains("No CoolProp fallback"), message)
         })
     }
 
@@ -651,7 +854,7 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertEqual(
                 error as? ProviderError,
                 .invalidRequest(
-                    "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. No CoolProp fallback is used."
+                    "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ homogeneous density domains only. No CoolProp fallback is used."
                 )
             )
         })
@@ -715,7 +918,7 @@ final class TeqpProviderTests: XCTestCase {
                     temperatureK: 293.15,
                     hydrogenMoleFraction: 0.054
                 ),
-                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄"
+                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂"
             )
         ]
 
@@ -905,7 +1108,7 @@ final class TeqpProviderTests: XCTestCase {
                     temperatureK: 301.14,
                     methaneMoleFraction: 0.051
                 ),
-                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄"
+                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂"
             )
         ]
 

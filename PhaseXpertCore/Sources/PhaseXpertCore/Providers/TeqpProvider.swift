@@ -71,6 +71,34 @@ public struct TeqpMixtureDensityResult: Equatable, Sendable {
     }
 }
 
+public struct TeqpNComponentDensityResult: Equatable, Sendable {
+    public let densityKilogramsPerCubicMetre: Double
+    public let molarDensityMolesPerCubicMetre: Double
+    public let densityRootCount: Int
+    public let converged: Bool
+    public let phaseIdentifier: String
+    public let formulationID: String
+    public let composition: [MixtureComponent]
+
+    public init(
+        densityKilogramsPerCubicMetre: Double,
+        molarDensityMolesPerCubicMetre: Double,
+        densityRootCount: Int,
+        converged: Bool,
+        phaseIdentifier: String,
+        formulationID: String,
+        composition: [MixtureComponent]
+    ) {
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.densityRootCount = densityRootCount
+        self.converged = converged
+        self.phaseIdentifier = phaseIdentifier
+        self.formulationID = formulationID
+        self.composition = composition
+    }
+}
+
 public struct TeqpMixtureThermodynamicResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
     public let molarDensityMolesPerCubicMetre: Double
@@ -171,6 +199,23 @@ public enum TeqpBinaryFormulationID: Sendable {
     case eoscgCarbonDioxideMethane
 }
 
+public enum TeqpNComponentDiagnostic {
+    public static let formulationID =
+        "teqp-v0.23.1-eoscg2021-ncomponent-density-diagnostic"
+
+    public static let supportedComponents: Set<ComponentID> = [
+        .carbonDioxide,
+        .nitrogen,
+        .methane,
+        .hydrogen,
+        .oxygen,
+        .argon,
+        .carbonMonoxide,
+        .hydrogenSulfide,
+        .water
+    ]
+}
+
 public struct TeqpBinaryVLEResult: Equatable, Sendable {
     public let converged: Bool
     public let iterationCount: Int
@@ -258,6 +303,12 @@ public protocol TeqpEngine: Sendable {
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult
 
+    func calculateCarbonDioxideOxygenGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        oxygenMoleFraction: Double
+    ) async throws -> TeqpMixtureDensityResult
+
     func calculateBinaryThermodynamicState(
         formulation: TeqpBinaryFormulationID,
         pressurePa: Double,
@@ -276,6 +327,24 @@ public protocol TeqpEngine: Sendable {
         liquidComponent2MoleFraction: Double,
         initialGuess: TeqpBinaryVLEInitialGuess?
     ) async throws -> TeqpBinaryVLEResult
+
+    func calculateNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition
+    ) async throws -> TeqpNComponentDensityResult
+}
+
+public extension TeqpEngine {
+    func calculateCarbonDioxideOxygenGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        oxygenMoleFraction: Double
+    ) async throws -> TeqpMixtureDensityResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp CO₂+O₂ production density route is not available in this engine."
+        )
+    }
 }
 
 public struct UnavailableTeqpEngine: TeqpEngine {
@@ -321,6 +390,16 @@ public struct UnavailableTeqpEngine: TeqpEngine {
         )
     }
 
+    public func calculateCarbonDioxideOxygenGasDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        oxygenMoleFraction: Double
+    ) async throws -> TeqpMixtureDensityResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
     public func calculateBinaryVLE(
         formulation: TeqpBinaryFormulationID,
         temperatureK: Double,
@@ -351,10 +430,21 @@ public struct UnavailableTeqpEngine: TeqpEngine {
             "The teqp native XCFramework has not been linked."
         )
     }
+
+    public func calculateNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition
+    ) async throws -> TeqpNComponentDensityResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
 }
 
 public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     private let engine: Engine
+    private let capabilityMatrix = AdvancedCCSCapabilityMatrix()
 
     public init(engine: Engine) {
         self.engine = engine
@@ -378,7 +468,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "Native teqp Helmholtz engine with validation-gated pure CO₂ and property-specific CCS mixture formulations.",
-            equationOrMethod: "Pure CO₂ uses the pinned upstream CarbonDioxide.json multifluid model. CO₂+H₂ and CO₂+CH₄ homogeneous density use EOS-CG-2021 model data at the exact validated ThermoML density domains. Unsupported properties and domains do not fall back to CoolProp.",
+            equationOrMethod: "Pure CO₂ uses the pinned upstream CarbonDioxide.json multifluid model. CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ homogeneous density use EOS-CG model data only at independently validated domains. Unsupported properties and domains do not fall back to CoolProp.",
             coefficientSetVersion: TeqpFormulationCatalog.pureCarbonDioxide.provenance,
             requiredResources: ["PhaseXpertTeqpBridge.xcframework"],
             limitations: [
@@ -387,7 +477,8 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "CO₂+H₂ is supported only for homogeneous gas density at xH₂ = 0.05362, on the validated 273.15 K, 293.15 K and 323.15 K isotherms, within the observed gas-pressure ranges.",
                 "CO₂+CH₄ is supported only for homogeneous density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 gas and high-temperature supercritical validation slices.",
                 "CO₂+CH₄ VLE phase classification and continuous bubble/dew phase-envelope points are validation-gated to xCH₄ = 0.05 from 293.13 K to 298.142 K inside the ordinary Petropoulou et al. 2018 temperature bounds; two-phase bulk density is unavailable.",
-                "N₂, O₂, Ar and simultaneous impurity mixtures remain unsupported and never fall back to CoolProp.",
+                "N₂, Ar and simultaneous impurity mixtures remain unsupported and never fall back to CoolProp.",
+                "CO₂+O₂ is limited to homogeneous gas density at exact xO₂ = 0.05032089 and the seven Lozano-Martín et al. 2020 experimental isotherm bands.",
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
                 "Phase classification is limited to pure-CO₂ stable vapor/liquid/supercritical states and the validated CO₂+CH₄ VLE gate; otherwise the phase remains unknown or unavailable.",
@@ -437,6 +528,12 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     title: "Accurate density measurements on a binary mixture (carbon dioxide + methane) at the vicinity of the critical point in the supercritical state by a single-sinker densimeter",
                     year: 2016,
                     doiOrURL: "https://doi.org/10.1016/j.fluid.2015.08.029"
+                ),
+                SourceReference(
+                    authors: "Lozano-Martín, Mondéjar and Segovia",
+                    title: "Accurate experimental (p, ρ, T) data of the (CO₂ + O₂) binary system for the development of models for CCS processes",
+                    year: 2020,
+                    doiOrURL: "https://doi.org/10.1016/j.jct.2020.106210"
                 )
             ]
         )
@@ -445,18 +542,43 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     public func applicabilityIssues(
         for composition: [MixtureComponent]
     ) -> [ValidationIssue] {
-        guard !isPureCarbonDioxide(composition) else { return [] }
+        guard let canonical = try? CanonicalComposition(composition) else {
+            return [
+                ValidationIssue(
+                    code: .compositionTotal,
+                    severity: .error,
+                    message: "Advanced CCS composition must be finite, duplicate-free, non-negative, and total exactly 100 mol% before provider routing."
+                )
+            ]
+        }
+        guard !isPureCarbonDioxide(canonical.components) else { return [] }
         if isSupportedHydrogenGasComposition(composition) {
             return []
         }
         if isSupportedMethaneGasComposition(composition) {
             return []
         }
+        if isSupportedOxygenGasComposition(composition) {
+            return []
+        }
+        if canonical.components.count > 2 {
+            let decision = capabilityMatrix.decision(
+                for: canonical,
+                property: .density
+            )
+            return [
+                ValidationIssue(
+                    code: .componentOutsideModelRange,
+                    severity: .error,
+                    message: "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
+                )
+            ]
+        }
         return [
             ValidationIssue(
                 code: .componentOutsideModelRange,
                 severity: .error,
-                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. This mixture is unsupported and is not routed to CoolProp."
+                message: "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ density domains only. This mixture is unsupported and is not routed to CoolProp."
             )
         ]
     }
@@ -483,6 +605,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 requestedProperties: context.requestedProperties
             )
         }
+        if let oxygen = context.composition.first(where: { $0.component == .oxygen }) {
+            return oxygenOperatingRangeGuidance(
+                oxygenMoleFraction: oxygen.moleFraction,
+                pressurePa: context.pressurePa,
+                temperatureK: context.temperatureK,
+                requestedProperties: context.requestedProperties
+            )
+        }
         if context.composition.contains(where: { $0.component != .carbonDioxide }) {
             return OperatingRangeGuidance(
                 title: "Model limits",
@@ -490,12 +620,50 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     .init(
                         severity: .unsupported,
                         title: "Mixture unsupported",
-                        detail: "Advanced CCS Properties is production-enabled only for pure CO₂, CO₂+H₂ density, and CO₂+CH₄ density/VLE gates. No CoolProp fallback is used."
+                        detail: "Advanced CCS Properties is production-enabled only for pure CO₂, CO₂+H₂ density, CO₂+CH₄ density/VLE and low-O₂ CO₂+O₂ density gates. No CoolProp fallback is used."
                     )
                 ]
             )
         }
         return nil
+    }
+
+    public func diagnosticNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> TeqpNComponentDensityResult {
+        try Task.checkCancellation()
+        guard engine.isAvailable else {
+            throw ProviderError.modelUnavailable("teqp is not available in this build.")
+        }
+        guard pressurePa.isFinite, temperatureK.isFinite, pressurePa > 0, temperatureK > 0 else {
+            throw ProviderError.invalidRequest(
+                "N-component teqp density diagnostics require finite positive pressure and temperature."
+            )
+        }
+        let canonical: CanonicalComposition
+        do {
+            canonical = try CanonicalComposition(composition)
+        } catch {
+            throw ProviderError.invalidRequest(
+                "N-component teqp density diagnostics require finite, duplicate-free mole fractions summing exactly to 100 mol%; the diagnostic path never normalizes or drops components."
+            )
+        }
+        let unsupported = canonical.components
+            .map(\.component)
+            .filter { !TeqpNComponentDiagnostic.supportedComponents.contains($0) }
+        guard unsupported.isEmpty else {
+            let unsupportedSymbols = unsupported.map(\.symbol).joined(separator: ", ")
+            throw ProviderError.invalidRequest(
+                "N-component teqp density diagnostics do not support: \(unsupportedSymbols)."
+            )
+        }
+        return try await engine.calculateNComponentDensity(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: canonical
+        )
     }
 
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
@@ -509,6 +677,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         guard request.pressurePa.isFinite, request.temperatureK.isFinite else {
             throw ProviderError.invalidRequest("Pressure and temperature must be finite.")
         }
+        let canonical: CanonicalComposition
+        do {
+            canonical = try CanonicalComposition(request.composition)
+        } catch {
+            throw ProviderError.invalidRequest(
+                "Advanced CCS composition must be finite, duplicate-free, non-negative, and total exactly 100 mol% before provider routing."
+            )
+        }
         guard
             request.pressurePa >= descriptor.domain.minimumPressurePa,
             request.pressurePa <= descriptor.domain.maximumPressurePa,
@@ -517,6 +693,17 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         else {
             throw ProviderError.invalidRequest(
                 "The state point is outside the experimental teqp domain."
+            )
+        }
+        if canonical.components.count > 2 {
+            let decision = capabilityMatrix.decision(
+                for: canonical,
+                property: .density,
+                pressurePa: request.pressurePa,
+                temperatureK: request.temperatureK
+            )
+            throw ProviderError.invalidRequest(
+                "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
             )
         }
         if isSupportedHydrogenGasComposition(request.composition) {
@@ -533,9 +720,12 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "CO₂+CH₄ teqp support at xCH₄ = 0.05 is limited to the Ghafri density slices and the Petropoulou 2018 ordinary VLE temperature interval 293.13 K (19.98 °C) to 298.142 K (24.99 °C)."
             )
         }
+        if isSupportedOxygenGasComposition(request.composition) {
+            return try await calculateOxygenGasDensity(request)
+        }
         guard isPureCarbonDioxide(request.composition) else {
             throw ProviderError.invalidRequest(
-                "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂ and CO₂+CH₄ homogeneous density domains only. No CoolProp fallback is used."
+                "Advanced CCS Properties supports pure CO₂ plus validation-gated CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ homogeneous density domains only. No CoolProp fallback is used."
             )
         }
 
@@ -919,6 +1109,74 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         )
     }
 
+    private func calculateOxygenGasDensity(
+        _ request: CalculationRequest
+    ) async throws -> CalculationResponse {
+        try validateOxygenGasDomain(request)
+        let startedAt = Date()
+        let oxygenMoleFraction = try oxygenFraction(request.composition)
+        let raw = try await engine.calculateCarbonDioxideOxygenGasDensity(
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            oxygenMoleFraction: oxygenMoleFraction
+        )
+        guard raw.densityKilogramsPerCubicMetre.isFinite,
+              raw.densityKilogramsPerCubicMetre > 0,
+              raw.densityRootCount >= 1
+        else {
+            throw ProviderError.malformedResponse(
+                "teqp did not return a defensible CO₂+O₂ gas-density root."
+            )
+        }
+        let derivedValues = DerivedPropertyCalculator().values(
+            requestedProperties: request.requestedProperties,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            composition: request.composition,
+            densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre
+        )
+        let derivedByProperty = Dictionary(
+            uniqueKeysWithValues: derivedValues.map { ($0.property, $0) }
+        )
+        let values = request.requestedProperties.sorted { $0.rawValue < $1.rawValue }.map {
+            property -> PropertyValue in
+            if let derived = derivedByProperty[property] { return derived }
+            if property == .density {
+                return PropertyValue(
+                    property: property,
+                    value: raw.densityKilogramsPerCubicMetre,
+                    unit: "kg/m³",
+                    status: .calculated,
+                    message: "Native teqp EOS-CG CO₂+O₂ homogeneous gas density in the Lozano-Martín et al. 2020 validated domain."
+                )
+            }
+            return PropertyValue(
+                property: property,
+                value: nil,
+                unit: "",
+                status: .unavailable,
+                message: "\(property.rawValue) is not production-enabled for CO₂+O₂."
+            )
+        }
+        return CalculationResponse(
+            requestID: request.requestID,
+            model: descriptor,
+            phase: .gas,
+            properties: values,
+            solver: SolverMetadata(
+                method: "teqp v0.23.1 EOS-CG CO₂+O₂ lowest gas-density root; formulation \(raw.formulationID); validation artifact Documentation/Validation/LozanoMartin2020CO2O2Density.csv",
+                converged: true,
+                iterationCount: nil,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            warnings: [
+                "LIMITED PASS — CO₂+O₂ homogeneous gas density only at xO₂ = 0.05032089 and the seven encoded experimental isotherm bands.",
+                "VLE, caloric, acoustic, reference-state and transport properties remain unavailable; no CoolProp fallback is used."
+            ],
+            isScientificResult: true
+        )
+    }
+
     private func calculateMethaneVLEClassification(
         _ request: CalculationRequest
     ) async throws -> CalculationResponse {
@@ -1286,6 +1544,35 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         }
     }
 
+    private func validateOxygenGasDomain(_ request: CalculationRequest) throws {
+        let capability = try supportedOxygenCapability()
+        let oxygenMoleFraction = try oxygenFraction(request.composition)
+        guard abs(oxygenMoleFraction - 0.05032089)
+            <= CalculationValidator.compositionTolerance else {
+            throw ProviderError.invalidRequest(
+                "CO₂+O₂ teqp density is validated only at xO₂ = 0.05032089."
+            )
+        }
+        guard capability.isothermPressureLimits.contains(where: {
+            request.temperatureK >= $0.minimumTemperatureK
+                && request.temperatureK <= $0.maximumTemperatureK
+                && request.pressurePa >= $0.minimumPressurePa
+                && request.pressurePa <= $0.maximumPressurePa
+        }) else {
+            throw ProviderError.invalidRequest(
+                "CO₂+O₂ teqp density is outside the encoded Lozano-Martín et al. 2020 gas isotherm/pressure domain."
+            )
+        }
+    }
+
+    private func supportedOxygenCapability() throws -> TeqpPropertyCapability {
+        guard let capability = TeqpFormulationCatalog.co2OxygenEOSCGGasDensity
+            .propertyCapabilities.first(where: { $0.property == .density }) else {
+            throw ProviderError.invalidRequest("CO₂+O₂ validation metadata is incomplete.")
+        }
+        return capability
+    }
+
     private func methaneDensityDomainContains(_ request: CalculationRequest) -> Bool {
         guard let supported = try? supportedMethaneCapability(),
               let methaneMoleFraction = try? methaneFraction(request.composition),
@@ -1569,6 +1856,40 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         )
     }
 
+    private func oxygenOperatingRangeGuidance(
+        oxygenMoleFraction: Double,
+        pressurePa: Double?,
+        temperatureK: Double?,
+        requestedProperties: Set<PropertyID>
+    ) -> OperatingRangeGuidance {
+        let capability = try? supportedOxygenCapability()
+        let limits = capability?.isothermPressureLimits ?? []
+        var issues: [OperatingGuidanceLine] = []
+        if abs(oxygenMoleFraction - 0.05032089) > CalculationValidator.compositionTolerance {
+            issues.append(.init(severity: .unsupported, title: "Composition outside validated value", detail: "Validated O₂ mole fraction is 0.05032089."))
+        }
+        if let temperatureK,
+           !limits.contains(where: { temperatureK >= $0.minimumTemperatureK && temperatureK <= $0.maximumTemperatureK }) {
+            issues.append(.init(severity: .unsupported, title: "Temperature outside validation set", detail: "Use one of the seven measured Lozano-Martín et al. 2020 isotherm bands."))
+        }
+        if let pressurePa, let temperatureK,
+           let limit = limits.first(where: { temperatureK >= $0.minimumTemperatureK && temperatureK <= $0.maximumTemperatureK }),
+           !(limit.minimumPressurePa...limit.maximumPressurePa).contains(pressurePa) {
+            issues.append(.init(severity: .unsupported, title: "Pressure outside validated range", detail: "Pressure must remain within \(pressureRangeString(limit)) for this isotherm."))
+        }
+        return OperatingRangeGuidance(
+            title: "Validated range",
+            summary: [
+                .init(severity: .information, title: "O₂ validated composition", detail: "xO₂ = 0.05032089"),
+                .init(severity: .information, title: "Validated temperature", detail: exactTemperatureList(limits))
+            ],
+            currentInputIssues: issues,
+            propertyAvailability: propertyAvailabilityLines(requestedProperties: requestedProperties, supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume], system: "CO₂+O₂"),
+            phaseDiagram: [.init(severity: .unsupported, title: "Phase diagram", detail: "Phase equilibrium is not validated for CO₂+O₂.")],
+            suggestions: []
+        )
+    }
+
     private func propertyAvailabilityLines(
         requestedProperties: Set<PropertyID>,
         supportedProperties: Set<PropertyID>,
@@ -1842,6 +2163,20 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 <= CalculationValidator.compositionTolerance
     }
 
+    private func isSupportedOxygenGasComposition(
+        _ composition: [MixtureComponent]
+    ) -> Bool {
+        guard composition.count == 2,
+              let carbonDioxide = composition.first(where: { $0.component == .carbonDioxide }),
+              let oxygen = composition.first(where: { $0.component == .oxygen }) else {
+            return false
+        }
+        return abs(carbonDioxide.moleFraction + oxygen.moleFraction - 1)
+            <= CalculationValidator.compositionTolerance
+            && abs(oxygen.moleFraction - 0.05032089)
+                <= CalculationValidator.compositionTolerance
+    }
+
     private func hydrogenFraction(_ composition: [MixtureComponent]) throws -> Double {
         guard let hydrogen = composition.first(where: { $0.component == .hydrogen }) else {
             throw ProviderError.invalidRequest("CO₂+H₂ composition is missing H₂.")
@@ -1854,6 +2189,13 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             throw ProviderError.invalidRequest("CO₂+CH₄ composition is missing CH₄.")
         }
         return methane.moleFraction
+    }
+
+    private func oxygenFraction(_ composition: [MixtureComponent]) throws -> Double {
+        guard let oxygen = composition.first(where: { $0.component == .oxygen }) else {
+            throw ProviderError.invalidRequest("CO₂+O₂ composition is missing O₂.")
+        }
+        return oxygen.moleFraction
     }
 
     private var methaneVLEProductionMethaneMoleFraction: Double { 0.05 }

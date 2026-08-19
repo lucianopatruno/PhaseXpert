@@ -1,0 +1,1268 @@
+{
+  "schema_version": 1,
+  "status": "experimental rows encoded; validation pending a defensible generic ternary VLE initialization/continuation implementation",
+  "source": {
+    "doi": "10.1016/j.fluid.2019.112444",
+    "citation": "Ott\u00f8y et al., Fluid Phase Equilibria 509 (2020) 112444",
+    "repository": "Norwegian National Research Archive handle 11250/2640998",
+    "license": "CC BY 4.0",
+    "tables": "2 (bubble), 3 (dew)",
+    "composition_basis": "mole fraction",
+    "pressure_unit": "MPa",
+    "temperature_unit": "K"
+  },
+  "row_count": 62,
+  "bubble_row_count": 31,
+  "dew_row_count": 31,
+  "rows": [
+    {
+      "id": "L1",
+      "identity": "bubble",
+      "temperature_k": 298.138,
+      "pressure_mpa": 7.085,
+      "composition_mole_fraction": {
+        "co2": 0.9807,
+        "n2": 0.0089,
+        "ch4": 0.0104
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0085,
+        "pressure_mpa": 0.0015,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L2",
+      "identity": "bubble",
+      "temperature_k": 298.133,
+      "pressure_mpa": 7.5238,
+      "composition_mole_fraction": {
+        "co2": 0.9651,
+        "n2": 0.0163,
+        "ch4": 0.0186
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0051,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L3",
+      "identity": "bubble",
+      "temperature_k": 298.131,
+      "pressure_mpa": 7.7887,
+      "composition_mole_fraction": {
+        "co2": 0.9535,
+        "n2": 0.022,
+        "ch4": 0.0244
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0055,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L4",
+      "identity": "bubble",
+      "temperature_k": 298.131,
+      "pressure_mpa": 7.9281,
+      "composition_mole_fraction": {
+        "co2": 0.944,
+        "n2": 0.0266,
+        "ch4": 0.0294
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0058,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00046,
+        "n2_mole_fraction": 0.00035,
+        "ch4_mole_fraction": 0.00028
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00047,
+      "source_table": 2
+    },
+    {
+      "id": "L5",
+      "identity": "bubble",
+      "temperature_k": 298.13,
+      "pressure_mpa": 7.8767,
+      "composition_mole_fraction": {
+        "co2": 0.9487,
+        "n2": 0.0246,
+        "ch4": 0.0267
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0054,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00045,
+        "n2_mole_fraction": 0.00035,
+        "ch4_mole_fraction": 0.00028
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00046,
+      "source_table": 2
+    },
+    {
+      "id": "L6",
+      "identity": "bubble",
+      "temperature_k": 298.129,
+      "pressure_mpa": 6.8975,
+      "composition_mole_fraction": {
+        "co2": 0.9885,
+        "n2": 0.009,
+        "ch4": 0.0024
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0046,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L7",
+      "identity": "bubble",
+      "temperature_k": 298.129,
+      "pressure_mpa": 7.3045,
+      "composition_mole_fraction": {
+        "co2": 0.9769,
+        "n2": 0.0183,
+        "ch4": 0.0048
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0048,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00043,
+        "n2_mole_fraction": 0.00035,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00043,
+      "source_table": 2
+    },
+    {
+      "id": "L8",
+      "identity": "bubble",
+      "temperature_k": 298.129,
+      "pressure_mpa": 7.6691,
+      "composition_mole_fraction": {
+        "co2": 0.9651,
+        "n2": 0.0278,
+        "ch4": 0.0071
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0058,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L9",
+      "identity": "bubble",
+      "temperature_k": 298.129,
+      "pressure_mpa": 7.9272,
+      "composition_mole_fraction": {
+        "co2": 0.9551,
+        "n2": 0.0362,
+        "ch4": 0.0088
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0055,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00043,
+      "source_table": 2
+    },
+    {
+      "id": "L10",
+      "identity": "bubble",
+      "temperature_k": 283.154,
+      "pressure_mpa": 5.2541,
+      "composition_mole_fraction": {
+        "co2": 0.9803,
+        "n2": 0.0083,
+        "ch4": 0.0115
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L11",
+      "identity": "bubble",
+      "temperature_k": 283.154,
+      "pressure_mpa": 6.1461,
+      "composition_mole_fraction": {
+        "co2": 0.955,
+        "n2": 0.0201,
+        "ch4": 0.0249
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L12",
+      "identity": "bubble",
+      "temperature_k": 283.154,
+      "pressure_mpa": 7.0889,
+      "composition_mole_fraction": {
+        "co2": 0.9262,
+        "n2": 0.035,
+        "ch4": 0.0388
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L13",
+      "identity": "bubble",
+      "temperature_k": 283.155,
+      "pressure_mpa": 7.68,
+      "composition_mole_fraction": {
+        "co2": 0.9055,
+        "n2": 0.0449,
+        "ch4": 0.0496
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.014,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L14",
+      "identity": "bubble",
+      "temperature_k": 283.156,
+      "pressure_mpa": 8.2586,
+      "composition_mole_fraction": {
+        "co2": 0.8831,
+        "n2": 0.0567,
+        "ch4": 0.0602
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L15",
+      "identity": "bubble",
+      "temperature_k": 283.156,
+      "pressure_mpa": 8.8483,
+      "composition_mole_fraction": {
+        "co2": 0.8526,
+        "n2": 0.0709,
+        "ch4": 0.0766
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.014,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00043,
+      "source_table": 2
+    },
+    {
+      "id": "L16",
+      "identity": "bubble",
+      "temperature_k": 273.168,
+      "pressure_mpa": 3.9903,
+      "composition_mole_fraction": {
+        "co2": 0.9874,
+        "n2": 0.005,
+        "ch4": 0.0076
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L17",
+      "identity": "bubble",
+      "temperature_k": 273.166,
+      "pressure_mpa": 5.2521,
+      "composition_mole_fraction": {
+        "co2": 0.9527,
+        "n2": 0.0195,
+        "ch4": 0.0277
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.011,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L18",
+      "identity": "bubble",
+      "temperature_k": 273.167,
+      "pressure_mpa": 6.2607,
+      "composition_mole_fraction": {
+        "co2": 0.9226,
+        "n2": 0.033,
+        "ch4": 0.0444
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0099,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L19",
+      "identity": "bubble",
+      "temperature_k": 273.167,
+      "pressure_mpa": 7.2203,
+      "composition_mole_fraction": {
+        "co2": 0.8913,
+        "n2": 0.0478,
+        "ch4": 0.0609
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L20",
+      "identity": "bubble",
+      "temperature_k": 273.167,
+      "pressure_mpa": 8.1663,
+      "composition_mole_fraction": {
+        "co2": 0.8565,
+        "n2": 0.0652,
+        "ch4": 0.0783
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0096,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L21",
+      "identity": "bubble",
+      "temperature_k": 273.169,
+      "pressure_mpa": 8.8023,
+      "composition_mole_fraction": {
+        "co2": 0.8294,
+        "n2": 0.0794,
+        "ch4": 0.0912
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L22",
+      "identity": "bubble",
+      "temperature_k": 273.17,
+      "pressure_mpa": 9.3244,
+      "composition_mole_fraction": {
+        "co2": 0.8031,
+        "n2": 0.0939,
+        "ch4": 0.103
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L23",
+      "identity": "bubble",
+      "temperature_k": 253.162,
+      "pressure_mpa": 2.3369,
+      "composition_mole_fraction": {
+        "co2": 0.991,
+        "n2": 0.0033,
+        "ch4": 0.0057
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0033,
+        "pressure_mpa": 0.00057,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L24",
+      "identity": "bubble",
+      "temperature_k": 253.162,
+      "pressure_mpa": 2.6863,
+      "composition_mole_fraction": {
+        "co2": 0.9821,
+        "n2": 0.0066,
+        "ch4": 0.0113
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0035,
+        "pressure_mpa": 0.00058,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L25",
+      "identity": "bubble",
+      "temperature_k": 253.163,
+      "pressure_mpa": 3.0423,
+      "composition_mole_fraction": {
+        "co2": 0.9727,
+        "n2": 0.0102,
+        "ch4": 0.0171
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0032,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L26",
+      "identity": "bubble",
+      "temperature_k": 253.162,
+      "pressure_mpa": 3.4109,
+      "composition_mole_fraction": {
+        "co2": 0.9629,
+        "n2": 0.0141,
+        "ch4": 0.0231
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0032,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L27",
+      "identity": "bubble",
+      "temperature_k": 253.163,
+      "pressure_mpa": 3.7991,
+      "composition_mole_fraction": {
+        "co2": 0.9523,
+        "n2": 0.0183,
+        "ch4": 0.0294
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.003,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L28",
+      "identity": "bubble",
+      "temperature_k": 223.151,
+      "pressure_mpa": 0.7965,
+      "composition_mole_fraction": {
+        "co2": 0.9972,
+        "n2": 0.0009,
+        "ch4": 0.0018
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0067,
+        "pressure_mpa": 0.00035,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L29",
+      "identity": "bubble",
+      "temperature_k": 223.151,
+      "pressure_mpa": 0.9958,
+      "composition_mole_fraction": {
+        "co2": 0.9925,
+        "n2": 0.0024,
+        "ch4": 0.0051
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0067,
+        "pressure_mpa": 0.00035,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L30",
+      "identity": "bubble",
+      "temperature_k": 223.151,
+      "pressure_mpa": 1.0983,
+      "composition_mole_fraction": {
+        "co2": 0.9899,
+        "n2": 0.0033,
+        "ch4": 0.0068
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0065,
+        "pressure_mpa": 0.00055,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "L31",
+      "identity": "bubble",
+      "temperature_k": 223.15,
+      "pressure_mpa": 1.2246,
+      "composition_mole_fraction": {
+        "co2": 0.9867,
+        "n2": 0.0044,
+        "ch4": 0.0089
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0059,
+        "pressure_mpa": 0.00055,
+        "co2_mole_fraction": 0.00042,
+        "n2_mole_fraction": 0.00034,
+        "ch4_mole_fraction": 0.00027
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00042,
+      "source_table": 2
+    },
+    {
+      "id": "V1",
+      "identity": "dew",
+      "temperature_k": 298.138,
+      "pressure_mpa": 7.0854,
+      "composition_mole_fraction": {
+        "co2": 0.9587,
+        "n2": 0.0215,
+        "ch4": 0.0198
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0085,
+        "pressure_mpa": 0.0015,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00058,
+      "source_table": 3
+    },
+    {
+      "id": "V2",
+      "identity": "dew",
+      "temperature_k": 298.133,
+      "pressure_mpa": 7.5243,
+      "composition_mole_fraction": {
+        "co2": 0.9373,
+        "n2": 0.0319,
+        "ch4": 0.0307
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0051,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V3",
+      "identity": "dew",
+      "temperature_k": 298.131,
+      "pressure_mpa": 7.7892,
+      "composition_mole_fraction": {
+        "co2": 0.9295,
+        "n2": 0.0356,
+        "ch4": 0.035
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0055,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V4",
+      "identity": "dew",
+      "temperature_k": 298.131,
+      "pressure_mpa": 7.9286,
+      "composition_mole_fraction": {
+        "co2": 0.9296,
+        "n2": 0.035,
+        "ch4": 0.0353
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0058,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V5",
+      "identity": "dew",
+      "temperature_k": 298.13,
+      "pressure_mpa": 7.8772,
+      "composition_mole_fraction": {
+        "co2": 0.9285,
+        "n2": 0.0359,
+        "ch4": 0.0356
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0054,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V6",
+      "identity": "dew",
+      "temperature_k": 298.129,
+      "pressure_mpa": 6.8978,
+      "composition_mole_fraction": {
+        "co2": 0.971,
+        "n2": 0.024,
+        "ch4": 0.005
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0046,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V7",
+      "identity": "dew",
+      "temperature_k": 298.129,
+      "pressure_mpa": 7.305,
+      "composition_mole_fraction": {
+        "co2": 0.9493,
+        "n2": 0.0419,
+        "ch4": 0.0088
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0048,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V8",
+      "identity": "dew",
+      "temperature_k": 298.129,
+      "pressure_mpa": 7.6696,
+      "composition_mole_fraction": {
+        "co2": 0.9348,
+        "n2": 0.0539,
+        "ch4": 0.0112
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0058,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V9",
+      "identity": "dew",
+      "temperature_k": 298.129,
+      "pressure_mpa": 7.9277,
+      "composition_mole_fraction": {
+        "co2": 0.9285,
+        "n2": 0.0593,
+        "ch4": 0.0122
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0055,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V10",
+      "identity": "dew",
+      "temperature_k": 283.154,
+      "pressure_mpa": 5.2542,
+      "composition_mole_fraction": {
+        "co2": 0.911,
+        "n2": 0.0476,
+        "ch4": 0.0415
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00061,
+      "source_table": 3
+    },
+    {
+      "id": "V11",
+      "identity": "dew",
+      "temperature_k": 283.154,
+      "pressure_mpa": 6.1439,
+      "composition_mole_fraction": {
+        "co2": 0.8354,
+        "n2": 0.0905,
+        "ch4": 0.0741
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.0006,
+      "source_table": 3
+    },
+    {
+      "id": "V12",
+      "identity": "dew",
+      "temperature_k": 283.155,
+      "pressure_mpa": 7.0836,
+      "composition_mole_fraction": {
+        "co2": 0.7822,
+        "n2": 0.1229,
+        "ch4": 0.0949
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.013,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00059,
+      "source_table": 3
+    },
+    {
+      "id": "V13",
+      "identity": "dew",
+      "temperature_k": 283.155,
+      "pressure_mpa": 7.6738,
+      "composition_mole_fraction": {
+        "co2": 0.7597,
+        "n2": 0.1334,
+        "ch4": 0.1068
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0068,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00057,
+      "source_table": 3
+    },
+    {
+      "id": "V14",
+      "identity": "dew",
+      "temperature_k": 283.155,
+      "pressure_mpa": 8.2636,
+      "composition_mole_fraction": {
+        "co2": 0.7463,
+        "n2": 0.1359,
+        "ch4": 0.1179
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.014,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00058,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00034
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.0006,
+      "source_table": 3
+    },
+    {
+      "id": "V15",
+      "identity": "dew",
+      "temperature_k": 283.155,
+      "pressure_mpa": 8.6818,
+      "composition_mole_fraction": {
+        "co2": 0.7432,
+        "n2": 0.136,
+        "ch4": 0.1208
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.014,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00059,
+      "source_table": 3
+    },
+    {
+      "id": "V16",
+      "identity": "dew",
+      "temperature_k": 273.167,
+      "pressure_mpa": 3.9894,
+      "composition_mole_fraction": {
+        "co2": 0.9134,
+        "n2": 0.0465,
+        "ch4": 0.0401
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00058,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00063,
+      "source_table": 3
+    },
+    {
+      "id": "V17",
+      "identity": "dew",
+      "temperature_k": 273.166,
+      "pressure_mpa": 5.2508,
+      "composition_mole_fraction": {
+        "co2": 0.7663,
+        "n2": 0.1263,
+        "ch4": 0.1073
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.0006,
+      "source_table": 3
+    },
+    {
+      "id": "V18",
+      "identity": "dew",
+      "temperature_k": 273.166,
+      "pressure_mpa": 6.2599,
+      "composition_mole_fraction": {
+        "co2": 0.6967,
+        "n2": 0.1645,
+        "ch4": 0.1389
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00059,
+      "source_table": 3
+    },
+    {
+      "id": "V19",
+      "identity": "dew",
+      "temperature_k": 273.167,
+      "pressure_mpa": 7.2129,
+      "composition_mole_fraction": {
+        "co2": 0.6549,
+        "n2": 0.1875,
+        "ch4": 0.1575
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0097,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00058,
+      "source_table": 3
+    },
+    {
+      "id": "V20",
+      "identity": "dew",
+      "temperature_k": 273.168,
+      "pressure_mpa": 8.1578,
+      "composition_mole_fraction": {
+        "co2": 0.6319,
+        "n2": 0.2001,
+        "ch4": 0.1679
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0096,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00058,
+      "source_table": 3
+    },
+    {
+      "id": "V21",
+      "identity": "dew",
+      "temperature_k": 273.17,
+      "pressure_mpa": 8.79,
+      "composition_mole_fraction": {
+        "co2": 0.6267,
+        "n2": 0.2021,
+        "ch4": 0.1712
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00058,
+      "source_table": 3
+    },
+    {
+      "id": "V22",
+      "identity": "dew",
+      "temperature_k": 273.17,
+      "pressure_mpa": 9.3076,
+      "composition_mole_fraction": {
+        "co2": 0.6301,
+        "n2": 0.1995,
+        "ch4": 0.1704
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.01,
+        "pressure_mpa": 0.0014,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00058,
+      "source_table": 3
+    },
+    {
+      "id": "V23",
+      "identity": "dew",
+      "temperature_k": 253.162,
+      "pressure_mpa": 2.3336,
+      "composition_mole_fraction": {
+        "co2": 0.8774,
+        "n2": 0.0668,
+        "ch4": 0.0558
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0032,
+        "pressure_mpa": 0.00057,
+        "co2_mole_fraction": 0.0006,
+        "n2_mole_fraction": 0.00045,
+        "ch4_mole_fraction": 0.00034
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00062,
+      "source_table": 3
+    },
+    {
+      "id": "V24",
+      "identity": "dew",
+      "temperature_k": 253.162,
+      "pressure_mpa": 2.6825,
+      "composition_mole_fraction": {
+        "co2": 0.7843,
+        "n2": 0.1184,
+        "ch4": 0.0973
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0032,
+        "pressure_mpa": 0.00058,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00059,
+      "source_table": 3
+    },
+    {
+      "id": "V25",
+      "identity": "dew",
+      "temperature_k": 253.163,
+      "pressure_mpa": 3.0413,
+      "composition_mole_fraction": {
+        "co2": 0.7136,
+        "n2": 0.1575,
+        "ch4": 0.1288
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0032,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.0006,
+        "n2_mole_fraction": 0.00047,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00064,
+      "source_table": 3
+    },
+    {
+      "id": "V26",
+      "identity": "dew",
+      "temperature_k": 253.162,
+      "pressure_mpa": 3.4091,
+      "composition_mole_fraction": {
+        "co2": 0.6566,
+        "n2": 0.1893,
+        "ch4": 0.1541
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0032,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.0006,
+      "source_table": 3
+    },
+    {
+      "id": "V27",
+      "identity": "dew",
+      "temperature_k": 253.162,
+      "pressure_mpa": 3.7969,
+      "composition_mole_fraction": {
+        "co2": 0.6102,
+        "n2": 0.2153,
+        "ch4": 0.1745
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0034,
+        "pressure_mpa": 0.0013,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00059,
+      "source_table": 3
+    },
+    {
+      "id": "V28",
+      "identity": "dew",
+      "temperature_k": 223.151,
+      "pressure_mpa": 0.7963,
+      "composition_mole_fraction": {
+        "co2": 0.8734,
+        "n2": 0.0708,
+        "ch4": 0.0558
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0067,
+        "pressure_mpa": 0.00035,
+        "co2_mole_fraction": 0.00059,
+        "n2_mole_fraction": 0.00045,
+        "ch4_mole_fraction": 0.00034
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00071,
+      "source_table": 3
+    },
+    {
+      "id": "V29",
+      "identity": "dew",
+      "temperature_k": 223.151,
+      "pressure_mpa": 0.9948,
+      "composition_mole_fraction": {
+        "co2": 0.7145,
+        "n2": 0.1606,
+        "ch4": 0.1249
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0065,
+        "pressure_mpa": 0.00035,
+        "co2_mole_fraction": 0.00058,
+        "n2_mole_fraction": 0.00045,
+        "ch4_mole_fraction": 0.00034
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00065,
+      "source_table": 3
+    },
+    {
+      "id": "V30",
+      "identity": "dew",
+      "temperature_k": 223.15,
+      "pressure_mpa": 1.0973,
+      "composition_mole_fraction": {
+        "co2": 0.6537,
+        "n2": 0.195,
+        "ch4": 0.1514
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0064,
+        "pressure_mpa": 0.00055,
+        "co2_mole_fraction": 0.00058,
+        "n2_mole_fraction": 0.00045,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00066,
+      "source_table": 3
+    },
+    {
+      "id": "V31",
+      "identity": "dew",
+      "temperature_k": 223.151,
+      "pressure_mpa": 1.2233,
+      "composition_mole_fraction": {
+        "co2": 0.5937,
+        "n2": 0.2289,
+        "ch4": 0.1774
+      },
+      "standard_uncertainty": {
+        "temperature_k": 0.0061,
+        "pressure_mpa": 0.00055,
+        "co2_mole_fraction": 0.00057,
+        "n2_mole_fraction": 0.00044,
+        "ch4_mole_fraction": 0.00033
+      },
+      "total_standard_uncertainty_co2_mole_fraction": 0.00063,
+      "source_table": 3
+    }
+  ],
+  "implementation_audit": {
+    "teqp_version": "0.23.1",
+    "generic_routes": [
+      "mix_VLE_Tx",
+      "mix_VLE_Tp",
+      "mixture_VLE_px"
+    ],
+    "decision": "No ternary pressure-prediction bridge was added. In pinned teqp v0.23.1, mix_VLE_Tx is explicitly documented as binary-only and hard-codes four residual/Jacobian rows, so it cannot solve a ternary bubble pressure from specified liquid composition. mix_VLE_Tp accepts N components but fixes experimental T and P and therefore can only polish compositions, not independently predict pressure; mixture_VLE_px fixes pressure and liquid composition and solves temperature. Neighboring Ottøy rows cannot remove this missing ternary pressure-specification equation/API. A new thermodynamic solver would be required and is outside the evidence-backed scope."
+  }
+}
