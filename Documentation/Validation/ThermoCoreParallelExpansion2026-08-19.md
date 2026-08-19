@@ -20,7 +20,7 @@ Corrected current Advanced CCS state at the start of the milestone:
 | CO | No Advanced production support; component exists for General dry-mixture workflows | No PhaseXpert Advanced native route | No | No | No | Unsupported | No production gate |
 | H2S | No Advanced production support; component exists for General dry-mixture workflows | No PhaseXpert Advanced native route | No | No | No | Unsupported | No production gate |
 | H2O | No Advanced production support; component identity exists | No PhaseXpert Advanced native route | No | No | No | Unsupported | No production gate |
-| Simultaneous impurities | Composition can be represented by `CanonicalComposition`; Advanced production calculations are rejected | Pinned upstream teqp can construct generic multifluid models from complete pair data, but PhaseXpert has no linked N-component provider route or validation gate | No | No | No | Unsupported | No production gate |
+| Simultaneous impurities | Composition can be represented by `CanonicalComposition`; Advanced production calculations are rejected | Pinned upstream teqp can construct generic multifluid models from complete pair data, and PhaseXpert now has a diagnostic N-component density ABI | No | No | No | Diagnostic / validation pending | No production gate |
 
 Implemented groundwork:
 
@@ -30,14 +30,19 @@ Implemented groundwork:
 - `AdvancedCCSCapabilityMatrix` returns property-specific support decisions
   with validation state, formulation identifier, phase domain, and rejection
   reasons.
-- `TeqpProvider` rejects ternary and larger Advanced CCS mixtures before any
-  native engine call and includes all active components in the rejection reason.
+- `TeqpProvider` rejects ternary and larger Advanced CCS production mixtures
+  before any production native engine call and includes all active components
+  in the rejection reason.
+- `TeqpProvider.diagnosticNComponentDensity` and
+  `px_teqp_calculate_ncomponent_density` provide a non-production
+  arbitrary-length EOS-CG density diagnostic for the audited 9-component
+  subset.
 
 No ternary or quaternary Advanced CCS production calculation is enabled in this
 milestone. EOS-CG-2021 itself is a multicomponent Helmholtz-energy CCS mixture
-model, but the current PhaseXpert production ABI exposes only pure CO2 and
-selected binary formulation calls, and no independent multicomponent validation
-gate has been encoded.
+model, and the diagnostic ABI now proves native construction/execution for
+representative multicomponent homogeneous density states, but no independent
+multicomponent validation gate has been encoded.
 
 ## Workstream B - Additional Advanced CCS Impurities
 
@@ -103,8 +108,9 @@ Current PhaseXpert native status:
 
 - `PhaseXpertTeqpBridge` exposes pure CO2, CO2+N2 diagnostic point/VLE, and
   binary EOS-CG CO2+H2 and CO2+CH4 density/diagnostic functions.
-- The public Swift `TeqpEngine` protocol exposes no arbitrary-length
-  composition vector or N-component teqp entry point.
+- The public Swift `TeqpEngine` protocol now exposes a diagnostic
+  arbitrary-length composition vector for N-component teqp homogeneous
+  density.
 - The bridge explicitly throws for thermodynamic properties and critical
   diagnostics outside EOS-CG CO2+H2 and CO2+CH4 binaries.
 - `EOSCG2021TargetModelData.json` currently records only a 6-component
@@ -170,23 +176,69 @@ Ternary target conclusion:
 
 | Target | Required pairs | PhaseXpert pair status | Decision |
 | --- | --- | --- | --- |
-| CO2 + N2 + CH4 | CO2+N2, CO2+CH4, N2+CH4 | All three pairs are present in pinned upstream teqp data and the ternary model constructs; PhaseXpert still lacks linked N-component provider ABI and encoded Ottøy validation rows | Unsupported |
-| CO2 + N2 + CH4 + H2 | CO2+N2, CO2+CH4, CO2+H2, N2+CH4, N2+H2, CH4+H2 | All six pairs are present in pinned upstream teqp data and the quaternary model constructs; PhaseXpert still lacks linked N-component provider ABI and production validation | Unsupported |
+| CO2 + N2 + CH4 | CO2+N2, CO2+CH4, N2+CH4 | All three pairs are present in pinned upstream teqp data; PhaseXpert diagnostic ABI computes a representative homogeneous density point; encoded experimental density/VLE rows remain unavailable | Diagnostic / validation pending |
+| CO2 + N2 + CH4 + H2 | CO2+N2, CO2+CH4, CO2+H2, N2+CH4, N2+H2, CH4+H2 | All six pairs are present in pinned upstream teqp data; PhaseXpert diagnostic ABI computes a representative homogeneous density point; no production validation gate encoded | Diagnostic / validation pending |
 
 Independent validation exists for the ternary CO2+N2+CH4 VLE system: Ottøy et
 al. measured 62 dew/bubble points from 223 K to 298 K and 0.8 MPa to 9.3 MPa
 and compared them with EOS-CG-2019, reporting composition deviations below
 0.5 mol% liquid and 1.0 mol% vapor. PhaseXpert does not yet encode these
 validation rows in executable form, so no ternary production calculation was
-implemented. The next implementation step is an N-component native ABI backed
-by generated model data for the selected subset, followed by direct Ottøy VLE
+enabled. The next implementation step is direct row-level density and Ottøy VLE
 validation rather than relying on construction success.
+
+## Diagnostic N-Component Native ABI - 2026-08-19 Continuation
+
+Implementation:
+
+- C ABI:
+  `px_teqp_calculate_ncomponent_density(component_ids, mole_fractions,
+  component_count, pressure_pa, temperature_k, result, error_buffer,
+  error_buffer_size)`.
+- Swift diagnostic route:
+  `TeqpProvider.diagnosticNComponentDensity(pressurePa:temperatureK:composition:)`.
+- Supported diagnostic component identifiers: CO2, N2, CH4, H2, O2, Ar, CO,
+  H2S and H2O.
+- The route validates deterministic `CanonicalComposition` order, exact
+  mole-fraction total, duplicate rejection, positive active fractions, finite
+  P/T, supported component IDs, native non-null pointers, and one unique
+  homogeneous density root.
+- Generated teqp model data now embed CarbonMonoxide, HydrogenSulfide and
+  Water pure-fluid records in addition to the existing CO2, N2, O2, Ar, H2 and
+  CH4 records.
+
+Native rebuild/probe results:
+
+| Diagnostic case | P / T | Native status | Density kg/m3 | Molar density mol/m3 | Roots | Production status |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| CO2+N2+CH4, x = 0.90 / 0.06 / 0.04 | 8 MPa / 320 K | Converged | 190.807775192 | 4550.481133 | 1 | Diagnostic only |
+| CO2+N2+CH4+H2, x = 0.88 / 0.06 / 0.04 / 0.02 | 8 MPa / 320 K | Converged | 181.126278075 | 4407.88104137 | 1 | Diagnostic only |
+| CO2+H2O, x = 0.999 / 0.001 | 8 MPa / 320 K | Converged | 232.153904029 | 5278.16776103 | 1 | Diagnostic only |
+| 9-component subset, x = 0.86 / 0.04 / 0.03 / 0.02 / 0.015 / 0.01 / 0.01 / 0.005 / 0.01 | 8 MPa / 320 K | Converged | 181.016911875 | 4414.97245094 | 1 | Diagnostic only |
+
+Validation data status:
+
+- The primary density target is the JC&ED paper
+  "Density Characteristics of a Multicomponent CO2/N2/CH4 Ternary Mixture at
+  Temperature of 293.15-353.15 K and Pressure of 0.5-18 MPa",
+  DOI `10.1021/acs.jced.2c00020`. ACS supplemental URLs and NIST ThermoML URL
+  guesses returned HTTP 403 in the agent environment, and the repository
+  contains no committed measured rows for that DOI. No density rows were
+  encoded.
+- The primary VLE target is Ottøy et al. 2020,
+  DOI `10.1016/j.fluid.2019.112444`. The publication-level summary is
+  available, but exact experimental rows were not reconstructed in
+  machine-readable form during this continuation. No VLE rows were encoded.
+
+Production decision: CO2+N2+CH4 homogeneous density remains
+diagnostic / validation pending. A successful EOS-CG density solve is not
+external validation, and no production P/T/composition gate is derived.
 
 ## Second-Generation Audit - Additional Advanced Impurities
 
 | Impurity | Candidate model | Pure EOS / binary interaction provenance | Data located | Validation outcome | Status |
 | --- | --- | --- | --- | --- | --- |
-| O2 | EOS-CG/Gernert CO2+O2 with Fij = 0 and no departure function; newer O2-rich density papers are validation data rather than a new PhaseXpert model | CO2 Span-Wagner; O2 Schmidt/Stewart; EOS-CG/Gernert reducing parameters | Existing Mantovani 2012 PVT audit; Lozano-Martin/Staubach O2-rich PVT literature found | Existing PhaseXpert direct teqp density audit failed: 6/6 converged, AARD 7.3878%, worst 14.8035%. New literature is not CO2-rich low-O2 transport validation and does not repair the model gate. | No defensible model found |
+| O2 | EOS-CG/Gernert CO2+O2 with Fij = 0 and no departure function; newer low-O2 density data are validation data rather than a new PhaseXpert model | CO2 Span-Wagner; O2 Schmidt/Stewart; EOS-CG/Gernert reducing parameters | Existing Mantovani 2012 PVT audit; Lozano-Martin et al. 2024/2025 low-O2 PVT dataset located for xO2 = 0.05, 0.10 and 0.20 from 250 K to 375 K and 0.5 MPa to 13 MPa | Existing PhaseXpert direct teqp density audit failed: 6/6 converged, AARD 7.3878%, worst 14.8035%. The newer low-O2 dataset has not yet been row-encoded or revalidated against the new N-component ABI, so no O2 production gate is derived in this continuation. | Research only |
 | Ar | EOS-CG-2021 CO2+Ar update with Løvseth et al. departure function | CO2 Span-Wagner; Ar Tegeler; EOS-CG Table 4 and Løvseth/GERG-2008 departure | Existing Mantovani 2012 PVT audit; Løvseth CO2+Ar model paper located | Existing broad gate failed: AARD 3.40533%, worst 9.99102%; low-Ar subset worst about 0.731526% over only 3 points and no VLE gate. | Research only |
 | CO | EOS-CG-2021 reports CO as a covered CCS component; pinned upstream teqp has CO pure-fluid data and CO2+CO binary pair data | PhaseXpert has no linked native teqp CO2+CO provider route; upstream pair data are not a production gate | CO2+CO density and VLE literature found, including high-pressure density and Chapoy 2020 VLE | No PhaseXpert Advanced validation harness exists for CO2+CO; no production domain derived. | No defensible production model found |
 | H2S | EOS-CG-2021 reports H2S extension; pinned upstream teqp has H2S pure-fluid data and CO2+H2S binary pair data | PhaseXpert has no linked native teqp CO2+H2S provider route; H2S must not be inferred from CoolProp or molar mass | CO2+H2S VLE/solubility literature found | No PhaseXpert Advanced validation harness exists for CO2+H2S; no production domain derived. | No defensible production model found |
@@ -240,14 +292,14 @@ Candidate model classes located:
 
 No Advanced H2O production capability was implemented. Pinned upstream teqp
 provides traceable H2O pure-fluid data and a CO2+H2O pair with a
-`CarbonDioxide-Water` departure function, and the construction probe confirms
-that wet multifluid models can be assembled. PhaseXpert does not yet generate
-or link those wet model records into its native iOS bridge, and no validation
-matrix is encoded for H2O-in-CO2-rich phase, CO2-in-water-rich phase, water
-dew/dropout, aqueous phase appearance, or density. Solubility-specific models
-such as Spycher-Pruess or Duan-Sun are promising for future aqueous-phase
-work, but they are not drop-in replacements for the dry Advanced EOS provider
-and need separate units, activity conventions, brine inputs, and validation.
+`CarbonDioxide-Water` departure function, and the diagnostic N-component ABI
+now constructs and evaluates a representative homogeneous CO2+H2O density
+state. No validation matrix is encoded for H2O-in-CO2-rich phase,
+CO2-in-water-rich phase, water dew/dropout, aqueous phase appearance, or
+density. Solubility-specific models such as Spycher-Pruess or Duan-Sun are
+promising for future aqueous-phase work, but they are not drop-in replacements
+for the dry Advanced EOS provider and need separate units, activity
+conventions, brine inputs, and validation.
 
 Advanced H2O remains unsupported.
 

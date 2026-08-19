@@ -71,6 +71,34 @@ public struct TeqpMixtureDensityResult: Equatable, Sendable {
     }
 }
 
+public struct TeqpNComponentDensityResult: Equatable, Sendable {
+    public let densityKilogramsPerCubicMetre: Double
+    public let molarDensityMolesPerCubicMetre: Double
+    public let densityRootCount: Int
+    public let converged: Bool
+    public let phaseIdentifier: String
+    public let formulationID: String
+    public let composition: [MixtureComponent]
+
+    public init(
+        densityKilogramsPerCubicMetre: Double,
+        molarDensityMolesPerCubicMetre: Double,
+        densityRootCount: Int,
+        converged: Bool,
+        phaseIdentifier: String,
+        formulationID: String,
+        composition: [MixtureComponent]
+    ) {
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.densityRootCount = densityRootCount
+        self.converged = converged
+        self.phaseIdentifier = phaseIdentifier
+        self.formulationID = formulationID
+        self.composition = composition
+    }
+}
+
 public struct TeqpMixtureThermodynamicResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
     public let molarDensityMolesPerCubicMetre: Double
@@ -169,6 +197,23 @@ public enum TeqpBinaryFormulationID: Sendable {
     case carbonDioxideNitrogen
     case eoscgCarbonDioxideHydrogen
     case eoscgCarbonDioxideMethane
+}
+
+public enum TeqpNComponentDiagnostic {
+    public static let formulationID =
+        "teqp-v0.23.1-eoscg2021-ncomponent-density-diagnostic"
+
+    public static let supportedComponents: Set<ComponentID> = [
+        .carbonDioxide,
+        .nitrogen,
+        .methane,
+        .hydrogen,
+        .oxygen,
+        .argon,
+        .carbonMonoxide,
+        .hydrogenSulfide,
+        .water
+    ]
 }
 
 public struct TeqpBinaryVLEResult: Equatable, Sendable {
@@ -276,6 +321,12 @@ public protocol TeqpEngine: Sendable {
         liquidComponent2MoleFraction: Double,
         initialGuess: TeqpBinaryVLEInitialGuess?
     ) async throws -> TeqpBinaryVLEResult
+
+    func calculateNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition
+    ) async throws -> TeqpNComponentDensityResult
 }
 
 public struct UnavailableTeqpEngine: TeqpEngine {
@@ -347,6 +398,16 @@ public struct UnavailableTeqpEngine: TeqpEngine {
         formulation: TeqpBinaryFormulationID,
         component2MoleFraction: Double
     ) async throws -> TeqpBinaryCriticalResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
+
+    public func calculateNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition
+    ) async throws -> TeqpNComponentDensityResult {
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
         )
@@ -519,6 +580,44 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             )
         }
         return nil
+    }
+
+    public func diagnosticNComponentDensity(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> TeqpNComponentDensityResult {
+        try Task.checkCancellation()
+        guard engine.isAvailable else {
+            throw ProviderError.modelUnavailable("teqp is not available in this build.")
+        }
+        guard pressurePa.isFinite, temperatureK.isFinite, pressurePa > 0, temperatureK > 0 else {
+            throw ProviderError.invalidRequest(
+                "N-component teqp density diagnostics require finite positive pressure and temperature."
+            )
+        }
+        let canonical: CanonicalComposition
+        do {
+            canonical = try CanonicalComposition(composition)
+        } catch {
+            throw ProviderError.invalidRequest(
+                "N-component teqp density diagnostics require finite, duplicate-free mole fractions summing exactly to 100 mol%; the diagnostic path never normalizes or drops components."
+            )
+        }
+        let unsupported = canonical.components
+            .map(\.component)
+            .filter { !TeqpNComponentDiagnostic.supportedComponents.contains($0) }
+        guard unsupported.isEmpty else {
+            let unsupportedSymbols = unsupported.map(\.symbol).joined(separator: ", ")
+            throw ProviderError.invalidRequest(
+                "N-component teqp density diagnostics do not support: \(unsupportedSymbols)."
+            )
+        }
+        return try await engine.calculateNComponentDensity(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: canonical
+        )
     }
 
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
