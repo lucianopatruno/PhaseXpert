@@ -87,6 +87,9 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             }
             return CoolPropBinaryEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                densityMolesPerCubicMetre: nativeResult.density_mol_m3,
+                reducingDensityMolesPerCubicMetre: nativeResult.reducing_density_mol_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
         }.value
@@ -138,11 +141,151 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             }
             return CoolPropBinaryEngineResult(
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                densityMolesPerCubicMetre: nativeResult.density_mol_m3,
+                reducingDensityMolesPerCubicMetre: nativeResult.reducing_density_mol_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
         }.value
         try Task.checkCancellation()
         return result
+    }
+
+    public func identifyDryCarbonDioxideMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        try Task.checkCancellation()
+        let fractions = composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
+
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXCoolPropPhaseResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
+                pressurePa,
+                temperatureK,
+                fractions[.carbonDioxide] ?? 0,
+                fractions[.nitrogen] ?? 0,
+                fractions[.oxygen] ?? 0,
+                fractions[.argon] ?? 0,
+                fractions[.methane] ?? 0,
+                fractions[.hydrogen] ?? 0,
+                fractions[.carbonMonoxide] ?? 0,
+                fractions[.hydrogenSulfide] ?? 0,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp dry-mixture legacy-stability phase classification failed." : message
+                )
+            }
+            return CoolPropPhaseEngineResult(
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+    }
+
+    public func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult {
+        try Task.checkCancellation()
+        let fractions = composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
+        let phaseHint: PXCoolPropPhaseHint = switch imposedPhase {
+        case .gas:
+            PXCoolPropPhaseHintGas
+        case .liquid:
+            PXCoolPropPhaseHintLiquid
+        }
+
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXCoolPropBinaryResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_calculate_dry_co2_mixture_with_phase_hint(
+                pressurePa,
+                temperatureK,
+                fractions[.carbonDioxide] ?? 0,
+                fractions[.nitrogen] ?? 0,
+                fractions[.oxygen] ?? 0,
+                fractions[.argon] ?? 0,
+                fractions[.methane] ?? 0,
+                fractions[.hydrogen] ?? 0,
+                fractions[.carbonMonoxide] ?? 0,
+                fractions[.hydrogenSulfide] ?? 0,
+                phaseHint,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp phase-imposed dry-mixture calculation failed." : message
+                )
+            }
+            return CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                densityMolesPerCubicMetre: nativeResult.density_mol_m3,
+                reducingDensityMolesPerCubicMetre: nativeResult.reducing_density_mol_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+    }
+
+    public func dryCarbonDioxideMixtureSaturationPressures(
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropMixtureSaturationPressures {
+        try Task.checkCancellation()
+        let fractions = composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
+
+        let pressures = try await Task.detached(priority: .utility) {
+            var nativePressures = PXCoolPropMixtureSaturationPressures()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_dry_co2_mixture_saturation_pressures(
+                temperatureK,
+                fractions[.carbonDioxide] ?? 0,
+                fractions[.nitrogen] ?? 0,
+                fractions[.oxygen] ?? 0,
+                fractions[.argon] ?? 0,
+                fractions[.methane] ?? 0,
+                fractions[.hydrogen] ?? 0,
+                fractions[.carbonMonoxide] ?? 0,
+                fractions[.hydrogenSulfide] ?? 0,
+                &nativePressures,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp dry-mixture saturation-pressure calculation failed." : message
+                )
+            }
+            return CoolPropMixtureSaturationPressures(
+                bubblePressurePa: nativePressures.bubble_pressure_pa,
+                dewPressurePa: nativePressures.dew_pressure_pa
+            )
+        }.value
+        try Task.checkCancellation()
+        return pressures
     }
 
     public func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {

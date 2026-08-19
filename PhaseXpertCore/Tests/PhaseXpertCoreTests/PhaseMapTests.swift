@@ -352,6 +352,24 @@ final class PhaseMapTests: XCTestCase {
         XCTAssertFalse(unavailable.isSupported)
     }
 
+    func testSummaryCountsKeepUnknownSeparateFromClassifiedAndFailed() {
+        let result = PhaseMapResult(
+            request: request(),
+            model: Self.descriptor,
+            evaluations: [
+                evaluation(classification: .gas),
+                evaluation(classification: .unknown),
+                evaluation(classification: .failed, failureReason: "Fixture failure.")
+            ],
+            warnings: []
+        )
+
+        XCTAssertEqual(result.classifiedCount, 1)
+        XCTAssertEqual(result.successfulCount, 1)
+        XCTAssertEqual(result.unknownCount, 1)
+        XCTAssertEqual(result.failedCount, 1)
+    }
+
     func testRunnerEvaluatesEveryPointAndContinuesAfterPointFailure() async throws {
         let recorder = CallRecorder()
         let provider = FixtureProvider(recorder: recorder) { request in
@@ -438,6 +456,34 @@ final class PhaseMapTests: XCTestCase {
             range: range,
             resolution: resolution,
             clientVersion: "test"
+        )
+    }
+
+    private func evaluation(
+        classification: PhaseMapClassification,
+        failureReason: String? = nil
+    ) -> PhaseMapEvaluation {
+        PhaseMapEvaluation(
+            point: PhaseMapGridPoint(
+                pressurePa: 12_000_000,
+                temperatureK: 300,
+                isOperatingPoint: false
+            ),
+            classification: classification == .failed
+                ? PhaseMapClassificationResult(
+                    classification: .failed,
+                    displayName: "Failed",
+                    isSupported: false
+                )
+                : PhaseMapClassificationResult(
+                    classification: classification,
+                    displayName: classification.rawValue,
+                    isSupported: classification != .unknown
+                ),
+            solver: failureReason == nil
+                ? SolverMetadata(method: "Fixture", converged: true, durationMilliseconds: 1)
+                : nil,
+            failureReason: failureReason
         )
     }
 

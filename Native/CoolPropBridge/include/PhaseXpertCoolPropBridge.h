@@ -33,8 +33,26 @@ typedef struct PXCoolPropResult {
 
 typedef struct PXCoolPropBinaryResult {
     double density_kg_m3;
+    double density_mol_m3;
+    double reducing_density_mol_m3;
+    double gibbs_molar_j_mol;
     PXCoolPropPhase phase;
 } PXCoolPropBinaryResult;
+
+typedef struct PXCoolPropPhaseResult {
+    PXCoolPropPhase phase;
+} PXCoolPropPhaseResult;
+
+typedef enum PXCoolPropPhaseHint {
+    PXCoolPropPhaseHintNone = 0,
+    PXCoolPropPhaseHintGas = 1,
+    PXCoolPropPhaseHintLiquid = 2
+} PXCoolPropPhaseHint;
+
+typedef struct PXCoolPropMixtureSaturationPressures {
+    double bubble_pressure_pa;
+    double dew_pressure_pa;
+} PXCoolPropMixtureSaturationPressures;
 
 typedef struct PXCoolPropSaturationLimits {
     double triple_temperature_k;
@@ -88,6 +106,49 @@ int px_coolprop_calculate_dry_co2_mixture(
     size_t error_buffer_size
 );
 
+/// Classifies the pinned CoolProp dry-mixture phase for Phase Map points using
+/// CoolProp's legacy mixture stability route. This deliberately avoids
+/// high-level PhaseSI/PropsSI("Phase") because those can enter the Michelsen
+/// two-phase PT flash and abort on iOS. Fractions are ordered CO2, N2, O2, Ar,
+/// CH4, H2, CO and H2S and use the same dry-mixture guardrails as the
+/// density-producing calculation.
+int px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropPhaseResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Calculates a restricted dry CO2-rich state with an imposed single-phase
+/// hint. Intended for Phase Map points that have first been classified outside
+/// the CoolProp bubble/dew interval at the same temperature. No estimated
+/// mixing rule is applied.
+int px_coolprop_calculate_dry_co2_mixture_with_phase_hint(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropPhaseHint phase_hint,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
 /// Backwards-compatible entry point for the restricted CO2-N2 subset.
 int px_coolprop_calculate_co2_n2(
     double pressure_pa,
@@ -95,6 +156,24 @@ int px_coolprop_calculate_co2_n2(
     double carbon_dioxide_mole_fraction,
     double nitrogen_mole_fraction,
     PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Returns CoolProp bubble and dew pressures at a fixed temperature for the
+/// restricted dry CO2-rich mixture. Fractions use the same order and guardrail
+/// as the state calculation.
+int px_coolprop_dry_co2_mixture_saturation_pressures(
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropMixtureSaturationPressures *pressures,
     char *error_buffer,
     size_t error_buffer_size
 );

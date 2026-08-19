@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 @testable import PhaseXpertCore
 
@@ -91,6 +92,73 @@ final class CoolPropProviderTests: XCTestCase {
         ) async throws -> CoolPropMixtureEnvelopeResult {
             envelopeCallRecorder?.recordCall()
             return mixtureEnvelope
+        }
+    }
+
+    private final class PhaseMapPhaseOnlyCallRecorder: @unchecked Sendable {
+        private let lock = NSLock()
+        private(set) var calls: [(pressurePa: Double, temperatureK: Double)] = []
+
+        func recordCall(pressurePa: Double, temperatureK: Double) {
+            lock.withLock {
+                calls.append((pressurePa, temperatureK))
+            }
+        }
+    }
+
+    private struct PhaseMapPhaseOnlyEngine: CoolPropEngine {
+        let isAvailable = true
+        let libraryVersion = "8.0.0-legacy-stability-test"
+        var phaseResult: @Sendable (Double, Double) throws -> CoolPropPhaseEngineResult
+        var recorder: PhaseMapPhaseOnlyCallRecorder?
+
+        func calculatePureCarbonDioxide(
+            pressurePa: Double,
+            temperatureK: Double
+        ) async throws -> CoolPropEngineResult {
+            throw ProviderError.modelUnavailable("Pure CO2 is not used by this test engine.")
+        }
+
+        func calculateCarbonDioxideNitrogen(
+            pressurePa: Double,
+            temperatureK: Double,
+            carbonDioxideMoleFraction: Double,
+            nitrogenMoleFraction: Double
+        ) async throws -> CoolPropBinaryEngineResult {
+            throw ProviderError.modelUnavailable("Unimposed PT flash is not used by this test engine.")
+        }
+
+        func calculateDryCarbonDioxideMixture(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropBinaryEngineResult {
+            throw ProviderError.modelUnavailable("Density-producing PT flash is not used by Phase Map.")
+        }
+
+        func identifyDryCarbonDioxideMixturePhase(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropPhaseEngineResult {
+            recorder?.recordCall(pressurePa: pressurePa, temperatureK: temperatureK)
+            return try phaseResult(pressurePa, temperatureK)
+        }
+
+        func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+            throw ProviderError.modelUnavailable("Pure CO2 saturation is not used by this test engine.")
+        }
+
+        func pureCarbonDioxideSaturationPressure(
+            temperatureK: Double
+        ) async throws -> Double {
+            throw ProviderError.modelUnavailable("Pure CO2 saturation is not used by this test engine.")
+        }
+
+        func dryCarbonDioxideMixturePhaseEnvelope(
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropMixtureEnvelopeResult {
+            throw ProviderError.modelUnavailable("Phase envelope is not used by this test engine.")
         }
     }
 
@@ -666,4 +734,102 @@ final class CoolPropProviderTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
     }
+
+    func testPhaseMapUsesLegacyStabilityPhaseEngineAndDoesNotRequestDensity() async throws {
+        let recorder = PhaseMapPhaseOnlyCallRecorder()
+        let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
+            phaseResult: { pressure, _ in
+                CoolPropPhaseEngineResult(
+                    phaseIdentifier: pressure < 15_000_000 ? "gas" : "twophase"
+                )
+            },
+            recorder: recorder
+        ))
+        let request = fallbackPhaseMapRequest()
+
+        let result = try await provider.phaseMap(request)
+        let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+
+        XCTAssertEqual(result.evaluations.count, expectedCount)
+        XCTAssertEqual(recorder.calls.count, expectedCount)
+        XCTAssertTrue(result.evaluations.contains {
+            $0.classification.classification == .gas
+        })
+        XCTAssertTrue(result.evaluations.contains {
+            $0.classification.classification == .multiphase
+        })
+        XCTAssertEqual(result.failedCount, 0)
+    }
+
+    func testPhaseMapPhaseOnlyFailuresAreRecoverableAndSubsequentPointsContinue() async throws {
+        let recorder = PhaseMapPhaseOnlyCallRecorder()
+        let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
+            phaseResult: { pressure, _ in
+                if pressure == 7_500_000 {
+                    throw ProviderError.malformedResponse("mock pinned CoolProp phase failure")
+                }
+                return CoolPropPhaseEngineResult(phaseIdentifier: "liquid")
+            },
+            recorder: recorder
+        ))
+        let request = fallbackPhaseMapRequest()
+
+        let result = try await provider.phaseMap(request)
+        let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+
+        XCTAssertEqual(result.evaluations.count, expectedCount)
+        XCTAssertEqual(recorder.calls.count, expectedCount)
+        XCTAssertEqual(result.failedCount, PhaseMapResolution.five.rawValue)
+        let firstFailureIndex = try XCTUnwrap(result.evaluations.firstIndex {
+            $0.classification.classification == .failed
+        })
+        XCTAssertTrue(result.evaluations.dropFirst(firstFailureIndex + 1).contains {
+            $0.classification.classification == .liquid
+        })
+    }
+
+    func testPhaseMapUnknownPointsAreNotFailuresAndSubsequentPointsContinue() async throws {
+        let recorder = PhaseMapPhaseOnlyCallRecorder()
+        let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
+            phaseResult: { pressure, _ in
+                if pressure == 7_500_000 {
+                    return CoolPropPhaseEngineResult(phaseIdentifier: "unknown")
+                }
+                return CoolPropPhaseEngineResult(phaseIdentifier: "liquid")
+            },
+            recorder: recorder
+        ))
+        let request = fallbackPhaseMapRequest()
+
+        let result = try await provider.phaseMap(request)
+        let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+
+        XCTAssertEqual(result.evaluations.count, expectedCount)
+        XCTAssertEqual(recorder.calls.count, expectedCount)
+        XCTAssertEqual(result.failedCount, 0)
+        XCTAssertEqual(result.unknownCount, PhaseMapResolution.five.rawValue)
+        XCTAssertEqual(result.classifiedCount, expectedCount - PhaseMapResolution.five.rawValue)
+        let firstUnknownIndex = try XCTUnwrap(result.evaluations.firstIndex {
+            $0.classification.classification == .unknown
+        })
+        XCTAssertTrue(result.evaluations.dropFirst(firstUnknownIndex + 1).contains {
+            $0.classification.classification == .liquid
+        })
+    }
+
+    private func fallbackPhaseMapRequest() -> PhaseMapRequest {
+        PhaseMapRequest(
+            modelID: "coolprop-heos",
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ],
+            range: .automatic(pressurePa: 15_000_000, temperatureK: 293.15),
+            resolution: .five,
+            clientVersion: "fallback-test"
+        )
+    }
+
 }

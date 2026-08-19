@@ -230,7 +230,22 @@ public struct PhaseMapResult: Codable, Equatable, Sendable {
     }
 
     public var successfulCount: Int {
-        evaluations.filter { $0.failureReason == nil && $0.solver?.converged != false }.count
+        classifiedCount
+    }
+
+    public var classifiedCount: Int {
+        evaluations.filter {
+            $0.failureReason == nil
+                && $0.solver?.converged != false
+                && $0.classification.classification != .unknown
+        }.count
+    }
+
+    public var unknownCount: Int {
+        evaluations.filter {
+            $0.failureReason == nil
+                && $0.classification.classification == .unknown
+        }.count
     }
 
     public var failedCount: Int {
@@ -244,6 +259,13 @@ public struct PhaseMapResult: Codable, Equatable, Sendable {
     public var operatingPoint: PhaseMapEvaluation? {
         evaluations.first { $0.point.isOperatingPoint }
     }
+}
+
+public protocol PhaseMapProvidingModelProvider: ThermodynamicModelProvider {
+    func phaseMap(
+        _ request: PhaseMapRequest,
+        progress: (@Sendable (PhaseMapProgress) async -> Void)?
+    ) async throws -> PhaseMapResult
 }
 
 public enum PhaseMapGridBuilder {
@@ -401,6 +423,9 @@ public struct PhaseMapRunner: Sendable {
         _ request: PhaseMapRequest,
         progress: (@Sendable (PhaseMapProgress) async -> Void)? = nil
     ) async throws -> PhaseMapResult {
+        if let phaseMapProvider = provider as? any PhaseMapProvidingModelProvider {
+            return try await phaseMapProvider.phaseMap(request, progress: progress)
+        }
         guard provider.descriptor.availability != .unavailable else {
             throw ProviderError.modelUnavailable("The selected provider is not available.")
         }

@@ -3,12 +3,15 @@
 #include "CoolProp/AbstractState.h"
 #include "CoolProp/Configuration.h"
 #include "CoolProp/CoolProp.h"
+#include "Backends/Helmholtz/HelmholtzEOSMixtureBackend.h"
+#include "Backends/Helmholtz/VLERoutines.h"
 
 #include <array>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <exception>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -18,7 +21,18 @@ namespace {
 
 constexpr const char *kFluid = "HEOS::CarbonDioxide";
 constexpr double kPhaseEnvelopeStartingPressurePa = 80000.0;
+constexpr std::array<const char *, 8> kDryMixtureNames = {
+    "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
+    "CarbonMonoxide", "HydrogenSulfide"
+};
 std::mutex kPhaseEnvelopeConfigurationMutex;
+std::mutex kMixtureStabilityConfigurationMutex;
+
+struct ActiveDryMixture {
+    std::vector<std::string> names;
+    std::vector<double> fractions;
+    std::string fluid_identifier;
+};
 
 class ScopedPhaseEnvelopeStartingPressure {
 public:
@@ -57,6 +71,29 @@ private:
     double previous_pressure_pa_;
 };
 
+class ScopedMixtureStabilityAlgorithm {
+public:
+    explicit ScopedMixtureStabilityAlgorithm(int algorithm)
+        : previous_algorithm_(CoolProp::get_config_int(MIXTURE_STABILITY_ALGORITHM)) {
+        CoolProp::set_config_int(MIXTURE_STABILITY_ALGORITHM, algorithm);
+    }
+
+    ~ScopedMixtureStabilityAlgorithm() {
+        try {
+            CoolProp::set_config_int(MIXTURE_STABILITY_ALGORITHM, previous_algorithm_);
+        } catch (...) {
+            // Destructors must not throw. The process-global setting is guarded
+            // and restoration failure cannot change already-returned points.
+        }
+    }
+
+    ScopedMixtureStabilityAlgorithm(const ScopedMixtureStabilityAlgorithm &) = delete;
+    ScopedMixtureStabilityAlgorithm &operator=(const ScopedMixtureStabilityAlgorithm &) = delete;
+
+private:
+    int previous_algorithm_;
+};
+
 void copy_text(const std::string &text, char *buffer, size_t buffer_size) {
     if (buffer == nullptr || buffer_size == 0) {
         return;
@@ -84,6 +121,355 @@ PXCoolPropPhase map_phase(const std::string &phase) {
         return PXCoolPropPhaseSolid;
     }
     return PXCoolPropPhaseUnknown;
+}
+
+PXCoolPropPhase map_phase(CoolProp::phases phase) {
+    switch (phase) {
+        case CoolProp::iphase_gas:
+        case CoolProp::iphase_supercritical_gas:
+            return PXCoolPropPhaseGas;
+        case CoolProp::iphase_liquid:
+            return PXCoolPropPhaseLiquid;
+        case CoolProp::iphase_supercritical_liquid:
+            return PXCoolPropPhaseDense;
+        case CoolProp::iphase_supercritical:
+        case CoolProp::iphase_critical_point:
+            return PXCoolPropPhaseSupercritical;
+        case CoolProp::iphase_twophase:
+            return PXCoolPropPhaseTwoPhase;
+        case CoolProp::iphase_unknown:
+        case CoolProp::iphase_not_imposed:
+            return PXCoolPropPhaseUnknown;
+    }
+    return PXCoolPropPhaseUnknown;
+}
+
+int validate_dry_mixture(
+    const std::array<double, 8> &fractions,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    double total = 0;
+    for (const double fraction : fractions) {
+        if (!std::isfinite(fraction) || fraction < 0) {
+            copy_text("Mole fractions must be finite and non-negative.", error_buffer, error_buffer_size);
+            return 3;
+        }
+        total += fraction;
+    }
+    const double total_impurity = 1.0 - fractions[0];
+    bool carbon_dioxide_is_unique_largest = fractions[0] > 0;
+    for (size_t index = 1; index < fractions.size(); ++index) {
+        carbon_dioxide_is_unique_largest =
+            carbon_dioxide_is_unique_largest && fractions[0] > fractions[index];
+    }
+    if (std::abs(total - 1.0) > 1e-10
+        || total_impurity <= 0
+        || total_impurity > 0.10 + 1e-12
+        || !carbon_dioxide_is_unique_largest) {
+        copy_text(
+            "Dry mixtures require CO2 as the unique largest component, total impurity in (0, 0.10], and fractions summing to one.",
+            error_buffer,
+            error_buffer_size
+        );
+        return 4;
+    }
+    return 0;
+}
+
+bool active_dry_mixture(
+    const std::array<double, 8> &fractions,
+    ActiveDryMixture *mixture,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    mixture->names.clear();
+    mixture->fractions.clear();
+    mixture->fluid_identifier = "HEOS::";
+    bool first = true;
+    char component[96];
+    for (size_t index = 0; index < fractions.size(); ++index) {
+        if (fractions[index] <= 1e-14) {
+            continue;
+        }
+        mixture->names.emplace_back(kDryMixtureNames[index]);
+        mixture->fractions.push_back(fractions[index]);
+        const int length = std::snprintf(
+            component,
+            sizeof(component),
+            "%s%s[%.17g]",
+            first ? "" : "&",
+            kDryMixtureNames[index],
+            fractions[index]
+        );
+        if (length <= 0 || static_cast<size_t>(length) >= sizeof(component)) {
+            copy_text("Could not construct the bounded dry-mixture identifier.", error_buffer, error_buffer_size);
+            return false;
+        }
+        mixture->fluid_identifier += component;
+        first = false;
+    }
+    if (mixture->names.empty()) {
+        copy_text("Could not construct the bounded dry-mixture component list.", error_buffer, error_buffer_size);
+        return false;
+    }
+    return true;
+}
+
+CoolProp::phases imposed_phase(PXCoolPropPhaseHint phase_hint) {
+    switch (phase_hint) {
+        case PXCoolPropPhaseHintGas:
+            return CoolProp::iphase_gas;
+        case PXCoolPropPhaseHintLiquid:
+            return CoolProp::iphase_liquid;
+        default:
+            return CoolProp::iphase_not_imposed;
+    }
+}
+
+int calculate_dry_mixture_state(
+    double pressure_pa,
+    double temperature_k,
+    const std::array<double, 8> &fractions,
+    CoolProp::phases phase_hint,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    const int validation_status = validate_dry_mixture(
+        fractions,
+        error_buffer,
+        error_buffer_size
+    );
+    if (validation_status != 0) {
+        return validation_status;
+    }
+
+    try {
+        ActiveDryMixture mixture;
+        if (!active_dry_mixture(fractions, &mixture, error_buffer, error_buffer_size)) {
+            return 5;
+        }
+
+        // CoolProp resolves only interaction entries shipped in version 8.0.0.
+        // This bridge never calls apply_simple_mixing_rule and never mutates
+        // binary interaction parameters.
+        std::shared_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory("HEOS", mixture.names)
+        );
+        state->set_mole_fractions(mixture.fractions);
+        if (phase_hint != CoolProp::iphase_not_imposed) {
+            state->specify_phase(phase_hint);
+        }
+        state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
+
+        const double density = state->rhomass();
+        const double density_molar = state->rhomolar();
+        const double reducing_density_molar = state->rhomolar_reducing();
+        const double gibbs_molar = state->gibbsmolar();
+        if (!std::isfinite(density) || density <= 0) {
+            copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        if (!std::isfinite(density_molar) || density_molar <= 0
+            || !std::isfinite(reducing_density_molar)
+            || reducing_density_molar <= 0) {
+            copy_text("CoolProp returned an invalid dry-mixture molar or reducing density.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        if (!std::isfinite(gibbs_molar)) {
+            copy_text("CoolProp returned an invalid dry-mixture molar Gibbs energy.", error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        result->density_kg_m3 = density;
+        result->density_mol_m3 = density_molar;
+        result->reducing_density_mol_m3 = reducing_density_molar;
+        result->gibbs_molar_j_mol = gibbs_molar;
+        result->phase = map_phase(state->phase());
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp dry-mixture calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
+    }
+}
+
+int calculate_dry_mixture_high_level_state(
+    double pressure_pa,
+    double temperature_k,
+    const std::array<double, 8> &fractions,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    const int validation_status = validate_dry_mixture(
+        fractions,
+        error_buffer,
+        error_buffer_size
+    );
+    if (validation_status != 0) {
+        return validation_status;
+    }
+
+    try {
+        ActiveDryMixture mixture;
+        if (!active_dry_mixture(fractions, &mixture, error_buffer, error_buffer_size)) {
+            return 5;
+        }
+
+        // Phase Map reference behavior uses CoolProp's high-level dry-mixture
+        // flash path. This preserves CoolProp's own twophase classification
+        // without routing through the iOS-crashing direct AbstractState PT
+        // update introduced by the CO/H2S bridge expansion.
+        const double density = CoolProp::PropsSI(
+            "Dmass", "P", pressure_pa, "T", temperature_k, mixture.fluid_identifier
+        );
+        const std::string phase = CoolProp::PhaseSI(
+            "P", pressure_pa, "T", temperature_k, mixture.fluid_identifier
+        );
+        if (!std::isfinite(density) || density <= 0) {
+            copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        result->density_kg_m3 = density;
+        result->density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+        result->reducing_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+        result->gibbs_molar_j_mol = std::numeric_limits<double>::quiet_NaN();
+        result->phase = map_phase(phase);
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp dry-mixture calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
+    }
+}
+
+int classify_dry_mixture_phase_legacy_stability(
+    double pressure_pa,
+    double temperature_k,
+    const std::array<double, 8> &fractions,
+    PXCoolPropPhaseResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    const int validation_status = validate_dry_mixture(
+        fractions,
+        error_buffer,
+        error_buffer_size
+    );
+    if (validation_status != 0) {
+        return validation_status;
+    }
+
+    try {
+        ActiveDryMixture mixture;
+        if (!active_dry_mixture(fractions, &mixture, error_buffer, error_buffer_size)) {
+            return 5;
+        }
+
+        PXCoolPropPhase legacy_phase = PXCoolPropPhaseUnknown;
+        {
+            std::lock_guard<std::mutex> lock(kMixtureStabilityConfigurationMutex);
+            ScopedMixtureStabilityAlgorithm use_legacy_stability(0);
+            std::shared_ptr<CoolProp::AbstractState> state(
+                CoolProp::AbstractState::factory("HEOS", mixture.names)
+            );
+            state->set_mole_fractions(mixture.fractions);
+            state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
+            legacy_phase = map_phase(state->phase());
+        }
+
+        if (legacy_phase == PXCoolPropPhaseUnknown) {
+            copy_text("CoolProp legacy stability returned an unknown dry-mixture phase.", error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        if (legacy_phase == PXCoolPropPhaseGas || legacy_phase == PXCoolPropPhaseLiquid) {
+            bool michelsen_stability_available = false;
+            bool michelsen_indicates_instability = false;
+            try {
+                std::shared_ptr<CoolProp::AbstractState> stability_state(
+                    CoolProp::AbstractState::factory("HEOS", mixture.names)
+                );
+                stability_state->set_mole_fractions(mixture.fractions);
+                auto *heos = dynamic_cast<CoolProp::HelmholtzEOSMixtureBackend *>(stability_state.get());
+                if (heos != nullptr) {
+                    CoolProp::StabilityRoutines::StabilityEvaluationClass stability(*heos);
+                    stability.set_TP(temperature_k, pressure_pa);
+                    stability.set_use_michelsen(true);
+                    michelsen_indicates_instability = !stability.is_stable();
+                    michelsen_stability_available = true;
+                }
+            } catch (...) {
+                michelsen_stability_available = false;
+            }
+
+            if (michelsen_stability_available && michelsen_indicates_instability) {
+                bool saturation_confidently_resolves_single_phase = false;
+                try {
+                    // No fitted pressure band is applied here: the safe T,Q
+                    // topology either places P outside finite bubble/dew
+                    // bounds, or the conflicting indicators remain Unknown.
+                    const double bubble_pressure = CoolProp::PropsSI(
+                        "P", "T", temperature_k, "Q", 0, mixture.fluid_identifier
+                    );
+                    const double dew_pressure = CoolProp::PropsSI(
+                        "P", "T", temperature_k, "Q", 1, mixture.fluid_identifier
+                    );
+                    if (std::isfinite(bubble_pressure) && bubble_pressure > 0
+                        && std::isfinite(dew_pressure) && dew_pressure > 0) {
+                        const double lower_pressure = std::min(bubble_pressure, dew_pressure);
+                        const double upper_pressure = std::max(bubble_pressure, dew_pressure);
+                        const bool outside_interval =
+                            pressure_pa < lower_pressure || pressure_pa > upper_pressure;
+                        saturation_confidently_resolves_single_phase =
+                            outside_interval;
+                    }
+                } catch (...) {
+                    saturation_confidently_resolves_single_phase = false;
+                }
+
+                if (!saturation_confidently_resolves_single_phase) {
+                    result->phase = PXCoolPropPhaseUnknown;
+                    copy_text("CoolProp legacy stability returned single phase, but safe stability indicators are boundary-conflicting.", error_buffer, error_buffer_size);
+                    return 0;
+                }
+            }
+        }
+
+        result->phase = legacy_phase;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp dry-mixture phase identification failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
+    }
 }
 
 }  // namespace
@@ -189,6 +575,128 @@ int px_coolprop_calculate_dry_co2_mixture(
         return 1;
     }
 
+    return calculate_dry_mixture_high_level_state(
+        pressure_pa,
+        temperature_k,
+        {
+            carbon_dioxide_mole_fraction,
+            nitrogen_mole_fraction,
+            oxygen_mole_fraction,
+            argon_mole_fraction,
+            methane_mole_fraction,
+            hydrogen_mole_fraction,
+            carbon_monoxide_mole_fraction,
+            hydrogen_sulfide_mole_fraction
+        },
+        result,
+        error_buffer,
+        error_buffer_size
+    );
+}
+
+int px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropPhaseResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Mixture-phase result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+
+    return classify_dry_mixture_phase_legacy_stability(
+        pressure_pa,
+        temperature_k,
+        {
+            carbon_dioxide_mole_fraction,
+            nitrogen_mole_fraction,
+            oxygen_mole_fraction,
+            argon_mole_fraction,
+            methane_mole_fraction,
+            hydrogen_mole_fraction,
+            carbon_monoxide_mole_fraction,
+            hydrogen_sulfide_mole_fraction
+        },
+        result,
+        error_buffer,
+        error_buffer_size
+    );
+}
+
+int px_coolprop_calculate_dry_co2_mixture_with_phase_hint(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropPhaseHint phase_hint,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Mixture-result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+
+    return calculate_dry_mixture_state(
+        pressure_pa,
+        temperature_k,
+        {
+            carbon_dioxide_mole_fraction,
+            nitrogen_mole_fraction,
+            oxygen_mole_fraction,
+            argon_mole_fraction,
+            methane_mole_fraction,
+            hydrogen_mole_fraction,
+            carbon_monoxide_mole_fraction,
+            hydrogen_sulfide_mole_fraction
+        },
+        imposed_phase(phase_hint),
+        result,
+        error_buffer,
+        error_buffer_size
+    );
+}
+
+int px_coolprop_dry_co2_mixture_saturation_pressures(
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropMixtureSaturationPressures *pressures,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (pressures == nullptr) {
+        copy_text("Mixture-saturation output pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(temperature_k) || temperature_k <= 0) {
+        copy_text("Saturation temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+
     const std::array<double, 8> fractions = {
         carbon_dioxide_mole_fraction,
         nitrogen_mole_fraction,
@@ -199,82 +707,35 @@ int px_coolprop_calculate_dry_co2_mixture(
         carbon_monoxide_mole_fraction,
         hydrogen_sulfide_mole_fraction
     };
-    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
-        || pressure_pa <= 0 || temperature_k <= 0) {
-        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
-        return 2;
-    }
-    double total = 0;
-    for (const double fraction : fractions) {
-        if (!std::isfinite(fraction) || fraction < 0) {
-            copy_text("Mole fractions must be finite and non-negative.", error_buffer, error_buffer_size);
-            return 3;
-        }
-        total += fraction;
-    }
-    const double total_impurity = 1.0 - carbon_dioxide_mole_fraction;
-    bool carbon_dioxide_is_unique_largest = carbon_dioxide_mole_fraction > 0;
-    for (size_t index = 1; index < fractions.size(); ++index) {
-        carbon_dioxide_is_unique_largest =
-            carbon_dioxide_is_unique_largest
-            && carbon_dioxide_mole_fraction > fractions[index];
-    }
-    if (std::abs(total - 1.0) > 1e-10
-        || total_impurity <= 0
-        || total_impurity > 0.10 + 1e-12
-        || !carbon_dioxide_is_unique_largest) {
-        copy_text(
-            "Dry mixtures require CO2 as the unique largest component, total impurity in (0, 0.10], and fractions summing to one.",
-            error_buffer,
-            error_buffer_size
-        );
-        return 4;
+    const int validation_status = validate_dry_mixture(
+        fractions,
+        error_buffer,
+        error_buffer_size
+    );
+    if (validation_status != 0) {
+        return validation_status;
     }
 
     try {
-        constexpr std::array<const char *, 8> names = {
-            "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
-            "CarbonMonoxide", "HydrogenSulfide"
-        };
-        std::string fluid = "HEOS::";
-        bool first = true;
-        char component[96];
-        for (size_t index = 0; index < fractions.size(); ++index) {
-            if (fractions[index] <= 1e-14) {
-                continue;
-            }
-            const int length = std::snprintf(
-                component,
-                sizeof(component),
-                "%s%s[%.17g]",
-                first ? "" : "&",
-                names[index],
-                fractions[index]
-            );
-            if (length <= 0 || static_cast<size_t>(length) >= sizeof(component)) {
-                copy_text("Could not construct the bounded dry-mixture identifier.", error_buffer, error_buffer_size);
-                return 5;
-            }
-            fluid += component;
-            first = false;
+        ActiveDryMixture mixture;
+        if (!active_dry_mixture(fractions, &mixture, error_buffer, error_buffer_size)) {
+            return 5;
         }
 
-        // CoolProp resolves only interaction entries shipped in version 8.0.0.
-        // This bridge never calls apply_simple_mixing_rule and never mutates
-        // binary interaction parameters.
-        const double density = CoolProp::PropsSI(
-            "Dmass", "P", pressure_pa, "T", temperature_k, fluid
+        const double bubble_pressure = CoolProp::PropsSI(
+            "P", "T", temperature_k, "Q", 0, mixture.fluid_identifier
         );
-        const std::string phase = CoolProp::PhaseSI(
-            "P", pressure_pa, "T", temperature_k, fluid
+        const double dew_pressure = CoolProp::PropsSI(
+            "P", "T", temperature_k, "Q", 1, mixture.fluid_identifier
         );
-        if (!std::isfinite(density) || density <= 0) {
-            copy_text("CoolProp returned an invalid dry-mixture density.", error_buffer, error_buffer_size);
+        if (!std::isfinite(bubble_pressure) || bubble_pressure <= 0
+            || !std::isfinite(dew_pressure) || dew_pressure <= 0) {
+            copy_text("CoolProp returned invalid dry-mixture saturation pressures.", error_buffer, error_buffer_size);
             return 6;
         }
 
-        result->density_kg_m3 = density;
-        result->phase = map_phase(phase);
+        pressures->bubble_pressure_pa = bubble_pressure;
+        pressures->dew_pressure_pa = dew_pressure;
         copy_text("", error_buffer, error_buffer_size);
         return 0;
     } catch (const std::exception &error) {

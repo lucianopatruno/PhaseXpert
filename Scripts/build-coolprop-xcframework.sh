@@ -149,6 +149,7 @@ compile_bridge() {
         "${architecture_flags[@]}" \
         -I"${bridge_headers}" \
         -I"${source_root}/include" \
+        -I"${source_root}/src" \
         -I"${build_directory}/_deps/fmt-src/include" \
         -I"${build_directory}/_deps/eigen-src" \
         -I"${build_directory}/_deps/msgpack-c-src/include" \

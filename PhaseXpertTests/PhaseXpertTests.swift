@@ -1886,16 +1886,20 @@ final class PhaseXpertTests: XCTestCase {
     func testPhaseMapMarkerStylesKeepDenseSupercriticalAndFailedDistinct() {
         let dense = PhaseMapMarkerStyle.style(for: .dense)
         let supercritical = PhaseMapMarkerStyle.style(for: .supercritical)
+        let unknown = PhaseMapMarkerStyle.style(for: .unknown)
         let failed = PhaseMapMarkerStyle.failed
 
         XCTAssertEqual(dense.systemImage, "diamond.fill")
         XCTAssertEqual(supercritical.systemImage, "triangle.fill")
+        XCTAssertEqual(unknown.systemImage, "questionmark.diamond")
         XCTAssertNotEqual(dense.systemImage, supercritical.systemImage)
+        XCTAssertNotEqual(unknown.systemImage, failed.systemImage)
         XCTAssertTrue(dense.accessibilityDescription.contains("Dense"))
         XCTAssertTrue(supercritical.accessibilityDescription.contains("Supercritical"))
+        XCTAssertTrue(unknown.accessibilityDescription.contains("unknown"))
         XCTAssertEqual(failed.systemImage, "circle.fill")
         XCTAssertTrue(failed.accessibilityDescription.contains("failed"))
-        XCTAssertTrue(failed.accessibilityDescription.contains("unknown"))
+        XCTAssertFalse(failed.accessibilityDescription.contains("unknown"))
     }
 
     @MainActor
