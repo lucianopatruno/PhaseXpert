@@ -106,6 +106,19 @@ int px_coolprop_calculate_dry_co2_mixture(
     size_t error_buffer_size
 );
 
+/// Calculates a deliberately narrow homogeneous CO2-rich gas containing H2O.
+/// The gas phase is imposed to avoid CoolProp's unsafe mixture PT flash. This
+/// route does not calculate aqueous equilibrium, mutual solubility or dew.
+int px_coolprop_calculate_co2_h2o_homogeneous_gas(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double water_mole_fraction,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
 /// Classifies the pinned CoolProp dry-mixture phase for Phase Map points using
 /// CoolProp's legacy mixture stability route. This deliberately avoids
 /// high-level PhaseSI/PropsSI("Phase") because those can enter the Michelsen

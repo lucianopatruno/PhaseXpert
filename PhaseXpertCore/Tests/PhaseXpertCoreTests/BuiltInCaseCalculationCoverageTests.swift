@@ -61,7 +61,7 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
         XCTAssertTrue(required.isSubset(of: advertised))
         XCTAssertTrue(advertised.contains(.carbonMonoxide))
         XCTAssertTrue(advertised.contains(.hydrogenSulfide))
-        XCTAssertEqual(provider.descriptor.providerVersion, "0.8.3")
+        XCTAssertEqual(provider.descriptor.providerVersion, "0.9.0")
     }
 
     func testEveryBuiltInCasePassesPreliminaryProviderCompositionGate() async throws {

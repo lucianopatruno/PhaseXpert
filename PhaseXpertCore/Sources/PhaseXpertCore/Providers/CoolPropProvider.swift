@@ -170,6 +170,13 @@ public protocol CoolPropEngine: Sendable {
         composition: [MixtureComponent]
     ) async throws -> CoolPropBinaryEngineResult
 
+    func calculateCarbonDioxideWaterHomogeneousGas(
+        pressurePa: Double,
+        temperatureK: Double,
+        carbonDioxideMoleFraction: Double,
+        waterMoleFraction: Double
+    ) async throws -> CoolPropBinaryEngineResult
+
     func calculateDryCarbonDioxideMixture(
         pressurePa: Double,
         temperatureK: Double,
@@ -200,6 +207,17 @@ public protocol CoolPropEngine: Sendable {
 }
 
 public extension CoolPropEngine {
+    func calculateCarbonDioxideWaterHomogeneousGas(
+        pressurePa: Double,
+        temperatureK: Double,
+        carbonDioxideMoleFraction: Double,
+        waterMoleFraction: Double
+    ) async throws -> CoolPropBinaryEngineResult {
+        throw ProviderError.modelUnavailable(
+            "The CoolProp engine does not expose the preliminary CO₂/H₂O homogeneous-gas bridge."
+        )
+    }
+
     func calculateDryCarbonDioxideMixture(
         pressurePa: Double,
         temperatureK: Double,
@@ -351,6 +369,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     private enum SupportedComposition {
         case pureCarbonDioxide
         case dryMixture([MixtureComponent])
+        case wetCarbonDioxideGas([MixtureComponent])
     }
 
     private struct ResolvedState {
@@ -373,13 +392,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             id: "coolprop-heos",
             name: "General Properties (CoolProp)",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.8.3",
+            providerVersion: "0.9.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
                 ? [
                     .carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen,
-                    .carbonMonoxide, .hydrogenSulfide
+                    .carbonMonoxide, .hydrogenSulfide, .water
                 ]
                 : [],
             supportedProperties: engine.isAvailable
@@ -401,8 +420,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ]
                 : [],
             domain: .initialCO2Transport,
-            scientificBasis: "CoolProp HEOS pure-fluid CO₂ and restricted dry CO₂-rich mixture backend.",
-            equationOrMethod: "CoolProp HEOS; pure-CO₂ thermodynamic, acoustic and transport values come from one AbstractState(P,T) update. Cp/Cv, molar mass, specific volume and Z are derived transparently. Dry-mixture state calculations use only interaction entries shipped by the pinned release; no estimated mixing rule is applied.",
+            scientificBasis: "CoolProp HEOS pure-fluid CO₂, restricted dry CO₂-rich mixtures, and a preliminary homogeneous CO₂-rich water-vapor route.",
+            equationOrMethod: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
@@ -411,7 +430,8 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.",
                 "Preliminary integration; no production accuracy claim.",
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
-                "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation."
+                "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation.",
+                "H₂O support is preliminary homogeneous gas density only for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa; it does not represent aqueous equilibrium, mutual solubility, dew, dropout or pH."
             ],
             references: [
                 SourceReference(
@@ -461,6 +481,12 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     title: "2022 CODATA recommended values of the fundamental physical constants",
                     year: 2022,
                     doiOrURL: "https://physics.nist.gov/cuu/Constants/"
+                ),
+                SourceReference(
+                    authors: "Wagner and Pruß",
+                    title: "The IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use",
+                    year: 2002,
+                    doiOrURL: "https://doi.org/10.1063/1.1461829"
                 )
             ]
         )
@@ -505,6 +531,45 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             )
         }
         return issues
+    }
+
+    public func operatingRangeGuidance(
+        for context: OperatingGuidanceContext
+    ) -> OperatingRangeGuidance? {
+        guard let water = context.composition.first(where: {
+            $0.component == .water && $0.moleFraction > 0
+        }) else { return nil }
+        var issues: [OperatingGuidanceLine] = []
+        if water.moleFraction < 1e-6 || water.moleFraction > 0.001 {
+            issues.append(.init(
+                severity: .unsupported,
+                title: "Water outside preliminary range",
+                detail: "Enter 1–1000 ppm H₂O on a mole basis."
+            ))
+        }
+        if let temperatureK = context.temperatureK,
+           !(350...423.15).contains(temperatureK) {
+            issues.append(.init(severity: .unsupported, title: "Temperature outside preliminary range", detail: "CO₂/H₂O homogeneous gas is limited to 350–423.15 K."))
+        }
+        if let pressurePa = context.pressurePa,
+           !(500_000...5_000_000).contains(pressurePa) {
+            issues.append(.init(severity: .unsupported, title: "Pressure outside preliminary range", detail: "CO₂/H₂O homogeneous gas is limited to 5–50 bar(a)."))
+        }
+        return OperatingRangeGuidance(
+            title: "Preliminary homogeneous wet-gas range",
+            summary: [
+                .init(severity: .information, title: "Composition", detail: "Binary CO₂/H₂O; xH₂O = 1–1000 ppm (mole basis)"),
+                .init(severity: .information, title: "Properties", detail: "Density plus derived molar mass, specific volume and compressibility factor")
+            ],
+            currentInputIssues: issues,
+            propertyAvailability: [
+                .init(severity: .information, title: "Available", detail: "Homogeneous gas density, M, v and Z"),
+                .init(severity: .unsupported, title: "Unavailable", detail: "Cp/Cv, sound speed, transport, mutual solubility, aqueous equilibrium, water dew/dropout and pH")
+            ],
+            phaseDiagram: [
+                .init(severity: .unsupported, title: "Phase Map", detail: "Unavailable for H₂O-containing mixtures; dry-mixture safety routing remains unchanged.")
+            ]
+        )
     }
 
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
@@ -569,6 +634,35 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     "DRY MIXTURE — VALIDATION PENDING: density and phase have not completed independent validation.",
                     "The 10 mol% total-impurity cap is a PhaseXpert product guardrail, not a validated accuracy range.",
                     "Mixture dynamic viscosity and expanded properties are not enabled; phase diagrams are scoped to pure CO₂."
+                ]
+            )
+        case let .wetCarbonDioxideGas(activeComposition):
+            guard request.temperatureK >= 350,
+                  request.temperatureK <= 423.15,
+                  request.pressurePa >= 500_000,
+                  request.pressurePa <= 5_000_000 else {
+                throw ProviderError.invalidRequest(
+                    "Preliminary CO₂/H₂O homogeneous gas support is limited to 350–423.15 K and 0.5–5 MPa."
+                )
+            }
+            let carbonDioxide = activeComposition.first { $0.component == .carbonDioxide }?.moleFraction ?? 0
+            let water = activeComposition.first { $0.component == .water }?.moleFraction ?? 0
+            let raw = try await engine.calculateCarbonDioxideWaterHomogeneousGas(
+                pressurePa: request.pressurePa,
+                temperatureK: request.temperatureK,
+                carbonDioxideMoleFraction: carbonDioxide,
+                waterMoleFraction: water
+            )
+            state = ResolvedState(
+                densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
+                dynamicViscosityPascalSeconds: nil,
+                phaseIdentifier: raw.phaseIdentifier,
+                isPureCarbonDioxide: false,
+                expandedProperties: nil,
+                solverMethod: "CoolProp AbstractState(HEOS, CO₂/H₂O), imposed homogeneous gas phase; Gernert CO₂-Water pair",
+                warnings: [
+                    "WET GAS — PRELIMINARY / VALIDATION PENDING: only homogeneous density and derived M, v and Z are available.",
+                    "This result does not calculate water dew, dropout, mutual solubility, an aqueous phase or pH."
                 ]
             )
         }
@@ -642,6 +736,11 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
         let points = try PhaseMapGridBuilder.points(for: request)
         let supported = try supportedComposition(request.composition)
+        if case .wetCarbonDioxideGas = supported {
+            throw ProviderError.invalidRequest(
+                "Phase Map is unavailable for H₂O-containing mixtures; the PR #49 dry-mixture safety path is unchanged."
+            )
+        }
         guard case let .dryMixture(activeComposition) = supported else {
             throw ProviderError.invalidRequest(
                 "CoolProp legacy-stability Phase Map is available only for supported dry mixtures."
@@ -717,6 +816,11 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
         let supported = try supportedComposition(request.composition)
         if case .dryMixture = supported {
+            throw ProviderError.invalidRequest(
+                PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+            )
+        }
+        if case .wetCarbonDioxideGas = supported {
             throw ProviderError.invalidRequest(
                 PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
             )
@@ -843,6 +947,19 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
         if isPureCarbonDioxide(active) {
             return .pureCarbonDioxide
+        }
+        if active.contains(where: { $0.component == .water }) {
+            guard active.count == 2,
+                  let carbonDioxide = active.first(where: { $0.component == .carbonDioxide }),
+                  let water = active.first(where: { $0.component == .water }),
+                  carbonDioxide.moleFraction > water.moleFraction,
+                  water.moleFraction >= 1e-6,
+                  water.moleFraction <= 0.001 else {
+                throw ProviderError.invalidRequest(
+                    "Preliminary H₂O support is limited to binary CO₂/H₂O homogeneous gas with xH₂O from 1 to 1000 ppm."
+                )
+            }
+            return .wetCarbonDioxideGas(active)
         }
         if let unsupported = active.first(where: {
             !Self.supportedDryComponents.contains($0.component)

@@ -151,6 +151,43 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         return result
     }
 
+    public func calculateCarbonDioxideWaterHomogeneousGas(
+        pressurePa: Double,
+        temperatureK: Double,
+        carbonDioxideMoleFraction: Double,
+        waterMoleFraction: Double
+    ) async throws -> CoolPropBinaryEngineResult {
+        try Task.checkCancellation()
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXCoolPropBinaryResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_calculate_co2_h2o_homogeneous_gas(
+                pressurePa,
+                temperatureK,
+                carbonDioxideMoleFraction,
+                waterMoleFraction,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp CO₂/H₂O homogeneous-gas calculation failed." : message
+                )
+            }
+            return CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                densityMolesPerCubicMetre: nativeResult.density_mol_m3,
+                reducingDensityMolesPerCubicMetre: nativeResult.reducing_density_mol_m3,
+                gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+    }
+
     public func identifyDryCarbonDioxideMixturePhase(
         pressurePa: Double,
         temperatureK: Double,
