@@ -77,6 +77,21 @@ final class CoolPropProviderTests: XCTestCase {
             binaryResult
         }
 
+        func calculateCarbonDioxideWaterHomogeneousGas(
+            pressurePa: Double,
+            temperatureK: Double,
+            carbonDioxideMoleFraction: Double,
+            waterMoleFraction: Double
+        ) async throws -> CoolPropBinaryEngineResult {
+            CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: 31.25,
+                densityMolesPerCubicMetre: 712.0,
+                reducingDensityMolesPerCubicMetre: 10_100,
+                gibbsMolarJoulesPerMole: -2_000,
+                phaseIdentifier: "gas"
+            )
+        }
+
         func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
             saturationLimits
         }
@@ -349,7 +364,8 @@ final class CoolPropProviderTests: XCTestCase {
                 .methane,
                 .hydrogen,
                 .carbonMonoxide,
-                .hydrogenSulfide
+                .hydrogenSulfide,
+                .water
             ]
         )
         let request = CalculationRequest(
@@ -499,7 +515,7 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertTrue(response.warnings.contains { $0.contains("product guardrail") })
     }
 
-    func testUnsupportedWetComponentIsRejected() async {
+    func testWetCompositionOutsideNarrowPreliminaryGateIsRejected() async {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = CalculationRequest(
             modelID: provider.descriptor.id,
@@ -515,11 +531,58 @@ final class CoolPropProviderTests: XCTestCase {
 
         do {
             _ = try await provider.calculate(request)
-            XCTFail("Water is outside the approved dry-mixture scope.")
+            XCTFail("Water outside the narrow preliminary gate must be rejected.")
         } catch let error as ProviderError {
-            XCTAssertEqual(error, .unsupportedComponent(.water))
+            guard case let .invalidRequest(message) = error else {
+                return XCTFail("Expected invalidRequest, got \(error).")
+            }
+            XCTAssertTrue(message.contains("1 to 1000 ppm"))
         } catch {
             XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testPreliminaryWetGasCalculatesDensityAndDerivedPropertiesOnly() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 2_000_000,
+            temperatureK: 373.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9995),
+                .init(component: .water, moleFraction: 0.0005)
+            ],
+            requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor, .isobaricHeatCapacity],
+            clientVersion: "test"
+        ))
+        XCTAssertEqual(response.phase, .gas)
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.value, 31.25)
+        XCTAssertEqual(response.properties.first { $0.property == .molarMass }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .isobaricHeatCapacity }?.status, .unavailable)
+        XCTAssertTrue(response.warnings.contains { $0.contains("does not calculate water dew") })
+    }
+
+    func testWetGasRejectsStateOutsideTemperaturePressureGate() async {
+        let provider = CoolPropProvider(engine: MockEngine())
+        do {
+            _ = try await provider.calculate(CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 8_000_000,
+                temperatureK: 320,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.999),
+                    .init(component: .water, moleFraction: 0.001)
+                ],
+                requestedProperties: [.density],
+                clientVersion: "test"
+            ))
+            XCTFail("Expected the wet state to be rejected.")
+        } catch let ProviderError.invalidRequest(message) {
+            XCTAssertTrue(message.contains("350–423.15 K"))
+        } catch {
+            XCTFail("Expected invalidRequest, got \(error).")
         }
     }
 
@@ -677,6 +740,33 @@ final class CoolPropProviderTests: XCTestCase {
         do {
             _ = try await provider.phaseEnvelope(request)
             XCTFail("A multicomponent phase diagram request must be rejected.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .invalidRequest(
+                    PhaseDiagramEligibility.pureCarbonDioxideScopeMessage
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(recorder.callCount, 0)
+    }
+
+    func testWetMixturePhaseEnvelopeIsRejectedBeforeNativeEnvelopeWork() async {
+        let recorder = EnvelopeCallRecorder()
+        let provider = CoolPropProvider(engine: MockEngine(envelopeCallRecorder: recorder))
+        let request = PhaseEnvelopeRequest(
+            modelID: provider.descriptor.id,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9995),
+                .init(component: .water, moleFraction: 0.0005)
+            ]
+        )
+
+        do {
+            _ = try await provider.phaseEnvelope(request)
+            XCTFail("A wet-mixture phase diagram request must be rejected.")
         } catch let error as ProviderError {
             XCTAssertEqual(
                 error,

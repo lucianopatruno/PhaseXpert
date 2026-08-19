@@ -67,14 +67,14 @@ final class DerivedPropertyCalculatorTests: XCTestCase {
             temperatureK: 300,
             composition: [
                 .init(component: .carbonDioxide, moleFraction: 0.99),
-                .init(component: .water, moleFraction: 0.01)
+                .init(component: .helium, moleFraction: 0.01)
             ],
             densityKilogramsPerCubicMetre: 500
         )
 
         XCTAssertEqual(try value(.molarMass, in: values).status, .unavailable)
         XCTAssertTrue(
-            try value(.molarMass, in: values).message?.contains("H₂O") == true
+            try value(.molarMass, in: values).message?.contains("He") == true
         )
         XCTAssertEqual(
             try value(.compressibilityFactor, in: values).status,

@@ -99,6 +99,50 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
         }
     }
 
+    func testNativePreliminaryCarbonDioxideWaterHomogeneousGas() async throws {
+        let engine = NativeCoolPropEngine()
+        let states: [(pressurePa: Double, temperatureK: Double, water: Double)] = [
+            (500_000, 350, 0.000001),
+            (2_000_000, 373.15, 0.0005),
+            (5_000_000, 423.15, 0.001)
+        ]
+        let startedAt = Date()
+        for state in states {
+            let result = try await engine.calculateCarbonDioxideWaterHomogeneousGas(
+                pressurePa: state.pressurePa,
+                temperatureK: state.temperatureK,
+                carbonDioxideMoleFraction: 1 - state.water,
+                waterMoleFraction: state.water
+            )
+            XCTAssertTrue(result.densityKilogramsPerCubicMetre.isFinite)
+            XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
+            XCTAssertEqual(result.phaseIdentifier, "gas")
+        }
+        print("CO2_H2O_GENERAL_NATIVE states=3 elapsed=\(Date().timeIntervalSince(startedAt))")
+    }
+
+    func testWaterMixturePhaseMapIsRejectedBeforeNativeClassifier() async throws {
+        let provider = try requireNativeCoolPropProvider()
+        let request = PhaseMapRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 2_000_000,
+            temperatureK: 373.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9995),
+                .init(component: .water, moleFraction: 0.0005)
+            ],
+            range: .automatic(pressurePa: 2_000_000, temperatureK: 373.15),
+            resolution: .five,
+            clientVersion: "coolprop-water-phase-map-rejection"
+        )
+        do {
+            _ = try await PhaseMapRunner(provider: provider).run(request)
+            XCTFail("Wet Phase Map must be rejected before native classification.")
+        } catch let ProviderError.invalidRequest(message) {
+            XCTAssertTrue(message.contains("PR #49 dry-mixture safety path is unchanged"))
+        }
+    }
+
     private func requireNativeCoolPropProvider() throws
         -> any ThermodynamicModelProvider
     {

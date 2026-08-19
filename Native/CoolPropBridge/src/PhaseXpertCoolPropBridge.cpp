@@ -594,6 +594,70 @@ int px_coolprop_calculate_dry_co2_mixture(
     );
 }
 
+int px_coolprop_calculate_co2_h2o_homogeneous_gas(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double water_mole_fraction,
+    PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Wet-mixture result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa < 500000.0 || pressure_pa > 5000000.0
+        || temperature_k < 350.0 || temperature_k > 423.15) {
+        copy_text("Preliminary CO2/H2O gas support requires 350 to 423.15 K and 0.5 to 5 MPa.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!std::isfinite(carbon_dioxide_mole_fraction)
+        || !std::isfinite(water_mole_fraction)
+        || water_mole_fraction < 1e-6 || water_mole_fraction > 0.001
+        || std::abs(carbon_dioxide_mole_fraction + water_mole_fraction - 1.0) > 1e-10) {
+        copy_text("Preliminary CO2/H2O gas support requires xH2O in [1e-6, 0.001] and fractions summing to one.", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        std::shared_ptr<CoolProp::AbstractState> state(
+            CoolProp::AbstractState::factory(
+                "HEOS",
+                std::vector<std::string>{"CarbonDioxide", "Water"}
+            )
+        );
+        state->set_mole_fractions({carbon_dioxide_mole_fraction, water_mole_fraction});
+        state->specify_phase(CoolProp::iphase_gas);
+        state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
+        const double density = state->rhomass();
+        const double density_molar = state->rhomolar();
+        const double reducing_density_molar = state->rhomolar_reducing();
+        const double gibbs_molar = state->gibbsmolar();
+        if (!std::isfinite(density) || density <= 0
+            || !std::isfinite(density_molar) || density_molar <= 0
+            || !std::isfinite(reducing_density_molar) || reducing_density_molar <= 0
+            || !std::isfinite(gibbs_molar)) {
+            copy_text("CoolProp returned an invalid homogeneous CO2/H2O gas state.", error_buffer, error_buffer_size);
+            return 4;
+        }
+        result->density_kg_m3 = density;
+        result->density_mol_m3 = density_molar;
+        result->reducing_density_mol_m3 = reducing_density_molar;
+        result->gibbs_molar_j_mol = gibbs_molar;
+        result->phase = PXCoolPropPhaseGas;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 5;
+    } catch (...) {
+        copy_text("CoolProp homogeneous CO2/H2O gas calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 6;
+    }
+}
+
 int px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
     double pressure_pa,
     double temperature_k,
