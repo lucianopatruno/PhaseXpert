@@ -84,7 +84,7 @@ enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CalculatorViewModel {
-    var pressureText = "150"
+    var pressureText = "50"
     var temperatureText = "20"
     var pressureDisplayUnit: PressureDisplayUnit = .barAbsolute
     var temperatureDisplayUnit: TemperatureDisplayUnit = .celsius
@@ -96,13 +96,14 @@ final class CalculatorViewModel {
     private(set) var validationReport = ValidationReport(issues: [], normalizedComposition: nil)
     private(set) var calculationRecord: CalculationRecord?
     private(set) var calculationError: String?
+    private(set) var standaloneWaterEquilibriumResult: CarbonDioxideWaterEquilibriumResult?
     private(set) var isCalculating = false
 
     let registry: ProviderRegistry
     private let validator = CalculationValidator()
     private var compositionBeforeNormalization: [CompositionInputSnapshot]?
     private var lastNormalizedComposition: [MixtureComponent]?
-    private var lastValidPressurePa = PressureUnit.bar.toPascal(150)
+    private var lastValidPressurePa = PressureUnit.bar.toPascal(50)
     private var lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
 
     init(registry: ProviderRegistry = ProviderRegistry()) {
@@ -151,6 +152,42 @@ final class CalculatorViewModel {
             temperatureK: temperatureK,
             currentWaterMoleFraction: water.moleFraction
         )
+    }
+
+    var displayedWaterEquilibrium: CarbonDioxideWaterEquilibriumResult? {
+        waterEquilibriumPreview
+    }
+
+    var canRunCalculation: Bool {
+        if isBinaryCarbonDioxideWaterComposition {
+            return homogeneousWetPropertiesAreInPreliminaryDomain
+                || waterEquilibriumPreview != nil
+        }
+        return validationReport.canCalculate
+    }
+
+    var homogeneousPropertiesUnavailableWhileEquilibriumAvailable: Bool {
+        isBinaryCarbonDioxideWaterComposition
+            && !homogeneousWetPropertiesAreInPreliminaryDomain
+            && waterEquilibriumPreview != nil
+    }
+
+    var homogeneousWetPropertiesAreInPreliminaryDomain: Bool {
+        guard isBinaryCarbonDioxideWaterComposition,
+              let pressurePa = parsedPressurePa,
+              let temperatureK = parsedTemperatureK,
+              let water = domainComposition().first(where: { $0.component == .water }) else {
+            return false
+        }
+        return (1e-6...0.001).contains(water.moleFraction)
+            && (350...423.15).contains(temperatureK)
+            && (500_000...5_000_000).contains(pressurePa)
+    }
+
+    var calculationNotice: String? {
+        homogeneousPropertiesUnavailableWhileEquilibriumAvailable
+            ? Self.independentWaterEquilibriumNotice
+            : nil
     }
 
     var canNormalize: Bool {
@@ -227,6 +264,7 @@ final class CalculatorViewModel {
     }
 
     func validate() {
+        standaloneWaterEquilibriumResult = nil
         guard
             let pressurePa = parsedPressurePa,
             let temperatureK = parsedTemperatureK,
@@ -292,6 +330,24 @@ final class CalculatorViewModel {
         )
     }
 
+    func reset() {
+        pressureDisplayUnit = .barAbsolute
+        temperatureDisplayUnit = .celsius
+        pressureText = "50"
+        temperatureText = "20"
+        lastValidPressurePa = PressureUnit.bar.toPascal(50)
+        lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
+        selectedModelID = "coolprop-heos"
+        compositionBasis = .partsPerMillion
+        composition = [CompositionInput(component: .carbonDioxide, value: "1000000")]
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
+        standaloneWaterEquilibriumResult = nil
+        validate()
+    }
+
     func normalizeComposition() {
         guard compositionBasis == .molePercent else { return }
         guard let normalized = validationReport.normalizedComposition else { return }
@@ -341,6 +397,7 @@ final class CalculatorViewModel {
         lastNormalizedComposition = nil
         calculationRecord = nil
         calculationError = nil
+        standaloneWaterEquilibriumResult = nil
         validate()
     }
 
@@ -366,6 +423,7 @@ final class CalculatorViewModel {
         lastNormalizedComposition = nil
         calculationRecord = nil
         calculationError = nil
+        standaloneWaterEquilibriumResult = nil
         validate()
     }
 
@@ -468,7 +526,20 @@ final class CalculatorViewModel {
 
     func calculate() async {
         validate()
-        guard validationReport.canCalculate else { return }
+        let equilibrium = waterEquilibriumPreview
+        if isBinaryCarbonDioxideWaterComposition,
+           !homogeneousWetPropertiesAreInPreliminaryDomain {
+            calculationRecord = nil
+            calculationError = nil
+            standaloneWaterEquilibriumResult = equilibrium
+            return
+        }
+        guard validationReport.canCalculate else {
+            calculationRecord = nil
+            calculationError = nil
+            standaloneWaterEquilibriumResult = equilibrium
+            return
+        }
         guard
             let provider = registry.provider(id: selectedModelID),
             let pressureValue = parse(pressureText),
@@ -480,6 +551,7 @@ final class CalculatorViewModel {
         isCalculating = true
         calculationError = nil
         calculationRecord = nil
+        standaloneWaterEquilibriumResult = nil
         defer { isCalculating = false }
 
         let calculatedComposition = domainComposition()
@@ -516,6 +588,9 @@ final class CalculatorViewModel {
         }
     }
 
+    static let independentWaterEquilibriumNotice =
+        "Homogeneous wet-gas properties are outside their preliminary supported range. Water-equilibrium results remain available within their separate validated range."
+
     private func domainComposition() -> [MixtureComponent] {
         composition.map { entry in
             let enteredValue = entry.component == .carbonDioxide
@@ -526,6 +601,15 @@ final class CalculatorViewModel {
                 moleFraction: enteredValue / (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
             )
         }
+    }
+
+    private var isBinaryCarbonDioxideWaterComposition: Bool {
+        let active = domainComposition().filter {
+            $0.moleFraction.isFinite && $0.moleFraction > 0
+        }
+        return active.count == 2
+            && active.contains(where: { $0.component == .carbonDioxide })
+            && active.contains(where: { $0.component == .water })
     }
 
     private func setComposition(component: ComponentID, moleFraction: Double) {

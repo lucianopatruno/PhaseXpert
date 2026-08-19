@@ -266,20 +266,36 @@ struct CalculatorView: View {
                     }
                 }
 
-                if let equilibrium = viewModel.waterEquilibriumPreview {
+                if let notice = viewModel.calculationNotice {
+                    Section {
+                        Label(notice, systemImage: "info.circle.fill")
+                            .foregroundStyle(Color.ifePrimary)
+                    } header: {
+                        Text("Independent capability result")
+                    }
+                }
+
+                if let equilibrium = viewModel.displayedWaterEquilibrium {
                     WaterEquilibriumSection(equilibrium: equilibrium)
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {
                     Section {
                         ForEach(viewModel.validationReport.issues) { issue in
+                            let isNonfatalHomogeneousIssue =
+                                issue.severity == .error
+                                && viewModel.homogeneousPropertiesUnavailableWhileEquilibriumAvailable
                             Label(
                                 issue.message,
-                                systemImage: issue.severity == .error
+                                systemImage: issue.severity == .error && !isNonfatalHomogeneousIssue
                                     ? "xmark.octagon.fill"
                                     : "exclamationmark.triangle.fill"
                             )
-                            .foregroundStyle(issue.severity == .error ? .red : Color.ifePrimary)
+                            .foregroundStyle(
+                                issue.severity == .error && !isNonfatalHomogeneousIssue
+                                    ? .red
+                                    : Color.ifePrimary
+                            )
                         }
 
                         if viewModel.canNormalize {
@@ -315,7 +331,7 @@ struct CalculatorView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isCalculating || !viewModel.validationReport.canCalculate)
+                    .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
                     .accessibilityIdentifier("run-calculation")
                 } header: {
                     IFESectionHeader(step: 6, title: "Run calculation")
@@ -397,6 +413,25 @@ struct CalculatorView: View {
             }
             .onSubmit { viewModel.validate() }
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset", systemImage: "arrow.counterclockwise") {
+                        focusedField = nil
+                        pressureSelection = nil
+                        temperatureSelection = nil
+                        compositionSelections.removeAll()
+                        recordToSave = nil
+                        saveConfirmation = nil
+                        saveError = nil
+                        navigationState.pendingCalculationRecord = nil
+                        navigationState.pendingBuiltInCase = nil
+                        navigationState.latestCalculationRecord = nil
+                        viewModel.reset()
+                    }
+                    .disabled(viewModel.isCalculating)
+                    .accessibilityIdentifier("reset-calculator")
+                    .accessibilityHint("Restores the clean calculator defaults and clears results.")
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Scientific traceability", systemImage: "checkmark.shield") {
                         viewModel.validate()
@@ -671,7 +706,9 @@ struct CalculatorView: View {
         } else if viewModel.temperatureText.hasPrefix("−") {
             viewModel.temperatureText.removeFirst()
         } else {
-            viewModel.temperatureText.insert("-", at: viewModel.temperatureText.startIndex)
+            // The dedicated key starts a new negative entry, matching the
+            // calculator's replace-on-focus behavior for numeric fields.
+            viewModel.temperatureText = "-"
         }
     }
 
@@ -1675,8 +1712,8 @@ private struct ModelSelectionRow: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .top, spacing: IFESpacing.regular) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : statusIcon)
-                    .foregroundStyle(statusColor)
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(isSelected ? Color.ifePrimary : Color.secondary)
                     .font(.title3)
                     .accessibilityHidden(true)
 
@@ -1897,6 +1934,9 @@ private struct WaterEquilibriumSection: View {
             if let margin = equilibrium.marginToSaturationPPM {
                 IFEValueRow(title: "Margin to saturation", value: number(margin), unit: "ppm (mole)")
             }
+            if let ratio = equilibrium.waterSaturationRatio {
+                IFEValueRow(title: "Water saturation ratio", value: number(ratio), unit: "current / saturation")
+            }
             IFEValueRow(
                 title: "CO₂ in H₂O-rich phase",
                 value: number(equilibrium.carbonDioxideInWaterRichPhaseMoleFraction * 100),
@@ -1907,7 +1947,15 @@ private struct WaterEquilibriumSection: View {
                     title: "Water-dropout pressure",
                     value: number(dropoutPressurePa / 100_000),
                     unit: "bar(a)",
-                    status: "Preliminary bounded solve on the validated 373 K isotherm"
+                    status: "Preliminary bounded solve; no extrapolation"
+                )
+            }
+            if let dropoutTemperatureK = equilibrium.waterDropoutTemperatureK {
+                IFEValueRow(
+                    title: "Water-dropout temperature",
+                    value: number(dropoutTemperatureK - 273.15),
+                    unit: "°C",
+                    status: "Directly validated bounded solve, 30–80 °C and 4.999–50.055 bar(a)"
                 )
             }
             IFEValueRow(

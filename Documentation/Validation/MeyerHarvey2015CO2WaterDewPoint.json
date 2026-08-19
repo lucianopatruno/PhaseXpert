@@ -1,0 +1,471 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "authors": "Christopher W. Meyer and Allan H. Harvey",
+    "year": 2015,
+    "title": "Dew-Point Measurements for Water in Compressed Carbon Dioxide",
+    "journal": "AIChE Journal 61, 2913–2925",
+    "doi": "10.1002/aic.14818",
+    "primaryTable": "Table 2",
+    "access": "NIST author manuscript; US Government work",
+    "sourceURL": "https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=917841",
+    "notes": "Rows at 283.15 K are preserved by the source but omitted because they are below the Spycher 2003 published 12 °C lower limit. Values are transcribed exactly; mole fractions are unit conversions only."
+  },
+  "originalUnits": {
+    "temperature": "K",
+    "pressure": "MPa",
+    "water": "yH2O × 10^3"
+  },
+  "rows": [
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.83,
+      "pressureMPa": 0.5,
+      "measuredWaterMoleFraction": 0.0054788,
+      "originalWaterValueTimes1e3": 5.4788,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.83,
+      "pressureMPa": 1.0003,
+      "measuredWaterMoleFraction": 0.0028883,
+      "originalWaterValueTimes1e3": 2.8883,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.83,
+      "pressureMPa": 1.5005,
+      "measuredWaterMoleFraction": 0.0020413000000000002,
+      "originalWaterValueTimes1e3": 2.0413,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.83,
+      "pressureMPa": 2.0008,
+      "measuredWaterMoleFraction": 0.0016239,
+      "originalWaterValueTimes1e3": 1.6239,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.83,
+      "pressureMPa": 2.501,
+      "measuredWaterMoleFraction": 0.0013849,
+      "originalWaterValueTimes1e3": 1.3849,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.83,
+      "pressureMPa": 3.0013,
+      "measuredWaterMoleFraction": 0.0012332,
+      "originalWaterValueTimes1e3": 1.2332,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.84,
+      "pressureMPa": 3.5016,
+      "measuredWaterMoleFraction": 0.0011338,
+      "originalWaterValueTimes1e3": 1.1338,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.84,
+      "pressureMPa": 4.0112,
+      "measuredWaterMoleFraction": 0.0010738000000000002,
+      "originalWaterValueTimes1e3": 1.0738,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.84,
+      "pressureMPa": 4.5027,
+      "measuredWaterMoleFraction": 0.0010445,
+      "originalWaterValueTimes1e3": 1.0445,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 294.84,
+      "pressureMPa": 4.9854,
+      "measuredWaterMoleFraction": 0.0010244,
+      "originalWaterValueTimes1e3": 1.0244,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.14,
+      "pressureMPa": 0.5002,
+      "measuredWaterMoleFraction": 0.0088966,
+      "originalWaterValueTimes1e3": 8.8966,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.15,
+      "pressureMPa": 1.0003,
+      "measuredWaterMoleFraction": 0.0046867,
+      "originalWaterValueTimes1e3": 4.6867,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.14,
+      "pressureMPa": 1.5008,
+      "measuredWaterMoleFraction": 0.0032833000000000003,
+      "originalWaterValueTimes1e3": 3.2833,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.15,
+      "pressureMPa": 2.0008,
+      "measuredWaterMoleFraction": 0.0026054,
+      "originalWaterValueTimes1e3": 2.6054,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.14,
+      "pressureMPa": 2.5013,
+      "measuredWaterMoleFraction": 0.0022033,
+      "originalWaterValueTimes1e3": 2.2033,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.15,
+      "pressureMPa": 3.0013,
+      "measuredWaterMoleFraction": 0.0019371,
+      "originalWaterValueTimes1e3": 1.9371,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.14,
+      "pressureMPa": 3.5017,
+      "measuredWaterMoleFraction": 0.0017714,
+      "originalWaterValueTimes1e3": 1.7714,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.15,
+      "pressureMPa": 4.0019,
+      "measuredWaterMoleFraction": 0.001665,
+      "originalWaterValueTimes1e3": 1.665,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.14,
+      "pressureMPa": 4.502,
+      "measuredWaterMoleFraction": 0.0015719,
+      "originalWaterValueTimes1e3": 1.5719,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 303.15,
+      "pressureMPa": 5.0055,
+      "measuredWaterMoleFraction": 0.0015022,
+      "originalWaterValueTimes1e3": 1.5022,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 0.5002,
+      "measuredWaterMoleFraction": 0.01534,
+      "originalWaterValueTimes1e3": 15.34,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 1.0003,
+      "measuredWaterMoleFraction": 0.0080707,
+      "originalWaterValueTimes1e3": 8.0707,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 1.5007,
+      "measuredWaterMoleFraction": 0.0056219,
+      "originalWaterValueTimes1e3": 5.6219,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 2.001,
+      "measuredWaterMoleFraction": 0.0044139,
+      "originalWaterValueTimes1e3": 4.4139,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 2.5012,
+      "measuredWaterMoleFraction": 0.0037210999999999998,
+      "originalWaterValueTimes1e3": 3.7211,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 3.0013,
+      "measuredWaterMoleFraction": 0.0032649,
+      "originalWaterValueTimes1e3": 3.2649,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 3.5016,
+      "measuredWaterMoleFraction": 0.002937,
+      "originalWaterValueTimes1e3": 2.937,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 4.0019,
+      "measuredWaterMoleFraction": 0.002732,
+      "originalWaterValueTimes1e3": 2.732,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.16,
+      "pressureMPa": 4.5022,
+      "measuredWaterMoleFraction": 0.0025664,
+      "originalWaterValueTimes1e3": 2.5664,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 313.17,
+      "pressureMPa": 5.0024,
+      "measuredWaterMoleFraction": 0.0024569,
+      "originalWaterValueTimes1e3": 2.4569,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.19,
+      "pressureMPa": 0.5,
+      "measuredWaterMoleFraction": 0.041504,
+      "originalWaterValueTimes1e3": 41.504,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 1.0002,
+      "measuredWaterMoleFraction": 0.021460999999999997,
+      "originalWaterValueTimes1e3": 21.461,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 1.5007,
+      "measuredWaterMoleFraction": 0.014798,
+      "originalWaterValueTimes1e3": 14.798,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 2.0009,
+      "measuredWaterMoleFraction": 0.011514,
+      "originalWaterValueTimes1e3": 11.514,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 2.501,
+      "measuredWaterMoleFraction": 0.009562300000000001,
+      "originalWaterValueTimes1e3": 9.5623,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 3.0012,
+      "measuredWaterMoleFraction": 0.0082871,
+      "originalWaterValueTimes1e3": 8.2871,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 3.5015,
+      "measuredWaterMoleFraction": 0.0073862,
+      "originalWaterValueTimes1e3": 7.3862,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 4.0018,
+      "measuredWaterMoleFraction": 0.0067515,
+      "originalWaterValueTimes1e3": 6.7515,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.17,
+      "pressureMPa": 4.5019,
+      "measuredWaterMoleFraction": 0.0062355,
+      "originalWaterValueTimes1e3": 6.2355,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 333.18,
+      "pressureMPa": 5.0024,
+      "measuredWaterMoleFraction": 0.0058609,
+      "originalWaterValueTimes1e3": 5.8609,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.15,
+      "pressureMPa": 0.4999,
+      "measuredWaterMoleFraction": 0.097482,
+      "originalWaterValueTimes1e3": 97.482,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.15,
+      "pressureMPa": 1.0001,
+      "measuredWaterMoleFraction": 0.050406,
+      "originalWaterValueTimes1e3": 50.406,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.14,
+      "pressureMPa": 1.5005,
+      "measuredWaterMoleFraction": 0.034561999999999996,
+      "originalWaterValueTimes1e3": 34.562,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.15,
+      "pressureMPa": 2.0007,
+      "measuredWaterMoleFraction": 0.026675,
+      "originalWaterValueTimes1e3": 26.675,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.14,
+      "pressureMPa": 2.501,
+      "measuredWaterMoleFraction": 0.021942,
+      "originalWaterValueTimes1e3": 21.942,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.14,
+      "pressureMPa": 3.0012,
+      "measuredWaterMoleFraction": 0.018871,
+      "originalWaterValueTimes1e3": 18.871,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.15,
+      "pressureMPa": 3.5017,
+      "measuredWaterMoleFraction": 0.016681,
+      "originalWaterValueTimes1e3": 16.681,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.14,
+      "pressureMPa": 4.0016,
+      "measuredWaterMoleFraction": 0.015051,
+      "originalWaterValueTimes1e3": 15.051,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.15,
+      "pressureMPa": 4.502,
+      "measuredWaterMoleFraction": 0.013793,
+      "originalWaterValueTimes1e3": 13.793,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    },
+    {
+      "rowIdentifier": "Table 2",
+      "temperatureK": 353.15,
+      "pressureMPa": 5.0023,
+      "measuredWaterMoleFraction": 0.012819,
+      "originalWaterValueTimes1e3": 12.819,
+      "reportedDatasetAverageExpandedRelativeUncertaintyPercentK2": 0.3,
+      "phaseIdentity": "CO2-rich gas saturated with pure liquid water"
+    }
+  ]
+}

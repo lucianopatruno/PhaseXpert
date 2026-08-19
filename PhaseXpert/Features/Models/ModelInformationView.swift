@@ -4,9 +4,11 @@ import SwiftUI
 struct ModelInformationView: View {
     private let descriptors = ProviderRegistry().descriptors
     private let wrapsInNavigationStack: Bool
+    private let modelID: String?
 
-    init(wrapsInNavigationStack: Bool = true) {
+    init(wrapsInNavigationStack: Bool = true, modelID: String? = nil) {
         self.wrapsInNavigationStack = wrapsInNavigationStack
+        self.modelID = modelID
     }
 
     var body: some View {
@@ -21,22 +23,26 @@ struct ModelInformationView: View {
 
     private var content: some View {
         Group {
-            List(descriptors) { descriptor in
-                NavigationLink {
-                    ModelDetailView(descriptor: descriptor)
-                } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(descriptor.name)
-                            .font(.headline)
-                        Text(descriptor.availability.rawValue.capitalized)
-                            .font(.subheadline)
-                            .foregroundStyle(statusColor(descriptor.availability))
+            if let modelID, let descriptor = descriptors.first(where: { $0.id == modelID }) {
+                ModelDetailView(descriptor: descriptor)
+            } else {
+                List(descriptors) { descriptor in
+                    NavigationLink {
+                        ModelDetailView(descriptor: descriptor)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(descriptor.name)
+                                .font(.headline)
+                            Text(descriptor.availability.rawValue.capitalized)
+                                .font(.subheadline)
+                                .foregroundStyle(statusColor(descriptor.availability))
+                        }
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.ifeBackground)
+                .navigationTitle("Model Information")
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.ifeBackground)
-            .navigationTitle("Model Information")
         }
     }
 
