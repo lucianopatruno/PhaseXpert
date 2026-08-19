@@ -644,7 +644,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         let supported = try supportedComposition(request.composition)
         guard case let .dryMixture(activeComposition) = supported else {
             throw ProviderError.invalidRequest(
-                "CoolProp phase-only Phase Map is available only for supported dry mixtures."
+                "CoolProp legacy-stability Phase Map is available only for supported dry mixtures."
             )
         }
 
@@ -659,7 +659,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     index: index,
                     point: point,
                     composition: request.composition,
-                    providerPath: "CoolProp dry-mixture PhaseSI phase-only"
+                    providerPath: "CoolProp dry-mixture legacy-stability phase classifier"
                 )
                 let raw = try await engine.identifyDryCarbonDioxideMixturePhase(
                     pressurePa: point.pressurePa,
@@ -672,7 +672,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                         phaseRegion(for: raw.phaseIdentifier)
                     ),
                     solver: SolverMetadata(
-                        method: "CoolProp PhaseSI(P,T), HEOS dry CO₂-rich mixture; phase-only map evaluation with no density request",
+                        method: "CoolProp legacy mixture stability, HEOS dry CO₂-rich mixture; phase-map classification without requesting density as a Phase Map property",
                         converged: true,
                         durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
                     ),
@@ -695,7 +695,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             evaluations: evaluations,
             warnings: [
                 "Phase Map classifies discrete provider flash points only; it is not a phase envelope and does not trace bubble or dew boundaries.",
-                "CoolProp dry-mixture Phase Map uses pinned CoolProp PhaseSI software-reference phase classification without requesting density.",
+                "CoolProp dry-mixture Phase Map uses a safe legacy-stability phase classifier; boundary-conflicting points are reported as Unknown.",
                 "Narrow phase regions can be missed between evaluated grid points."
             ]
         )

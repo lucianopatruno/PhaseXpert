@@ -3,6 +3,8 @@
 #include "CoolProp/AbstractState.h"
 #include "CoolProp/Configuration.h"
 #include "CoolProp/CoolProp.h"
+#include "Backends/Helmholtz/HelmholtzEOSMixtureBackend.h"
+#include "Backends/Helmholtz/VLERoutines.h"
 
 #include <array>
 #include <cmath>
@@ -19,11 +21,18 @@ namespace {
 
 constexpr const char *kFluid = "HEOS::CarbonDioxide";
 constexpr double kPhaseEnvelopeStartingPressurePa = 80000.0;
+// Applied only when safe CoolProp indicators conflict: legacy stability returns
+// a single phase while Michelsen stability reports instability. The value is
+// the rounded pressure envelope of the two independently reviewed CO2/N2
+// boundary-adjacent disagreements (maximum unresolved bubble-pressure margin
+// 0.482 MPa), so these points remain Unknown rather than forced to liquid/gas.
+constexpr double kBoundaryConflictPressureTolerancePa = 500000.0;
 constexpr std::array<const char *, 8> kDryMixtureNames = {
     "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
     "CarbonMonoxide", "HydrogenSulfide"
 };
 std::mutex kPhaseEnvelopeConfigurationMutex;
+std::mutex kMixtureStabilityConfigurationMutex;
 
 struct ActiveDryMixture {
     std::vector<std::string> names;
@@ -66,6 +75,29 @@ public:
 
 private:
     double previous_pressure_pa_;
+};
+
+class ScopedMixtureStabilityAlgorithm {
+public:
+    explicit ScopedMixtureStabilityAlgorithm(int algorithm)
+        : previous_algorithm_(CoolProp::get_config_int(MIXTURE_STABILITY_ALGORITHM)) {
+        CoolProp::set_config_int(MIXTURE_STABILITY_ALGORITHM, algorithm);
+    }
+
+    ~ScopedMixtureStabilityAlgorithm() {
+        try {
+            CoolProp::set_config_int(MIXTURE_STABILITY_ALGORITHM, previous_algorithm_);
+        } catch (...) {
+            // Destructors must not throw. The process-global setting is guarded
+            // and restoration failure cannot change already-returned points.
+        }
+    }
+
+    ScopedMixtureStabilityAlgorithm(const ScopedMixtureStabilityAlgorithm &) = delete;
+    ScopedMixtureStabilityAlgorithm &operator=(const ScopedMixtureStabilityAlgorithm &) = delete;
+
+private:
+    int previous_algorithm_;
 };
 
 void copy_text(const std::string &text, char *buffer, size_t buffer_size) {
@@ -336,7 +368,7 @@ int calculate_dry_mixture_high_level_state(
     }
 }
 
-int identify_dry_mixture_phase(
+int classify_dry_mixture_phase_legacy_stability(
     double pressure_pa,
     double temperature_k,
     const std::array<double, 8> &fractions,
@@ -364,15 +396,81 @@ int identify_dry_mixture_phase(
             return 5;
         }
 
-        const std::string phase = CoolProp::PhaseSI(
-            "P", pressure_pa, "T", temperature_k, mixture.fluid_identifier
-        );
-        if (phase.rfind("unknown:", 0) == 0 || phase.rfind("error:", 0) == 0) {
-            copy_text(phase, error_buffer, error_buffer_size);
+        PXCoolPropPhase legacy_phase = PXCoolPropPhaseUnknown;
+        {
+            std::lock_guard<std::mutex> lock(kMixtureStabilityConfigurationMutex);
+            ScopedMixtureStabilityAlgorithm use_legacy_stability(0);
+            std::shared_ptr<CoolProp::AbstractState> state(
+                CoolProp::AbstractState::factory("HEOS", mixture.names)
+            );
+            state->set_mole_fractions(mixture.fractions);
+            state->update(CoolProp::PT_INPUTS, pressure_pa, temperature_k);
+            legacy_phase = map_phase(state->phase());
+        }
+
+        if (legacy_phase == PXCoolPropPhaseUnknown) {
+            copy_text("CoolProp legacy stability returned an unknown dry-mixture phase.", error_buffer, error_buffer_size);
             return 6;
         }
 
-        result->phase = map_phase(phase);
+        if (legacy_phase == PXCoolPropPhaseGas || legacy_phase == PXCoolPropPhaseLiquid) {
+            bool michelsen_stability_available = false;
+            bool michelsen_indicates_instability = false;
+            try {
+                std::shared_ptr<CoolProp::AbstractState> stability_state(
+                    CoolProp::AbstractState::factory("HEOS", mixture.names)
+                );
+                stability_state->set_mole_fractions(mixture.fractions);
+                auto *heos = dynamic_cast<CoolProp::HelmholtzEOSMixtureBackend *>(stability_state.get());
+                if (heos != nullptr) {
+                    CoolProp::StabilityRoutines::StabilityEvaluationClass stability(*heos);
+                    stability.set_TP(temperature_k, pressure_pa);
+                    stability.set_use_michelsen(true);
+                    michelsen_indicates_instability = !stability.is_stable();
+                    michelsen_stability_available = true;
+                }
+            } catch (...) {
+                michelsen_stability_available = false;
+            }
+
+            if (michelsen_stability_available && michelsen_indicates_instability) {
+                bool saturation_confidently_resolves_single_phase = false;
+                try {
+                    const double bubble_pressure = CoolProp::PropsSI(
+                        "P", "T", temperature_k, "Q", 0, mixture.fluid_identifier
+                    );
+                    const double dew_pressure = CoolProp::PropsSI(
+                        "P", "T", temperature_k, "Q", 1, mixture.fluid_identifier
+                    );
+                    if (std::isfinite(bubble_pressure) && bubble_pressure > 0
+                        && std::isfinite(dew_pressure) && dew_pressure > 0) {
+                        const double lower_pressure = std::min(bubble_pressure, dew_pressure);
+                        const double upper_pressure = std::max(bubble_pressure, dew_pressure);
+                        const bool outside_interval =
+                            pressure_pa < lower_pressure || pressure_pa > upper_pressure;
+                        const double boundary_distance = outside_interval
+                            ? std::min(
+                                std::abs(pressure_pa - lower_pressure),
+                                std::abs(pressure_pa - upper_pressure)
+                            )
+                            : 0;
+                        saturation_confidently_resolves_single_phase =
+                            outside_interval
+                            && boundary_distance > kBoundaryConflictPressureTolerancePa;
+                    }
+                } catch (...) {
+                    saturation_confidently_resolves_single_phase = false;
+                }
+
+                if (!saturation_confidently_resolves_single_phase) {
+                    result->phase = PXCoolPropPhaseUnknown;
+                    copy_text("CoolProp legacy stability returned single phase, but safe stability indicators are boundary-conflicting.", error_buffer, error_buffer_size);
+                    return 0;
+                }
+            }
+        }
+
+        result->phase = legacy_phase;
         copy_text("", error_buffer, error_buffer_size);
         return 0;
     } catch (const std::exception &error) {
@@ -506,7 +604,7 @@ int px_coolprop_calculate_dry_co2_mixture(
     );
 }
 
-int px_coolprop_identify_dry_co2_mixture_phase(
+int px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
     double pressure_pa,
     double temperature_k,
     double carbon_dioxide_mole_fraction,
@@ -526,7 +624,7 @@ int px_coolprop_identify_dry_co2_mixture_phase(
         return 1;
     }
 
-    return identify_dry_mixture_phase(
+    return classify_dry_mixture_phase_legacy_stability(
         pressure_pa,
         temperature_k,
         {

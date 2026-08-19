@@ -164,7 +164,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let result = try await Task.detached(priority: .userInitiated) {
             var nativeResult = PXCoolPropPhaseResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
-            let status = px_coolprop_identify_dry_co2_mixture_phase(
+            let status = px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
                 pressurePa,
                 temperatureK,
                 fractions[.carbonDioxide] ?? 0,
@@ -182,7 +182,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             guard status == 0 else {
                 let message = String(cString: errorBuffer)
                 throw ProviderError.malformedResponse(
-                    message.isEmpty ? "CoolProp dry-mixture phase identification failed." : message
+                    message.isEmpty ? "CoolProp dry-mixture legacy-stability phase classification failed." : message
                 )
             }
             return CoolPropPhaseEngineResult(

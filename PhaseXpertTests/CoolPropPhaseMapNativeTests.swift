@@ -6,6 +6,50 @@ import XCTest
 /// These assert executable crash resistance for validation-pending provider
 /// calls. They are not independent thermodynamic accuracy validation.
 final class CoolPropPhaseMapNativeTests: XCTestCase {
+    func testFirstHistoricalCO2NitrogenIOSCrashPointUsesSafeClassifier() async throws {
+        let engine = NativeCoolPropEngine()
+
+        let result = try await engine.identifyDryCarbonDioxideMixturePhase(
+            pressurePa: 7_500_000,
+            temperatureK: 268.15,
+            composition: historicalCO2NitrogenComposition
+        )
+
+        XCTAssertEqual(result.phaseIdentifier, "liquid")
+    }
+
+    func testHistoricalCO2NitrogenLegacyDisagreementPointsUseEvidenceOutcomes() async throws {
+        let engine = NativeCoolPropEngine()
+        let cases: [(pressurePa: Double, temperatureK: Double, expectedPhase: String, note: String)] = [
+            (7_500_000, 280.65, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
+            (19_166_667, 268.15, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
+            (7_500_000, 279.261111, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
+            (7_500_000, 284.816667, "unknown", "Boundary-adjacent disagreement remains unresolved."),
+            (16_184_211, 273.413158, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
+            (7_500_000, 278.676316, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
+            (19_342_105, 278.676316, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
+            (19_342_105, 281.307895, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
+            (20_921_053, 281.307895, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
+            (7_500_000, 283.939474, "liquid", "Boundary-proximity diagnostic still supports legacy liquid."),
+            (8_289_474, 283.939474, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
+            (7_500_000, 286.571053, "unknown", "Boundary-adjacent disagreement remains unresolved.")
+        ]
+
+        for entry in cases {
+            let result = try await engine.identifyDryCarbonDioxideMixturePhase(
+                pressurePa: entry.pressurePa,
+                temperatureK: entry.temperatureK,
+                composition: historicalCO2NitrogenComposition
+            )
+
+            XCTAssertEqual(
+                result.phaseIdentifier,
+                entry.expectedPhase,
+                "P=\(entry.pressurePa) Pa T=\(entry.temperatureK) K: \(entry.note)"
+            )
+        }
+    }
+
     func testHistoricalCO2NitrogenFiveByFiveMatchesReference() async throws {
         try await assertHistoricalCO2NitrogenReference(resolution: .five)
     }
@@ -42,7 +86,12 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
                 clientVersion: "coolprop-built-in-phase-map-native-regression"
             )
 
+            let startedAt = Date()
             let result = try await PhaseMapRunner(provider: provider).run(request)
+            let elapsed = Date().timeIntervalSince(startedAt)
+            print(
+                "BUILT_IN_PHASE_MAP id=\(entry.id) resolution=\(entry.resolution.rawValue) evaluations=\(result.evaluations.count) distribution=\(phaseDistributionString(result)) elapsed=\(elapsed)"
+            )
 
             let expectedCount = try PhaseMapGridBuilder.points(for: request).count
             XCTAssertEqual(result.evaluations.count, expectedCount, builtInCase.name)
@@ -72,10 +121,7 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             modelID: provider.descriptor.id,
             pressurePa: 15_000_000,
             temperatureK: 293.15,
-            composition: [
-                MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
-                MixtureComponent(component: .nitrogen, moleFraction: 0.05)
-            ],
+            composition: historicalCO2NitrogenComposition,
             range: .automatic(pressurePa: 15_000_000, temperatureK: 293.15),
             resolution: resolution,
             clientVersion: "coolprop-phase-map-native-regression"
@@ -94,10 +140,19 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
         let result = try await PhaseMapRunner(provider: provider).run(request)
         let elapsed = Date().timeIntervalSince(startedAt)
         print(
-            "CO2_N2_REFERENCE resolution=\(resolution.rawValue) evaluations=\(result.evaluations.count) elapsed=\(elapsed)"
+            "CO2_N2_REFERENCE resolution=\(resolution.rawValue) evaluations=\(result.evaluations.count) distribution=\(phaseDistributionString(result)) elapsed=\(elapsed)"
         )
 
         try assertHistoricalCO2NitrogenResult(result, request: request)
+    }
+
+    private func phaseDistributionString(_ result: PhaseMapResult) -> String {
+        let counts = Dictionary(grouping: result.evaluations) {
+            $0.classification.classification
+        }.mapValues(\.count)
+        return PhaseMapClassification.allCases.map { classification in
+            "\(classification.rawValue)=\(counts[classification, default: 0])"
+        }.joined(separator: ",")
     }
 
     private func assertHistoricalCO2NitrogenResult(
@@ -120,9 +175,9 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             $0.classification.classification == .unknown
         }
         XCTAssertLessThanOrEqual(
-            Double(unknown.count) / Double(result.evaluations.count),
-            0.01,
-            "Historical CO2/N2 Phase Map returned more than 1% unknown points: \(unknown.count)/\(result.evaluations.count)"
+            unknown.count,
+            max(2, result.evaluations.count / 100),
+            "Historical CO2/N2 Phase Map returned more than the expected small boundary-uncertainty count: \(unknown.count)/\(result.evaluations.count)"
         )
 
         let rows = Dictionary(grouping: result.evaluations) { evaluation in
@@ -152,11 +207,11 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
         }.mapValues(\.count)
         let expected: [PhaseMapClassification: Int] = switch request.resolution {
         case .five:
-            [.failed: 1, .gas: 2, .liquid: 21, .multiphase: 1]
+            [.gas: 2, .liquid: 22, .multiphase: 1]
         case .ten:
-            [.failed: 2, .gas: 8, .liquid: 88, .multiphase: 3]
+            [.gas: 8, .liquid: 89, .multiphase: 2, .unknown: 2]
         case .twenty:
-            [.failed: 1, .gas: 25, .liquid: 365, .multiphase: 10]
+            [.gas: 25, .liquid: 369, .multiphase: 3, .unknown: 4]
         }
         for classification in PhaseMapClassification.allCases {
             XCTAssertEqual(
@@ -165,5 +220,12 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
                 "Unexpected historical CO2/N2 \(request.resolution.rawValue)x\(request.resolution.rawValue) \(classification.rawValue) count."
             )
         }
+    }
+
+    private var historicalCO2NitrogenComposition: [MixtureComponent] {
+        [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.95),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.05)
+        ]
     }
 }

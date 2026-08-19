@@ -106,11 +106,13 @@ int px_coolprop_calculate_dry_co2_mixture(
     size_t error_buffer_size
 );
 
-/// Identifies the pinned CoolProp dry-mixture phase using PhaseSI only.
-/// Intended for Phase Map points where density is not required. Fractions are
-/// ordered CO2, N2, O2, Ar, CH4, H2, CO and H2S and use the same dry-mixture
-/// guardrails as the density-producing calculation.
-int px_coolprop_identify_dry_co2_mixture_phase(
+/// Classifies the pinned CoolProp dry-mixture phase for Phase Map points using
+/// CoolProp's legacy mixture stability route. This deliberately avoids
+/// high-level PhaseSI/PropsSI("Phase") because those can enter the Michelsen
+/// two-phase PT flash and abort on iOS. Fractions are ordered CO2, N2, O2, Ar,
+/// CH4, H2, CO and H2S and use the same dry-mixture guardrails as the
+/// density-producing calculation.
+int px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
     double pressure_pa,
     double temperature_k,
     double carbon_dioxide_mole_fraction,

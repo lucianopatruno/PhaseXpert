@@ -108,7 +108,7 @@ final class CoolPropProviderTests: XCTestCase {
 
     private struct PhaseMapPhaseOnlyEngine: CoolPropEngine {
         let isAvailable = true
-        let libraryVersion = "8.0.0-phase-only-test"
+        let libraryVersion = "8.0.0-legacy-stability-test"
         var phaseResult: @Sendable (Double, Double) throws -> CoolPropPhaseEngineResult
         var recorder: PhaseMapPhaseOnlyCallRecorder?
 
@@ -735,7 +735,7 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
-    func testPhaseMapUsesPhaseOnlyEngineAndDoesNotRequestDensity() async throws {
+    func testPhaseMapUsesLegacyStabilityPhaseEngineAndDoesNotRequestDensity() async throws {
         let recorder = PhaseMapPhaseOnlyCallRecorder()
         let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
             phaseResult: { pressure, _ in
@@ -784,6 +784,35 @@ final class CoolPropProviderTests: XCTestCase {
             $0.classification.classification == .failed
         })
         XCTAssertTrue(result.evaluations.dropFirst(firstFailureIndex + 1).contains {
+            $0.classification.classification == .liquid
+        })
+    }
+
+    func testPhaseMapUnknownPointsAreNotFailuresAndSubsequentPointsContinue() async throws {
+        let recorder = PhaseMapPhaseOnlyCallRecorder()
+        let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
+            phaseResult: { pressure, _ in
+                if pressure == 7_500_000 {
+                    return CoolPropPhaseEngineResult(phaseIdentifier: "unknown")
+                }
+                return CoolPropPhaseEngineResult(phaseIdentifier: "liquid")
+            },
+            recorder: recorder
+        ))
+        let request = fallbackPhaseMapRequest()
+
+        let result = try await provider.phaseMap(request)
+        let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+
+        XCTAssertEqual(result.evaluations.count, expectedCount)
+        XCTAssertEqual(recorder.calls.count, expectedCount)
+        XCTAssertEqual(result.failedCount, 0)
+        XCTAssertEqual(result.unknownCount, PhaseMapResolution.five.rawValue)
+        XCTAssertEqual(result.classifiedCount, expectedCount - PhaseMapResolution.five.rawValue)
+        let firstUnknownIndex = try XCTUnwrap(result.evaluations.firstIndex {
+            $0.classification.classification == .unknown
+        })
+        XCTAssertTrue(result.evaluations.dropFirst(firstUnknownIndex + 1).contains {
             $0.classification.classification == .liquid
         })
     }
