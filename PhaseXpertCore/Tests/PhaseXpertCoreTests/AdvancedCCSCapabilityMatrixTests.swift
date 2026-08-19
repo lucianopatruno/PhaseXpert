@@ -124,4 +124,21 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
         XCTAssertEqual(decision.validationState, .unsupported)
         XCTAssertNil(decision.formulationID)
     }
+
+    func testOxygenDensityIsEnabledOnlyInsideExactValidatedGasDomain() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let validated = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.94967911),
+            .init(component: .oxygen, moleFraction: 0.05032089)
+        ])
+        XCTAssertTrue(matrix.decision(for: validated, property: .density, pressurePa: 3_940_000, temperatureK: 275.001).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .speedOfSound, pressurePa: 3_940_000, temperatureK: 275.001).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 8_000_000, temperatureK: 275.001).isSupported)
+
+        let nominal = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.95),
+            .init(component: .oxygen, moleFraction: 0.05)
+        ])
+        XCTAssertFalse(matrix.decision(for: nominal, property: .density, pressurePa: 3_940_000, temperatureK: 275.001).isSupported)
+    }
 }

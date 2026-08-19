@@ -3219,3 +3219,62 @@ int px_teqp_calculate_ncomponent_density(
         return 11;
     }
 }
+
+int px_teqp_calculate_eoscg_co2_o2_gas_density(
+    double pressure_pa,
+    double temperature_k,
+    double oxygen_mole_fraction,
+    PXTeqpMixtureDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!std::isfinite(oxygen_mole_fraction)
+        || oxygen_mole_fraction <= 0.0
+        || oxygen_mole_fraction >= 1.0) {
+        copy_text("Oxygen mole fraction must be finite and in (0, 1).", error_buffer, error_buffer_size);
+        return 3;
+    }
+
+    try {
+        const std::vector<int> ids = {
+            PXTeqpComponentCarbonDioxide,
+            PXTeqpComponentOxygen
+        };
+        NComponentMultifluidModel model(ids);
+        Eigen::ArrayXd molefractions(2);
+        molefractions << 1.0 - oxygen_mole_fraction, oxygen_mole_fraction;
+        const auto roots = density_roots_for_molefractions(
+            model,
+            pressure_pa,
+            temperature_k,
+            molefractions
+        );
+        if (roots.empty()) {
+            copy_text("teqp did not find a finite EOS-CG CO2/O2 gas-density root.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        const auto selected = lowest_density_root(roots);
+        result->molar_density_mol_m3 = selected.molar_density_mol_m3;
+        result->density_kg_m3 = selected.molar_density_mol_m3
+            * model.mixtureMolarMassKgMol(molefractions);
+        result->density_root_count = static_cast<int>(roots.size());
+        result->phase = PXTeqpPhaseGas;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("teqp EOS-CG CO2/O2 gas-density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
+    }
+}

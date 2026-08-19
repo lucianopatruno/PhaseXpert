@@ -295,26 +295,26 @@ final class PhaseXpertTests: XCTestCase {
         }
 
         XCTAssertEqual(viewModel.selectedDescriptor?.name, "Advanced CCS Properties")
-        XCTAssertEqual(Set(viewModel.supportedImpurityComponents), [.methane, .hydrogen])
+        XCTAssertEqual(Set(viewModel.supportedImpurityComponents), [.oxygen, .methane, .hydrogen])
         XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.nitrogen))
-        XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.oxygen))
+        XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.oxygen))
         XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.argon))
 
         let firstID = try XCTUnwrap(viewModel.addImpurity())
         XCTAssertEqual(
             viewModel.composition.first { $0.id == firstID }?.component,
-            .methane
+            .oxygen
         )
         let methaneOptions = viewModel.impurityOptions(including: .methane)
-        XCTAssertEqual(Set(methaneOptions), [.methane, .hydrogen])
+        XCTAssertEqual(Set(methaneOptions), [.oxygen, .methane, .hydrogen])
         XCTAssertFalse(methaneOptions.contains(.nitrogen))
-        XCTAssertFalse(methaneOptions.contains(.oxygen))
+        XCTAssertTrue(methaneOptions.contains(.oxygen))
         XCTAssertFalse(methaneOptions.contains(.argon))
 
         let secondID = try XCTUnwrap(viewModel.addImpurity())
         XCTAssertEqual(
             viewModel.composition.first { $0.id == secondID }?.component,
-            .hydrogen
+            .methane
         )
     }
 

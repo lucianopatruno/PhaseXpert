@@ -176,16 +176,18 @@ Ternary target conclusion:
 
 | Target | Required pairs | PhaseXpert pair status | Decision |
 | --- | --- | --- | --- |
-| CO2 + N2 + CH4 | CO2+N2, CO2+CH4, N2+CH4 | All three pairs are present in pinned upstream teqp data; PhaseXpert diagnostic ABI computes a representative homogeneous density point; encoded experimental density/VLE rows remain unavailable | Diagnostic / validation pending |
+| CO2 + N2 + CH4 | CO2+N2, CO2+CH4, N2+CH4 | All three pairs are present; the diagnostic ABI computes homogeneous density; Zhang density remains unavailable; 62 exact Ottøy VLE rows are encoded but pinned teqp has no suitable generic pressure-predictive ternary route without new flash-solver logic | Density and VLE diagnostic only |
 | CO2 + N2 + CH4 + H2 | CO2+N2, CO2+CH4, CO2+H2, N2+CH4, N2+H2, CH4+H2 | All six pairs are present in pinned upstream teqp data; PhaseXpert diagnostic ABI computes a representative homogeneous density point; no production validation gate encoded | Diagnostic / validation pending |
 
 Independent validation exists for the ternary CO2+N2+CH4 VLE system: Ottøy et
 al. measured 62 dew/bubble points from 223 K to 298 K and 0.8 MPa to 9.3 MPa
 and compared them with EOS-CG-2019, reporting composition deviations below
-0.5 mol% liquid and 1.0 mol% vapor. PhaseXpert does not yet encode these
-validation rows in executable form, so no ternary production calculation was
-enabled. The next implementation step is direct row-level density and Ottøy VLE
-validation rather than relying on construction success.
+0.5 mol% liquid and 1.0 mol% vapor. PhaseXpert encodes all 62 exact rows in
+`Ottoy2020TernaryVLE.json`. Pinned teqp v0.23.1 exposes generic coexistence
+correctors that require defensible phase density/composition initialization,
+but no pressure-predictive ternary flash contract that consumes these rows
+directly. Implementing and validating a new flash solver is outside this PR, so
+ternary VLE remains diagnostic only.
 
 ## Diagnostic N-Component Native ABI - 2026-08-19 Continuation
 
@@ -226,9 +228,10 @@ Validation data status:
   contains no committed measured rows for that DOI. No density rows were
   encoded.
 - The primary VLE target is Ottøy et al. 2020,
-  DOI `10.1016/j.fluid.2019.112444`. The publication-level summary is
-  available, but exact experimental rows were not reconstructed in
-  machine-readable form during this continuation. No VLE rows were encoded.
+  DOI `10.1016/j.fluid.2019.112444`. All 62 exact experimental rows (31 bubble,
+  31 dew) are encoded in `Ottoy2020TernaryVLE.json`; calculation remains blocked
+  because pinned teqp lacks a defensible generic pressure-predictive ternary
+  route without implementing new flash-solver logic.
 
 Production decision: CO2+N2+CH4 homogeneous density remains
 diagnostic / validation pending. A successful EOS-CG density solve is not
@@ -238,7 +241,7 @@ external validation, and no production P/T/composition gate is derived.
 
 | Impurity | Candidate model | Pure EOS / binary interaction provenance | Data located | Validation outcome | Status |
 | --- | --- | --- | --- | --- | --- |
-| O2 | EOS-CG/Gernert CO2+O2 with Fij = 0 and no departure function; newer low-O2 density data are validation data rather than a new PhaseXpert model | CO2 Span-Wagner; O2 Schmidt/Stewart; EOS-CG/Gernert reducing parameters | Existing Mantovani 2012 PVT audit; Lozano-Martin et al. 2024/2025 low-O2 PVT dataset located for xO2 = 0.05, 0.10 and 0.20 from 250 K to 375 K and 0.5 MPa to 13 MPa | Existing PhaseXpert direct teqp density audit failed: 6/6 converged, AARD 7.3878%, worst 14.8035%. The newer low-O2 dataset has not yet been row-encoded or revalidated against the new N-component ABI, so no O2 production gate is derived in this continuation. | Research only |
+| O2 | The pinned Gernert-Thesis-2013 and EOS-CG-2021 CO2+O2 records are parameter-identical: betaT=betaV=1, gammaT=1.031986, gammaV=1.08446, Fij=0 | CO2 Span-Wagner; O2 Schmidt/Wagner; unchanged EOS-CG/Gernert reducing parameters | Mantovani 2012 broad audit plus 162 exact Lozano-Martin et al. 2020 rows encoded from primary-manuscript Tables 2 and 5–7 | All 162 current native calculations converged. Exact xO2=0.05032089: 45 rows, AARD 0.079069%, bias +0.004184%, RMS 0.113610%, worst 0.393366%; enabled only on seven measured homogeneous-gas T/P slices. xO2=0.09985604 and 0.19990709 remain validation-only because localized worst deviations are 1.211991% and 3.313709%. | Limited production density at exact low-O2 composition; VLE and all other properties disabled |
 | Ar | EOS-CG-2021 CO2+Ar update with Løvseth et al. departure function | CO2 Span-Wagner; Ar Tegeler; EOS-CG Table 4 and Løvseth/GERG-2008 departure | Existing Mantovani 2012 PVT audit; Løvseth CO2+Ar model paper located | Existing broad gate failed: AARD 3.40533%, worst 9.99102%; low-Ar subset worst about 0.731526% over only 3 points and no VLE gate. | Research only |
 | CO | EOS-CG-2021 reports CO as a covered CCS component; pinned upstream teqp has CO pure-fluid data and CO2+CO binary pair data | PhaseXpert has no linked native teqp CO2+CO provider route; upstream pair data are not a production gate | CO2+CO density and VLE literature found, including high-pressure density and Chapoy 2020 VLE | No PhaseXpert Advanced validation harness exists for CO2+CO; no production domain derived. | No defensible production model found |
 | H2S | EOS-CG-2021 reports H2S extension; pinned upstream teqp has H2S pure-fluid data and CO2+H2S binary pair data | PhaseXpert has no linked native teqp CO2+H2S provider route; H2S must not be inferred from CoolProp or molar mass | CO2+H2S VLE/solubility literature found | No PhaseXpert Advanced validation harness exists for CO2+H2S; no production domain derived. | No defensible production model found |

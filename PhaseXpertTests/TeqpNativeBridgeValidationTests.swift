@@ -143,6 +143,19 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
+    func testNativeEOSCGCarbonDioxideOxygenProductionDensity() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let result = try await engine.calculateCarbonDioxideOxygenGasDensity(
+            pressurePa: 3_940_000,
+            temperatureK: 275.001,
+            oxygenMoleFraction: 0.05032089
+        )
+        XCTAssertEqual(result.densityKilogramsPerCubicMetre, 109.300351603473, accuracy: 1e-8)
+        XCTAssertGreaterThanOrEqual(result.densityRootCount, 1)
+        XCTAssertEqual(result.phaseIdentifier, "gas")
+        XCTAssertEqual(result.formulationID, TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id)
+    }
+
     func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
         let engine = try requireNativeTeqpEngine()
         XCTAssertTrue(engine.isAvailable)

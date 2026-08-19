@@ -416,6 +416,63 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2OxygenEOSCGGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-o2-gas-density-lozano-martin2020",
+        name: "CO₂+O₂ EOS-CG homogeneous gas density",
+        family: .eosCG2021,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .oxygen],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .oxygen,
+                minimumMoleFraction: 0.05032089,
+                maximumMoleFraction: 0.05032089
+            )
+        ],
+        supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .oxygen,
+                        minimumMoleFraction: 0.05032089,
+                        maximumMoleFraction: 0.05032089
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(temperatureK: 275, minimumTemperatureK: 275.001, maximumTemperatureK: 275.005, minimumPressurePa: 998_000, maximumPressurePa: 3_940_000),
+                    TeqpTemperaturePressureLimit(temperatureK: 293.15, minimumTemperatureK: 293.094, maximumTemperatureK: 293.101, minimumPressurePa: 999_000, maximumPressurePa: 5_066_000),
+                    TeqpTemperaturePressureLimit(temperatureK: 300, minimumTemperatureK: 299.945, maximumTemperatureK: 299.949, minimumPressurePa: 999_000, maximumPressurePa: 6_024_000),
+                    TeqpTemperaturePressureLimit(temperatureK: 312.5, minimumTemperatureK: 312.472, maximumTemperatureK: 312.476, minimumPressurePa: 999_000, maximumPressurePa: 3_988_000),
+                    TeqpTemperaturePressureLimit(temperatureK: 325, minimumTemperatureK: 324.952, maximumTemperatureK: 324.955, minimumPressurePa: 997_000, maximumPressurePa: 6_804_000),
+                    TeqpTemperaturePressureLimit(temperatureK: 350, minimumTemperatureK: 349.937, maximumTemperatureK: 349.939, minimumPressurePa: 999_000, maximumPressurePa: 7_897_000),
+                    TeqpTemperaturePressureLimit(temperatureK: 375, minimumTemperatureK: 374.920, maximumTemperatureK: 374.925, minimumPressurePa: 999_000, maximumPressurePa: 7_119_000)
+                ],
+                validationArtifact: "Documentation/Validation/LozanoMartin2020CO2O2Density.csv",
+                validationSummary: "Lozano-Martín et al. 2020 single-sinker gas-density validation at exact normalized xO₂ = 0.05032089.",
+                accuracySummary: "45/45 converged; AARD 0.079069%; bias +0.004184%; RMS 0.113610%; worst 0.393366%.",
+                notes: [
+                    "No composition interpolation or interpolation between measured isotherm temperature bands is claimed.",
+                    "The lowest-density root is selected because the primary source explicitly identifies every encoded row as gaseous.",
+                    "VLE, phase envelope, caloric, acoustic, reference-state and transport properties remain unavailable."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "Gernert and Span EOS-CG-2016 CO₂+O₂ reducing parameters, inherited unchanged by EOS-CG-2021, evaluated through teqp v0.23.1 \(teqpCommit).",
+        limitations: [
+            "LIMITED PASS — homogeneous gas density only at exact xO₂ = 0.05032089.",
+            "Temperature and pressure must remain inside one of the seven encoded experimental isotherm bands.",
+            "No O₂ VLE or other thermodynamic property is production-enabled; no CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(authors: "Lozano-Martín, Mondéjar and Segovia", title: "Accurate experimental (p, ρ, T) data of the (CO₂ + O₂) binary system for the development of models for CCS processes", year: 2020, doiOrURL: "https://doi.org/10.1016/j.jct.2020.106210"),
+            SourceReference(authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span", title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures", year: 2023, doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6")
+        ]
+    )
+
     public static let co2MethaneEOSCGVLE = TeqpPhaseEquilibriumCapability(
         components: [.carbonDioxide, .methane],
         phaseDomain: .phaseEquilibrium,
@@ -651,7 +708,8 @@ public enum TeqpFormulationCatalog {
         [
             pureCarbonDioxide,
             co2HydrogenEOSCGGasDensity,
-            co2MethaneEOSCGGasDensity
+            co2MethaneEOSCGGasDensity,
+            co2OxygenEOSCGGasDensity
         ]
     }
 
