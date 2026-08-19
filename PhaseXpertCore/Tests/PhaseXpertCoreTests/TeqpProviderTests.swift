@@ -1637,6 +1637,108 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertFalse(guidance?.summary.contains { $0.title == "Validated pressure" } == true)
     }
 
+    func testOxygenDensityAcceptsTwentyCelsiusThirtyBarNominalIsotherm() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let guidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 3_000_000,
+                temperatureK: 293.15,
+                composition: oxygenComposition(oxygenMoleFraction: 0.05032089),
+                requestedProperties: [.density, .isobaricHeatCapacity]
+            )
+        ))
+
+        XCTAssertTrue(guidance.summary.contains {
+            $0.title == "Validated pressure" && $0.detail == "10.0–50.7 bar(a)"
+        })
+        XCTAssertFalse(guidance.currentInputIssues.contains {
+            $0.title == "Temperature outside validation set"
+        })
+        XCTAssertFalse(guidance.currentInputIssues.contains {
+            $0.title == "Pressure outside validated range"
+        })
+        XCTAssertTrue(guidance.propertyAvailability.contains {
+            $0.title == "Cp/Cv/speed"
+                && $0.detail.contains("not production-validated for CO₂+O₂")
+        })
+
+        let response = try await provider.calculate(oxygenRequest(
+            pressurePa: 3_000_000,
+            temperatureK: 293.15,
+            oxygenMoleFraction: 0.05032089
+        ))
+        let density = try XCTUnwrap(response.properties.first { $0.property == .density })
+        XCTAssertEqual(density.status, .calculated)
+        XCTAssertEqual(try XCTUnwrap(density.value), 109.300351603473, accuracy: 1e-12)
+    }
+
+    func testOxygenDensityRejectsOutsidePressureTemperatureAndCompositionGates() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let validComposition = oxygenComposition(oxygenMoleFraction: 0.05032089)
+
+        let lowPressureGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 900_000,
+                temperatureK: 293.15,
+                composition: validComposition,
+                requestedProperties: [.density]
+            )
+        ))
+        XCTAssertTrue(lowPressureGuidance.currentInputIssues.contains {
+            $0.title == "Pressure outside validated range"
+                && $0.detail.contains("10.0–50.7 bar(a)")
+        })
+
+        let highPressureGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 5_200_000,
+                temperatureK: 293.15,
+                composition: validComposition,
+                requestedProperties: [.density]
+            )
+        ))
+        XCTAssertTrue(highPressureGuidance.currentInputIssues.contains {
+            $0.title == "Pressure outside validated range"
+                && $0.detail.contains("10.0–50.7 bar(a)")
+        })
+
+        let unsupportedTemperatureGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 3_000_000,
+                temperatureK: 294.15,
+                composition: validComposition,
+                requestedProperties: [.density]
+            )
+        ))
+        XCTAssertTrue(unsupportedTemperatureGuidance.currentInputIssues.contains {
+            $0.title == "Temperature outside validation set"
+        })
+
+        let unsupportedCompositionGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 3_000_000,
+                temperatureK: 293.15,
+                composition: oxygenComposition(oxygenMoleFraction: 0.05),
+                requestedProperties: [.density]
+            )
+        ))
+        XCTAssertTrue(unsupportedCompositionGuidance.currentInputIssues.contains {
+            $0.title == "Composition outside validated value"
+        })
+
+        let invalidRequests = [
+            oxygenRequest(pressurePa: 900_000, temperatureK: 293.15, oxygenMoleFraction: 0.05032089),
+            oxygenRequest(pressurePa: 5_200_000, temperatureK: 293.15, oxygenMoleFraction: 0.05032089),
+            oxygenRequest(pressurePa: 3_000_000, temperatureK: 294.15, oxygenMoleFraction: 0.05032089),
+            oxygenRequest(pressurePa: 3_000_000, temperatureK: 293.15, oxygenMoleFraction: 0.05)
+        ]
+        for request in invalidRequests {
+            await XCTAssertThrowsErrorAsync({
+                try await provider.calculate(request)
+            })
+        }
+    }
+
     func testMethaneGuidanceMatchesDensityAndPhaseEnvelopeGates() async throws {
         let provider = TeqpProvider(engine: MockEngine())
         let composition = [
@@ -1731,6 +1833,30 @@ final class TeqpProviderTests: XCTestCase {
         [
             .init(component: .carbonDioxide, moleFraction: 1 - hydrogenMoleFraction),
             .init(component: .hydrogen, moleFraction: hydrogenMoleFraction)
+        ]
+    }
+
+    private func oxygenRequest(
+        pressurePa: Double,
+        temperatureK: Double,
+        oxygenMoleFraction: Double
+    ) -> CalculationRequest {
+        CalculationRequest(
+            modelID: "teqp-pure-co2-experimental",
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: oxygenComposition(oxygenMoleFraction: oxygenMoleFraction),
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+    }
+
+    private func oxygenComposition(
+        oxygenMoleFraction: Double
+    ) -> [MixtureComponent] {
+        [
+            .init(component: .carbonDioxide, moleFraction: 1 - oxygenMoleFraction),
+            .init(component: .oxygen, moleFraction: oxygenMoleFraction)
         ]
     }
 

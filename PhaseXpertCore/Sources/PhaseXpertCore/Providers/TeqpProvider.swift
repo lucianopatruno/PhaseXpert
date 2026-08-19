@@ -1553,12 +1553,11 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "CO₂+O₂ teqp density is validated only at xO₂ = 0.05032089."
             )
         }
-        guard capability.isothermPressureLimits.contains(where: {
-            request.temperatureK >= $0.minimumTemperatureK
-                && request.temperatureK <= $0.maximumTemperatureK
-                && request.pressurePa >= $0.minimumPressurePa
-                && request.pressurePa <= $0.maximumPressurePa
-        }) else {
+        guard capability.contains(
+            temperatureK: request.temperatureK,
+            pressurePa: request.pressurePa,
+            nominalTemperatureToleranceK: TeqpFormulationCatalog.co2OxygenNominalIsothermToleranceK
+        ) else {
             throw ProviderError.invalidRequest(
                 "CO₂+O₂ teqp density is outside the encoded Lozano-Martín et al. 2020 gas isotherm/pressure domain."
             )
@@ -1868,21 +1867,40 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         if abs(oxygenMoleFraction - 0.05032089) > CalculationValidator.compositionTolerance {
             issues.append(.init(severity: .unsupported, title: "Composition outside validated value", detail: "Validated O₂ mole fraction is 0.05032089."))
         }
-        if let temperatureK,
-           !limits.contains(where: { temperatureK >= $0.minimumTemperatureK && temperatureK <= $0.maximumTemperatureK }) {
+        let selectedIsotherm = temperatureK.flatMap {
+            capability?.isothermPressureLimit(
+                for: $0,
+                nominalTemperatureToleranceK: TeqpFormulationCatalog.co2OxygenNominalIsothermToleranceK
+            )
+        }
+        if temperatureK != nil, selectedIsotherm == nil {
             issues.append(.init(severity: .unsupported, title: "Temperature outside validation set", detail: "Use one of the seven measured Lozano-Martín et al. 2020 isotherm bands."))
         }
-        if let pressurePa, let temperatureK,
-           let limit = limits.first(where: { temperatureK >= $0.minimumTemperatureK && temperatureK <= $0.maximumTemperatureK }),
+        if let pressurePa,
+           let limit = selectedIsotherm,
            !(limit.minimumPressurePa...limit.maximumPressurePa).contains(pressurePa) {
             issues.append(.init(severity: .unsupported, title: "Pressure outside validated range", detail: "Pressure must remain within \(pressureRangeString(limit)) for this isotherm."))
         }
+        var summary: [OperatingGuidanceLine] = [
+            .init(severity: .information, title: "O₂ validated composition", detail: "xO₂ = 0.05032089"),
+            .init(severity: .information, title: "Validated temperature", detail: exactTemperatureList(limits))
+        ]
+        if let selectedIsotherm {
+            summary.append(.init(
+                severity: .information,
+                title: "Validated pressure",
+                detail: pressureRangeString(selectedIsotherm)
+            ))
+        } else {
+            summary.append(.init(
+                severity: .information,
+                title: "Pressure",
+                detail: "Validated range depends on the selected temperature."
+            ))
+        }
         return OperatingRangeGuidance(
             title: "Validated range",
-            summary: [
-                .init(severity: .information, title: "O₂ validated composition", detail: "xO₂ = 0.05032089"),
-                .init(severity: .information, title: "Validated temperature", detail: exactTemperatureList(limits))
-            ],
+            summary: summary,
             currentInputIssues: issues,
             propertyAvailability: propertyAvailabilityLines(requestedProperties: requestedProperties, supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume], system: "CO₂+O₂"),
             phaseDiagram: [.init(severity: .unsupported, title: "Phase diagram", detail: "Phase equilibrium is not validated for CO₂+O₂.")],

@@ -132,8 +132,12 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
             .init(component: .oxygen, moleFraction: 0.05032089)
         ])
         XCTAssertTrue(matrix.decision(for: validated, property: .density, pressurePa: 3_940_000, temperatureK: 275.001).isSupported)
+        XCTAssertTrue(matrix.decision(for: validated, property: .density, pressurePa: 3_000_000, temperatureK: 293.15).isSupported)
         XCTAssertFalse(matrix.decision(for: validated, property: .speedOfSound, pressurePa: 3_940_000, temperatureK: 275.001).isSupported)
         XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 8_000_000, temperatureK: 275.001).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 900_000, temperatureK: 293.15).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 5_200_000, temperatureK: 293.15).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 3_000_000, temperatureK: 294.15).isSupported)
 
         let nominal = try CanonicalComposition([
             .init(component: .carbonDioxide, moleFraction: 0.95),

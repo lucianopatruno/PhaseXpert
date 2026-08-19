@@ -60,6 +60,26 @@ public struct TeqpTemperaturePressureLimit: Codable, Equatable, Sendable {
     }
 }
 
+public extension TeqpTemperaturePressureLimit {
+    func containsTemperature(
+        _ temperatureK: Double,
+        nominalToleranceK: Double = 0
+    ) -> Bool {
+        (temperatureK >= minimumTemperatureK && temperatureK <= maximumTemperatureK)
+            || abs(temperatureK - self.temperatureK) <= nominalToleranceK
+    }
+
+    func contains(
+        temperatureK: Double,
+        pressurePa: Double,
+        nominalTemperatureToleranceK: Double = 0
+    ) -> Bool {
+        containsTemperature(temperatureK, nominalToleranceK: nominalTemperatureToleranceK)
+            && pressurePa >= minimumPressurePa
+            && pressurePa <= maximumPressurePa
+    }
+}
+
 public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
     public let property: PropertyID
     public let phaseDomain: TeqpPhaseDomain
@@ -88,6 +108,38 @@ public struct TeqpPropertyCapability: Codable, Equatable, Sendable {
         self.validationSummary = validationSummary
         self.accuracySummary = accuracySummary
         self.notes = notes
+    }
+}
+
+public extension TeqpPropertyCapability {
+    func isothermPressureLimit(
+        for temperatureK: Double,
+        nominalTemperatureToleranceK: Double = 0
+    ) -> TeqpTemperaturePressureLimit? {
+        isothermPressureLimits.first {
+            $0.containsTemperature(
+                temperatureK,
+                nominalToleranceK: nominalTemperatureToleranceK
+            )
+        }
+    }
+
+    func contains(
+        temperatureK: Double,
+        pressurePa: Double,
+        nominalTemperatureToleranceK: Double = 0
+    ) -> Bool {
+        isothermPressureLimit(
+            for: temperatureK,
+            nominalTemperatureToleranceK: nominalTemperatureToleranceK
+        )
+        .map {
+            $0.contains(
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                nominalTemperatureToleranceK: nominalTemperatureToleranceK
+            )
+        } ?? false
     }
 }
 
@@ -174,6 +226,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
 public enum TeqpFormulationCatalog {
     public static let teqpVersion = "v0.23.1"
     public static let teqpCommit = "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"
+    public static let co2OxygenNominalIsothermToleranceK = 0.05
 
     public static let pureCarbonDioxide = TeqpFormulation(
         id: "teqp-v0.23.1-pure-co2-span-wagner-density",
