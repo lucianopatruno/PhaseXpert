@@ -92,4 +92,36 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
             [.carbonDioxide, .nitrogen, .methane]
         )
     }
+
+    func testNitrogenIsSurveyedButNotProductionEnabled() throws {
+        XCTAssertTrue(
+            TeqpFormulationCatalog.surveyedBinaryImpurities.contains(.nitrogen)
+        )
+        XCTAssertEqual(
+            TeqpFormulationCatalog.co2NitrogenGernertGergDiagnostic.status,
+            .failedValidation
+        )
+        XCTAssertFalse(
+            TeqpFormulationCatalog.productionFormulations.contains {
+                $0.components == [.carbonDioxide, .nitrogen]
+            }
+        )
+
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let binary = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.97),
+            .init(component: .nitrogen, moleFraction: 0.03)
+        ])
+
+        let decision = matrix.decision(
+            for: binary,
+            property: .density,
+            pressurePa: 10_000_000,
+            temperatureK: 303.15
+        )
+
+        XCTAssertFalse(decision.isSupported)
+        XCTAssertEqual(decision.validationState, .unsupported)
+        XCTAssertNil(decision.formulationID)
+    }
 }
