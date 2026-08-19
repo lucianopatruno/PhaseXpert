@@ -1263,6 +1263,6 @@
       "mix_VLE_Tp",
       "mixture_VLE_px"
     ],
-    "decision": "Routes exist but require phase-density/composition initial guesses; PhaseXpert has no independently verified generic ternary initialization/continuation strategy. No bridge or production solver added."
+    "decision": "No ternary pressure-prediction bridge was added. In pinned teqp v0.23.1, mix_VLE_Tx is explicitly documented as binary-only and hard-codes four residual/Jacobian rows, so it cannot solve a ternary bubble pressure from specified liquid composition. mix_VLE_Tp accepts N components but fixes experimental T and P and therefore can only polish compositions, not independently predict pressure; mixture_VLE_px fixes pressure and liquid composition and solves temperature. Neighboring Ottøy rows cannot remove this missing ternary pressure-specification equation/API. A new thermodynamic solver would be required and is outside the evidence-backed scope."
   }
 }

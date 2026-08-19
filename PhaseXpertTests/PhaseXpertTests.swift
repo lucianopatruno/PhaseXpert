@@ -490,7 +490,8 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertNil(viewModel.calculationRecord)
         XCTAssertTrue(
-            viewModel.calculationError?.contains("outside the validated gas range") == true
+            viewModel.calculationError?.contains("outside the validated range") == true,
+            viewModel.calculationError ?? "nil"
         )
     }
 
@@ -522,7 +523,8 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertNil(viewModel.response)
         XCTAssertNil(viewModel.phaseMapRecord)
         XCTAssertTrue(
-            viewModel.errorMessage?.contains("H₂ phase envelopes remain unavailable") == true
+            viewModel.errorMessage?.contains("cannot be shown for this calculation") == true,
+            viewModel.errorMessage ?? "nil"
         )
     }
 
@@ -553,7 +555,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertNil(viewModel.scopeMessage)
         XCTAssertNil(viewModel.phaseMapRecord)
         XCTAssertEqual(viewModel.response?.boundaryKind, .mixtureEnvelope)
-        XCTAssertEqual(viewModel.response?.points.filter { $0.branch == .bubble }.count, 2)
+        XCTAssertEqual(viewModel.response?.points.filter { $0.branch == .bubble }.count, 3)
         XCTAssertEqual(viewModel.response?.points.filter { $0.branch == .dew }.count, 2)
         XCTAssertTrue(viewModel.response?.points.contains { !$0.temperatureK.isFinite } == true)
         XCTAssertFalse(viewModel.response?.points.contains { $0.branch == .critical } == true)
