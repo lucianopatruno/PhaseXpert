@@ -24,7 +24,7 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             (7_500_000, 280.65, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
             (19_166_667, 268.15, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
             (7_500_000, 279.261111, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),
-            (7_500_000, 284.816667, "unknown", "Boundary-adjacent disagreement remains unresolved."),
+            (7_500_000, 284.816667, "liquid", "Finite T,Q bubble/dew topology resolves this conflict outside the two-phase interval."),
             (16_184_211, 273.413158, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
             (7_500_000, 278.676316, "liquid", "PhaseSI twophase; independent comparison supports legacy liquid."),
             (19_342_105, 278.676316, "liquid", "PhaseSI failed; independent comparison supports legacy liquid."),

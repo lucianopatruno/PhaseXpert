@@ -21,12 +21,6 @@ namespace {
 
 constexpr const char *kFluid = "HEOS::CarbonDioxide";
 constexpr double kPhaseEnvelopeStartingPressurePa = 80000.0;
-// Applied only when safe CoolProp indicators conflict: legacy stability returns
-// a single phase while Michelsen stability reports instability. The value is
-// the rounded pressure envelope of the two independently reviewed CO2/N2
-// boundary-adjacent disagreements (maximum unresolved bubble-pressure margin
-// 0.482 MPa), so these points remain Unknown rather than forced to liquid/gas.
-constexpr double kBoundaryConflictPressureTolerancePa = 500000.0;
 constexpr std::array<const char *, 8> kDryMixtureNames = {
     "CarbonDioxide", "Nitrogen", "Oxygen", "Argon", "Methane", "Hydrogen",
     "CarbonMonoxide", "HydrogenSulfide"
@@ -436,6 +430,9 @@ int classify_dry_mixture_phase_legacy_stability(
             if (michelsen_stability_available && michelsen_indicates_instability) {
                 bool saturation_confidently_resolves_single_phase = false;
                 try {
+                    // No fitted pressure band is applied here: the safe T,Q
+                    // topology either places P outside finite bubble/dew
+                    // bounds, or the conflicting indicators remain Unknown.
                     const double bubble_pressure = CoolProp::PropsSI(
                         "P", "T", temperature_k, "Q", 0, mixture.fluid_identifier
                     );
@@ -448,15 +445,8 @@ int classify_dry_mixture_phase_legacy_stability(
                         const double upper_pressure = std::max(bubble_pressure, dew_pressure);
                         const bool outside_interval =
                             pressure_pa < lower_pressure || pressure_pa > upper_pressure;
-                        const double boundary_distance = outside_interval
-                            ? std::min(
-                                std::abs(pressure_pa - lower_pressure),
-                                std::abs(pressure_pa - upper_pressure)
-                            )
-                            : 0;
                         saturation_confidently_resolves_single_phase =
-                            outside_interval
-                            && boundary_distance > kBoundaryConflictPressureTolerancePa;
+                            outside_interval;
                     }
                 } catch (...) {
                     saturation_confidently_resolves_single_phase = false;
