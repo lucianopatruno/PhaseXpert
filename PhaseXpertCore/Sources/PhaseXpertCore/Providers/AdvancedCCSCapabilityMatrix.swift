@@ -146,12 +146,15 @@ public struct AdvancedCCSCapabilityMatrix: Sendable {
         }
 
         if let pressurePa, let temperatureK {
-            guard capability.isothermPressureLimits.contains(where: { limit in
-                temperatureK >= limit.minimumTemperatureK
-                    && temperatureK <= limit.maximumTemperatureK
-                    && pressurePa >= limit.minimumPressurePa
-                    && pressurePa <= limit.maximumPressurePa
-            }) else {
+            let nominalTemperatureToleranceK = formulation.id == TeqpFormulationCatalog
+                .co2OxygenEOSCGGasDensity.id
+                ? TeqpFormulationCatalog.co2OxygenNominalIsothermToleranceK
+                : 0
+            guard capability.contains(
+                temperatureK: temperatureK,
+                pressurePa: pressurePa,
+                nominalTemperatureToleranceK: nominalTemperatureToleranceK
+            ) else {
                 return AdvancedCCSCapabilityDecision(
                     isSupported: false,
                     validationState: .unsupported,
