@@ -266,6 +266,10 @@ struct CalculatorView: View {
                     }
                 }
 
+                if let equilibrium = viewModel.waterEquilibriumPreview {
+                    WaterEquilibriumSection(equilibrium: equilibrium)
+                }
+
                 if !viewModel.validationReport.issues.isEmpty {
                     Section {
                         ForEach(viewModel.validationReport.issues) { issue in
@@ -1871,6 +1875,56 @@ private struct UnitAwareNumericField: View {
     }
 }
 
+private struct WaterEquilibriumSection: View {
+    let equilibrium: CarbonDioxideWaterEquilibriumResult
+    var step: Int? = nil
+
+    var body: some View {
+        Section {
+            IFEValueRow(
+                title: "Water status",
+                value: equilibrium.waterStatus.displayName,
+                status: equilibrium.validationStatus
+            )
+            IFEValueRow(
+                title: "Water saturation in CO₂-rich phase",
+                value: number(equilibrium.waterInCarbonDioxideRichPhasePPM),
+                unit: "ppm (mole)"
+            )
+            if let current = equilibrium.currentWaterPPM {
+                IFEValueRow(title: "Current water content", value: number(current), unit: "ppm (mole)")
+            }
+            if let margin = equilibrium.marginToSaturationPPM {
+                IFEValueRow(title: "Margin to saturation", value: number(margin), unit: "ppm (mole)")
+            }
+            IFEValueRow(
+                title: "CO₂ in H₂O-rich phase",
+                value: number(equilibrium.carbonDioxideInWaterRichPhaseMoleFraction * 100),
+                unit: "mol%"
+            )
+            if let dropoutPressurePa = equilibrium.waterDropoutPressurePa {
+                IFEValueRow(
+                    title: "Water-dropout pressure",
+                    value: number(dropoutPressurePa / 100_000),
+                    unit: "bar(a)",
+                    status: "Preliminary bounded solve on the validated 373 K isotherm"
+                )
+            }
+            IFEValueRow(
+                title: "Equilibrium model",
+                value: equilibrium.modelIdentifier,
+                status: "Binary CO₂ + pure H₂O only"
+            )
+        } header: {
+            IFESectionHeader(step: step, title: "Water equilibrium")
+        }
+    }
+
+    private func number(_ value: Double) -> String {
+        value.formatted(.number.precision(.significantDigits(1...7)))
+    }
+}
+
 struct CalculationResultSections: View {
     let record: CalculationRecord
 
@@ -1971,6 +2025,10 @@ struct CalculationResultSections: View {
                         value: "Not applied"
                     )
                 }
+            }
+
+            if let equilibrium = record.response.waterEquilibrium {
+                WaterEquilibriumSection(equilibrium: equilibrium)
             }
 
             ForEach(ResultGroup.allCases, id: \.self) { group in

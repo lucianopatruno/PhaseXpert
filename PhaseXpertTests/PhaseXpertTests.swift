@@ -4,6 +4,36 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    @MainActor
+    func testWaterEquilibriumPreviewIsBinaryOnlyAndIndependentOfHomogeneousGate() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "coolprop-heos"
+        viewModel.pressureText = "47.1"
+        viewModel.temperatureText = "100.12"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "999500"),
+            CompositionInput(component: .water, value: "500")
+        ]
+
+        let equilibrium = try XCTUnwrap(viewModel.waterEquilibriumPreview)
+        XCTAssertEqual(equilibrium.waterStatus, .belowSaturation)
+        XCTAssertGreaterThan(equilibrium.waterInCarbonDioxideRichPhasePPM, 20_000)
+        XCTAssertEqual(equilibrium.currentWaterPPM, 500)
+
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "980000"),
+            CompositionInput(component: .water, value: "20000")
+        ]
+        let dropoutPreview = try XCTUnwrap(viewModel.waterEquilibriumPreview)
+        XCTAssertNotNil(dropoutPreview.waterDropoutPressurePa)
+        XCTAssertEqual(dropoutPreview.waterStatus, .belowSaturation)
+
+        viewModel.composition.append(
+            CompositionInput(component: .nitrogen, value: "100")
+        )
+        XCTAssertNil(viewModel.waterEquilibriumPreview)
+    }
     private static let testDescriptor = ModelDescriptor(
         id: "test-calculation-provider",
         name: "Test calculation provider",

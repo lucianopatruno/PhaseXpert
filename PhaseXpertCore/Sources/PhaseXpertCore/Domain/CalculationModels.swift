@@ -130,6 +130,7 @@ public struct CalculationResponse: Codable, Equatable, Sendable {
     public let solver: SolverMetadata
     public let warnings: [String]
     public let isScientificResult: Bool
+    public let waterEquilibrium: CarbonDioxideWaterEquilibriumResult?
 
     public init(
         calculationID: UUID = UUID(),
@@ -140,7 +141,8 @@ public struct CalculationResponse: Codable, Equatable, Sendable {
         properties: [PropertyValue],
         solver: SolverMetadata,
         warnings: [String],
-        isScientificResult: Bool
+        isScientificResult: Bool,
+        waterEquilibrium: CarbonDioxideWaterEquilibriumResult? = nil
     ) {
         self.calculationID = calculationID
         self.requestID = requestID
@@ -151,6 +153,7 @@ public struct CalculationResponse: Codable, Equatable, Sendable {
         self.solver = solver
         self.warnings = warnings
         self.isScientificResult = isScientificResult
+        self.waterEquilibrium = waterEquilibrium
     }
 }
 

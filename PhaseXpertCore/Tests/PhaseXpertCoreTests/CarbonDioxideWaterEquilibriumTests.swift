@@ -1,0 +1,231 @@
+import XCTest
+@testable import PhaseXpertCore
+
+final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
+    private let model = SpycherPruess2003WaterEquilibrium()
+
+    func testRepresentativeEquilibriumStateMatchesPrimaryEquationImplementation() throws {
+        let result = try model.equilibrium(
+            pressurePa: 10_040_000,
+            temperatureK: 373.27,
+            currentWaterMoleFraction: 0.0005
+        )
+        XCTAssertEqual(result.waterInCarbonDioxideRichPhaseMoleFraction, 0.01795729472, accuracy: 1e-10)
+        XCTAssertEqual(result.carbonDioxideInWaterRichPhaseMoleFraction, 0.01413700671, accuracy: 1e-10)
+        XCTAssertEqual(result.waterInCarbonDioxideRichPhasePPM, 17_957.29472, accuracy: 1e-5)
+        XCTAssertEqual(try XCTUnwrap(result.currentWaterPPM), 500, accuracy: 1e-12)
+        XCTAssertEqual(try XCTUnwrap(result.marginToSaturationPPM), 17_457.29472, accuracy: 1e-5)
+        XCTAssertEqual(result.waterStatus, .belowSaturation)
+    }
+
+    func testValidatedDomainBoundariesConvergeAndOutsideDomainIsRejected() throws {
+        for (pressure, temperature) in [
+            (4_700_000.0, 373.15),
+            (15_090_000.0, 373.30)
+        ] {
+            let result = try model.equilibrium(
+                pressurePa: pressure,
+                temperatureK: temperature
+            )
+            XCTAssertTrue(result.waterInCarbonDioxideRichPhaseMoleFraction.isFinite)
+            XCTAssertTrue(result.carbonDioxideInWaterRichPhaseMoleFraction.isFinite)
+        }
+        XCTAssertThrowsError(try model.equilibrium(
+            pressurePa: 4_699_999,
+            temperatureK: 373.20
+        )) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .outsideValidatedDomain)
+        }
+        XCTAssertThrowsError(try model.equilibrium(
+            pressurePa: 5_000_000,
+            temperatureK: 373.31
+        )) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .outsideValidatedDomain)
+        }
+    }
+
+    func testWaterStatusClassificationUsesIndependentValidationErrorBand() throws {
+        let saturation = try model.equilibrium(
+            pressurePa: 10_040_000,
+            temperatureK: 373.27
+        ).waterInCarbonDioxideRichPhaseMoleFraction
+        XCTAssertEqual(try status(at: saturation - 0.002), .belowSaturation)
+        XCTAssertEqual(try status(at: saturation), .atSaturation)
+        XCTAssertEqual(try status(at: saturation + 0.002), .aqueousWaterExpected)
+    }
+
+    func testDropoutPressureUsesBoundedValidatedIsothermSolve() throws {
+        let referencePressure = 10_040_000.0
+        let water = try model.equilibrium(
+            pressurePa: referencePressure,
+            temperatureK: 373.27
+        ).waterInCarbonDioxideRichPhaseMoleFraction
+        let solved = try model.waterDropoutPressurePa(
+            temperatureK: 373.27,
+            waterMoleFraction: water
+        )
+        XCTAssertEqual(solved, referencePressure, accuracy: 0.1)
+
+        XCTAssertThrowsError(try model.waterDropoutPressurePa(
+            temperatureK: 373.27,
+            waterMoleFraction: 0.0005
+        )) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .dropoutPressureUnavailable)
+        }
+    }
+
+    func testIndependentSanchezVicenteTrusler2022CarbonDioxideRichWaterRows() throws {
+        let rows: [(temperature: Double, pressure: Double, experimentalWater: Double)] = [
+            (373.27, 4.71, 1 - 0.97323),
+            (373.27, 4.70, 1 - 0.97370),
+            (373.27, 5.46, 1 - 0.97644),
+            (373.27, 5.45, 1 - 0.97444),
+            (373.27, 10.06, 1 - 0.98064),
+            (373.28, 10.04, 1 - 0.98141),
+            (373.27, 15.09, 1 - 0.98390)
+        ]
+        let metrics = try relativeMetrics(rows.map { row in
+            let calculated = try model.equilibrium(
+                pressurePa: row.pressure * 1_000_000,
+                temperatureK: row.temperature
+            ).waterInCarbonDioxideRichPhaseMoleFraction
+            return (calculated, row.experimentalWater)
+        })
+        XCTAssertEqual(metrics.count, 7)
+        XCTAssertEqual(metrics.aardPercent, 4.710_285, accuracy: 1e-5)
+        XCTAssertEqual(metrics.biasPercent, 0.514_212, accuracy: 1e-5)
+        XCTAssertEqual(metrics.rmsPercent, 5.308_226, accuracy: 1e-5)
+        XCTAssertEqual(metrics.worstPercent, 9.270_172, accuracy: 1e-5)
+    }
+
+    func testIndependentSanchezVicenteTrusler2022WaterRichCarbonDioxideRows() throws {
+        let rows: [(temperature: Double, pressure: Double, experimentalCarbonDioxide: Double)] = [
+            (373.28, 4.71, 0.00780),
+            (373.26, 5.45, 0.00899),
+            (373.28, 10.07, 0.01434),
+            (373.22, 10.03, 0.01393),
+            (373.28, 15.09, 0.01784),
+            (373.28, 15.09, 0.01822)
+        ]
+        let metrics = try relativeMetrics(rows.map { row in
+            let calculated = try model.equilibrium(
+                pressurePa: row.pressure * 1_000_000,
+                temperatureK: row.temperature
+            ).carbonDioxideInWaterRichPhaseMoleFraction
+            return (calculated, row.experimentalCarbonDioxide)
+        })
+        XCTAssertEqual(metrics.count, 6)
+        XCTAssertEqual(metrics.aardPercent, 1.165_421, accuracy: 1e-5)
+        XCTAssertEqual(metrics.biasPercent, -0.189_465, accuracy: 1e-5)
+        XCTAssertEqual(metrics.rmsPercent, 1.358_951, accuracy: 1e-5)
+        XCTAssertEqual(metrics.worstPercent, 2.256_479, accuracy: 1e-5)
+    }
+
+    func testMulticomponentWetStreamIsNotSilentlyAccepted() async {
+        let provider = CoolPropProvider(engine: WaterEquilibriumMockEngine())
+        let composition: [MixtureComponent] = [
+            .init(component: .carbonDioxide, moleFraction: 0.9895),
+            .init(component: .nitrogen, moleFraction: 0.01),
+            .init(component: .water, moleFraction: 0.0005)
+        ]
+        XCTAssertTrue(provider.applicabilityIssues(for: composition).contains {
+            $0.severity == .error && $0.message.contains("never drops additional components")
+        })
+        do {
+            _ = try await provider.calculate(CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 4_710_000,
+                temperatureK: 373.27,
+                composition: composition,
+                requestedProperties: [.density],
+                clientVersion: "test"
+            ))
+            XCTFail("Binary water equilibrium must not be applied to wet multicomponent streams.")
+        } catch let ProviderError.invalidRequest(message) {
+            XCTAssertTrue(message.contains("binary CO₂/H₂O"))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    func testCalculationResponseRoundTripsStructuredWaterEquilibrium() throws {
+        let equilibrium = try model.equilibrium(
+            pressurePa: 4_710_000,
+            temperatureK: 373.27,
+            currentWaterMoleFraction: 0.0005
+        )
+        let response = CalculationResponse(
+            requestID: UUID(),
+            model: WaterEquilibriumMockEngine().descriptor,
+            phase: .gas,
+            properties: [],
+            solver: .init(method: "test", converged: true, durationMilliseconds: 0),
+            warnings: [],
+            isScientificResult: true,
+            waterEquilibrium: equilibrium
+        )
+        XCTAssertEqual(
+            try JSONDecoder().decode(CalculationResponse.self, from: JSONEncoder().encode(response)),
+            response
+        )
+    }
+
+    func testRepresentativePerformance() throws {
+        let equilibriumStart = ContinuousClock.now
+        let result = try model.equilibrium(
+            pressurePa: 10_040_000,
+            temperatureK: 373.27,
+            currentWaterMoleFraction: 0.02
+        )
+        let equilibriumDuration = equilibriumStart.duration(to: .now)
+        let dropoutStart = ContinuousClock.now
+        _ = try model.waterDropoutPressurePa(
+            temperatureK: 373.27,
+            waterMoleFraction: result.waterInCarbonDioxideRichPhaseMoleFraction
+        )
+        let dropoutDuration = dropoutStart.duration(to: .now)
+        print("CO2_H2O_EQUILIBRIUM_PERFORMANCE state_and_saturation=\(equilibriumDuration) dropout_pressure=\(dropoutDuration)")
+    }
+
+    private func status(at water: Double) throws -> WaterEquilibriumStatus {
+        try model.equilibrium(
+            pressurePa: 10_040_000,
+            temperatureK: 373.27,
+            currentWaterMoleFraction: water
+        ).waterStatus
+    }
+
+    private func relativeMetrics(
+        _ values: [(calculated: Double, experimental: Double)]
+    ) throws -> (count: Int, aardPercent: Double, biasPercent: Double, rmsPercent: Double, worstPercent: Double) {
+        let deviations = values.map { ($0.calculated - $0.experimental) / $0.experimental * 100 }
+        return (
+            deviations.count,
+            deviations.map(abs).reduce(0, +) / Double(deviations.count),
+            deviations.reduce(0, +) / Double(deviations.count),
+            sqrt(deviations.map { $0 * $0 }.reduce(0, +) / Double(deviations.count)),
+            deviations.map(abs).max() ?? 0
+        )
+    }
+}
+
+private struct WaterEquilibriumMockEngine: CoolPropEngine {
+    let isAvailable = true
+    let libraryVersion = "test"
+    var descriptor: ModelDescriptor {
+        CoolPropProvider(engine: self).descriptor
+    }
+
+    func calculatePureCarbonDioxide(
+        pressurePa: Double,
+        temperatureK: Double
+    ) async throws -> CoolPropEngineResult {
+        .init(densityKilogramsPerCubicMetre: 1, dynamicViscosityPascalSeconds: 1, phaseIdentifier: "gas")
+    }
+
+    func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+        .init(triplePointTemperatureK: 216, criticalPointTemperatureK: 304, criticalPointPressurePa: 7e6)
+    }
+
+    func pureCarbonDioxideSaturationPressure(temperatureK: Double) async throws -> Double { 1 }
+}

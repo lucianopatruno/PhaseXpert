@@ -21,7 +21,7 @@ The existing generic native diagnostic converges representative CO₂/H₂O and 
 | Duan & Sun 2003, DOI `10.1016/S0009-2541(02)00263-2` | Aqueous chemical-potential/activity model for CO₂ solubility in pure water and NaCl solutions | 273–533 K, 0–2000 bar; published standard error about 4.5% for NaCl-solution data | Wider range but primarily CO₂-in-aqueous-phase output; the legacy program’s redistribution terms and a faithful coefficient/code audit are not established here. Not selected for integration. |
 | Duan et al. 2006, DOI `10.1016/j.marchem.2005.09.001` | Non-iterative extension for mixed-ion brines; CO₂ solubility in aqueous phase | 273–533 K, 0–2000 bar, ionic strength up to about 4.5 molal | Valuable for later brine work, but needs Na/K/Ca/Mg/Cl/SO₄ inputs absent from PhaseXpert and does not by itself provide the CO₂-rich water content. |
 
-No mutual-solubility or dew capability is enabled. The blocker is not model availability: it is the absence of a completely audited coefficient implementation plus independent row-level validation for both phase compositions. EOS-CG/CoolProp homogeneous execution is deliberately not substituted for aqueous equilibrium.
+This was the PR #52 checkpoint. The subsequent phase-equilibrium milestone independently implements and validates the binary pure-water Spycher 2003 model; see `CO2WaterPhaseEquilibrium2026-08-19.md`. EOS-CG/CoolProp homogeneous execution remains deliberately separate from aqueous equilibrium.
 
 ## Later pH/speciation provider
 
