@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "validation_pending_source_rows_unavailable",
+  "source": {
+    "doi": "10.1021/acs.jced.2c00020",
+    "citation": "Zhang et al., Journal of Chemical & Engineering Data 67 (2022) 908-918",
+    "title": "Density Characteristics of a Multicomponent CO2/N2/CH4 Ternary Mixture at Temperature of 293.15-353.15 K and Pressure of 0.5-18 MPa"
+  },
+  "reported_inventory": {
+    "row_count": 200,
+    "temperature_range_k": [293.15, 353.15],
+    "pressure_range_mpa": [0.5, 18.0],
+    "compositions_mole_fraction": [
+      {"co2": 0.0998, "ch4": 0.6525, "n2": 0.2477},
+      {"co2": 0.9499, "ch4": 0.0200, "n2": 0.0301},
+      {"co2": 0.1504, "ch4": 0.1004, "n2": 0.7492},
+      {"co2": 0.3346, "ch4": 0.3319, "n2": 0.3335}
+    ]
+  },
+  "acquisition_audit": [
+    "ACS primary article and SI endpoints returned access-control responses in the local network environment.",
+    "NIST ThermoML did not contain an object for this DOI.",
+    "OpenAlex and Unpaywall reported no repository full text.",
+    "Secondary sources confirmed inventory and composition metadata but did not expose the numerical experimental density rows."
+  ],
+  "encoded_experimental_rows": [],
+  "validation_metrics": null,
+  "capability_decision": "diagnostic_validation_pending",
+  "decision_reason": "No production or limited-production density domain can be defined without traceable experimental density rows and uncertainty values. No values were reconstructed from plots and no EOS-generated values were substituted."
+}

@@ -121,6 +121,28 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         let nearCritical: Bool
     }
 
+    func testNativeGenericNComponentDensityAcrossAuditedSystems() async throws {
+        let provider = TeqpProvider(engine: try requireNativeTeqpEngine())
+        let systems: [[MixtureComponent]] = [
+            [.init(component: .carbonDioxide, moleFraction: 0.95), .init(component: .nitrogen, moleFraction: 0.05)],
+            [.init(component: .carbonDioxide, moleFraction: 0.90), .init(component: .nitrogen, moleFraction: 0.05), .init(component: .methane, moleFraction: 0.05)],
+            [.init(component: .carbonDioxide, moleFraction: 0.88), .init(component: .nitrogen, moleFraction: 0.05), .init(component: .methane, moleFraction: 0.04), .init(component: .hydrogen, moleFraction: 0.03)],
+            [.init(component: .carbonDioxide, moleFraction: 0.99), .init(component: .water, moleFraction: 0.01)],
+            [.init(component: .carbonDioxide, moleFraction: 0.94), .init(component: .nitrogen, moleFraction: 0.05), .init(component: .water, moleFraction: 0.01)],
+            [.init(component: .carbonDioxide, moleFraction: 0.76), .init(component: .nitrogen, moleFraction: 0.05), .init(component: .methane, moleFraction: 0.04), .init(component: .hydrogen, moleFraction: 0.03), .init(component: .oxygen, moleFraction: 0.03), .init(component: .argon, moleFraction: 0.03), .init(component: .carbonMonoxide, moleFraction: 0.02), .init(component: .hydrogenSulfide, moleFraction: 0.02), .init(component: .water, moleFraction: 0.02)]
+        ]
+        for composition in systems {
+            let result = try await provider.diagnosticNComponentDensity(
+                pressurePa: 8_000_000,
+                temperatureK: 320,
+                composition: composition
+            )
+            XCTAssertTrue(result.converged)
+            XCTAssertTrue(result.densityKilogramsPerCubicMetre.isFinite)
+            XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
+        }
+    }
+
     func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
         let engine = try requireNativeTeqpEngine()
         XCTAssertTrue(engine.isAvailable)
