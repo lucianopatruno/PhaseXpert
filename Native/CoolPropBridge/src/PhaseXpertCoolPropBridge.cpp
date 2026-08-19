@@ -336,6 +336,54 @@ int calculate_dry_mixture_high_level_state(
     }
 }
 
+int identify_dry_mixture_phase(
+    double pressure_pa,
+    double temperature_k,
+    const std::array<double, 8> &fractions,
+    PXCoolPropPhaseResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
+        || pressure_pa <= 0 || temperature_k <= 0) {
+        copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    const int validation_status = validate_dry_mixture(
+        fractions,
+        error_buffer,
+        error_buffer_size
+    );
+    if (validation_status != 0) {
+        return validation_status;
+    }
+
+    try {
+        ActiveDryMixture mixture;
+        if (!active_dry_mixture(fractions, &mixture, error_buffer, error_buffer_size)) {
+            return 5;
+        }
+
+        const std::string phase = CoolProp::PhaseSI(
+            "P", pressure_pa, "T", temperature_k, mixture.fluid_identifier
+        );
+        if (phase.rfind("unknown:", 0) == 0 || phase.rfind("error:", 0) == 0) {
+            copy_text(phase, error_buffer, error_buffer_size);
+            return 6;
+        }
+
+        result->phase = map_phase(phase);
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 7;
+    } catch (...) {
+        copy_text("CoolProp dry-mixture phase identification failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 8;
+    }
+}
+
 }  // namespace
 
 int px_coolprop_calculate_pure_co2(
@@ -440,6 +488,45 @@ int px_coolprop_calculate_dry_co2_mixture(
     }
 
     return calculate_dry_mixture_high_level_state(
+        pressure_pa,
+        temperature_k,
+        {
+            carbon_dioxide_mole_fraction,
+            nitrogen_mole_fraction,
+            oxygen_mole_fraction,
+            argon_mole_fraction,
+            methane_mole_fraction,
+            hydrogen_mole_fraction,
+            carbon_monoxide_mole_fraction,
+            hydrogen_sulfide_mole_fraction
+        },
+        result,
+        error_buffer,
+        error_buffer_size
+    );
+}
+
+int px_coolprop_identify_dry_co2_mixture_phase(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropPhaseResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Mixture-phase result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+
+    return identify_dry_mixture_phase(
         pressure_pa,
         temperature_k,
         {

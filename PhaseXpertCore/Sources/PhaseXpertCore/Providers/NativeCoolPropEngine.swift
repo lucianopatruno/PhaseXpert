@@ -151,6 +151,48 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         return result
     }
 
+    public func identifyDryCarbonDioxideMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        try Task.checkCancellation()
+        let fractions = composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
+
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXCoolPropPhaseResult()
+            var errorBuffer = [CChar](repeating: 0, count: 512)
+            let status = px_coolprop_identify_dry_co2_mixture_phase(
+                pressurePa,
+                temperatureK,
+                fractions[.carbonDioxide] ?? 0,
+                fractions[.nitrogen] ?? 0,
+                fractions[.oxygen] ?? 0,
+                fractions[.argon] ?? 0,
+                fractions[.methane] ?? 0,
+                fractions[.hydrogen] ?? 0,
+                fractions[.carbonMonoxide] ?? 0,
+                fractions[.hydrogenSulfide] ?? 0,
+                &nativeResult,
+                &errorBuffer,
+                errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "CoolProp dry-mixture phase identification failed." : message
+                )
+            }
+            return CoolPropPhaseEngineResult(
+                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+    }
+
     public func calculateDryCarbonDioxideMixture(
         pressurePa: Double,
         temperatureK: Double,

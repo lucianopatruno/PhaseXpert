@@ -39,6 +39,10 @@ typedef struct PXCoolPropBinaryResult {
     PXCoolPropPhase phase;
 } PXCoolPropBinaryResult;
 
+typedef struct PXCoolPropPhaseResult {
+    PXCoolPropPhase phase;
+} PXCoolPropPhaseResult;
+
 typedef enum PXCoolPropPhaseHint {
     PXCoolPropPhaseHintNone = 0,
     PXCoolPropPhaseHintGas = 1,
@@ -98,6 +102,26 @@ int px_coolprop_calculate_dry_co2_mixture(
     double carbon_monoxide_mole_fraction,
     double hydrogen_sulfide_mole_fraction,
     PXCoolPropBinaryResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+/// Identifies the pinned CoolProp dry-mixture phase using PhaseSI only.
+/// Intended for Phase Map points where density is not required. Fractions are
+/// ordered CO2, N2, O2, Ar, CH4, H2, CO and H2S and use the same dry-mixture
+/// guardrails as the density-producing calculation.
+int px_coolprop_identify_dry_co2_mixture_phase(
+    double pressure_pa,
+    double temperature_k,
+    double carbon_dioxide_mole_fraction,
+    double nitrogen_mole_fraction,
+    double oxygen_mole_fraction,
+    double argon_mole_fraction,
+    double methane_mole_fraction,
+    double hydrogen_mole_fraction,
+    double carbon_monoxide_mole_fraction,
+    double hydrogen_sulfide_mole_fraction,
+    PXCoolPropPhaseResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

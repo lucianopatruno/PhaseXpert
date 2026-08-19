@@ -95,30 +95,22 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
-    private final class PhaseMapFallbackCallRecorder: @unchecked Sendable {
+    private final class PhaseMapPhaseOnlyCallRecorder: @unchecked Sendable {
         private let lock = NSLock()
-        private(set) var saturationTemperatures: [Double] = []
-        private(set) var imposedPhaseCalls: [CoolPropSinglePhaseHint] = []
+        private(set) var calls: [(pressurePa: Double, temperatureK: Double)] = []
 
-        func recordSaturation(temperatureK: Double) {
+        func recordCall(pressurePa: Double, temperatureK: Double) {
             lock.withLock {
-                saturationTemperatures.append(temperatureK)
-            }
-        }
-
-        func recordImposedPhase(_ phase: CoolPropSinglePhaseHint) {
-            lock.withLock {
-                imposedPhaseCalls.append(phase)
+                calls.append((pressurePa, temperatureK))
             }
         }
     }
 
-    private struct PhaseMapFallbackEngine: CoolPropEngine {
+    private struct PhaseMapPhaseOnlyEngine: CoolPropEngine {
         let isAvailable = true
-        let libraryVersion = "8.0.0-fallback-test"
-        var gasResult: Result<CoolPropBinaryEngineResult, ProviderError>
-        var liquidResult: Result<CoolPropBinaryEngineResult, ProviderError>
-        var recorder: PhaseMapFallbackCallRecorder?
+        let libraryVersion = "8.0.0-phase-only-test"
+        var phaseResult: @Sendable (Double, Double) throws -> CoolPropPhaseEngineResult
+        var recorder: PhaseMapPhaseOnlyCallRecorder?
 
         func calculatePureCarbonDioxide(
             pressurePa: Double,
@@ -141,30 +133,16 @@ final class CoolPropProviderTests: XCTestCase {
             temperatureK: Double,
             composition: [MixtureComponent]
         ) async throws -> CoolPropBinaryEngineResult {
-            throw ProviderError.modelUnavailable("Unimposed PT flash is not used by this test engine.")
+            throw ProviderError.modelUnavailable("Density-producing PT flash is not used by Phase Map.")
         }
 
-        func calculateDryCarbonDioxideMixture(
+        func identifyDryCarbonDioxideMixturePhase(
             pressurePa: Double,
             temperatureK: Double,
-            composition: [MixtureComponent],
-            imposedPhase: CoolPropSinglePhaseHint
-        ) async throws -> CoolPropBinaryEngineResult {
-            recorder?.recordImposedPhase(imposedPhase)
-            switch imposedPhase {
-            case .gas:
-                return try gasResult.get()
-            case .liquid:
-                return try liquidResult.get()
-            }
-        }
-
-        func dryCarbonDioxideMixtureSaturationPressures(
-            temperatureK: Double,
             composition: [MixtureComponent]
-        ) async throws -> CoolPropMixtureSaturationPressures {
-            recorder?.recordSaturation(temperatureK: temperatureK)
-            throw ProviderError.malformedResponse("mock T,Q saturation unavailable")
+        ) async throws -> CoolPropPhaseEngineResult {
+            recorder?.recordCall(pressurePa: pressurePa, temperatureK: temperatureK)
+            return try phaseResult(pressurePa, temperatureK)
         }
 
         func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
@@ -757,122 +735,57 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
-    func testPhaseMapSaturationUnavailableChoosesLowerGibbsCandidate() async throws {
-        let result = try await phaseMapResult(
-            gasResult: .success(binaryResult(gibbsMolarJoulesPerMole: 200, phaseIdentifier: "gas")),
-            liquidResult: .success(binaryResult(gibbsMolarJoulesPerMole: 100, phaseIdentifier: "liquid"))
-        )
-
-        XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .liquid
-        })
-    }
-
-    func testPhaseMapSaturationUnavailableUsesGasWhenOnlyGasConverges() async throws {
-        let result = try await phaseMapResult(
-            gasResult: .success(binaryResult(gibbsMolarJoulesPerMole: 200, phaseIdentifier: "gas")),
-            liquidResult: .failure(.malformedResponse("liquid failed"))
-        )
-
-        XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .gas
-        })
-    }
-
-    func testPhaseMapSaturationUnavailableUsesLiquidWhenOnlyLiquidConverges() async throws {
-        let result = try await phaseMapResult(
-            gasResult: .failure(.malformedResponse("gas failed")),
-            liquidResult: .success(binaryResult(gibbsMolarJoulesPerMole: 100, phaseIdentifier: "liquid"))
-        )
-
-        XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .liquid
-        })
-    }
-
-    func testPhaseMapSaturationUnavailableFailsWhenNeitherPhaseConverges() async throws {
-        let result = try await phaseMapResult(
-            gasResult: .failure(.malformedResponse("gas failed")),
-            liquidResult: .failure(.malformedResponse("liquid failed"))
-        )
-
-        XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .failed
-        })
-    }
-
-    func testPhaseMapSaturationUnavailableFailsWhenGibbsCandidatesTie() async throws {
-        let result = try await phaseMapResult(
-            gasResult: .success(binaryResult(
-                densityKilogramsPerCubicMetre: 10,
-                gibbsMolarJoulesPerMole: 100,
-                phaseIdentifier: "gas"
-            )),
-            liquidResult: .success(binaryResult(
-                densityKilogramsPerCubicMetre: 700,
-                gibbsMolarJoulesPerMole: 100 + 1e-9,
-                phaseIdentifier: "liquid"
-            ))
-        )
-
-        XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .failed
-        })
-    }
-
-    func testPhaseMapSaturationUnavailableClassifiesIdenticalStateWithReducingDensity() async throws {
-        let result = try await phaseMapResult(
-            gasResult: .success(binaryResult(
-                densityKilogramsPerCubicMetre: 700,
-                densityMolesPerCubicMetre: 12_000,
-                reducingDensityMolesPerCubicMetre: 10_000,
-                gibbsMolarJoulesPerMole: 100,
-                phaseIdentifier: "gas"
-            )),
-            liquidResult: .success(binaryResult(
-                densityKilogramsPerCubicMetre: 700,
-                densityMolesPerCubicMetre: 12_000,
-                reducingDensityMolesPerCubicMetre: 10_000,
-                gibbsMolarJoulesPerMole: 100 + 1e-9,
-                phaseIdentifier: "liquid"
-            ))
-        )
-
-        XCTAssertTrue(result.evaluations.allSatisfy {
-            $0.classification.classification == .liquid
-        })
-        XCTAssertTrue(result.evaluations.allSatisfy { $0.failureReason == nil })
-    }
-
-    func testPhaseMapSaturationLookupFailureDoesNotPoisonEntireTemperatureRow() async throws {
-        let recorder = PhaseMapFallbackCallRecorder()
-        let request = fallbackPhaseMapRequest()
-        let provider = CoolPropProvider(engine: PhaseMapFallbackEngine(
-            gasResult: .success(binaryResult(gibbsMolarJoulesPerMole: 100, phaseIdentifier: "gas")),
-            liquidResult: .failure(.malformedResponse("liquid failed")),
+    func testPhaseMapUsesPhaseOnlyEngineAndDoesNotRequestDensity() async throws {
+        let recorder = PhaseMapPhaseOnlyCallRecorder()
+        let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
+            phaseResult: { pressure, _ in
+                CoolPropPhaseEngineResult(
+                    phaseIdentifier: pressure < 15_000_000 ? "gas" : "twophase"
+                )
+            },
             recorder: recorder
         ))
+        let request = fallbackPhaseMapRequest()
 
         let result = try await provider.phaseMap(request)
         let expectedCount = try PhaseMapGridBuilder.points(for: request).count
 
         XCTAssertEqual(result.evaluations.count, expectedCount)
-        XCTAssertEqual(result.evaluations.filter {
-            $0.classification.classification == .failed
-        }.count, 0)
-        XCTAssertEqual(Set(recorder.saturationTemperatures).count, PhaseMapResolution.five.rawValue)
-        XCTAssertEqual(recorder.imposedPhaseCalls.count, expectedCount * 2)
+        XCTAssertEqual(recorder.calls.count, expectedCount)
+        XCTAssertTrue(result.evaluations.contains {
+            $0.classification.classification == .gas
+        })
+        XCTAssertTrue(result.evaluations.contains {
+            $0.classification.classification == .multiphase
+        })
+        XCTAssertEqual(result.failedCount, 0)
     }
 
-    private func phaseMapResult(
-        gasResult: Result<CoolPropBinaryEngineResult, ProviderError>,
-        liquidResult: Result<CoolPropBinaryEngineResult, ProviderError>
-    ) async throws -> PhaseMapResult {
-        let provider = CoolPropProvider(engine: PhaseMapFallbackEngine(
-            gasResult: gasResult,
-            liquidResult: liquidResult
+    func testPhaseMapPhaseOnlyFailuresAreRecoverableAndSubsequentPointsContinue() async throws {
+        let recorder = PhaseMapPhaseOnlyCallRecorder()
+        let provider = CoolPropProvider(engine: PhaseMapPhaseOnlyEngine(
+            phaseResult: { pressure, _ in
+                if pressure == 7_500_000 {
+                    throw ProviderError.malformedResponse("mock pinned CoolProp phase failure")
+                }
+                return CoolPropPhaseEngineResult(phaseIdentifier: "liquid")
+            },
+            recorder: recorder
         ))
-        return try await provider.phaseMap(fallbackPhaseMapRequest())
+        let request = fallbackPhaseMapRequest()
+
+        let result = try await provider.phaseMap(request)
+        let expectedCount = try PhaseMapGridBuilder.points(for: request).count
+
+        XCTAssertEqual(result.evaluations.count, expectedCount)
+        XCTAssertEqual(recorder.calls.count, expectedCount)
+        XCTAssertEqual(result.failedCount, PhaseMapResolution.five.rawValue)
+        let firstFailureIndex = try XCTUnwrap(result.evaluations.firstIndex {
+            $0.classification.classification == .failed
+        })
+        XCTAssertTrue(result.evaluations.dropFirst(firstFailureIndex + 1).contains {
+            $0.classification.classification == .liquid
+        })
     }
 
     private func fallbackPhaseMapRequest() -> PhaseMapRequest {
@@ -890,19 +803,4 @@ final class CoolPropProviderTests: XCTestCase {
         )
     }
 
-    private func binaryResult(
-        densityKilogramsPerCubicMetre: Double = 700,
-        densityMolesPerCubicMetre: Double = 9_000,
-        reducingDensityMolesPerCubicMetre: Double = 10_000,
-        gibbsMolarJoulesPerMole: Double,
-        phaseIdentifier: String
-    ) -> CoolPropBinaryEngineResult {
-        CoolPropBinaryEngineResult(
-            densityKilogramsPerCubicMetre: densityKilogramsPerCubicMetre,
-            densityMolesPerCubicMetre: densityMolesPerCubicMetre,
-            reducingDensityMolesPerCubicMetre: reducingDensityMolesPerCubicMetre,
-            gibbsMolarJoulesPerMole: gibbsMolarJoulesPerMole,
-            phaseIdentifier: phaseIdentifier
-        )
-    }
 }
