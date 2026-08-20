@@ -299,6 +299,9 @@ struct SavedCasesView: View {
             return builtInCase.name.localizedCaseInsensitiveContains(searchText)
                 || builtInCase.shortDescription.localizedCaseInsensitiveContains(searchText)
                 || builtInCase.modelingBasis.localizedCaseInsensitiveContains(searchText)
+                || builtInCase.projectFacts.contains {
+                    $0.localizedCaseInsensitiveContains(searchText)
+                }
         }
     }
 
@@ -412,6 +415,10 @@ struct SavedCasesView: View {
     }
 
     private func duplicate(_ builtInCase: BuiltInCase) {
+        guard builtInCase.hasCalculationPreset else {
+            persistenceError = "This built-in project entry does not include a calculation preset."
+            return
+        }
         do {
             let savedCase = try SavedCalculation(
                 name: "\(builtInCase.name) — Copy",
@@ -457,12 +464,22 @@ private struct BuiltInCaseRow: View {
                     .foregroundStyle(.secondary)
                     .labelStyle(.titleAndIcon)
             }
-            Text("\(number(builtInCase.defaultPressurePa / 100_000)) bar(a) · \(number(builtInCase.defaultTemperatureK - 273.15)) °C")
-                .font(.subheadline.monospacedDigit())
-            Text(compositionLabel(builtInCase.composition))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
+            if
+                let pressurePa = builtInCase.defaultPressurePa,
+                let temperatureK = builtInCase.defaultTemperatureK,
+                let composition = builtInCase.composition
+            {
+                Text("\(number(pressurePa / 100_000)) bar(a) · \(number(temperatureK - 273.15)) °C")
+                    .font(.subheadline.monospacedDigit())
+                Text(compositionLabel(composition))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            } else {
+                Label("No calculation preset", systemImage: "info.circle")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
             Text(builtInCase.shortDescription)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -489,27 +506,57 @@ private struct BuiltInCaseDetailView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Default inputs") {
-                LabeledContent("Pressure", value: "\(number(builtInCase.defaultPressurePa / 100_000)) bar(a)")
-                LabeledContent("Temperature", value: "\(number(builtInCase.defaultTemperatureK - 273.15)) °C")
-                LabeledContent("Composition") {
-                    Text(compositionLabel(builtInCase.composition))
-                        .multilineTextAlignment(.trailing)
+            if !builtInCase.projectFacts.isEmpty {
+                Section("Project facts") {
+                    ForEach(builtInCase.projectFacts, id: \.self) { fact in
+                        Label(fact, systemImage: "info.circle")
+                    }
+                }
+            }
+
+            if
+                let pressurePa = builtInCase.defaultPressurePa,
+                let temperatureK = builtInCase.defaultTemperatureK,
+                let composition = builtInCase.composition
+            {
+                Section("Default inputs") {
+                    LabeledContent("Pressure", value: "\(number(pressurePa / 100_000)) bar(a)")
+                    LabeledContent("Temperature", value: "\(number(temperatureK - 273.15)) °C")
+                    LabeledContent("Composition") {
+                        Text(compositionLabel(composition))
+                            .multilineTextAlignment(.trailing)
+                    }
+                    Text("Default inputs are PhaseXpert source-based presets, not measured operating data unless the source says so explicitly.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Section("Default inputs") {
+                    ContentUnavailableView(
+                        "No Calculation Preset",
+                        systemImage: "info.circle",
+                        description: Text("Public sources did not provide an exact composition and operating state suitable for a thermodynamic input preset.")
+                    )
                 }
             }
 
             Section {
-                Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
-                    navigationState.openBuiltInCaseInCalculator(builtInCase)
-                }
-                .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
+                if builtInCase.hasCalculationPreset {
+                    Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
+                        navigationState.openBuiltInCaseInCalculator(builtInCase)
+                    }
+                    .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
 
-                Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
-                    duplicateAction()
+                    Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
+                        duplicateAction()
+                    }
+                    .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
+                } else {
+                    Label("Project information only", systemImage: "info.circle")
+                        .foregroundStyle(.secondary)
                 }
-                .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
             } footer: {
-                Text("Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes.")
+                Text(builtInCase.hasCalculationPreset ? "Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes." : "This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states.")
             }
 
             Section("Modeling basis") {
@@ -563,6 +610,13 @@ private func number(_ value: Double) -> String {
 
 extension BuiltInCase {
     func inputSnapshotRecord() -> CalculationRecord {
+        guard
+            let defaultPressurePa,
+            let defaultTemperatureK,
+            let composition
+        else {
+            preconditionFailure("Information-only built-in cases do not provide calculation records.")
+        }
         let request = CalculationRequest(
             modelID: "phase-xpert-built-in-case-input",
             pressurePa: defaultPressurePa,

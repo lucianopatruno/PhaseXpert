@@ -4,6 +4,19 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    func testIFEContactMailLinkIncludesSubject() throws {
+        let url = IFEContactMailLink.url
+
+        XCTAssertEqual(url.scheme, "mailto")
+        XCTAssertEqual(url.absoluteString, "mailto:firmapost@ife.no?subject=PhaseXpert")
+        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        XCTAssertEqual(components.path, "firmapost@ife.no")
+        XCTAssertEqual(
+            components.queryItems?.first(where: { $0.name == "subject" })?.value,
+            "PhaseXpert"
+        )
+    }
+
     @MainActor
     func testPhoneCaseSixtyCelsiusFortyBarRunsEquilibriumWhenHomogeneousIsUnavailable() async throws {
         let viewModel = wetGeneralViewModel(pressureBar: 40, temperatureCelsius: 60)
