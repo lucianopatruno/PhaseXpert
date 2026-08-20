@@ -2841,6 +2841,312 @@ NComponentVLEState solve_ncomponent_vle(
     return best;
 }
 
+struct TPDState {
+    bool converged = false;
+    PXTeqpStabilityStatus status = PXTeqpStabilityFailed;
+    int iterations = 0;
+    int root_evaluations = 0;
+    int minimum_count = 0;
+    double minimum = std::numeric_limits<double>::infinity();
+    double trial_density = std::numeric_limits<double>::quiet_NaN();
+    double reference_density = std::numeric_limits<double>::quiet_NaN();
+    Eigen::ArrayXd composition;
+};
+
+struct StableRootState {
+    double density;
+    double gibbs;
+    Eigen::ArrayXd chemical_potentials;
+};
+
+std::vector<Root> tpd_density_roots(
+    const NComponentMultifluidModel &model,
+    double pressure_pa,
+    double temperature_k,
+    const Eigen::ArrayXd &composition
+) {
+    std::vector<Root> roots;
+    constexpr int scan_count = 180;
+    const double log_min = std::log(1e-7), log_max = std::log(kMaximumMolarDensity);
+    auto f = [&](double rho) { return model.pressurePa(temperature_k, composition, rho) - pressure_pa; };
+    double previous_rho = std::exp(log_min), previous_f = f(previous_rho);
+    for (int i = 1; i <= scan_count; ++i) {
+        const double rho = std::exp(log_min + (log_max - log_min) * i / scan_count);
+        const double value = f(rho);
+        if (std::isfinite(value) && brackets_root(previous_f, value)) {
+            double lo = previous_rho, hi = rho, flo = previous_f;
+            for (int j = 0; j < 70; ++j) {
+                const double mid = 0.5 * (lo + hi), fm = f(mid);
+                if (!std::isfinite(fm)) { break; }
+                if (brackets_root(flo, fm)) { hi = mid; } else { lo = mid; flo = fm; }
+            }
+            const double root = 0.5 * (lo + hi);
+            if (!is_duplicate_root(roots, root)) { roots.push_back({root}); }
+        }
+        previous_rho = rho; previous_f = value;
+    }
+    return roots;
+}
+
+std::vector<StableRootState> stable_root_states(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    double pressure_pa,
+    const Eigen::ArrayXd &composition,
+    int *root_counter = nullptr,
+    bool require_compositional_stability = true
+) {
+    std::vector<StableRootState> states;
+    const auto roots = tpd_density_roots(
+        model, pressure_pa, temperature_k, composition
+    );
+    if (root_counter) { *root_counter += static_cast<int>(roots.size()); }
+    for (const auto &root : roots) {
+        const Eigen::ArrayXd rhovec = root.molar_density_mol_m3 * composition;
+        try {
+            const double h = std::max(1e-3, 1e-5 * root.molar_density_mol_m3);
+            const double dpdrho = (
+                model.pressurePa(temperature_k, composition, root.molar_density_mol_m3 + h)
+                - model.pressurePa(temperature_k, composition, std::max(1e-9, root.molar_density_mol_m3 - h))
+            ) / (2.0 * h);
+            if (!std::isfinite(dpdrho) || dpdrho <= 0.0
+                || (require_compositional_stability
+                    && model.minimumStabilityEigenvalue(temperature_k, rhovec) <= 0.0)) {
+                continue;
+            }
+            const Eigen::ArrayXd mu = model.chemicalPotentials(temperature_k, rhovec);
+            states.push_back({root.molar_density_mol_m3, (composition * mu).sum(), mu});
+        } catch (...) {}
+    }
+    return states;
+}
+
+TPDState solve_tpd(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    double pressure_pa,
+    const Eigen::ArrayXd &feed
+) {
+    TPDState out;
+    auto reference_roots = stable_root_states(
+        model, temperature_k, pressure_pa, feed, &out.root_evaluations, false
+    );
+    if (reference_roots.empty()) { return out; }
+    const auto reference = *std::min_element(
+        reference_roots.begin(), reference_roots.end(),
+        [](const auto &a, const auto &b) { return a.gibbs < b.gibbs; }
+    );
+    out.reference_density = reference.density;
+    const double rt = model.gasConstant(feed) * temperature_k;
+    auto objective = [&](const Eigen::VectorXd &logits, double *density) {
+        const Eigen::ArrayXd w = composition_from_log_ratios(logits);
+        auto roots = stable_root_states(
+            model, temperature_k, pressure_pa, w, &out.root_evaluations
+        );
+        double value = std::numeric_limits<double>::infinity();
+        for (const auto &root : roots) {
+            const double tpd = (w * (root.chemical_potentials - reference.chemical_potentials)).sum() / rt;
+            if (std::isfinite(tpd) && tpd < value) {
+                value = tpd;
+                if (density) { *density = root.density; }
+            }
+        }
+        return value;
+    };
+
+    std::vector<Eigen::ArrayXd> starts = {feed};
+    for (Eigen::Index i = 0; i < feed.size(); ++i) {
+        Eigen::ArrayXd enriched = 0.15 * feed;
+        enriched[i] += 0.85;
+        enriched /= enriched.sum();
+        starts.push_back(enriched);
+    }
+    std::vector<std::pair<double, Eigen::ArrayXd>> minima;
+    for (const auto &start : starts) {
+        Eigen::VectorXd logits = log_ratios_from_composition(start);
+        double step = 2.0;
+        double density = std::numeric_limits<double>::quiet_NaN();
+        double value = objective(logits, &density);
+        int iterations = 0;
+        while (step > 5e-3 && iterations < 36) {
+            bool improved = false;
+            for (Eigen::Index i = 0; i < logits.size(); ++i) {
+                for (double direction : {-1.0, 1.0}) {
+                    Eigen::VectorXd candidate = logits;
+                    candidate[i] += direction * step;
+                    double candidate_density = 0.0;
+                    const double candidate_value = objective(candidate, &candidate_density);
+                    if (candidate_value + 1e-11 < value) {
+                        logits = candidate;
+                        value = candidate_value;
+                        density = candidate_density;
+                        improved = true;
+                    }
+                }
+            }
+            if (!improved) { step *= 0.5; }
+            ++iterations;
+        }
+        out.iterations += iterations;
+        if (!std::isfinite(value)) { continue; }
+        const Eigen::ArrayXd composition = composition_from_log_ratios(logits);
+        bool duplicate = false;
+        for (const auto &minimum : minima) {
+            if ((minimum.second - composition).matrix().norm() < 1e-4) {
+                duplicate = true; break;
+            }
+        }
+        if (!duplicate) { minima.push_back({value, composition}); }
+        if (value < out.minimum) {
+            out.minimum = value;
+            out.composition = composition;
+            out.trial_density = density;
+        }
+    }
+    out.minimum_count = static_cast<int>(minima.size());
+    out.converged = std::isfinite(out.minimum) && out.composition.size() == feed.size();
+    if (!out.converged) { return out; }
+    constexpr double neutral = 2e-6;
+    out.status = out.minimum < -neutral ? PXTeqpStabilityUnstable
+        : (out.minimum < -1e-9 ? PXTeqpStabilityNearNeutral
+                               : PXTeqpStabilityStable);
+    return out;
+}
+
+struct TPFlashState {
+    bool converged = false;
+    PXTeqpEquilibriumStatus status = PXTeqpEquilibriumMaximumIterations;
+    int iterations = 0;
+    double beta = std::numeric_limits<double>::quiet_NaN();
+    double rho_l = std::numeric_limits<double>::quiet_NaN();
+    double rho_v = std::numeric_limits<double>::quiet_NaN();
+    Eigen::ArrayXd liquid;
+    Eigen::ArrayXd vapor;
+    double material_residual = std::numeric_limits<double>::infinity();
+    double fugacity_residual = std::numeric_limits<double>::infinity();
+    double pressure_l_residual = std::numeric_limits<double>::infinity();
+    double pressure_v_residual = std::numeric_limits<double>::infinity();
+    double stability_l = std::numeric_limits<double>::quiet_NaN();
+    double stability_v = std::numeric_limits<double>::quiet_NaN();
+    double post_tpd = std::numeric_limits<double>::quiet_NaN();
+};
+
+Eigen::VectorXd tp_flash_residual(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    double pressure_pa,
+    const Eigen::ArrayXd &feed,
+    const Eigen::VectorXd &u,
+    Eigen::ArrayXd *liquid_out = nullptr,
+    Eigen::ArrayXd *vapor_out = nullptr
+) {
+    const Eigen::Index n = feed.size();
+    const double rho_l = std::exp(std::clamp(u[0], std::log(1.0), std::log(80000.0)));
+    const double rho_v = std::exp(std::clamp(u[1], std::log(1.0), std::log(80000.0)));
+    const Eigen::ArrayXd liquid = composition_from_log_ratios(u.segment(2, n - 1));
+    const Eigen::ArrayXd vapor = composition_from_log_ratios(u.segment(n + 1, n - 1));
+    const double beta = 1.0 / (1.0 + std::exp(-std::clamp(u[2 * n], -30.0, 30.0)));
+    const Eigen::ArrayXd mu_l = model.chemicalPotentials(temperature_k, rho_l * liquid);
+    const Eigen::ArrayXd mu_v = model.chemicalPotentials(temperature_k, rho_v * vapor);
+    const double rt = model.gasConstant(feed) * temperature_k;
+    Eigen::VectorXd residual(2 * n + 1);
+    residual.head(n) = ((mu_l - mu_v) / rt).matrix();
+    residual[n] = (model.pressurePa(temperature_k, liquid, rho_l) - pressure_pa) / pressure_pa;
+    residual[n + 1] = (model.pressurePa(temperature_k, vapor, rho_v) - pressure_pa) / pressure_pa;
+    residual.segment(n + 2, n - 1) =
+        ((1.0 - beta) * liquid.head(n - 1) + beta * vapor.head(n - 1) - feed.head(n - 1)).matrix();
+    if (liquid_out) { *liquid_out = liquid; }
+    if (vapor_out) { *vapor_out = vapor; }
+    return residual;
+}
+
+TPFlashState solve_tp_flash(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    double pressure_pa,
+    const Eigen::ArrayXd &feed
+) {
+    TPFlashState out;
+    const TPDState tpd = solve_tpd(model, temperature_k, pressure_pa, feed);
+    out.post_tpd = tpd.minimum;
+    if (!tpd.converged) { out.status = PXTeqpEquilibriumThermodynamicFailure; return out; }
+    if (tpd.status != PXTeqpStabilityUnstable) {
+        out.converged = true;
+        out.status = tpd.status == PXTeqpStabilityNearNeutral
+            ? PXTeqpEquilibriumNoDistinctPhaseSplit : PXTeqpEquilibriumConverged;
+        out.beta = std::numeric_limits<double>::quiet_NaN();
+        return out;
+    }
+    const bool trial_is_liquid = tpd.trial_density > tpd.reference_density;
+    Eigen::ArrayXd liquid = trial_is_liquid ? tpd.composition : feed;
+    Eigen::ArrayXd vapor = trial_is_liquid ? feed : tpd.composition;
+    double beta_seed = 0.5;
+    for (double beta : {0.5, 0.25, 0.75, 0.1, 0.9}) {
+        Eigen::ArrayXd companion = trial_is_liquid
+            ? (feed - (1.0 - beta) * liquid) / beta
+            : (feed - beta * vapor) / (1.0 - beta);
+        if ((companion > 1e-10).all() && companion.isFinite().all()) {
+            if (trial_is_liquid) { vapor = companion; } else { liquid = companion; }
+            beta_seed = beta;
+            break;
+        }
+    }
+    auto roots_l = stable_root_states(model, temperature_k, pressure_pa, liquid);
+    auto roots_v = stable_root_states(model, temperature_k, pressure_pa, vapor);
+    if (roots_l.empty() || roots_v.empty()) { out.status = PXTeqpEquilibriumThermodynamicFailure; return out; }
+    const double rho_l_seed = std::max_element(roots_l.begin(), roots_l.end(), [](auto&a,auto&b){return a.density<b.density;})->density;
+    const double rho_v_seed = std::min_element(roots_v.begin(), roots_v.end(), [](auto&a,auto&b){return a.density<b.density;})->density;
+    const Eigen::Index n = feed.size();
+    Eigen::VectorXd u(2 * n + 1);
+    u[0] = std::log(rho_l_seed); u[1] = std::log(rho_v_seed);
+    u.segment(2, n - 1) = log_ratios_from_composition(liquid);
+    u.segment(n + 1, n - 1) = log_ratios_from_composition(vapor);
+    u[2 * n] = std::log(beta_seed / (1.0 - beta_seed));
+    double lambda = 1e-3;
+    for (int iteration = 0; iteration < 80; ++iteration) {
+        Eigen::VectorXd residual;
+        try { residual = tp_flash_residual(model, temperature_k, pressure_pa, feed, u); }
+        catch (...) { break; }
+        Eigen::MatrixXd jacobian(residual.size(), u.size());
+        bool ok = true;
+        for (Eigen::Index j = 0; j < u.size(); ++j) {
+            const double h = 2e-5 * std::max(1.0, std::abs(u[j]));
+            Eigen::VectorXd plus=u, minus=u; plus[j]+=h; minus[j]-=h;
+            try { jacobian.col(j)=(tp_flash_residual(model,temperature_k,pressure_pa,feed,plus)-tp_flash_residual(model,temperature_k,pressure_pa,feed,minus))/(2*h); }
+            catch (...) { ok=false; break; }
+        }
+        if (!ok || !jacobian.array().isFinite().all()) { break; }
+        Eigen::MatrixXd normal=jacobian.transpose()*jacobian;
+        normal.diagonal().array() += lambda;
+        const Eigen::VectorXd step=normal.ldlt().solve(-jacobian.transpose()*residual);
+        bool accepted=false;
+        for(int line=0;line<14;++line){
+            Eigen::VectorXd candidate=u+std::pow(0.5,line)*step;
+            try { if(tp_flash_residual(model,temperature_k,pressure_pa,feed,candidate).squaredNorm()<residual.squaredNorm()){u=candidate;accepted=true;break;} }
+            catch (...) {}
+        }
+        lambda=accepted?std::max(1e-10,lambda*0.3):std::min(1e10,lambda*10);
+        out.iterations=iteration+1;
+        Eigen::ArrayXd x,y;
+        const Eigen::VectorXd final=tp_flash_residual(model,temperature_k,pressure_pa,feed,u,&x,&y);
+        const double beta=1.0/(1.0+std::exp(-std::clamp(u[2*n],-30.0,30.0)));
+        const Eigen::ArrayXd mb=(1-beta)*x+beta*y-feed;
+        const double maxmu=final.head(n).cwiseAbs().maxCoeff();
+        if(maxmu<2e-7 && mb.abs().maxCoeff()<2e-8 && std::abs(final[n])<2e-7 && std::abs(final[n+1])<2e-7){
+            out.converged=true; out.status=PXTeqpEquilibriumConverged; out.beta=beta;
+            out.rho_l=std::exp(u[0]); out.rho_v=std::exp(u[1]); out.liquid=x; out.vapor=y;
+            out.material_residual=mb.abs().maxCoeff(); out.fugacity_residual=maxmu;
+            out.pressure_l_residual=std::abs(final[n]); out.pressure_v_residual=std::abs(final[n+1]);
+            out.stability_l=model.minimumStabilityEigenvalue(temperature_k,out.rho_l*x);
+            out.stability_v=model.minimumStabilityEigenvalue(temperature_k,out.rho_v*y);
+            if(out.rho_l<=1.02*out.rho_v || (x-y).matrix().norm()<1e-5 || out.stability_l<=0 || out.stability_v<=0){out.converged=false;out.status=PXTeqpEquilibriumNoDistinctPhaseSplit;}
+            break;
+        }
+        if(!accepted && lambda>=1e9){out.status=PXTeqpEquilibriumStagnated;break;}
+    }
+    return out;
+}
+
 }  // namespace
 
 int px_teqp_calculate_pure_co2(
@@ -3644,6 +3950,46 @@ int px_teqp_evaluate_ncomponent_phase(
         copy_text("Phase evaluation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 7;
     }
+}
+
+int px_teqp_calculate_ncomponent_tpd(
+    const int *component_ids, const double *feed_mole_fractions,
+    size_t component_count, double pressure_pa, double temperature_k,
+    double *minimum_composition, size_t minimum_composition_length,
+    PXTeqpTPDResult *result, char *error_buffer, size_t error_buffer_size
+) {
+    if(!component_ids||!feed_mole_fractions||!minimum_composition||!result){copy_text("TPD received a null pointer.",error_buffer,error_buffer_size);return 1;}
+    if(component_count<2||component_count>9||minimum_composition_length<component_count||!std::isfinite(pressure_pa)||pressure_pa<=0||!std::isfinite(temperature_k)||temperature_k<=0){copy_text("TPD input dimensions or state are invalid.",error_buffer,error_buffer_size);return 2;}
+    try{
+        std::vector<int> ids(component_ids,component_ids+component_count);
+        if(std::set<int>(ids.begin(),ids.end()).size()!=component_count){copy_text("TPD component identifiers must be unique.",error_buffer,error_buffer_size);return 3;}
+        Eigen::ArrayXd feed(component_count); double sum=0;
+        for(size_t i=0;i<component_count;++i){if(!std::isfinite(feed_mole_fractions[i])||feed_mole_fractions[i]<=0){copy_text("TPD composition must be finite and positive.",error_buffer,error_buffer_size);return 4;} feed[i]=feed_mole_fractions[i];sum+=feed[i];}
+        if(std::abs(sum-1.0)>1e-10){copy_text("TPD composition must sum to one; no normalization is applied.",error_buffer,error_buffer_size);return 5;}
+        NComponentMultifluidModel model(ids); const auto state=solve_tpd(model,temperature_k,pressure_pa,feed);
+        result->status=state.status;result->converged=state.converged?1:0;result->iteration_count=state.iterations;result->density_root_evaluations=state.root_evaluations;result->distinct_minimum_count=state.minimum_count;result->minimum_tpd=state.minimum;result->trial_molar_density_mol_m3=state.trial_density;result->reference_molar_density_mol_m3=state.reference_density;
+        if(state.composition.size()==static_cast<Eigen::Index>(component_count)){for(size_t i=0;i<component_count;++i)minimum_composition[i]=state.composition[i];}
+        if(!state.converged){copy_text("TPD minimization failed.",error_buffer,error_buffer_size);return 6;} copy_text("",error_buffer,error_buffer_size);return 0;
+    }catch(const std::exception&e){copy_text(e.what(),error_buffer,error_buffer_size);return 7;}catch(...){copy_text("TPD failed with unknown native exception.",error_buffer,error_buffer_size);return 8;}
+}
+
+int px_teqp_calculate_ncomponent_tp_flash(
+    const int *component_ids, const double *feed_mole_fractions,
+    size_t component_count, double pressure_pa, double temperature_k,
+    double *liquid_mole_fractions, size_t liquid_length,
+    double *vapor_mole_fractions, size_t vapor_length,
+    PXTeqpTPFlashResult *result, char *error_buffer, size_t error_buffer_size
+) {
+    if(!component_ids||!feed_mole_fractions||!liquid_mole_fractions||!vapor_mole_fractions||!result){copy_text("TP flash received a null pointer.",error_buffer,error_buffer_size);return 1;}
+    if(component_count<2||component_count>9||liquid_length<component_count||vapor_length<component_count||!std::isfinite(pressure_pa)||pressure_pa<=0||!std::isfinite(temperature_k)||temperature_k<=0){copy_text("TP flash input dimensions or state are invalid.",error_buffer,error_buffer_size);return 2;}
+    try{
+        std::vector<int> ids(component_ids,component_ids+component_count); if(std::set<int>(ids.begin(),ids.end()).size()!=component_count){copy_text("TP flash component identifiers must be unique.",error_buffer,error_buffer_size);return 3;}
+        Eigen::ArrayXd feed(component_count);double sum=0;for(size_t i=0;i<component_count;++i){if(!std::isfinite(feed_mole_fractions[i])||feed_mole_fractions[i]<=0){copy_text("TP flash composition must be finite and positive.",error_buffer,error_buffer_size);return 4;}feed[i]=feed_mole_fractions[i];sum+=feed[i];}if(std::abs(sum-1.0)>1e-10){copy_text("TP flash composition must sum to one; no normalization is applied.",error_buffer,error_buffer_size);return 5;}
+        NComponentMultifluidModel model(ids);const auto state=solve_tp_flash(model,temperature_k,pressure_pa,feed);
+        result->converged=state.converged?1:0;result->status=state.status;result->iteration_count=state.iterations;result->vapor_fraction=state.beta;result->liquid_molar_density_mol_m3=state.rho_l;result->vapor_molar_density_mol_m3=state.rho_v;result->maximum_material_balance_residual=state.material_residual;result->maximum_log_fugacity_residual=state.fugacity_residual;result->relative_liquid_pressure_residual=state.pressure_l_residual;result->relative_vapor_pressure_residual=state.pressure_v_residual;result->liquid_minimum_stability_eigenvalue=state.stability_l;result->vapor_minimum_stability_eigenvalue=state.stability_v;result->postcheck_minimum_tpd=state.post_tpd;
+        if(state.liquid.size()==static_cast<Eigen::Index>(component_count)){for(size_t i=0;i<component_count;++i){liquid_mole_fractions[i]=state.liquid[i];vapor_mole_fractions[i]=state.vapor[i];}}
+        if(!state.converged){copy_text("TP flash did not converge to a defensible equilibrium state.",error_buffer,error_buffer_size);return 6;}copy_text("",error_buffer,error_buffer_size);return 0;
+    }catch(const std::exception&e){copy_text(e.what(),error_buffer,error_buffer_size);return 7;}catch(...){copy_text("TP flash failed with unknown native exception.",error_buffer,error_buffer_size);return 8;}
 }
 
 int px_teqp_calculate_eoscg_co2_o2_gas_density(

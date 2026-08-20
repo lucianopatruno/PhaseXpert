@@ -337,6 +337,34 @@ public struct TeqpNComponentVLEResult: Equatable, Sendable {
     }
 }
 
+public enum TeqpGlobalStabilityStatus: Int, Sendable { case stable, unstable, nearNeutral, failed }
+
+public struct TeqpTPDResult: Equatable, Sendable {
+    public let status: TeqpGlobalStabilityStatus
+    public let minimumTPD: Double
+    public let minimumComposition: [MixtureComponent]
+    public let trialMolarDensityMolesPerCubicMetre: Double
+    public let referenceMolarDensityMolesPerCubicMetre: Double
+    public let iterationCount: Int
+    public let densityRootEvaluations: Int
+    public let distinctMinimumCount: Int
+}
+
+public struct TeqpTPFlashResult: Equatable, Sendable {
+    public let vaporFraction: Double?
+    public let liquidComposition: [MixtureComponent]?
+    public let vaporComposition: [MixtureComponent]?
+    public let liquidMolarDensityMolesPerCubicMetre: Double?
+    public let vaporMolarDensityMolesPerCubicMetre: Double?
+    public let maximumMaterialBalanceResidual: Double
+    public let maximumLogFugacityResidual: Double
+    public let liquidMinimumStabilityEigenvalue: Double?
+    public let vaporMinimumStabilityEigenvalue: Double?
+    public let postcheckMinimumTPD: Double
+    public let status: TeqpPhaseEquilibriumStatus
+    public let iterationCount: Int
+}
+
 public protocol TeqpEngine: Sendable {
     var isAvailable: Bool { get }
     var libraryVersion: String { get }
@@ -398,9 +426,18 @@ public protocol TeqpEngine: Sendable {
         specifiedComposition: CanonicalComposition,
         specification: TeqpPhaseEquilibriumSpecification
     ) async throws -> TeqpNComponentVLEResult
+
+    func calculateGlobalStability(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPDResult
+    func calculateTPFlash(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPFlashResult
 }
 
 public extension TeqpEngine {
+    func calculateGlobalStability(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPDResult {
+        throw ProviderError.modelUnavailable("Generic teqp TPD diagnostics are not available in this engine.")
+    }
+    func calculateTPFlash(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPFlashResult {
+        throw ProviderError.modelUnavailable("Generic teqp TP-flash diagnostics are not available in this engine.")
+    }
     func calculateNComponentVLE(
         temperatureK: Double,
         specifiedComposition: CanonicalComposition,

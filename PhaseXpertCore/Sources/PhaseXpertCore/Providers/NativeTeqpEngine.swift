@@ -490,6 +490,67 @@ public struct NativeTeqpEngine: TeqpEngine {
         #endif
     }
 
+    public func calculateGlobalStability(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPDResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let components = composition.components
+        let rawIDs = try components.map { try nativeComponentID(for: $0.component) }
+        let rawFractions = components.map(\.moleFraction)
+        return try await Task.detached(priority: .userInitiated) {
+            var ids = rawIDs, fractions = rawFractions
+            var minimum = [Double](repeating: 0, count: ids.count)
+            var native = PXTeqpTPDResult()
+            var error = [CChar](repeating: 0, count: 768)
+            let code = px_teqp_calculate_ncomponent_tpd(&ids, &fractions, ids.count, pressurePa, temperatureK, &minimum, minimum.count, &native, &error, error.count)
+            guard code == 0 else { throw ProviderError.malformedResponse(String(cString: error)) }
+            return TeqpTPDResult(
+                status: TeqpGlobalStabilityStatus(rawValue: Int(native.status.rawValue)) ?? .failed,
+                minimumTPD: native.minimum_tpd,
+                minimumComposition: zip(components, minimum).map { MixtureComponent(component: $0.0.component, moleFraction: $0.1) },
+                trialMolarDensityMolesPerCubicMetre: native.trial_molar_density_mol_m3,
+                referenceMolarDensityMolesPerCubicMetre: native.reference_molar_density_mol_m3,
+                iterationCount: Int(native.iteration_count),
+                densityRootEvaluations: Int(native.density_root_evaluations),
+                distinctMinimumCount: Int(native.distinct_minimum_count)
+            )
+        }.value
+        #else
+        throw ProviderError.modelUnavailable("The teqp native XCFramework has not been linked.")
+        #endif
+    }
+
+    public func calculateTPFlash(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPFlashResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let components = composition.components
+        let rawIDs = try components.map { try nativeComponentID(for: $0.component) }
+        let rawFractions = components.map(\.moleFraction)
+        return try await Task.detached(priority: .userInitiated) {
+            var ids = rawIDs, fractions = rawFractions
+            var liquid = [Double](repeating: 0, count: ids.count), vapor = liquid
+            var native = PXTeqpTPFlashResult()
+            var error = [CChar](repeating: 0, count: 768)
+            let code = px_teqp_calculate_ncomponent_tp_flash(&ids, &fractions, ids.count, pressurePa, temperatureK, &liquid, liquid.count, &vapor, vapor.count, &native, &error, error.count)
+            guard code == 0 else { throw ProviderError.malformedResponse(String(cString: error)) }
+            let hasSplit = native.vapor_fraction.isFinite
+            return TeqpTPFlashResult(
+                vaporFraction: hasSplit ? native.vapor_fraction : nil,
+                liquidComposition: hasSplit ? zip(components, liquid).map { MixtureComponent(component: $0.0.component, moleFraction: $0.1) } : nil,
+                vaporComposition: hasSplit ? zip(components, vapor).map { MixtureComponent(component: $0.0.component, moleFraction: $0.1) } : nil,
+                liquidMolarDensityMolesPerCubicMetre: hasSplit ? native.liquid_molar_density_mol_m3 : nil,
+                vaporMolarDensityMolesPerCubicMetre: hasSplit ? native.vapor_molar_density_mol_m3 : nil,
+                maximumMaterialBalanceResidual: native.maximum_material_balance_residual,
+                maximumLogFugacityResidual: native.maximum_log_fugacity_residual,
+                liquidMinimumStabilityEigenvalue: hasSplit ? native.liquid_minimum_stability_eigenvalue : nil,
+                vaporMinimumStabilityEigenvalue: hasSplit ? native.vapor_minimum_stability_eigenvalue : nil,
+                postcheckMinimumTPD: native.postcheck_minimum_tpd,
+                status: TeqpPhaseEquilibriumStatus(rawValue: Int(native.status.rawValue)) ?? .unknown,
+                iterationCount: Int(native.iteration_count)
+            )
+        }.value
+        #else
+        throw ProviderError.modelUnavailable("The teqp native XCFramework has not been linked.")
+        #endif
+    }
+
     public func calculateCarbonDioxideOxygenGasDensity(
         pressurePa: Double,
         temperatureK: Double,

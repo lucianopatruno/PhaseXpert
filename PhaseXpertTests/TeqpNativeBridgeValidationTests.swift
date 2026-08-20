@@ -227,6 +227,56 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         throw XCTSkip("Native teqp unavailable")
         #endif
     }
+
+    func testGenericTPDAndTernaryTPFlashDemonstrator() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
+        var feed = [0.9697, 0.0152, 0.0151]
+        var minimum = [Double](repeating: 0, count: 3)
+        var tpd = PXTeqpTPDResult()
+        var error = [CChar](repeating: 0, count: 512)
+        let tpdStatus = px_teqp_calculate_ncomponent_tpd(&ids, &feed, 3, 7_050_000, 298.138, &minimum, 3, &tpd, &error, error.count)
+        print("TPD-DEMONSTRATOR", tpdStatus, tpd.status.rawValue, tpd.minimum_tpd, minimum, tpd.reference_molar_density_mol_m3, tpd.trial_molar_density_mol_m3)
+        XCTAssertEqual(tpdStatus, 0, String(cString: error))
+        XCTAssertEqual(tpd.status, PXTeqpStabilityUnstable)
+        XCTAssertLessThan(tpd.minimum_tpd, -2e-6)
+
+        var liquid = [Double](repeating: 0, count: 3)
+        var vapor = [Double](repeating: 0, count: 3)
+        var flash = PXTeqpTPFlashResult()
+        error = [CChar](repeating: 0, count: 512)
+        let flashStatus = px_teqp_calculate_ncomponent_tp_flash(&ids, &feed, 3, 7_050_000, 298.138, &liquid, 3, &vapor, 3, &flash, &error, error.count)
+        print("TP-FLASH-DEMONSTRATOR", flashStatus, flash.vapor_fraction, liquid, vapor, flash.maximum_material_balance_residual, flash.maximum_log_fugacity_residual, String(cString: error))
+        XCTAssertEqual(flashStatus, 0, String(cString: error))
+        XCTAssertGreaterThan(flash.vapor_fraction, 0)
+        XCTAssertLessThan(flash.vapor_fraction, 1)
+        XCTAssertLessThan(flash.maximum_material_balance_residual, 2e-8)
+        XCTAssertLessThan(flash.maximum_log_fugacity_residual, 2e-7)
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
+    func testGenericTPDSupportsFourAndFiveComponentProductionCompositions() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let cases: [([Int32], [Double], Double, Double)] = [
+            ([Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentOxygen.rawValue), Int32(PXTeqpComponentArgon.rawValue)], [0.920, 0.043, 0.016, 0.021], 1_952_000, 312.35),
+            ([Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentArgon.rawValue), Int32(PXTeqpComponentMethane.rawValue), Int32(PXTeqpComponentHydrogen.rawValue)], [0.952, 0.028, 0.005, 0.010, 0.005], 10_000_000, 313.15)
+        ]
+        for (rawIDs, rawFeed, pressure, temperature) in cases {
+            var ids = rawIDs, feed = rawFeed
+            var minimum = [Double](repeating: 0, count: ids.count)
+            var result = PXTeqpTPDResult()
+            var error = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_ncomponent_tpd(&ids, &feed, ids.count, pressure, temperature, &minimum, minimum.count, &result, &error, error.count)
+            print("GENERIC-TPD", ids.count, status, result.status.rawValue, result.minimum_tpd, result.density_root_evaluations, String(cString: error))
+            XCTAssertEqual(status, 0, String(cString: error))
+            XCTAssertTrue(result.minimum_tpd.isFinite)
+        }
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
     private struct SaturationState {
         let pressurePa: Double
         let liquidDensityKilogramsPerCubicMetre: Double

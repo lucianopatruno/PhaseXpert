@@ -149,6 +149,40 @@ typedef struct PXTeqpPhaseThermodynamicResult {
     double minimum_stability_eigenvalue;
 } PXTeqpPhaseThermodynamicResult;
 
+typedef enum PXTeqpStabilityStatus {
+    PXTeqpStabilityStable = 0,
+    PXTeqpStabilityUnstable = 1,
+    PXTeqpStabilityNearNeutral = 2,
+    PXTeqpStabilityFailed = 3
+} PXTeqpStabilityStatus;
+
+typedef struct PXTeqpTPDResult {
+    PXTeqpStabilityStatus status;
+    int converged;
+    int iteration_count;
+    int density_root_evaluations;
+    int distinct_minimum_count;
+    double minimum_tpd;
+    double trial_molar_density_mol_m3;
+    double reference_molar_density_mol_m3;
+} PXTeqpTPDResult;
+
+typedef struct PXTeqpTPFlashResult {
+    int converged;
+    PXTeqpEquilibriumStatus status;
+    int iteration_count;
+    double vapor_fraction;
+    double liquid_molar_density_mol_m3;
+    double vapor_molar_density_mol_m3;
+    double maximum_material_balance_residual;
+    double maximum_log_fugacity_residual;
+    double relative_liquid_pressure_residual;
+    double relative_vapor_pressure_residual;
+    double liquid_minimum_stability_eigenvalue;
+    double vapor_minimum_stability_eigenvalue;
+    double postcheck_minimum_tpd;
+} PXTeqpTPFlashResult;
+
 typedef struct PXTeqpMixtureThermodynamicResult {
     double density_kg_m3;
     double molar_density_mol_m3;
@@ -304,6 +338,34 @@ int px_teqp_evaluate_ncomponent_phase(
     double *chemical_potentials_j_mol,
     size_t chemical_potentials_length,
     PXTeqpPhaseThermodynamicResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_ncomponent_tpd(
+    const int *component_ids,
+    const double *feed_mole_fractions,
+    size_t component_count,
+    double pressure_pa,
+    double temperature_k,
+    double *minimum_composition,
+    size_t minimum_composition_length,
+    PXTeqpTPDResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_ncomponent_tp_flash(
+    const int *component_ids,
+    const double *feed_mole_fractions,
+    size_t component_count,
+    double pressure_pa,
+    double temperature_k,
+    double *liquid_mole_fractions,
+    size_t liquid_mole_fractions_length,
+    double *vapor_mole_fractions,
+    size_t vapor_mole_fractions_length,
+    PXTeqpTPFlashResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

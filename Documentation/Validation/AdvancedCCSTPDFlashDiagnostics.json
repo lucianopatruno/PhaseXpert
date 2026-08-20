@@ -1,0 +1,49 @@
+{
+  "status": "research-only numerical diagnostics; not independent interior-flash validation",
+  "teqp_version": "v0.23.1",
+  "teqp_commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+  "tpd_benchmarks": [
+    {
+      "id": "ottoy-L1-V1-midpoint",
+      "temperature_k": 298.138,
+      "pressure_pa": 7050000,
+      "feed_mole_fractions": [0.9697, 0.0152, 0.0151],
+      "components": ["CO2", "N2", "CH4"],
+      "status": "unstable",
+      "minimum_tpd": -0.003422699548733931,
+      "minimum_composition": [0.9842137915586155, 0.006998047385373611, 0.008788161056010905]
+    },
+    {
+      "id": "razmjoo-oxycomb-i-gas",
+      "temperature_k": 312.35,
+      "pressure_pa": 1952000,
+      "components": ["CO2", "N2", "O2", "Ar"],
+      "feed_mole_fractions": [0.920, 0.043, 0.016, 0.021],
+      "status": "stable",
+      "minimum_tpd": 0.0,
+      "density_root_evaluations": 653
+    },
+    {
+      "id": "razmjoo-transport-spec-dense",
+      "temperature_k": 313.15,
+      "pressure_pa": 10000000,
+      "components": ["CO2", "N2", "Ar", "CH4", "H2"],
+      "feed_mole_fractions": [0.952, 0.028, 0.005, 0.010, 0.005],
+      "status": "stable",
+      "minimum_tpd": -1.9288902135379615e-15,
+      "density_root_evaluations": 1255
+    }
+  ],
+  "tp_flash_demonstrator": {
+    "id": "ottoy-L1-V1-midpoint",
+    "temperature_k": 298.138,
+    "pressure_pa": 7050000,
+    "overall_mole_fractions": [0.9697, 0.0152, 0.0151],
+    "vapor_fraction": 0.4889430060498542,
+    "liquid_mole_fractions": [0.9807356929890649, 0.008788544917661468, 0.010475762093273663],
+    "vapor_mole_fractions": [0.9581651557749203, 0.021901441989238393, 0.01993340223584133],
+    "maximum_material_balance_residual": 1.3324579106743784e-8,
+    "maximum_log_fugacity_residual": 2.6973251053726483e-8,
+    "validation_status": "thermodynamic self-consistency only"
+  }
+}
