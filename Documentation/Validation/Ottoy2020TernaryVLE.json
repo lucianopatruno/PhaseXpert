@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "experimental rows encoded; validation pending a defensible generic ternary VLE initialization/continuation implementation",
+  "status": "experimental rows encoded; independently predicted with the research-only generic N-component VLE solver; no production gate promoted",
   "source": {
     "doi": "10.1016/j.fluid.2019.112444",
     "citation": "Ott\u00f8y et al., Fluid Phase Equilibria 509 (2020) 112444",
@@ -1263,6 +1263,6 @@
       "mix_VLE_Tp",
       "mixture_VLE_px"
     ],
-    "decision": "No ternary pressure-prediction bridge was added. In pinned teqp v0.23.1, mix_VLE_Tx is explicitly documented as binary-only and hard-codes four residual/Jacobian rows, so it cannot solve a ternary bubble pressure from specified liquid composition. mix_VLE_Tp accepts N components but fixes experimental T and P and therefore can only polish compositions, not independently predict pressure; mixture_VLE_px fixes pressure and liquid composition and solves temperature. Neighboring Ottøy rows cannot remove this missing ternary pressure-specification equation/API. A new thermodynamic solver would be required and is outside the evidence-backed scope."
+    "decision": "Pinned teqp convenience APIs remain unsuitable for independent ternary pressure prediction, so PhaseXpert now supplies its own generic N-component bubble/dew solver using teqp residual-Helmholtz partial-density gradients and Hessians. The implementation independently predicts pressure and the incipient-phase composition without experimental pressure or opposite-phase composition as inputs. Full results and limitations are recorded in Ottoy2020TernaryVLEPredictions.json and AdvancedCCSMulticomponentVLEValidation2026-08-20.md; convergence and stability coverage are insufficient for a production gate."
   }
 }

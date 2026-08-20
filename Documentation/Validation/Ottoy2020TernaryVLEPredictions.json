@@ -1,0 +1,2492 @@
+{
+  "rows" : [
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.9587,
+        0.021499999999999998,
+        0.019800000000000002
+      ],
+      "experimental_pressure_pa" : 7085000,
+      "iterations" : 12,
+      "liquid_minimum_stability_eigenvalue" : 0.019657046689172938,
+      "liquid_molar_density_mol_m3" : 15331.756506463955,
+      "maximum_log_fugacity_residual" : 4.6083945029776854e-11,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V1",
+      "predicted_opposite_phase_composition" : [
+        0.95805611967087378,
+        0.022164343234219501,
+        0.019779537094906562
+      ],
+      "predicted_pressure_pa" : 7052580.3592473585,
+      "published_specified_composition" : [
+        0.98070000000000002,
+        0.0088999999999999999,
+        0.0104
+      ],
+      "relative_pressure_residual" : 8.4723704084569859e-11,
+      "source_row_id" : "L1",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.98070000000000002,
+        0.0088999999999999999,
+        0.0104
+      ],
+      "temperature_k" : 298.13799999999998,
+      "vapor_minimum_stability_eigenvalue" : 0.024609742755348968,
+      "vapor_molar_density_mol_m3" : 6431.2396936718933
+    },
+    {
+      "co2_closure_adjustment" : 1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.93730000000000002,
+        0.031899999999999998,
+        0.030700000000000002
+      ],
+      "experimental_pressure_pa" : 7523800,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.010979984698321186,
+      "liquid_molar_density_mol_m3" : 14531.020174439684,
+      "maximum_log_fugacity_residual" : 1.0463878549985798e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V2",
+      "predicted_opposite_phase_composition" : [
+        0.93559354623281399,
+        0.033570203235114733,
+        0.030836250532071306
+      ],
+      "predicted_pressure_pa" : 7492030.2143101338,
+      "published_specified_composition" : [
+        0.96509999999999996,
+        0.016299999999999999,
+        0.018599999999999998
+      ],
+      "relative_pressure_residual" : 1.9249767901888127e-08,
+      "source_row_id" : "L2",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.96510000000000007,
+        0.016299999999999999,
+        0.018599999999999998
+      ],
+      "temperature_k" : 298.13299999999998,
+      "vapor_minimum_stability_eigenvalue" : 0.013954590146680297,
+      "vapor_molar_density_mol_m3" : 7281.6786700499297
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.92949999999999999,
+        0.0356,
+        0.035000000000000003
+      ],
+      "experimental_pressure_pa" : 7788700,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.0062072665061351671,
+      "liquid_molar_density_mol_m3" : 13819.52606255994,
+      "maximum_log_fugacity_residual" : 7.3502986706014305e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V3",
+      "predicted_opposite_phase_composition" : [
+        0.92477668401213775,
+        0.038916009384583714,
+        0.036307306603278501
+      ],
+      "predicted_pressure_pa" : 7773738.3819529805,
+      "published_specified_composition" : [
+        0.95350000000000001,
+        0.021999999999999999,
+        0.024400000000000002
+      ],
+      "relative_pressure_residual" : 1.088524468688376e-07,
+      "source_row_id" : "L3",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.9536,
+        0.021999999999999999,
+        0.024400000000000002
+      ],
+      "temperature_k" : 298.13099999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.0080095612542453818,
+      "vapor_molar_density_mol_m3" : 7995.327848146655
+    },
+    {
+      "co2_closure_adjustment" : 1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.92959999999999998,
+        0.035000000000000003,
+        0.035299999999999998
+      ],
+      "experimental_pressure_pa" : 7928100,
+      "iterations" : 9,
+      "liquid_minimum_stability_eigenvalue" : 0.0033470698534745513,
+      "liquid_molar_density_mol_m3" : 13122.20693540637,
+      "maximum_log_fugacity_residual" : 2.1967103038853382e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V4",
+      "predicted_opposite_phase_composition" : [
+        0.91934524490250102,
+        0.040965559138559184,
+        0.039689195958939806
+      ],
+      "predicted_pressure_pa" : 7970290.2135736682,
+      "published_specified_composition" : [
+        0.94399999999999995,
+        0.026599999999999999,
+        0.029399999999999999
+      ],
+      "relative_pressure_residual" : 2.2729061499064822e-08,
+      "source_row_id" : "L4",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.94400000000000006,
+        0.026599999999999999,
+        0.029399999999999999
+      ],
+      "temperature_k" : 298.13099999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.0042507484268025954,
+      "vapor_molar_density_mol_m3" : 8660.6584057078217
+    },
+    {
+      "co2_closure_adjustment" : 1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.92849999999999999,
+        0.035900000000000001,
+        0.0356
+      ],
+      "experimental_pressure_pa" : 7876700,
+      "iterations" : 10,
+      "liquid_minimum_stability_eigenvalue" : 0.0046084754634940503,
+      "liquid_molar_density_mol_m3" : 13474.975844368435,
+      "maximum_log_fugacity_residual" : 4.9939908937766547e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V5",
+      "predicted_opposite_phase_composition" : [
+        0.92157853620753338,
+        0.04059116818477506,
+        0.037830295607691682
+      ],
+      "predicted_pressure_pa" : 7881421.697816724,
+      "published_specified_composition" : [
+        0.94869999999999999,
+        0.0246,
+        0.026700000000000002
+      ],
+      "relative_pressure_residual" : 6.2466316092272414e-08,
+      "source_row_id" : "L5",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.9487000000000001,
+        0.0246,
+        0.026700000000000002
+      ],
+      "temperature_k" : 298.13,
+      "vapor_minimum_stability_eigenvalue" : 0.0059579583768501814,
+      "vapor_molar_density_mol_m3" : 8327.9684021991379
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.97099999999999997,
+        0.024,
+        0.0050000000000000001
+      ],
+      "experimental_pressure_pa" : 6897500,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.024475785466880978,
+      "liquid_molar_density_mol_m3" : 15673.463565305767,
+      "maximum_log_fugacity_residual" : 1.7553257485838431e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V6",
+      "predicted_opposite_phase_composition" : [
+        0.97079134403988654,
+        0.024357013725529363,
+        0.0048516422345841539
+      ],
+      "predicted_pressure_pa" : 6870095.2182426816,
+      "published_specified_composition" : [
+        0.98850000000000005,
+        0.0089999999999999993,
+        0.0023999999999999998
+      ],
+      "relative_pressure_residual" : 2.1798339796005851e-10,
+      "source_row_id" : "L6",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.98860000000000003,
+        0.0089999999999999993,
+        0.0023999999999999998
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.030505423447460267,
+      "vapor_molar_density_mol_m3" : 6087.5996922197246
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.94930000000000003,
+        0.0419,
+        0.0088000000000000005
+      ],
+      "experimental_pressure_pa" : 7304500,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.016344094597131452,
+      "liquid_molar_density_mol_m3" : 15114.030030917502,
+      "maximum_log_fugacity_residual" : 5.7738082688107024e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V7",
+      "predicted_opposite_phase_composition" : [
+        0.94854685916329096,
+        0.042741407359869303,
+        0.0087117334768396226
+      ],
+      "predicted_pressure_pa" : 7281234.6268678578,
+      "published_specified_composition" : [
+        0.97689999999999999,
+        0.0183,
+        0.0047999999999999996
+      ],
+      "relative_pressure_residual" : 1.0316630480921007e-07,
+      "source_row_id" : "L7",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.97689999999999999,
+        0.0183,
+        0.0047999999999999996
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.020712714000444075,
+      "vapor_molar_density_mol_m3" : 6732.7316583699958
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.93479999999999996,
+        0.053900000000000003,
+        0.0112
+      ],
+      "experimental_pressure_pa" : 7669100,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.009859618806390814,
+      "liquid_molar_density_mol_m3" : 14457.035594512639,
+      "maximum_log_fugacity_residual" : 2.7436045838720388e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V8",
+      "predicted_opposite_phase_composition" : [
+        0.93285751943774375,
+        0.055614643445761107,
+        0.01152783711649513
+      ],
+      "predicted_pressure_pa" : 7650532.6970596965,
+      "published_specified_composition" : [
+        0.96509999999999996,
+        0.027799999999999998,
+        0.0071000000000000004
+      ],
+      "relative_pressure_residual" : 3.8328157761510279e-10,
+      "source_row_id" : "L8",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.96509999999999996,
+        0.027799999999999998,
+        0.0071000000000000004
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.012667906900526783,
+      "vapor_molar_density_mol_m3" : 7450.100482636637
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.92849999999999999,
+        0.059299999999999999,
+        0.012200000000000001
+      ],
+      "experimental_pressure_pa" : 7927200,
+      "iterations" : 12,
+      "liquid_minimum_stability_eigenvalue" : 0.005663602673339002,
+      "liquid_molar_density_mol_m3" : 13795.330896726455,
+      "maximum_log_fugacity_residual" : 1.7158682706564866e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V9",
+      "predicted_opposite_phase_composition" : [
+        0.9242240155606245,
+        0.062853482966913246,
+        0.012922501472462298
+      ],
+      "predicted_pressure_pa" : 7925322.6565269846,
+      "published_specified_composition" : [
+        0.95509999999999995,
+        0.036200000000000003,
+        0.0088000000000000005
+      ],
+      "relative_pressure_residual" : 2.3506141834933925e-10,
+      "source_row_id" : "L9",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.95499999999999996,
+        0.036200000000000003,
+        0.0088000000000000005
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.0074061989087648621,
+      "vapor_molar_density_mol_m3" : 8129.1071560399423
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999877964e-05,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.91100000000000003,
+        0.047600000000000003,
+        0.041500000000000002
+      ],
+      "experimental_pressure_pa" : 5254100,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -0.51807804681413638,
+      "liquid_molar_density_mol_m3" : 16374.696540623341,
+      "maximum_log_fugacity_residual" : 1.1871454652947097e-09,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V10",
+      "predicted_opposite_phase_composition" : [
+        0.92409186528611531,
+        0.040164401088055753,
+        0.035743733625828895
+      ],
+      "predicted_pressure_pa" : 5183036.9591801204,
+      "published_specified_composition" : [
+        0.98029999999999995,
+        0.0083000000000000001,
+        0.0115
+      ],
+      "relative_pressure_residual" : 1.3852906739994211e-09,
+      "source_row_id" : "L10",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.98020000000000007,
+        0.0083000000000000001,
+        0.0115
+      ],
+      "temperature_k" : 283.154,
+      "vapor_minimum_stability_eigenvalue" : 0.17067887991958869,
+      "vapor_molar_density_mol_m3" : 3673.9836677931162
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.83540000000000003,
+        0.090499999999999997,
+        0.074099999999999999
+      ],
+      "experimental_pressure_pa" : 6146100,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.079967259663167353,
+      "liquid_molar_density_mol_m3" : 18594.534211437858,
+      "maximum_log_fugacity_residual" : 3.2916916459804649e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V11",
+      "predicted_opposite_phase_composition" : [
+        0.83762407608003742,
+        0.090606064382489609,
+        0.071769859537472849
+      ],
+      "predicted_pressure_pa" : 6105513.3290972728,
+      "published_specified_composition" : [
+        0.95499999999999996,
+        0.0201,
+        0.024899999999999999
+      ],
+      "relative_pressure_residual" : 3.5355996816226435e-10,
+      "source_row_id" : "L11",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.95499999999999996,
+        0.0201,
+        0.024899999999999999
+      ],
+      "temperature_k" : 283.154,
+      "vapor_minimum_stability_eigenvalue" : 0.13206268331400212,
+      "vapor_molar_density_mol_m3" : 4448.2974880075071
+    },
+    {
+      "co2_closure_adjustment" : -1.1102230246251565e-16,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.78220000000000001,
+        0.1229,
+        0.094899999999999998
+      ],
+      "experimental_pressure_pa" : 7088900,
+      "iterations" : 10,
+      "liquid_minimum_stability_eigenvalue" : -1.5104479804266924,
+      "liquid_molar_density_mol_m3" : 14587.628856053872,
+      "maximum_log_fugacity_residual" : 1.5247579157750661e-09,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V12",
+      "predicted_opposite_phase_composition" : [
+        0.80712158803768164,
+        0.10740742579018099,
+        0.085470986172137164
+      ],
+      "predicted_pressure_pa" : 6748239.6762122735,
+      "published_specified_composition" : [
+        0.92620000000000002,
+        0.035000000000000003,
+        0.038800000000000001
+      ],
+      "relative_pressure_residual" : 1.8623846762774797e-09,
+      "source_row_id" : "L12",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.92619999999999991,
+        0.035000000000000003,
+        0.038800000000000001
+      ],
+      "temperature_k" : 283.154,
+      "vapor_minimum_stability_eigenvalue" : 0.085824069712251677,
+      "vapor_molar_density_mol_m3" : 5216.3320221089371
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.75970000000000004,
+        0.13339999999999999,
+        0.10680000000000001
+      ],
+      "experimental_pressure_pa" : 7680000,
+      "iterations" : 12,
+      "liquid_minimum_stability_eigenvalue" : 0.038945581579039976,
+      "liquid_molar_density_mol_m3" : 17309.006965999568,
+      "maximum_log_fugacity_residual" : 3.0531085890695827e-11,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V13",
+      "predicted_opposite_phase_composition" : [
+        0.76182192141256222,
+        0.13353830468826269,
+        0.10463977389917524
+      ],
+      "predicted_pressure_pa" : 7603861.0881215222,
+      "published_specified_composition" : [
+        0.90549999999999997,
+        0.044900000000000002,
+        0.049599999999999998
+      ],
+      "relative_pressure_residual" : 3.7067903530252169e-11,
+      "source_row_id" : "L13",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.90549999999999997,
+        0.044900000000000002,
+        0.049599999999999998
+      ],
+      "temperature_k" : 283.15499999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.061195558603117997,
+      "vapor_molar_density_mol_m3" : 6103.5604344847407
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.74629999999999996,
+        0.13589999999999999,
+        0.1179
+      ],
+      "experimental_pressure_pa" : 8258599.9999999991,
+      "iterations" : 11,
+      "liquid_minimum_stability_eigenvalue" : 0.026217758713559216,
+      "liquid_molar_density_mol_m3" : 16627.810865614116,
+      "maximum_log_fugacity_residual" : 5.2998834228971651e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V14",
+      "predicted_opposite_phase_composition" : [
+        0.74664341746080287,
+        0.14144003431132407,
+        0.11191654822787317
+      ],
+      "predicted_pressure_pa" : 8175751.9403434712,
+      "published_specified_composition" : [
+        0.8831,
+        0.0567,
+        0.060199999999999997
+      ],
+      "relative_pressure_residual" : 6.6686290640327909e-08,
+      "source_row_id" : "L14",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.8831,
+        0.0567,
+        0.060199999999999997
+      ],
+      "temperature_k" : 283.15600000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.039157538159754875,
+      "vapor_molar_density_mol_m3" : 6925.4422626954338
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.74319999999999997,
+        0.13600000000000001,
+        0.1208
+      ],
+      "experimental_pressure_pa" : 8848300,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.013357553470124392,
+      "liquid_molar_density_mol_m3" : 15570.11937308814,
+      "maximum_log_fugacity_residual" : 2.2055703411101807e-09,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V15",
+      "predicted_opposite_phase_composition" : [
+        0.73959474131014868,
+        0.13965616417972998,
+        0.12074909451012142
+      ],
+      "predicted_pressure_pa" : 8795110.4474574942,
+      "published_specified_composition" : [
+        0.85260000000000002,
+        0.070900000000000005,
+        0.076600000000000001
+      ],
+      "relative_pressure_residual" : 2.2270738314761904e-09,
+      "source_row_id" : "L15",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.85250000000000004,
+        0.070900000000000005,
+        0.076600000000000001
+      ],
+      "temperature_k" : 283.15600000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.018356382188438169,
+      "vapor_molar_density_mol_m3" : 8118.5621655256655
+    },
+    {
+      "co2_closure_adjustment" : -1.1102230246251565e-16,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.91339999999999999,
+        0.0465,
+        0.040099999999999997
+      ],
+      "experimental_pressure_pa" : 3990300,
+      "iterations" : 5,
+      "liquid_minimum_stability_eigenvalue" : -0.73718747695261222,
+      "liquid_molar_density_mol_m3" : 17967.98502892637,
+      "maximum_log_fugacity_residual" : 4.2909827231621622e-08,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V16",
+      "predicted_opposite_phase_composition" : [
+        0.92373810095425402,
+        0.041131465512999385,
+        0.035130433532746655
+      ],
+      "predicted_pressure_pa" : 3978417.6812149105,
+      "published_specified_composition" : [
+        0.98740000000000006,
+        0.0050000000000000001,
+        0.0076
+      ],
+      "relative_pressure_residual" : 3.938893012212934e-08,
+      "source_row_id" : "L16",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.98739999999999994,
+        0.0050000000000000001,
+        0.0076
+      ],
+      "temperature_k" : 273.16800000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.35221648996798449,
+      "vapor_molar_density_mol_m3" : 2592.9651425599618
+    },
+    {
+      "co2_closure_adjustment" : 0.00010000000000010001,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.76629999999999998,
+        0.1263,
+        0.10730000000000001
+      ],
+      "experimental_pressure_pa" : 5252100,
+      "iterations" : 6,
+      "liquid_minimum_stability_eigenvalue" : -2.0611477651514996,
+      "liquid_molar_density_mol_m3" : 17219.382291982758,
+      "maximum_log_fugacity_residual" : 1.1548674109524204e-12,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V17",
+      "predicted_opposite_phase_composition" : [
+        0.79489188327694238,
+        0.1101909229897776,
+        0.09491719373327992
+      ],
+      "predicted_pressure_pa" : 5061592.019300418,
+      "published_specified_composition" : [
+        0.95269999999999999,
+        0.0195,
+        0.027699999999999999
+      ],
+      "relative_pressure_residual" : 1.0337005045525018e-12,
+      "source_row_id" : "L17",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.95280000000000009,
+        0.0195,
+        0.027699999999999999
+      ],
+      "temperature_k" : 273.166,
+      "vapor_minimum_stability_eigenvalue" : 0.2589448539268856,
+      "vapor_molar_density_mol_m3" : 3425.595792824286
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.69669999999999999,
+        0.16450000000000001,
+        0.1389
+      ],
+      "experimental_pressure_pa" : 6260700,
+      "iterations" : 10,
+      "liquid_minimum_stability_eigenvalue" : -2.9072028223967776,
+      "liquid_molar_density_mol_m3" : 16569.626254760744,
+      "maximum_log_fugacity_residual" : 3.1879892458124119e-08,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V18",
+      "predicted_opposite_phase_composition" : [
+        0.73144453101463036,
+        0.14400894726252375,
+        0.12454652172284604
+      ],
+      "predicted_pressure_pa" : 5889518.1984212063,
+      "published_specified_composition" : [
+        0.92259999999999998,
+        0.033000000000000002,
+        0.044400000000000002
+      ],
+      "relative_pressure_residual" : 3.0705754938280814e-08,
+      "source_row_id" : "L18",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.92259999999999998,
+        0.033000000000000002,
+        0.044400000000000002
+      ],
+      "temperature_k" : 273.16699999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.19534839237467796,
+      "vapor_molar_density_mol_m3" : 4133.1255674893837
+    },
+    {
+      "co2_closure_adjustment" : 1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.65490000000000004,
+        0.1875,
+        0.1575
+      ],
+      "experimental_pressure_pa" : 7220300,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.066540475504193827,
+      "liquid_molar_density_mol_m3" : 19029.747603319371,
+      "maximum_log_fugacity_residual" : 2.5964399723389961e-12,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V19",
+      "predicted_opposite_phase_composition" : [
+        0.65993181872707929,
+        0.18628420652947755,
+        0.1537839747434431
+      ],
+      "predicted_pressure_pa" : 7128696.7516503353,
+      "published_specified_composition" : [
+        0.89129999999999998,
+        0.047800000000000002,
+        0.060900000000000003
+      ],
+      "relative_pressure_residual" : 2.1855460953834875e-12,
+      "source_row_id" : "L19",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.89130000000000009,
+        0.047800000000000002,
+        0.060900000000000003
+      ],
+      "temperature_k" : 273.16699999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.13396583735546691,
+      "vapor_molar_density_mol_m3" : 5227.918724141643
+    },
+    {
+      "co2_closure_adjustment" : -1.1102230246251565e-16,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.63190000000000002,
+        0.2001,
+        0.16789999999999999
+      ],
+      "experimental_pressure_pa" : 8166300,
+      "iterations" : 11,
+      "liquid_minimum_stability_eigenvalue" : -8.7681228766519954,
+      "liquid_molar_density_mol_m3" : 14038.520524535041,
+      "maximum_log_fugacity_residual" : 8.1355386091953187e-11,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V20",
+      "predicted_opposite_phase_composition" : [
+        0.73368897808525579,
+        0.13506971726914604,
+        0.13124130464559816
+      ],
+      "predicted_pressure_pa" : 8132970.2782225441,
+      "published_specified_composition" : [
+        0.85650000000000004,
+        0.065199999999999994,
+        0.078299999999999995
+      ],
+      "relative_pressure_residual" : 1.3303120733726259e-10,
+      "source_row_id" : "L20",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.85649999999999993,
+        0.065199999999999994,
+        0.078299999999999995
+      ],
+      "temperature_k" : 273.16699999999997,
+      "vapor_minimum_stability_eigenvalue" : -0.018013546123101541,
+      "vapor_molar_density_mol_m3" : 9983.5503782604337
+    },
+    {
+      "co2_closure_adjustment" : -1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.62670000000000003,
+        0.2021,
+        0.17119999999999999
+      ],
+      "experimental_pressure_pa" : 8802300,
+      "iterations" : 10,
+      "liquid_minimum_stability_eigenvalue" : 0.030190475925743355,
+      "liquid_molar_density_mol_m3" : 17536.479844848887,
+      "maximum_log_fugacity_residual" : 4.4052671199162237e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V21",
+      "predicted_opposite_phase_composition" : [
+        0.62681210726199221,
+        0.20332270553298826,
+        0.16986518720501947
+      ],
+      "predicted_pressure_pa" : 8691163.3284393009,
+      "published_specified_composition" : [
+        0.82940000000000003,
+        0.079399999999999998,
+        0.091200000000000003
+      ],
+      "relative_pressure_residual" : 4.5994691851677408e-08,
+      "source_row_id" : "L21",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.82939999999999992,
+        0.079399999999999998,
+        0.091200000000000003
+      ],
+      "temperature_k" : 273.16899999999998,
+      "vapor_minimum_stability_eigenvalue" : 0.05297965123547077,
+      "vapor_molar_density_mol_m3" : 7154.5142404114595
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.63009999999999999,
+        0.19950000000000001,
+        0.1704
+      ],
+      "experimental_pressure_pa" : 9324400,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.019765178389028755,
+      "liquid_molar_density_mol_m3" : 16795.407922995924,
+      "maximum_log_fugacity_residual" : 2.6909938739399121e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V22",
+      "predicted_opposite_phase_composition" : [
+        0.62667245428016638,
+        0.20277810529759016,
+        0.17054944042224346
+      ],
+      "predicted_pressure_pa" : 9230414.058726415,
+      "published_specified_composition" : [
+        0.80310000000000004,
+        0.093899999999999997,
+        0.10299999999999999
+      ],
+      "relative_pressure_residual" : 1.9553930366036917e-10,
+      "source_row_id" : "L22",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.80310000000000004,
+        0.093899999999999997,
+        0.10299999999999999
+      ],
+      "temperature_k" : 273.17000000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.031687038785785847,
+      "vapor_molar_density_mol_m3" : 8055.2192295534487
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.87739999999999996,
+        0.066799999999999998,
+        0.055800000000000002
+      ],
+      "experimental_pressure_pa" : 2336900,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.35741894840464317,
+      "liquid_molar_density_mol_m3" : 23325.917531363804,
+      "maximum_log_fugacity_residual" : 1.0891089815952924e-09,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V23",
+      "predicted_opposite_phase_composition" : [
+        0.8758186789611021,
+        0.069296448982655551,
+        0.054884872056242505
+      ],
+      "predicted_pressure_pa" : 2331635.8161205142,
+      "published_specified_composition" : [
+        0.99099999999999999,
+        0.0033,
+        0.0057000000000000002
+      ],
+      "relative_pressure_residual" : 4.38715044070077e-08,
+      "source_row_id" : "L23",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.99099999999999999,
+        0.0033,
+        0.0057000000000000002
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : 1.0005565438216135,
+      "vapor_molar_density_mol_m3" : 1399.3656362233251
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.7843,
+        0.11840000000000001,
+        0.097299999999999998
+      ],
+      "experimental_pressure_pa" : 2686300,
+      "iterations" : 6,
+      "liquid_minimum_stability_eigenvalue" : 0.31744194036341744,
+      "liquid_molar_density_mol_m3" : 23210.915357108592,
+      "maximum_log_fugacity_residual" : 2.7141070730033229e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V24",
+      "predicted_opposite_phase_composition" : [
+        0.7884663320737908,
+        0.11738443820758641,
+        0.09414922971862269
+      ],
+      "predicted_pressure_pa" : 2676604.297528794,
+      "published_specified_composition" : [
+        0.98209999999999997,
+        0.0066,
+        0.011299999999999999
+      ],
+      "relative_pressure_residual" : 2.122937127400563e-08,
+      "source_row_id" : "L24",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.98209999999999997,
+        0.0066,
+        0.011299999999999999
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.93452816710583875,
+      "vapor_molar_density_mol_m3" : 1616.6107998381085
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.71360000000000001,
+        0.1575,
+        0.1288
+      ],
+      "experimental_pressure_pa" : 3042300,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -2.5806958378507781,
+      "liquid_molar_density_mol_m3" : 20110.95352728073,
+      "maximum_log_fugacity_residual" : 3.6835609158826637e-11,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V25",
+      "predicted_opposite_phase_composition" : [
+        0.76296160439597982,
+        0.12898950303089801,
+        0.10804889257312209
+      ],
+      "predicted_pressure_pa" : 2885648.2718213936,
+      "published_specified_composition" : [
+        0.97270000000000001,
+        0.010200000000000001,
+        0.017100000000000001
+      ],
+      "relative_pressure_residual" : 1.1408390631154703e-08,
+      "source_row_id" : "L25",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.97270000000000001,
+        0.010200000000000001,
+        0.017100000000000001
+      ],
+      "temperature_k" : 253.16300000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.84618586274455321,
+      "vapor_molar_density_mol_m3" : 1767.0340346658638
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.65659999999999996,
+        0.1893,
+        0.15409999999999999
+      ],
+      "experimental_pressure_pa" : 3410900,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.25019692413764605,
+      "liquid_molar_density_mol_m3" : 22956.211101413362,
+      "maximum_log_fugacity_residual" : 4.0832934391263361e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V26",
+      "predicted_opposite_phase_composition" : [
+        0.66252745399982793,
+        0.18770957153690007,
+        0.14976297446327197
+      ],
+      "predicted_pressure_pa" : 3398925.7379514379,
+      "published_specified_composition" : [
+        0.96289999999999998,
+        0.0141,
+        0.023099999999999999
+      ],
+      "relative_pressure_residual" : 8.4094129586123278e-09,
+      "source_row_id" : "L26",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.96279999999999999,
+        0.0141,
+        0.023099999999999999
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.80527977810519702,
+      "vapor_molar_density_mol_m3" : 2085.9185660614849
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.61019999999999996,
+        0.21529999999999999,
+        0.17449999999999999
+      ],
+      "experimental_pressure_pa" : 3799100,
+      "iterations" : 10,
+      "liquid_minimum_stability_eigenvalue" : 0.22197195273321976,
+      "liquid_molar_density_mol_m3" : 22814.299588480309,
+      "maximum_log_fugacity_residual" : 2.4761279125832158e-09,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V27",
+      "predicted_opposite_phase_composition" : [
+        0.61600948504110686,
+        0.21365478943595931,
+        0.17033572552293375
+      ],
+      "predicted_pressure_pa" : 3776563.6897519976,
+      "published_specified_composition" : [
+        0.95230000000000004,
+        0.0183,
+        0.029399999999999999
+      ],
+      "relative_pressure_residual" : 2.0602108153096738e-08,
+      "source_row_id" : "L27",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.95230000000000004,
+        0.0183,
+        0.029399999999999999
+      ],
+      "temperature_k" : 253.16300000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.74185879561619827,
+      "vapor_molar_density_mol_m3" : 2340.8314553850355
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.87339999999999995,
+        0.070800000000000002,
+        0.055800000000000002
+      ],
+      "experimental_pressure_pa" : 796500,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.66822295814536325,
+      "liquid_molar_density_mol_m3" : 26207.014329364483,
+      "maximum_log_fugacity_residual" : 3.0881986269453011e-14,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "V28",
+      "predicted_opposite_phase_composition" : [
+        0.86739073516720577,
+        0.076040979222271141,
+        0.056568285610523211
+      ],
+      "predicted_pressure_pa" : 799803.8048236426,
+      "published_specified_composition" : [
+        0.99719999999999998,
+        0.00089999999999999998,
+        0.0018
+      ],
+      "relative_pressure_residual" : 1.1458048435712722e-08,
+      "source_row_id" : "L28",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.99729999999999996,
+        0.00089999999999999998,
+        0.0018
+      ],
+      "temperature_k" : 223.15100000000001,
+      "vapor_minimum_stability_eigenvalue" : 3.5865495888344667,
+      "vapor_molar_density_mol_m3" : 478.0156159266524
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.71450000000000002,
+        0.16059999999999999,
+        0.1249
+      ],
+      "experimental_pressure_pa" : 995800,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -2.4912320538890862,
+      "liquid_molar_density_mol_m3" : 19764.939989323164,
+      "maximum_log_fugacity_residual" : 1.2568478221409132e-12,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V29",
+      "predicted_opposite_phase_composition" : [
+        0.85498126887720871,
+        0.072921839114164569,
+        0.072096892008626762
+      ],
+      "predicted_pressure_pa" : 972052.82842450298,
+      "published_specified_composition" : [
+        0.99250000000000005,
+        0.0023999999999999998,
+        0.0051000000000000004
+      ],
+      "relative_pressure_residual" : 6.9718145663520876e-08,
+      "source_row_id" : "L29",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.99250000000000005,
+        0.0023999999999999998,
+        0.0051000000000000004
+      ],
+      "temperature_k" : 223.15100000000001,
+      "vapor_minimum_stability_eigenvalue" : 2.7520618006262634,
+      "vapor_molar_density_mol_m3" : 595.75347937316201
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.65369999999999995,
+        0.19500000000000001,
+        0.15140000000000001
+      ],
+      "experimental_pressure_pa" : 1098300,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -2.6479659065795338,
+      "liquid_molar_density_mol_m3" : 19761.296258257276,
+      "maximum_log_fugacity_residual" : 5.4901308923472013e-14,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V30",
+      "predicted_opposite_phase_composition" : [
+        0.81671346112539511,
+        0.093206300234636233,
+        0.090080238639968668
+      ],
+      "predicted_pressure_pa" : 1024076.4986224372,
+      "published_specified_composition" : [
+        0.9899,
+        0.0033,
+        0.0067999999999999996
+      ],
+      "relative_pressure_residual" : 2.1514621534085725e-09,
+      "source_row_id" : "L30",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.9899,
+        0.0033,
+        0.0067999999999999996
+      ],
+      "temperature_k" : 223.15100000000001,
+      "vapor_minimum_stability_eigenvalue" : 2.7243186070827843,
+      "vapor_molar_density_mol_m3" : 628.01579898754858
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.59370000000000001,
+        0.22889999999999999,
+        0.1774
+      ],
+      "experimental_pressure_pa" : 1224600,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -2.8264468141825061,
+      "liquid_molar_density_mol_m3" : 19758.659382426886,
+      "maximum_log_fugacity_residual" : 1.8833194118421666e-12,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "V31",
+      "predicted_opposite_phase_composition" : [
+        0.77617501128962385,
+        0.11434253279894065,
+        0.1094824559114356
+      ],
+      "predicted_pressure_pa" : 1085311.5156116029,
+      "published_specified_composition" : [
+        0.98670000000000002,
+        0.0044000000000000003,
+        0.0088999999999999999
+      ],
+      "relative_pressure_residual" : 7.3966575019952705e-08,
+      "source_row_id" : "L31",
+      "specification" : "bubble",
+      "specified_composition" : [
+        0.98670000000000002,
+        0.0044000000000000003,
+        0.0088999999999999999
+      ],
+      "temperature_k" : 223.15000000000001,
+      "vapor_minimum_stability_eigenvalue" : 2.6925716753862372,
+      "vapor_molar_density_mol_m3" : 666.07401094847785
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.98070000000000002,
+        0.0088999999999999999,
+        0.0104
+      ],
+      "experimental_pressure_pa" : 7085400,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.019887356745266111,
+      "liquid_molar_density_mol_m3" : 15347.643227316856,
+      "maximum_log_fugacity_residual" : 3.5938462019973108e-11,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L1",
+      "predicted_opposite_phase_composition" : [
+        0.98102466004695732,
+        0.0085967605529694551,
+        0.010378579400073338
+      ],
+      "predicted_pressure_pa" : 7040385.8366602268,
+      "published_specified_composition" : [
+        0.9587,
+        0.021499999999999998,
+        0.019800000000000002
+      ],
+      "relative_pressure_residual" : 1.8502672180025141e-11,
+      "source_row_id" : "V1",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.9587,
+        0.021499999999999998,
+        0.019800000000000002
+      ],
+      "temperature_k" : 298.13799999999998,
+      "vapor_minimum_stability_eigenvalue" : 0.024883635895466976,
+      "vapor_molar_density_mol_m3" : 6412.5921106331798
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.96509999999999996,
+        0.016299999999999999,
+        0.018599999999999998
+      ],
+      "experimental_pressure_pa" : 7524300,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.011722692013582354,
+      "liquid_molar_density_mol_m3" : 14614.984372972734,
+      "maximum_log_fugacity_residual" : 2.0307519112086296e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L2",
+      "predicted_opposite_phase_composition" : [
+        0.96654444721599075,
+        0.01519247566051596,
+        0.018263077123493367
+      ],
+      "predicted_pressure_pa" : 7448081.7991018118,
+      "published_specified_composition" : [
+        0.93730000000000002,
+        0.031899999999999998,
+        0.030700000000000002
+      ],
+      "relative_pressure_residual" : 3.4943008039691375e-08,
+      "source_row_id" : "V2",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.93740000000000001,
+        0.031899999999999998,
+        0.030700000000000002
+      ],
+      "temperature_k" : 298.13299999999998,
+      "vapor_minimum_stability_eigenvalue" : 0.014871130002035184,
+      "vapor_molar_density_mol_m3" : 7191.5569179807389
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.95350000000000001,
+        0.021999999999999999,
+        0.024400000000000002
+      ],
+      "experimental_pressure_pa" : 7789200,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.0083407646941505414,
+      "liquid_molar_density_mol_m3" : 14175.766784053638,
+      "maximum_log_fugacity_residual" : 2.5734020884908514e-09,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L3",
+      "predicted_opposite_phase_composition" : [
+        0.95902792355617028,
+        0.018669208618109917,
+        0.022302867825719795
+      ],
+      "predicted_pressure_pa" : 7637792.8365776185,
+      "published_specified_composition" : [
+        0.92949999999999999,
+        0.0356,
+        0.035000000000000003
+      ],
+      "relative_pressure_residual" : 4.2218910676016777e-09,
+      "source_row_id" : "V3",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.9294,
+        0.0356,
+        0.035000000000000003
+      ],
+      "temperature_k" : 298.13099999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.010670824813137575,
+      "vapor_molar_density_mol_m3" : 7638.6312527759819
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.94399999999999995,
+        0.026599999999999999,
+        0.029399999999999999
+      ],
+      "experimental_pressure_pa" : 7928600,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.0084750415659777031,
+      "liquid_molar_density_mol_m3" : 14194.279343416023,
+      "maximum_log_fugacity_residual" : 9.8839900862869695e-09,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L4",
+      "predicted_opposite_phase_composition" : [
+        0.95929617544591728,
+        0.018277234859537302,
+        0.022426589694545456
+      ],
+      "predicted_pressure_pa" : 7627788.956369482,
+      "published_specified_composition" : [
+        0.92959999999999998,
+        0.035000000000000003,
+        0.035299999999999998
+      ],
+      "relative_pressure_residual" : 1.4286663186056552e-08,
+      "source_row_id" : "V4",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.92969999999999997,
+        0.035000000000000003,
+        0.035299999999999998
+      ],
+      "temperature_k" : 298.13099999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.01083546152031192,
+      "vapor_molar_density_mol_m3" : 7618.0667324496626
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.94869999999999999,
+        0.0246,
+        0.026700000000000002
+      ],
+      "experimental_pressure_pa" : 7877200,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.0079470731285457927,
+      "liquid_molar_density_mol_m3" : 14115.144396694781,
+      "maximum_log_fugacity_residual" : 5.2727253760733771e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L5",
+      "predicted_opposite_phase_composition" : [
+        0.9580374162320745,
+        0.019069707065729101,
+        0.022892876702196436
+      ],
+      "predicted_pressure_pa" : 7660649.6648993045,
+      "published_specified_composition" : [
+        0.92849999999999999,
+        0.035900000000000001,
+        0.0356
+      ],
+      "relative_pressure_residual" : 6.5250378532289562e-10,
+      "source_row_id" : "V5",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.92849999999999999,
+        0.035900000000000001,
+        0.0356
+      ],
+      "temperature_k" : 298.13,
+      "vapor_minimum_stability_eigenvalue" : 0.010180393530385501,
+      "vapor_molar_density_mol_m3" : 7698.7391318321761
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.98850000000000005,
+        0.0089999999999999993,
+        0.0023999999999999998
+      ],
+      "experimental_pressure_pa" : 6897800,
+      "iterations" : 9,
+      "liquid_minimum_stability_eigenvalue" : 0.024544014505481621,
+      "liquid_molar_density_mol_m3" : 15676.957706578321,
+      "maximum_log_fugacity_residual" : 4.930858141912704e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L6",
+      "predicted_opposite_phase_composition" : [
+        0.98867036860463753,
+        0.0088582652262545764,
+        0.0024713661691077781
+      ],
+      "predicted_pressure_pa" : 6866056.2643501256,
+      "published_specified_composition" : [
+        0.97099999999999997,
+        0.024,
+        0.0050000000000000001
+      ],
+      "relative_pressure_residual" : 9.0262878098302144e-08,
+      "source_row_id" : "V6",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.97099999999999997,
+        0.024,
+        0.0050000000000000001
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.030582660236923593,
+      "vapor_molar_density_mol_m3" : 6082.7243359164786
+    },
+    {
+      "co2_closure_adjustment" : -1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.97689999999999999,
+        0.0183,
+        0.0047999999999999996
+      ],
+      "experimental_pressure_pa" : 7305000,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.016632657410352861,
+      "liquid_molar_density_mol_m3" : 15137.052109991733,
+      "maximum_log_fugacity_residual" : 5.6936766401197692e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L7",
+      "predicted_opposite_phase_composition" : [
+        0.97733769442481011,
+        0.017834358102364889,
+        0.0048279474728249406
+      ],
+      "predicted_pressure_pa" : 7264838.6910318471,
+      "published_specified_composition" : [
+        0.94930000000000003,
+        0.0419,
+        0.0088000000000000005
+      ],
+      "relative_pressure_residual" : 6.9609492157714187e-10,
+      "source_row_id" : "V7",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.94929999999999992,
+        0.0419,
+        0.0088000000000000005
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.021065596440257409,
+      "vapor_molar_density_mol_m3" : 6705.8648371808858
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.96509999999999996,
+        0.027799999999999998,
+        0.0071000000000000004
+      ],
+      "experimental_pressure_pa" : 7669600,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.010761996864433658,
+      "liquid_molar_density_mol_m3" : 14567.065208124361,
+      "maximum_log_fugacity_residual" : 5.8326767418307578e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L8",
+      "predicted_opposite_phase_composition" : [
+        0.96694166125687564,
+        0.026281640091719006,
+        0.006776698651405455
+      ],
+      "predicted_pressure_pa" : 7595853.1561830789,
+      "published_specified_composition" : [
+        0.93479999999999996,
+        0.053900000000000003,
+        0.0112
+      ],
+      "relative_pressure_residual" : 4.4373216737842447e-10,
+      "source_row_id" : "V8",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.93489999999999995,
+        0.053900000000000003,
+        0.0112
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.013791445425980575,
+      "vapor_molar_density_mol_m3" : 7332.7816345255305
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.95509999999999995,
+        0.036200000000000003,
+        0.0088000000000000005
+      ],
+      "experimental_pressure_pa" : 7927700,
+      "iterations" : 22,
+      "liquid_minimum_stability_eigenvalue" : 0.0078389813679391896,
+      "liquid_molar_density_mol_m3" : 14176.316714694607,
+      "maximum_log_fugacity_residual" : 5.0359101362148964e-11,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L9",
+      "predicted_opposite_phase_composition" : [
+        0.9606220558516877,
+        0.031527028283683554,
+        0.0078509158646285788
+      ],
+      "predicted_pressure_pa" : 7778043.9122014437,
+      "published_specified_composition" : [
+        0.92849999999999999,
+        0.059299999999999999,
+        0.012200000000000001
+      ],
+      "relative_pressure_residual" : 1.2963355124585461e-10,
+      "source_row_id" : "V9",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.92849999999999999,
+        0.059299999999999999,
+        0.012200000000000001
+      ],
+      "temperature_k" : 298.12900000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.010149129508559606,
+      "vapor_molar_density_mol_m3" : 7743.8078721958373
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.98029999999999995,
+        0.0083000000000000001,
+        0.0115
+      ],
+      "experimental_pressure_pa" : 5254200,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -0.53401979924091847,
+      "liquid_molar_density_mol_m3" : 16273.885011714139,
+      "maximum_log_fugacity_residual" : 1.4334537922251851e-07,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L10",
+      "predicted_opposite_phase_composition" : [
+        0.9759859016497493,
+        0.010238367894206655,
+        0.013775730456043992
+      ],
+      "predicted_pressure_pa" : 5313112.8979844358,
+      "published_specified_composition" : [
+        0.91100000000000003,
+        0.047600000000000003,
+        0.041500000000000002
+      ],
+      "relative_pressure_residual" : 5.2292364256941594e-08,
+      "source_row_id" : "V10",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.91090000000000004,
+        0.047600000000000003,
+        0.041500000000000002
+      ],
+      "temperature_k" : 283.154,
+      "vapor_minimum_stability_eigenvalue" : 0.16320546634866634,
+      "vapor_molar_density_mol_m3" : 3787.0991201987608
+    },
+    {
+      "co2_closure_adjustment" : -1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.95499999999999996,
+        0.0201,
+        0.024899999999999999
+      ],
+      "experimental_pressure_pa" : 6143900,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.078869346662377396,
+      "liquid_molar_density_mol_m3" : 18567.622004582518,
+      "maximum_log_fugacity_residual" : 1.1246699400632454e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L11",
+      "predicted_opposite_phase_composition" : [
+        0.95384823551582554,
+        0.020261552098004235,
+        0.025890212386170251
+      ],
+      "predicted_pressure_pa" : 6135061.71007815,
+      "published_specified_composition" : [
+        0.83540000000000003,
+        0.090499999999999997,
+        0.074099999999999999
+      ],
+      "relative_pressure_residual" : 1.8302327292947889e-08,
+      "source_row_id" : "V11",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.83539999999999992,
+        0.090499999999999997,
+        0.074099999999999999
+      ],
+      "temperature_k" : 283.154,
+      "vapor_minimum_stability_eigenvalue" : 0.13027475215367904,
+      "vapor_molar_density_mol_m3" : 4479.1940154413387
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.92620000000000002,
+        0.035000000000000003,
+        0.038800000000000001
+      ],
+      "experimental_pressure_pa" : 7083600,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.051939892985429101,
+      "liquid_molar_density_mol_m3" : 17823.456829292281,
+      "maximum_log_fugacity_residual" : 1.1282081489369584e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L12",
+      "predicted_opposite_phase_composition" : [
+        0.92409658131775685,
+        0.035597607547712594,
+        0.040305811134530488
+      ],
+      "predicted_pressure_pa" : 7081644.8692367543,
+      "published_specified_composition" : [
+        0.78220000000000001,
+        0.1229,
+        0.094899999999999998
+      ],
+      "relative_pressure_residual" : 2.1948738900749202e-08,
+      "source_row_id" : "V12",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.78220000000000001,
+        0.1229,
+        0.094899999999999998
+      ],
+      "temperature_k" : 283.15499999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.08398859536223148,
+      "vapor_molar_density_mol_m3" : 5463.0820620472314
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.90549999999999997,
+        0.044900000000000002,
+        0.049599999999999998
+      ],
+      "experimental_pressure_pa" : 7673800,
+      "iterations" : 6,
+      "liquid_minimum_stability_eigenvalue" : 0.037446054467867841,
+      "liquid_molar_density_mol_m3" : 17236.502428257398,
+      "maximum_log_fugacity_residual" : 3.1978127706457885e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L13",
+      "predicted_opposite_phase_composition" : [
+        0.90297333604692631,
+        0.045706535192217818,
+        0.051320128760855899
+      ],
+      "predicted_pressure_pa" : 7662509.519234119,
+      "published_specified_composition" : [
+        0.75970000000000004,
+        0.13339999999999999,
+        0.10680000000000001
+      ],
+      "relative_pressure_residual" : 1.0532463652564563e-07,
+      "source_row_id" : "V13",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.75980000000000003,
+        0.13339999999999999,
+        0.10680000000000001
+      ],
+      "temperature_k" : 283.15499999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.058587673371275122,
+      "vapor_molar_density_mol_m3" : 6186.2900645962145
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.8831,
+        0.0567,
+        0.060199999999999997
+      ],
+      "experimental_pressure_pa" : 8263600,
+      "iterations" : 9,
+      "liquid_minimum_stability_eigenvalue" : 0.025639629406025346,
+      "liquid_molar_density_mol_m3" : 16572.538269769346,
+      "maximum_log_fugacity_residual" : 3.2301737437675687e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L14",
+      "predicted_opposite_phase_composition" : [
+        0.88119809816331995,
+        0.054981912035544603,
+        0.063819989801135402
+      ],
+      "predicted_pressure_pa" : 8174683.4251015205,
+      "published_specified_composition" : [
+        0.74629999999999996,
+        0.13589999999999999,
+        0.1179
+      ],
+      "relative_pressure_residual" : 1.0415561959146252e-07,
+      "source_row_id" : "V14",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.74619999999999997,
+        0.13589999999999999,
+        0.1179
+      ],
+      "temperature_k" : 283.15499999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.038240030077193884,
+      "vapor_molar_density_mol_m3" : 6958.937033500315
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.85260000000000002,
+        0.070900000000000005,
+        0.076600000000000001
+      ],
+      "experimental_pressure_pa" : 8681800,
+      "iterations" : 11,
+      "liquid_minimum_stability_eigenvalue" : 0.022019811402480792,
+      "liquid_molar_density_mol_m3" : 16318.640909610704,
+      "maximum_log_fugacity_residual" : 4.8829958201538017e-12,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L15",
+      "predicted_opposite_phase_composition" : [
+        0.87343672761164148,
+        0.058381489348127709,
+        0.068181783040230759
+      ],
+      "predicted_pressure_pa" : 8342213.6629723022,
+      "published_specified_composition" : [
+        0.74319999999999997,
+        0.13600000000000001,
+        0.1208
+      ],
+      "relative_pressure_residual" : 1.7174657790747227e-11,
+      "source_row_id" : "V15",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.74319999999999997,
+        0.13600000000000001,
+        0.1208
+      ],
+      "temperature_k" : 283.15499999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.032191753737859187,
+      "vapor_molar_density_mol_m3" : 7248.7096991930975
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.98740000000000006,
+        0.0050000000000000001,
+        0.0076
+      ],
+      "experimental_pressure_pa" : 3989400,
+      "iterations" : 5,
+      "liquid_minimum_stability_eigenvalue" : -0.78116583839838083,
+      "liquid_molar_density_mol_m3" : 17922.017440004594,
+      "maximum_log_fugacity_residual" : 1.8086062439647038e-09,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L16",
+      "predicted_opposite_phase_composition" : [
+        0.98535477766403523,
+        0.0057943067734614415,
+        0.0088509155625033243
+      ],
+      "predicted_pressure_pa" : 4046672.2408867208,
+      "published_specified_composition" : [
+        0.91339999999999999,
+        0.0465,
+        0.040099999999999997
+      ],
+      "relative_pressure_residual" : 7.3915522581341414e-10,
+      "source_row_id" : "V16",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.91339999999999999,
+        0.0465,
+        0.040099999999999997
+      ],
+      "temperature_k" : 273.16699999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.34603529235597497,
+      "vapor_molar_density_mol_m3" : 2643.0417604080039
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.95269999999999999,
+        0.0195,
+        0.027699999999999999
+      ],
+      "experimental_pressure_pa" : 5250800,
+      "iterations" : 13,
+      "liquid_minimum_stability_eigenvalue" : -7.0167368508117445,
+      "liquid_molar_density_mol_m3" : 14074.839384653276,
+      "maximum_log_fugacity_residual" : 1.9052972913372782e-08,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L17",
+      "predicted_opposite_phase_composition" : [
+        0.85671236140297036,
+        0.071645367342378891,
+        0.071642271254650933
+      ],
+      "predicted_pressure_pa" : 7762478.4604558535,
+      "published_specified_composition" : [
+        0.76629999999999998,
+        0.1263,
+        0.10730000000000001
+      ],
+      "relative_pressure_residual" : 3.5949690791286938e-08,
+      "source_row_id" : "V17",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.76639999999999997,
+        0.1263,
+        0.10730000000000001
+      ],
+      "temperature_k" : 273.166,
+      "vapor_minimum_stability_eigenvalue" : -0.021746206061238268,
+      "vapor_molar_density_mol_m3" : 11095.291091108909
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.92259999999999998,
+        0.033000000000000002,
+        0.044400000000000002
+      ],
+      "experimental_pressure_pa" : 6259900,
+      "iterations" : 15,
+      "liquid_minimum_stability_eigenvalue" : -10.002292707624914,
+      "liquid_molar_density_mol_m3" : 14044.8148364711,
+      "maximum_log_fugacity_residual" : 2.9433902279697197e-11,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L18",
+      "predicted_opposite_phase_composition" : [
+        0.85881645314653809,
+        0.06717881804722986,
+        0.074004728806231962
+      ],
+      "predicted_pressure_pa" : 8430690.7522979435,
+      "published_specified_composition" : [
+        0.69669999999999999,
+        0.16450000000000001,
+        0.1389
+      ],
+      "relative_pressure_residual" : 3.633119783765642e-11,
+      "source_row_id" : "V18",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.6966,
+        0.16450000000000001,
+        0.1389
+      ],
+      "temperature_k" : 273.166,
+      "vapor_minimum_stability_eigenvalue" : -0.0039794601232765294,
+      "vapor_molar_density_mol_m3" : 8629.7822463823468
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.89129999999999998,
+        0.047800000000000002,
+        0.060900000000000003
+      ],
+      "experimental_pressure_pa" : 7212900,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.062655646859602496,
+      "liquid_molar_density_mol_m3" : 18911.66809514847,
+      "maximum_log_fugacity_residual" : 2.8853639959111786e-10,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L19",
+      "predicted_opposite_phase_composition" : [
+        0.88591317540162207,
+        0.049948420679660412,
+        0.064138403918717515
+      ],
+      "predicted_pressure_pa" : 7269495.9916462786,
+      "published_specified_composition" : [
+        0.65490000000000004,
+        0.1875,
+        0.1575
+      ],
+      "relative_pressure_residual" : 8.0668849882432372e-10,
+      "source_row_id" : "V19",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.65500000000000003,
+        0.1875,
+        0.1575
+      ],
+      "temperature_k" : 273.16699999999997,
+      "vapor_minimum_stability_eigenvalue" : 0.12525695629650435,
+      "vapor_molar_density_mol_m3" : 5379.9641586938305
+    },
+    {
+      "co2_closure_adjustment" : 0.00010000000000010001,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.85650000000000004,
+        0.065199999999999994,
+        0.078299999999999995
+      ],
+      "experimental_pressure_pa" : 8157800,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.040011539539316951,
+      "liquid_molar_density_mol_m3" : 18056.738570702913,
+      "maximum_log_fugacity_residual" : 2.0523371706612104e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L20",
+      "predicted_opposite_phase_composition" : [
+        0.84949614599018874,
+        0.068436324063496617,
+        0.082067529946314527
+      ],
+      "predicted_pressure_pa" : 8220400.2379196277,
+      "published_specified_composition" : [
+        0.63190000000000002,
+        0.2001,
+        0.16789999999999999
+      ],
+      "relative_pressure_residual" : 8.2774760261076268e-08,
+      "source_row_id" : "V20",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.63200000000000012,
+        0.2001,
+        0.16789999999999999
+      ],
+      "temperature_k" : 273.16800000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.074300928320299081,
+      "vapor_molar_density_mol_m3" : 6497.9917292953533
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.82940000000000003,
+        0.079399999999999998,
+        0.091200000000000003
+      ],
+      "experimental_pressure_pa" : 8790000,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.029686920179528835,
+      "liquid_molar_density_mol_m3" : 17501.757380065446,
+      "maximum_log_fugacity_residual" : 4.7535578286031619e-08,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L21",
+      "predicted_opposite_phase_composition" : [
+        0.82809848387445795,
+        0.079511883846843476,
+        0.092389632278698633
+      ],
+      "predicted_pressure_pa" : 8708812.9185461141,
+      "published_specified_composition" : [
+        0.62670000000000003,
+        0.2021,
+        0.17119999999999999
+      ],
+      "relative_pressure_residual" : 1.8205756726106232e-07,
+      "source_row_id" : "V21",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.62670000000000003,
+        0.2021,
+        0.17119999999999999
+      ],
+      "temperature_k" : 273.17000000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.051927410399240016,
+      "vapor_molar_density_mol_m3" : 7189.4637062451957
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.80310000000000004,
+        0.093899999999999997,
+        0.10299999999999999
+      ],
+      "experimental_pressure_pa" : 9307600,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.037002575206042269,
+      "liquid_molar_density_mol_m3" : 17905.360701328038,
+      "maximum_log_fugacity_residual" : 1.9028604638198956e-12,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L22",
+      "predicted_opposite_phase_composition" : [
+        0.84349377696449923,
+        0.07090755775968996,
+        0.085598665275810781
+      ],
+      "predicted_pressure_pa" : 8350824.098804744,
+      "published_specified_composition" : [
+        0.63009999999999999,
+        0.19950000000000001,
+        0.1704
+      ],
+      "relative_pressure_residual" : 1.6069584054051812e-12,
+      "source_row_id" : "V22",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.63009999999999999,
+        0.19950000000000001,
+        0.1704
+      ],
+      "temperature_k" : 273.17000000000002,
+      "vapor_minimum_stability_eigenvalue" : 0.067712790768523684,
+      "vapor_molar_density_mol_m3" : 6680.3235835708947
+    },
+    {
+      "co2_closure_adjustment" : 1.1102230246251565e-16,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.99099999999999999,
+        0.0033,
+        0.0057000000000000002
+      ],
+      "experimental_pressure_pa" : 2333600,
+      "iterations" : 13,
+      "liquid_minimum_stability_eigenvalue" : 0.3576888030773146,
+      "liquid_molar_density_mol_m3" : 23326.22617632943,
+      "maximum_log_fugacity_residual" : 6.9132932315398865e-14,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L23",
+      "predicted_opposite_phase_composition" : [
+        0.9910461638443232,
+        0.003172408542604109,
+        0.0057814276130726417
+      ],
+      "predicted_pressure_pa" : 2325872.4832170662,
+      "published_specified_composition" : [
+        0.87739999999999996,
+        0.066799999999999998,
+        0.055800000000000002
+      ],
+      "relative_pressure_residual" : 4.1777232874466857e-10,
+      "source_row_id" : "V23",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.87740000000000007,
+        0.066799999999999998,
+        0.055800000000000002
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : 1.0014141605459903,
+      "vapor_molar_density_mol_m3" : 1395.9921311486298
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.98209999999999997,
+        0.0066,
+        0.011299999999999999
+      ],
+      "experimental_pressure_pa" : 2682500,
+      "iterations" : 10,
+      "liquid_minimum_stability_eigenvalue" : 0.31509340251452161,
+      "liquid_molar_density_mol_m3" : 23203.099874786192,
+      "maximum_log_fugacity_residual" : 1.0102747199458557e-07,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L24",
+      "predicted_opposite_phase_composition" : [
+        0.98151904067949691,
+        0.0067147625190785354,
+        0.011766196801424413
+      ],
+      "predicted_pressure_pa" : 2695233.6024551871,
+      "published_specified_composition" : [
+        0.7843,
+        0.11840000000000001,
+        0.097299999999999998
+      ],
+      "relative_pressure_residual" : 9.5752482735046759e-08,
+      "source_row_id" : "V24",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.7843,
+        0.11840000000000001,
+        0.097299999999999998
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.9308205169785353,
+      "vapor_molar_density_mol_m3" : 1628.7033470331789
+    },
+    {
+      "co2_closure_adjustment" : 9.9999999999988987e-05,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.97270000000000001,
+        0.010200000000000001,
+        0.017100000000000001
+      ],
+      "experimental_pressure_pa" : 3041300,
+      "iterations" : 8,
+      "liquid_minimum_stability_eigenvalue" : 0.27863922571923111,
+      "liquid_molar_density_mol_m3" : 23075.064005354139,
+      "maximum_log_fugacity_residual" : 5.3713483753699337e-11,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L25",
+      "predicted_opposite_phase_composition" : [
+        0.97176984242929731,
+        0.010422571805543538,
+        0.017807585765159274
+      ],
+      "predicted_pressure_pa" : 3062790.4657435389,
+      "published_specified_composition" : [
+        0.71360000000000001,
+        0.1575,
+        0.1288
+      ],
+      "relative_pressure_residual" : 3.4566170196903515e-09,
+      "source_row_id" : "V25",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.7137,
+        0.1575,
+        0.1288
+      ],
+      "temperature_k" : 253.16300000000001,
+      "vapor_minimum_stability_eigenvalue" : 0.86368310517692382,
+      "vapor_molar_density_mol_m3" : 1865.1937042220447
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.96289999999999998,
+        0.0141,
+        0.023099999999999999
+      ],
+      "experimental_pressure_pa" : 3409100,
+      "iterations" : 20,
+      "liquid_minimum_stability_eigenvalue" : -5.1438421861321313,
+      "liquid_molar_density_mol_m3" : 15699.575058725428,
+      "maximum_log_fugacity_residual" : 8.0858741797744456e-11,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L26",
+      "predicted_opposite_phase_composition" : [
+        0.76075790968610302,
+        0.12460449265911833,
+        0.11463759765477878
+      ],
+      "predicted_pressure_pa" : 7633169.0814754954,
+      "published_specified_composition" : [
+        0.65659999999999996,
+        0.1893,
+        0.15409999999999999
+      ],
+      "relative_pressure_residual" : 3.760292961068265e-10,
+      "source_row_id" : "V26",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.65659999999999996,
+        0.1893,
+        0.15409999999999999
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : -0.033326430803960846,
+      "vapor_molar_density_mol_m3" : 13384.737343781353
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.95230000000000004,
+        0.0183,
+        0.029399999999999999
+      ],
+      "experimental_pressure_pa" : 3796900,
+      "iterations" : 18,
+      "liquid_minimum_stability_eigenvalue" : -6.931323685306193,
+      "liquid_molar_density_mol_m3" : 15673.479329664608,
+      "maximum_log_fugacity_residual" : 6.2687409787138045e-10,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L27",
+      "predicted_opposite_phase_composition" : [
+        0.76277352494798856,
+        0.12073946833434603,
+        0.11648700671766535
+      ],
+      "predicted_pressure_pa" : 8482916.0401068162,
+      "published_specified_composition" : [
+        0.61019999999999996,
+        0.21529999999999999,
+        0.17449999999999999
+      ],
+      "relative_pressure_residual" : 1.2776383466230474e-09,
+      "source_row_id" : "V27",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.61019999999999996,
+        0.21529999999999999,
+        0.17449999999999999
+      ],
+      "temperature_k" : 253.16200000000001,
+      "vapor_minimum_stability_eigenvalue" : -0.031558255844596532,
+      "vapor_molar_density_mol_m3" : 12217.229848768327
+    },
+    {
+      "co2_closure_adjustment" : 1.1102230246251565e-16,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.99719999999999998,
+        0.00089999999999999998,
+        0.0018
+      ],
+      "experimental_pressure_pa" : 796300,
+      "iterations" : 27,
+      "liquid_minimum_stability_eigenvalue" : -37.050893794460968,
+      "liquid_molar_density_mol_m3" : 6427.4041578631468,
+      "maximum_log_fugacity_residual" : 5.0929748235948049e-09,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L28",
+      "predicted_opposite_phase_composition" : [
+        0.99999999999999845,
+        4.2223258476995165e-19,
+        1.6331002001358359e-15
+      ],
+      "predicted_pressure_pa" : -238302814.40519908,
+      "published_specified_composition" : [
+        0.87339999999999995,
+        0.070800000000000002,
+        0.055800000000000002
+      ],
+      "relative_pressure_residual" : 9.172703827706916e-11,
+      "source_row_id" : "V28",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.87340000000000007,
+        0.070800000000000002,
+        0.055800000000000002
+      ],
+      "temperature_k" : 223.15100000000001,
+      "vapor_minimum_stability_eigenvalue" : -410.48088523789943,
+      "vapor_molar_density_mol_m3" : 5614.0024059462103
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.99250000000000005,
+        0.0023999999999999998,
+        0.0051000000000000004
+      ],
+      "experimental_pressure_pa" : 994800,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : 0.6055301935609656,
+      "liquid_molar_density_mol_m3" : 26159.71271677404,
+      "maximum_log_fugacity_residual" : 1.9117420071566148e-14,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L29",
+      "predicted_opposite_phase_composition" : [
+        0.99262753205102938,
+        0.0024136037176473186,
+        0.0049588642313234269
+      ],
+      "predicted_pressure_pa" : 996518.40150993934,
+      "published_specified_composition" : [
+        0.71450000000000002,
+        0.16059999999999999,
+        0.1249
+      ],
+      "relative_pressure_residual" : 1.5413839968238532e-09,
+      "source_row_id" : "V29",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.71450000000000002,
+        0.16059999999999999,
+        0.1249
+      ],
+      "temperature_k" : 223.15100000000001,
+      "vapor_minimum_stability_eigenvalue" : 3.4502976505860965,
+      "vapor_molar_density_mol_m3" : 596.86409025673049
+    },
+    {
+      "co2_closure_adjustment" : -9.9999999999988987e-05,
+      "converged" : false,
+      "equilibrium_status" : 6,
+      "error" : "N-component VLE did not converge to a distinct stable phase split.",
+      "experimental_opposite_phase_composition" : [
+        0.9899,
+        0.0033,
+        0.0067999999999999996
+      ],
+      "experimental_pressure_pa" : 1097300,
+      "iterations" : 7,
+      "liquid_minimum_stability_eigenvalue" : -3.2983363539137072,
+      "liquid_molar_density_mol_m3" : 19771.619343772509,
+      "maximum_log_fugacity_residual" : 7.4803368622361962e-13,
+      "native_status" : 7,
+      "paired_opposite_row_id" : "L30",
+      "predicted_opposite_phase_composition" : [
+        0.97388895349747151,
+        0.010093381180017343,
+        0.016017665322511226
+      ],
+      "predicted_pressure_pa" : 1323633.4917456587,
+      "published_specified_composition" : [
+        0.65369999999999995,
+        0.19500000000000001,
+        0.15140000000000001
+      ],
+      "relative_pressure_residual" : 1.4095884039554937e-08,
+      "source_row_id" : "V30",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.65359999999999996,
+        0.19500000000000001,
+        0.15140000000000001
+      ],
+      "temperature_k" : 223.15000000000001,
+      "vapor_minimum_stability_eigenvalue" : 2.5768142549802691,
+      "vapor_molar_density_mol_m3" : 814.56689084113998
+    },
+    {
+      "co2_closure_adjustment" : 0,
+      "converged" : true,
+      "equilibrium_status" : 0,
+      "error" : "",
+      "experimental_opposite_phase_composition" : [
+        0.98670000000000002,
+        0.0044000000000000003,
+        0.0088999999999999999
+      ],
+      "experimental_pressure_pa" : 1223300,
+      "iterations" : 9,
+      "liquid_minimum_stability_eigenvalue" : 0.53970920726322003,
+      "liquid_molar_density_mol_m3" : 26101.946284405643,
+      "maximum_log_fugacity_residual" : 6.8626636154340016e-15,
+      "native_status" : 0,
+      "paired_opposite_row_id" : "L31",
+      "predicted_opposite_phase_composition" : [
+        0.98693597725619986,
+        0.0043329651551003929,
+        0.0087310575886997283
+      ],
+      "predicted_pressure_pa" : 1233773.0706297248,
+      "published_specified_composition" : [
+        0.59370000000000001,
+        0.22889999999999999,
+        0.1774
+      ],
+      "relative_pressure_residual" : 3.3344121570791184e-10,
+      "source_row_id" : "V31",
+      "specification" : "dew",
+      "specified_composition" : [
+        0.59370000000000001,
+        0.22889999999999999,
+        0.1774
+      ],
+      "temperature_k" : 223.15100000000001,
+      "vapor_minimum_stability_eigenvalue" : 3.2957710429558666,
+      "vapor_molar_density_mol_m3" : 741.80174809686525
+    }
+  ],
+  "runtime_ms" : {
+    "mean" : 457.66387639507172,
+    "median" : 471.32706642150879,
+    "worst" : 1299.4810342788696
+  },
+  "source_doi" : "10.1016\/j.fluid.2019.112444",
+  "teqp_commit" : "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+  "teqp_version" : "v0.23.1"
+}

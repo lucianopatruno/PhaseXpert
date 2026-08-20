@@ -116,6 +116,39 @@ typedef struct PXTeqpNComponentDensityResult {
     PXTeqpPhase phase;
 } PXTeqpNComponentDensityResult;
 
+typedef enum PXTeqpEquilibriumSpecification {
+    PXTeqpEquilibriumBubble = 1,
+    PXTeqpEquilibriumDew = 2
+} PXTeqpEquilibriumSpecification;
+
+typedef enum PXTeqpEquilibriumStatus {
+    PXTeqpEquilibriumConverged = 0,
+    PXTeqpEquilibriumMaximumIterations = 1,
+    PXTeqpEquilibriumStagnated = 2,
+    PXTeqpEquilibriumIllConditioned = 3,
+    PXTeqpEquilibriumNoDistinctPhaseSplit = 4,
+    PXTeqpEquilibriumInvalidInput = 5,
+    PXTeqpEquilibriumThermodynamicFailure = 6
+} PXTeqpEquilibriumStatus;
+
+typedef struct PXTeqpNComponentVLEResult {
+    int converged;
+    int iteration_count;
+    PXTeqpEquilibriumStatus status;
+    double pressure_pa;
+    double liquid_molar_density_mol_m3;
+    double vapor_molar_density_mol_m3;
+    double maximum_log_fugacity_residual;
+    double relative_pressure_residual;
+    double liquid_minimum_stability_eigenvalue;
+    double vapor_minimum_stability_eigenvalue;
+} PXTeqpNComponentVLEResult;
+
+typedef struct PXTeqpPhaseThermodynamicResult {
+    double pressure_pa;
+    double minimum_stability_eigenvalue;
+} PXTeqpPhaseThermodynamicResult;
+
 typedef struct PXTeqpMixtureThermodynamicResult {
     double density_kg_m3;
     double molar_density_mol_m3;
@@ -244,6 +277,33 @@ int px_teqp_calculate_ncomponent_density(
     double pressure_pa,
     double temperature_k,
     PXTeqpNComponentDensityResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_calculate_ncomponent_vle(
+    const int *component_ids,
+    const double *specified_mole_fractions,
+    size_t component_count,
+    double temperature_k,
+    PXTeqpEquilibriumSpecification specification,
+    double *liquid_mole_fractions,
+    size_t liquid_mole_fractions_length,
+    double *vapor_mole_fractions,
+    size_t vapor_mole_fractions_length,
+    PXTeqpNComponentVLEResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_evaluate_ncomponent_phase(
+    const int *component_ids,
+    const double *partial_molar_densities_mol_m3,
+    size_t component_count,
+    double temperature_k,
+    double *chemical_potentials_j_mol,
+    size_t chemical_potentials_length,
+    PXTeqpPhaseThermodynamicResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );

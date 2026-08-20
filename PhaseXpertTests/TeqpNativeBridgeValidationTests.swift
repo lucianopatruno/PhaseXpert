@@ -84,6 +84,149 @@ private struct NativeBinaryCriticalState {
 /// XCFramework is an iOS-only artifact. They skip when that generated local
 /// artifact is absent rather than substituting a mock engine.
 final class TeqpNativeBridgeValidationTests: XCTestCase {
+    func testDiagnosticTernaryBubbleAndDewVLE() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let ids = [PXTeqpComponentCarbonDioxide.rawValue, PXTeqpComponentNitrogen.rawValue, PXTeqpComponentMethane.rawValue]
+        for (specification, composition) in [
+            (PXTeqpEquilibriumBubble, [0.9807, 0.0089, 0.0104]),
+            (PXTeqpEquilibriumDew, [0.9587, 0.0215, 0.0198])
+        ] {
+            var ids = ids.map(Int32.init)
+            var composition = composition
+            var liquid = [Double](repeating: 0, count: 3)
+            var vapor = [Double](repeating: 0, count: 3)
+            var result = PXTeqpNComponentVLEResult()
+            var error = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_ncomponent_vle(
+                &ids, &composition, 3, 298.138, specification,
+                &liquid, liquid.count, &vapor, vapor.count,
+                &result, &error, error.count
+            )
+            print("TERNARY-VLE", specification.rawValue, status, result.converged, result.pressure_pa, liquid, vapor, String(cString: error))
+            XCTAssertEqual(status, 0, String(cString: error))
+            XCTAssertEqual(result.converged, 1)
+        }
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
+    func testOttøyTernaryVLEValidationMatrix() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        struct Row: Decodable {
+            let id: String
+            let identity: String
+            let temperature_k: Double
+            let pressure_mpa: Double
+            let composition_mole_fraction: [String: Double]
+        }
+        struct Artifact: Decodable { let rows: [Row] }
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Documentation/Validation/Ottoy2020TernaryVLE.json")
+        let rows = try JSONDecoder().decode(Artifact.self, from: Data(contentsOf: url)).rows
+        let bubbles = rows.filter { $0.identity == "bubble" }
+        let dews = rows.filter { $0.identity == "dew" }
+        XCTAssertEqual(bubbles.count, 31)
+        XCTAssertEqual(dews.count, 31)
+        var outputRows: [[String: Any]] = []
+        var runtimes: [Double] = []
+        for (specification, specifiedRows, oppositeRows) in [
+            (PXTeqpEquilibriumBubble, bubbles, dews),
+            (PXTeqpEquilibriumDew, dews, bubbles)
+        ] {
+            for (row, opposite) in zip(specifiedRows, oppositeRows) {
+                var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
+                let publishedComposition = ["co2", "n2", "ch4"].map { row.composition_mole_fraction[$0]! }
+                var specified = publishedComposition
+                // Ottøy reports four decimal places; explicitly close CO₂ by the
+                // published rounding residual rather than normalizing every component.
+                specified[0] = 1.0 - specified[1] - specified[2]
+                var liquid = [Double](repeating: 0, count: 3)
+                var vapor = [Double](repeating: 0, count: 3)
+                var result = PXTeqpNComponentVLEResult()
+                var error = [CChar](repeating: 0, count: 512)
+                let started = CFAbsoluteTimeGetCurrent()
+                let status = px_teqp_calculate_ncomponent_vle(
+                    &ids, &specified, 3, row.temperature_k, specification,
+                    &liquid, 3, &vapor, 3, &result, &error, error.count
+                )
+                runtimes.append((CFAbsoluteTimeGetCurrent() - started) * 1000)
+                let predictedOpposite = specification == PXTeqpEquilibriumBubble ? vapor : liquid
+                let experimentalOpposite = ["co2", "n2", "ch4"].map { opposite.composition_mole_fraction[$0]! }
+                outputRows.append([
+                    "source_row_id": row.id,
+                    "paired_opposite_row_id": opposite.id,
+                    "specification": specification == PXTeqpEquilibriumBubble ? "bubble" : "dew",
+                    "temperature_k": row.temperature_k,
+                    "experimental_pressure_pa": row.pressure_mpa * 1e6,
+                    "predicted_pressure_pa": result.pressure_pa,
+                    "specified_composition": specified,
+                    "published_specified_composition": publishedComposition,
+                    "co2_closure_adjustment": specified[0] - publishedComposition[0],
+                    "experimental_opposite_phase_composition": experimentalOpposite,
+                    "predicted_opposite_phase_composition": predictedOpposite,
+                    "converged": status == 0 && result.converged == 1,
+                    "native_status": status,
+                    "equilibrium_status": result.status.rawValue,
+                    "iterations": result.iteration_count,
+                    "maximum_log_fugacity_residual": result.maximum_log_fugacity_residual,
+                    "relative_pressure_residual": result.relative_pressure_residual,
+                    "liquid_molar_density_mol_m3": result.liquid_molar_density_mol_m3,
+                    "vapor_molar_density_mol_m3": result.vapor_molar_density_mol_m3,
+                    "liquid_minimum_stability_eigenvalue": result.liquid_minimum_stability_eigenvalue,
+                    "vapor_minimum_stability_eigenvalue": result.vapor_minimum_stability_eigenvalue,
+                    "error": String(cString: error)
+                ])
+            }
+        }
+        let payload: [String: Any] = [
+            "source_doi": "10.1016/j.fluid.2019.112444",
+            "teqp_version": "v0.23.1",
+            "teqp_commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+            "rows": outputRows,
+            "runtime_ms": ["median": runtimes.sorted()[runtimes.count / 2], "mean": runtimes.reduce(0, +) / Double(runtimes.count), "worst": runtimes.max()!]
+        ]
+        let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: URL(fileURLWithPath: "/tmp/Ottoy2020TernaryVLEPredictions.json"))
+        let converged = outputRows.filter { ($0["converged"] as? Bool) == true }.count
+        XCTAssertEqual(converged, 44)
+        XCTAssertEqual(outputRows.filter { ($0["specification"] as? String) == "bubble" && ($0["converged"] as? Bool) == true }.count, 21)
+        XCTAssertEqual(outputRows.filter { ($0["specification"] as? String) == "dew" && ($0["converged"] as? Bool) == true }.count, 23)
+        print("OTTOY-SUMMARY rows=\(outputRows.count) converged=\(converged) runtime=\(payload["runtime_ms"]!)")
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
+    func testTernaryVLEIsDeterministicAndRejectsUnclosedComposition() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        func solve(_ composition: [Double]) -> (Int32, PXTeqpNComponentVLEResult, [Double], [Double], String) {
+            var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
+            var composition = composition
+            var liquid = [Double](repeating: 0, count: 3)
+            var vapor = [Double](repeating: 0, count: 3)
+            var result = PXTeqpNComponentVLEResult()
+            var error = [CChar](repeating: 0, count: 512)
+            let status = px_teqp_calculate_ncomponent_vle(
+                &ids, &composition, 3, 298.138, PXTeqpEquilibriumBubble,
+                &liquid, 3, &vapor, 3, &result, &error, error.count
+            )
+            return (status, result, liquid, vapor, String(cString: error))
+        }
+        let first = solve([0.9807, 0.0089, 0.0104])
+        let second = solve([0.9807, 0.0089, 0.0104])
+        XCTAssertEqual(first.0, 0)
+        XCTAssertEqual(first.1.pressure_pa, second.1.pressure_pa, accuracy: 1e-8)
+        XCTAssertEqual(first.2, second.2)
+        XCTAssertEqual(first.3, second.3)
+        let invalid = solve([0.9806, 0.0089, 0.0104])
+        XCTAssertEqual(invalid.0, 6)
+        XCTAssertTrue(invalid.4.contains("sum to one"))
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
     private struct SaturationState {
         let pressurePa: Double
         let liquidDensityKilogramsPerCubicMetre: Double

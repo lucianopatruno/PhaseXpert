@@ -431,6 +431,13 @@ double molar_mass_from_component_json(const std::string &component_json) {
     return fluid_json.at("EOS").at(0).at("molar_mass").get<double>();
 }
 
+template<typename Model>
+double minimum_stability_eigenvalue(
+    const Model &model,
+    double temperature_k,
+    const Eigen::ArrayXd &rhovec
+);
+
 class NComponentMultifluidModel {
 public:
     using Model = decltype(teqp::build_multifluid_JSONstr(
@@ -479,6 +486,37 @@ public:
                 * molar_masses_kg_mol_[static_cast<std::size_t>(index)];
         }
         return molar_mass;
+    }
+
+    auto psirDerivatives(double temperature_k, const Eigen::ArrayXd &rhovec) const {
+        using Derivatives = teqp::IsochoricDerivatives<Model, double, Eigen::ArrayXd>;
+        return Derivatives::build_Psir_fgradHessian_autodiff(
+            model_, temperature_k, rhovec
+        );
+    }
+
+    double gasConstant(const Eigen::ArrayXd &molefractions) const {
+        return model_.R(molefractions);
+    }
+
+    Eigen::ArrayXd chemicalPotentials(
+        double temperature_k,
+        const Eigen::ArrayXd &rhovec
+    ) const {
+        if ((rhovec <= 0.0).any() || !rhovec.isFinite().all()) {
+            throw std::runtime_error("Chemical potentials require finite positive partial densities.");
+        }
+        const auto derivatives = psirDerivatives(temperature_k, rhovec);
+        const Eigen::ArrayXd composition = (rhovec / rhovec.sum()).eval();
+        return (std::get<1>(derivatives).array()
+            + gasConstant(composition) * temperature_k * rhovec.log()).eval();
+    }
+
+    double minimumStabilityEigenvalue(
+        double temperature_k,
+        const Eigen::ArrayXd &rhovec
+    ) const {
+        return minimum_stability_eigenvalue(model_, temperature_k, rhovec);
     }
 
 private:
@@ -2571,6 +2609,238 @@ void fill_binary_critical_result(
     result->third_order_residual = critical.third_order_residual;
 }
 
+struct NComponentVLEState {
+    bool converged = false;
+    int iterations = 0;
+    PXTeqpEquilibriumStatus status = PXTeqpEquilibriumMaximumIterations;
+    double pressure_pa = std::numeric_limits<double>::quiet_NaN();
+    Eigen::ArrayXd liquid_composition;
+    Eigen::ArrayXd vapor_composition;
+    double liquid_density = std::numeric_limits<double>::quiet_NaN();
+    double vapor_density = std::numeric_limits<double>::quiet_NaN();
+    double fugacity_residual = std::numeric_limits<double>::infinity();
+    double pressure_residual = std::numeric_limits<double>::infinity();
+    double liquid_stability = std::numeric_limits<double>::quiet_NaN();
+    double vapor_stability = std::numeric_limits<double>::quiet_NaN();
+};
+
+Eigen::ArrayXd composition_from_log_ratios(const Eigen::VectorXd &ratios) {
+    Eigen::ArrayXd weights(ratios.size() + 1);
+    const double shift = std::max(0.0, ratios.maxCoeff());
+    for (Eigen::Index i = 0; i < ratios.size(); ++i) {
+        weights[i] = std::exp(std::clamp(ratios[i] - shift, -700.0, 700.0));
+    }
+    weights[ratios.size()] = std::exp(-shift);
+    return (weights / weights.sum()).eval();
+}
+
+Eigen::VectorXd log_ratios_from_composition(const Eigen::ArrayXd &composition) {
+    Eigen::VectorXd ratios(composition.size() - 1);
+    const double reference = std::max(1e-14, composition[composition.size() - 1]);
+    for (Eigen::Index i = 0; i < ratios.size(); ++i) {
+        ratios[i] = std::log(std::max(1e-14, composition[i]) / reference);
+    }
+    return ratios;
+}
+
+Eigen::VectorXd ncomponent_vle_residual(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    const Eigen::ArrayXd &specified,
+    PXTeqpEquilibriumSpecification specification,
+    const Eigen::VectorXd &variables,
+    Eigen::ArrayXd *liquid_out = nullptr,
+    Eigen::ArrayXd *vapor_out = nullptr
+) {
+    const Eigen::Index count = specified.size();
+    const double rho_liquid = std::exp(std::clamp(variables[0], -20.0, 12.0));
+    const double rho_vapor = std::exp(std::clamp(variables[1], -20.0, 12.0));
+    const Eigen::ArrayXd unknown = composition_from_log_ratios(
+        variables.segment(2, count - 1)
+    );
+    const Eigen::ArrayXd liquid = specification == PXTeqpEquilibriumBubble
+        ? specified : unknown;
+    const Eigen::ArrayXd vapor = specification == PXTeqpEquilibriumBubble
+        ? unknown : specified;
+    const Eigen::ArrayXd rho_liquid_vector = rho_liquid * liquid;
+    const Eigen::ArrayXd rho_vapor_vector = rho_vapor * vapor;
+    const Eigen::ArrayXd mu_liquid = model.chemicalPotentials(
+        temperature_k, rho_liquid_vector
+    );
+    const Eigen::ArrayXd mu_vapor = model.chemicalPotentials(
+        temperature_k, rho_vapor_vector
+    );
+    const double pressure_liquid = model.pressurePa(
+        temperature_k, liquid, rho_liquid
+    );
+    const double pressure_vapor = model.pressurePa(
+        temperature_k, vapor, rho_vapor
+    );
+    const double rt = model.gasConstant(specified) * temperature_k;
+    const double pressure_scale = std::max(
+        1e5, 0.5 * (std::abs(pressure_liquid) + std::abs(pressure_vapor))
+    );
+    Eigen::VectorXd residual(count + 1);
+    residual.head(count) = ((mu_liquid - mu_vapor) / rt).matrix();
+    residual[count] = (pressure_liquid - pressure_vapor) / pressure_scale;
+    if (liquid_out) { *liquid_out = liquid; }
+    if (vapor_out) { *vapor_out = vapor; }
+    return residual;
+}
+
+NComponentVLEState solve_ncomponent_vle(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    const Eigen::ArrayXd &specified,
+    PXTeqpEquilibriumSpecification specification
+) {
+    const Eigen::Index variable_count = specified.size() + 1;
+    NComponentVLEState best;
+    double best_norm = std::numeric_limits<double>::infinity();
+    const std::vector<double> liquid_seeds = {12000.0, 18000.0, 24000.0};
+    const std::vector<double> vapor_seeds = {300.0, 1000.0, 3000.0};
+    const std::vector<std::vector<double>> volatility_seeds = {
+        {1.0, 4.0, 2.5}, {1.0, 8.0, 5.0}, {1.0, 15.0, 8.0},
+        {1.0, 2.0, 6.0}, {1.0, 12.0, 3.0}
+    };
+
+    for (double liquid_seed : liquid_seeds) {
+        for (double vapor_seed : vapor_seeds) {
+            for (const auto &factors : volatility_seeds) {
+                Eigen::ArrayXd unknown = specified;
+                for (Eigen::Index i = 0; i < unknown.size(); ++i) {
+                    const double factor = i < static_cast<Eigen::Index>(factors.size())
+                        ? factors[static_cast<std::size_t>(i)] : 1.0;
+                    unknown[i] *= specification == PXTeqpEquilibriumBubble
+                        ? factor : 1.0 / factor;
+                }
+                unknown /= unknown.sum();
+                Eigen::VectorXd variables(variable_count);
+                variables[0] = std::log(liquid_seed);
+                variables[1] = std::log(vapor_seed);
+                variables.segment(2, specified.size() - 1) =
+                    log_ratios_from_composition(unknown);
+                double lambda = 1e-4;
+                int stagnation = 0;
+                for (int iteration = 0; iteration < 100; ++iteration) {
+                    Eigen::VectorXd residual;
+                    try {
+                        residual = ncomponent_vle_residual(
+                            model, temperature_k, specified, specification, variables
+                        );
+                    } catch (...) { break; }
+                    if (!residual.array().isFinite().all()) { break; }
+                    const double norm = residual.squaredNorm();
+                    Eigen::MatrixXd jacobian(residual.size(), variables.size());
+                    bool jacobian_ok = true;
+                    for (Eigen::Index column = 0; column < variables.size(); ++column) {
+                        const double step = 2e-5 * std::max(1.0, std::abs(variables[column]));
+                        Eigen::VectorXd plus = variables;
+                        Eigen::VectorXd minus = variables;
+                        plus[column] += step;
+                        minus[column] -= step;
+                        try {
+                            jacobian.col(column) = (
+                                ncomponent_vle_residual(model, temperature_k, specified, specification, plus)
+                                - ncomponent_vle_residual(model, temperature_k, specified, specification, minus)
+                            ) / (2.0 * step);
+                        } catch (...) { jacobian_ok = false; break; }
+                    }
+                    if (!jacobian_ok || !jacobian.array().isFinite().all()) { break; }
+                    Eigen::MatrixXd normal = jacobian.transpose() * jacobian;
+                    normal.diagonal().array() += lambda;
+                    const Eigen::VectorXd step = normal.ldlt().solve(-jacobian.transpose() * residual);
+                    if (!step.array().isFinite().all()) { break; }
+                    bool accepted = false;
+                    Eigen::VectorXd candidate = variables;
+                    double candidate_norm = norm;
+                    for (int line = 0; line < 14; ++line) {
+                        const double scale = std::pow(0.5, line);
+                        candidate = variables + scale * step;
+                        candidate[0] = std::clamp(candidate[0], std::log(1000.0), std::log(80000.0));
+                        candidate[1] = std::clamp(candidate[1], std::log(1.0), std::log(30000.0));
+                        try {
+                            candidate_norm = ncomponent_vle_residual(
+                                model, temperature_k, specified, specification, candidate
+                            ).squaredNorm();
+                        } catch (...) { continue; }
+                        if (std::isfinite(candidate_norm) && candidate_norm < norm) {
+                            accepted = true; break;
+                        }
+                    }
+                    if (accepted) {
+                        variables = candidate;
+                        lambda = std::max(1e-10, lambda * 0.3);
+                        stagnation = 0;
+                    } else {
+                        lambda = std::min(1e10, lambda * 10.0);
+                        ++stagnation;
+                    }
+
+                    Eigen::ArrayXd liquid, vapor;
+                    const Eigen::VectorXd final_residual = ncomponent_vle_residual(
+                        model, temperature_k, specified, specification, variables,
+                        &liquid, &vapor
+                    );
+                    const double rho_liquid = std::exp(variables[0]);
+                    const double rho_vapor = std::exp(variables[1]);
+                    const bool distinct = rho_liquid > 1.02 * rho_vapor
+                        && (liquid - vapor).matrix().norm() > 1e-5;
+                    const double max_mu = final_residual.head(specified.size()).cwiseAbs().maxCoeff();
+                    const double pressure_residual = std::abs(final_residual[specified.size()]);
+                    if (distinct && final_residual.squaredNorm() < best_norm) {
+                        best_norm = final_residual.squaredNorm();
+                        best.iterations = iteration + 1;
+                        best.liquid_composition = liquid;
+                        best.vapor_composition = vapor;
+                        best.liquid_density = rho_liquid;
+                        best.vapor_density = rho_vapor;
+                        best.fugacity_residual = max_mu;
+                        best.pressure_residual = pressure_residual;
+                    }
+                    if (distinct && max_mu < 2e-7 && pressure_residual < 2e-7) {
+                        best.converged = true;
+                        best.status = PXTeqpEquilibriumConverged;
+                        break;
+                    }
+                    if (stagnation >= 8 || step.norm() < 1e-10) { break; }
+                }
+                if (best.converged) { break; }
+            }
+            if (best.converged) { break; }
+        }
+        if (best.converged) { break; }
+    }
+    if (best.liquid_composition.size() == specified.size()) {
+        try {
+            const Eigen::ArrayXd rho_l = best.liquid_density * best.liquid_composition;
+            const Eigen::ArrayXd rho_v = best.vapor_density * best.vapor_composition;
+            const double pl = model.pressurePa(
+                temperature_k, best.liquid_composition, best.liquid_density
+            );
+            const double pv = model.pressurePa(
+                temperature_k, best.vapor_composition, best.vapor_density
+            );
+            best.pressure_pa = 0.5 * (pl + pv);
+            best.liquid_stability = model.minimumStabilityEigenvalue(temperature_k, rho_l);
+            best.vapor_stability = model.minimumStabilityEigenvalue(temperature_k, rho_v);
+            if (!std::isfinite(best.pressure_pa) || best.pressure_pa <= 0.0
+                || !std::isfinite(best.liquid_stability)
+                || !std::isfinite(best.vapor_stability)
+                || best.liquid_stability <= 0.0 || best.vapor_stability <= 0.0) {
+                best.converged = false;
+                best.status = PXTeqpEquilibriumThermodynamicFailure;
+            }
+        } catch (...) {
+            best.converged = false;
+            best.status = PXTeqpEquilibriumThermodynamicFailure;
+        }
+    } else {
+        best.status = PXTeqpEquilibriumNoDistinctPhaseSplit;
+    }
+    return best;
+}
+
 }  // namespace
 
 int px_teqp_calculate_pure_co2(
@@ -3217,6 +3487,162 @@ int px_teqp_calculate_ncomponent_density(
     } catch (...) {
         copy_text("teqp N-component density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 11;
+    }
+}
+
+int px_teqp_calculate_ncomponent_vle(
+    const int *component_ids,
+    const double *specified_mole_fractions,
+    size_t component_count,
+    double temperature_k,
+    PXTeqpEquilibriumSpecification specification,
+    double *liquid_mole_fractions,
+    size_t liquid_mole_fractions_length,
+    double *vapor_mole_fractions,
+    size_t vapor_mole_fractions_length,
+    PXTeqpNComponentVLEResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr || component_ids == nullptr
+        || specified_mole_fractions == nullptr
+        || liquid_mole_fractions == nullptr || vapor_mole_fractions == nullptr) {
+        copy_text("N-component VLE received a null pointer.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (component_count < 2 || component_count > 9
+        || liquid_mole_fractions_length < component_count
+        || vapor_mole_fractions_length < component_count) {
+        copy_text("N-component VLE requires 2...9 components and matching output buffers.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    if (!std::isfinite(temperature_k) || temperature_k <= 0.0
+        || (specification != PXTeqpEquilibriumBubble
+            && specification != PXTeqpEquilibriumDew)) {
+        copy_text("N-component VLE requires positive temperature and a valid specification.", error_buffer, error_buffer_size);
+        return 3;
+    }
+    try {
+        std::vector<int> ids(component_ids, component_ids + component_count);
+        if (std::set<int>(ids.begin(), ids.end()).size() != component_count) {
+            copy_text("N-component VLE component identifiers must be unique.", error_buffer, error_buffer_size);
+            return 4;
+        }
+        Eigen::ArrayXd specified(static_cast<Eigen::Index>(component_count));
+        double sum = 0.0;
+        for (std::size_t i = 0; i < component_count; ++i) {
+            specified[static_cast<Eigen::Index>(i)] = specified_mole_fractions[i];
+            if (!std::isfinite(specified_mole_fractions[i])
+                || specified_mole_fractions[i] <= 0.0) {
+                copy_text("N-component VLE mole fractions must be finite and positive.", error_buffer, error_buffer_size);
+                return 5;
+            }
+            sum += specified_mole_fractions[i];
+        }
+        if (std::abs(sum - 1.0) > 1e-10) {
+            copy_text("N-component VLE mole fractions must sum to one; no normalization is applied.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        NComponentMultifluidModel model(ids);
+        const auto state = solve_ncomponent_vle(
+            model, temperature_k, specified, specification
+        );
+        result->converged = state.converged ? 1 : 0;
+        result->iteration_count = state.iterations;
+        result->status = state.status;
+        result->pressure_pa = state.pressure_pa;
+        result->liquid_molar_density_mol_m3 = state.liquid_density;
+        result->vapor_molar_density_mol_m3 = state.vapor_density;
+        result->maximum_log_fugacity_residual = state.fugacity_residual;
+        result->relative_pressure_residual = state.pressure_residual;
+        result->liquid_minimum_stability_eigenvalue = state.liquid_stability;
+        result->vapor_minimum_stability_eigenvalue = state.vapor_stability;
+        if (state.liquid_composition.size() == static_cast<Eigen::Index>(component_count)) {
+            for (std::size_t i = 0; i < component_count; ++i) {
+                liquid_mole_fractions[i] = state.liquid_composition[static_cast<Eigen::Index>(i)];
+                vapor_mole_fractions[i] = state.vapor_composition[static_cast<Eigen::Index>(i)];
+            }
+        }
+        if (!state.converged) {
+            copy_text("N-component VLE did not converge to a distinct stable phase split.", error_buffer, error_buffer_size);
+            return 7;
+        }
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 8;
+    } catch (...) {
+        copy_text("N-component VLE failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 9;
+    }
+}
+
+int px_teqp_evaluate_ncomponent_phase(
+    const int *component_ids,
+    const double *partial_molar_densities_mol_m3,
+    size_t component_count,
+    double temperature_k,
+    double *chemical_potentials_j_mol,
+    size_t chemical_potentials_length,
+    PXTeqpPhaseThermodynamicResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (component_ids == nullptr || partial_molar_densities_mol_m3 == nullptr
+        || chemical_potentials_j_mol == nullptr || result == nullptr) {
+        copy_text("Phase evaluation received a null pointer.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    if (component_count < 2 || component_count > 9
+        || chemical_potentials_length < component_count
+        || !std::isfinite(temperature_k) || temperature_k <= 0.0) {
+        copy_text("Phase evaluation requires 2...9 components, matching buffers, and positive temperature.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    try {
+        const std::vector<int> ids(component_ids, component_ids + component_count);
+        if (std::set<int>(ids.begin(), ids.end()).size() != component_count) {
+            copy_text("Phase evaluation component identifiers must be unique.", error_buffer, error_buffer_size);
+            return 3;
+        }
+        Eigen::ArrayXd rhovec(static_cast<Eigen::Index>(component_count));
+        for (std::size_t i = 0; i < component_count; ++i) {
+            const double value = partial_molar_densities_mol_m3[i];
+            if (!std::isfinite(value) || value <= 0.0) {
+                copy_text("Phase evaluation requires finite positive partial densities.", error_buffer, error_buffer_size);
+                return 4;
+            }
+            rhovec[static_cast<Eigen::Index>(i)] = value;
+        }
+        NComponentMultifluidModel model(ids);
+        const Eigen::ArrayXd composition = (rhovec / rhovec.sum()).eval();
+        const Eigen::ArrayXd chemical_potentials = model.chemicalPotentials(
+            temperature_k, rhovec
+        );
+        result->pressure_pa = model.pressurePa(
+            temperature_k, composition, rhovec.sum()
+        );
+        result->minimum_stability_eigenvalue = model.minimumStabilityEigenvalue(
+            temperature_k, rhovec
+        );
+        for (std::size_t i = 0; i < component_count; ++i) {
+            chemical_potentials_j_mol[i] = chemical_potentials[static_cast<Eigen::Index>(i)];
+        }
+        if (!std::isfinite(result->pressure_pa)
+            || !std::isfinite(result->minimum_stability_eigenvalue)
+            || !chemical_potentials.isFinite().all()) {
+            copy_text("Phase evaluation produced non-finite thermodynamic primitives.", error_buffer, error_buffer_size);
+            return 5;
+        }
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 6;
+    } catch (...) {
+        copy_text("Phase evaluation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 7;
     }
 }
 

@@ -278,6 +278,65 @@ public struct TeqpBinaryVLEInitialGuess: Equatable, Sendable {
     }
 }
 
+public enum TeqpPhaseEquilibriumSpecification: Sendable {
+    case bubble
+    case dew
+}
+
+public enum TeqpPhaseEquilibriumStatus: Int, Sendable {
+    case converged = 0
+    case maximumIterations = 1
+    case stagnated = 2
+    case illConditioned = 3
+    case noDistinctPhaseSplit = 4
+    case invalidInput = 5
+    case thermodynamicFailure = 6
+    case unknown = 99
+}
+
+public struct TeqpNComponentVLEResult: Equatable, Sendable {
+    public let converged: Bool
+    public let iterationCount: Int
+    public let status: TeqpPhaseEquilibriumStatus
+    public let pressurePa: Double
+    public let liquidMolarDensityMolesPerCubicMetre: Double
+    public let vaporMolarDensityMolesPerCubicMetre: Double
+    public let liquidComposition: [MixtureComponent]
+    public let vaporComposition: [MixtureComponent]
+    public let maximumLogFugacityResidual: Double
+    public let relativePressureResidual: Double
+    public let liquidMinimumStabilityEigenvalue: Double
+    public let vaporMinimumStabilityEigenvalue: Double
+
+    public init(
+        converged: Bool,
+        iterationCount: Int,
+        status: TeqpPhaseEquilibriumStatus,
+        pressurePa: Double,
+        liquidMolarDensityMolesPerCubicMetre: Double,
+        vaporMolarDensityMolesPerCubicMetre: Double,
+        liquidComposition: [MixtureComponent],
+        vaporComposition: [MixtureComponent],
+        maximumLogFugacityResidual: Double,
+        relativePressureResidual: Double,
+        liquidMinimumStabilityEigenvalue: Double,
+        vaporMinimumStabilityEigenvalue: Double
+    ) {
+        self.converged = converged
+        self.iterationCount = iterationCount
+        self.status = status
+        self.pressurePa = pressurePa
+        self.liquidMolarDensityMolesPerCubicMetre = liquidMolarDensityMolesPerCubicMetre
+        self.vaporMolarDensityMolesPerCubicMetre = vaporMolarDensityMolesPerCubicMetre
+        self.liquidComposition = liquidComposition
+        self.vaporComposition = vaporComposition
+        self.maximumLogFugacityResidual = maximumLogFugacityResidual
+        self.relativePressureResidual = relativePressureResidual
+        self.liquidMinimumStabilityEigenvalue = liquidMinimumStabilityEigenvalue
+        self.vaporMinimumStabilityEigenvalue = vaporMinimumStabilityEigenvalue
+    }
+}
+
 public protocol TeqpEngine: Sendable {
     var isAvailable: Bool { get }
     var libraryVersion: String { get }
@@ -333,9 +392,25 @@ public protocol TeqpEngine: Sendable {
         temperatureK: Double,
         composition: CanonicalComposition
     ) async throws -> TeqpNComponentDensityResult
+
+    func calculateNComponentVLE(
+        temperatureK: Double,
+        specifiedComposition: CanonicalComposition,
+        specification: TeqpPhaseEquilibriumSpecification
+    ) async throws -> TeqpNComponentVLEResult
 }
 
 public extension TeqpEngine {
+    func calculateNComponentVLE(
+        temperatureK: Double,
+        specifiedComposition: CanonicalComposition,
+        specification: TeqpPhaseEquilibriumSpecification
+    ) async throws -> TeqpNComponentVLEResult {
+        throw ProviderError.modelUnavailable(
+            "Generic teqp N-component VLE diagnostics are not available in this engine."
+        )
+    }
+
     func calculateCarbonDioxideOxygenGasDensity(
         pressurePa: Double,
         temperatureK: Double,

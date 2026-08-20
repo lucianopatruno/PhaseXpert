@@ -429,6 +429,67 @@ public struct NativeTeqpEngine: TeqpEngine {
         #endif
     }
 
+    public func calculateNComponentVLE(
+        temperatureK: Double,
+        specifiedComposition: CanonicalComposition,
+        specification: TeqpPhaseEquilibriumSpecification
+    ) async throws -> TeqpNComponentVLEResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let components = specifiedComposition.components
+        let ids = try components.map { try nativeComponentID(for: $0.component) }
+        let fractions = components.map(\.moleFraction)
+        let nativeSpecification = specification == .bubble
+            ? PXTeqpEquilibriumBubble : PXTeqpEquilibriumDew
+        let result = try await Task.detached(priority: .userInitiated) {
+            var mutableIDs = ids
+            var mutableFractions = fractions
+            var liquid = [Double](repeating: 0, count: components.count)
+            var vapor = [Double](repeating: 0, count: components.count)
+            var nativeResult = PXTeqpNComponentVLEResult()
+            var errorBuffer = [CChar](repeating: 0, count: 768)
+            let status = px_teqp_calculate_ncomponent_vle(
+                &mutableIDs, &mutableFractions, mutableIDs.count,
+                temperatureK, nativeSpecification,
+                &liquid, liquid.count, &vapor, vapor.count,
+                &nativeResult, &errorBuffer, errorBuffer.count
+            )
+            guard status == 0 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty ? "teqp N-component VLE solve failed." : message
+                )
+            }
+            let liquidComposition = zip(components, liquid).map {
+                MixtureComponent(component: $0.0.component, moleFraction: $0.1)
+            }
+            let vaporComposition = zip(components, vapor).map {
+                MixtureComponent(component: $0.0.component, moleFraction: $0.1)
+            }
+            return TeqpNComponentVLEResult(
+                converged: nativeResult.converged == 1,
+                iterationCount: Int(nativeResult.iteration_count),
+                status: TeqpPhaseEquilibriumStatus(rawValue: Int(nativeResult.status.rawValue)) ?? .unknown,
+                pressurePa: nativeResult.pressure_pa,
+                liquidMolarDensityMolesPerCubicMetre: nativeResult.liquid_molar_density_mol_m3,
+                vaporMolarDensityMolesPerCubicMetre: nativeResult.vapor_molar_density_mol_m3,
+                liquidComposition: liquidComposition,
+                vaporComposition: vaporComposition,
+                maximumLogFugacityResidual: nativeResult.maximum_log_fugacity_residual,
+                relativePressureResidual: nativeResult.relative_pressure_residual,
+                liquidMinimumStabilityEigenvalue: nativeResult.liquid_minimum_stability_eigenvalue,
+                vaporMinimumStabilityEigenvalue: nativeResult.vapor_minimum_stability_eigenvalue
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
+
     public func calculateCarbonDioxideOxygenGasDensity(
         pressurePa: Double,
         temperatureK: Double,
