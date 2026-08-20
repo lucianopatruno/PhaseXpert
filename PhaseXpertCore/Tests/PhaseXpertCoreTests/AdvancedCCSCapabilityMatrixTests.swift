@@ -93,6 +93,103 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
         )
     }
 
+    func testExactPreCombIIMulticomponentDensityGate() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let composition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.942),
+            .init(component: .nitrogen, moleFraction: 0.023),
+            .init(component: .methane, moleFraction: 0.022),
+            .init(component: .hydrogen, moleFraction: 0.013)
+        ])
+
+        let density = matrix.decision(
+            for: composition, property: .density,
+            pressurePa: 10_000_000, temperatureK: 313.15
+        )
+        XCTAssertTrue(density.isSupported)
+        XCTAssertEqual(density.formulationID, TeqpFormulationCatalog.preCombIIMulticomponentDensity.id)
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .speedOfSound,
+            pressurePa: 10_000_000, temperatureK: 313.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .density,
+            pressurePa: 10_000_000, temperatureK: 300
+        ).isSupported)
+    }
+
+    func testTransportSpecDisjointPressureGateDoesNotBridgeUnvalidatedGap() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let composition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.952),
+            .init(component: .nitrogen, moleFraction: 0.028),
+            .init(component: .argon, moleFraction: 0.005),
+            .init(component: .methane, moleFraction: 0.010),
+            .init(component: .hydrogen, moleFraction: 0.005)
+        ])
+        XCTAssertTrue(matrix.decision(for: composition, property: .density, pressurePa: 3_000_000, temperatureK: 293.15).isSupported)
+        XCTAssertFalse(matrix.decision(for: composition, property: .density, pressurePa: 7_000_000, temperatureK: 293.15).isSupported)
+        XCTAssertTrue(matrix.decision(for: composition, property: .density, pressurePa: 10_000_000, temperatureK: 293.15).isSupported)
+
+        let offComposition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.951),
+            .init(component: .nitrogen, moleFraction: 0.029),
+            .init(component: .argon, moleFraction: 0.005),
+            .init(component: .methane, moleFraction: 0.010),
+            .init(component: .hydrogen, moleFraction: 0.005)
+        ])
+        XCTAssertFalse(matrix.decision(for: offComposition, property: .density, pressurePa: 3_000_000, temperatureK: 293.15).isSupported)
+    }
+
+    func testEveryMulticomponentGateRejectsAdjacentStateAndComposition() throws {
+        struct Gate {
+            let composition: [(ComponentID, Double)]
+            let temperature: Double
+            let minimumPressure: Double
+            let maximumPressure: Double
+        }
+        let gates = [
+            Gate(composition: [(.carbonDioxide, 0.920), (.nitrogen, 0.043), (.oxygen, 0.016), (.argon, 0.021)], temperature: 312.35, minimumPressure: 1_952_000, maximumPressure: 6_951_000),
+            Gate(composition: [(.carbonDioxide, 0.950), (.methane, 0.033), (.hydrogen, 0.017)], temperature: 313.00, minimumPressure: 1_995_000, maximumPressure: 7_000_000),
+            Gate(composition: [(.carbonDioxide, 0.942), (.nitrogen, 0.023), (.methane, 0.022), (.hydrogen, 0.013)], temperature: 313.15, minimumPressure: 2_000_000, maximumPressure: 20_002_000),
+            Gate(composition: [(.carbonDioxide, 0.952), (.nitrogen, 0.028), (.argon, 0.005), (.methane, 0.010), (.hydrogen, 0.005)], temperature: 313.15, minimumPressure: 1_996_000, maximumPressure: 22_000_000)
+        ]
+        let matrix = AdvancedCCSCapabilityMatrix()
+        for gate in gates {
+            let composition = try CanonicalComposition(gate.composition.map { .init(component: $0.0, moleFraction: $0.1) })
+            let midpoint = (gate.minimumPressure + gate.maximumPressure) / 2
+            for property in [PropertyID.density, .molarMass, .specificVolume, .compressibilityFactor] {
+                XCTAssertTrue(matrix.decision(for: composition, property: property, pressurePa: midpoint, temperatureK: gate.temperature).isSupported)
+            }
+            XCTAssertFalse(matrix.decision(for: composition, property: .density, pressurePa: gate.minimumPressure - 1, temperatureK: gate.temperature).isSupported)
+            XCTAssertFalse(matrix.decision(for: composition, property: .density, pressurePa: gate.maximumPressure + 1, temperatureK: gate.temperature).isSupported)
+            XCTAssertFalse(matrix.decision(for: composition, property: .density, pressurePa: midpoint, temperatureK: gate.temperature + 0.051).isSupported)
+
+            var shifted = gate.composition
+            shifted[0].1 -= 0.000101
+            shifted[1].1 += 0.000101
+            let shiftedComposition = try CanonicalComposition(shifted.map { .init(component: $0.0, moleFraction: $0.1) })
+            XCTAssertFalse(matrix.decision(for: shiftedComposition, property: .density, pressurePa: midpoint, temperatureK: gate.temperature).isSupported)
+        }
+    }
+
+    func testPorthosAndAramisDoNotAccidentallyMatchNewExactGates() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        for id in [
+            "porthos-pipeline-specification-example",
+            "aramis-ship-specification-example"
+        ] {
+            let builtIn = try XCTUnwrap(BuiltInCaseCatalog.caseWithID(id))
+            let composition = try CanonicalComposition(try XCTUnwrap(builtIn.composition))
+            XCTAssertFalse(matrix.decision(
+                for: composition,
+                property: .density,
+                pressurePa: try XCTUnwrap(builtIn.defaultPressurePa),
+                temperatureK: try XCTUnwrap(builtIn.defaultTemperatureK)
+            ).isSupported, id)
+        }
+    }
+
     func testNitrogenHasOnlyNarrowHomogeneousGasDensityGate() throws {
         XCTAssertTrue(
             TeqpFormulationCatalog.surveyedBinaryImpurities.contains(.nitrogen)

@@ -21,6 +21,8 @@
     "ACS primary article and SI endpoints returned access-control responses in the local network environment.",
     "NIST ThermoML did not contain an object for this DOI.",
     "OpenAlex and Unpaywall reported no repository full text.",
+    "ACS Figshare, Crossref/DataCite-linked supplements, Zenodo, Figshare, institutional repositories, author and university pages, accepted manuscripts, theses, national-metrology and research-group repositories were searched by DOI, title, authors, composition and table terminology without locating lawful numerical rows.",
+    "Later citing and EOS-CG/GERG validation papers were checked for a reused public table; none exposed traceable primary row-level values.",
     "Secondary sources confirmed inventory and composition metadata but did not expose the numerical experimental density rows."
   ],
   "encoded_experimental_rows": [],

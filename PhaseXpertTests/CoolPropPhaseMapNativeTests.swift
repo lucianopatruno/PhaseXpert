@@ -73,14 +73,17 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
 
         for entry in cases {
             let builtInCase = try XCTUnwrap(BuiltInCaseCatalog.caseWithID(entry.id))
+            let pressurePa = try XCTUnwrap(builtInCase.defaultPressurePa)
+            let temperatureK = try XCTUnwrap(builtInCase.defaultTemperatureK)
+            let composition = try XCTUnwrap(builtInCase.composition)
             let request = PhaseMapRequest(
                 modelID: provider.descriptor.id,
-                pressurePa: builtInCase.defaultPressurePa,
-                temperatureK: builtInCase.defaultTemperatureK,
-                composition: builtInCase.composition,
+                pressurePa: pressurePa,
+                temperatureK: temperatureK,
+                composition: composition,
                 range: .automatic(
-                    pressurePa: builtInCase.defaultPressurePa,
-                    temperatureK: builtInCase.defaultTemperatureK
+                    pressurePa: pressurePa,
+                    temperatureK: temperatureK
                 ),
                 resolution: entry.resolution,
                 clientVersion: "coolprop-built-in-phase-map-native-regression"
@@ -95,7 +98,7 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
 
             let expectedCount = try PhaseMapGridBuilder.points(for: request).count
             XCTAssertEqual(result.evaluations.count, expectedCount, builtInCase.name)
-            XCTAssertEqual(result.request.composition, builtInCase.composition, builtInCase.name)
+            XCTAssertEqual(result.request.composition, composition, builtInCase.name)
         }
     }
 

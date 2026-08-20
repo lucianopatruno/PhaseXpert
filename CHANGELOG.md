@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Added limited-production Advanced CCS density and density-derived M, v and Z
+  for four exact CO₂-rich Razmjoo 2026 dry multicomponent compositions and
+  measured T/P blocks, using the existing generic EOS-CG-2021 N-component
+  route with no normalization, component dropping or provider fallback.
+- Encoded all 330 CC BY 4.0 experimental rows with provenance, uncertainties,
+  native predictions and explicit non-convergence, and added capability,
+  provider, metadata and native regression coverage.
+- Kept the exact CO₂/N₂/CH₄ density target and its 62-row Ottøy ternary VLE
+  matrix research-only because lawful Zhang density rows remain unavailable and
+  the predictive bubble/dew, global-stability and TP-flash solvers have not
+  established a validated production domain. The solvers are available only as
+  deterministic research diagnostics.
+
 - Added a provider-facing operating-range guidance API for Advanced CCS
   Properties so the app can display production-validated composition,
   temperature, pressure, property and phase-diagram limits before calculation.

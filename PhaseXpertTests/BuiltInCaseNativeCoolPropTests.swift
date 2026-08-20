@@ -10,9 +10,16 @@ final class BuiltInCaseNativeCoolPropTests: XCTestCase {
     func testPinnedCoolPropCalculatesEveryBuiltInCaseWithoutDroppingComponents() async throws {
         let provider = try requireNativeCoolPropProvider()
         let advertised = Set(provider.descriptor.supportedComponents)
+        var calculatedCaseCount = 0
 
         for builtInCase in BuiltInCaseCatalog.cases {
-            let required = Set(builtInCase.composition.map(\.component))
+            guard let composition = builtInCase.composition,
+                  let pressurePa = builtInCase.defaultPressurePa,
+                  let temperatureK = builtInCase.defaultTemperatureK else {
+                continue
+            }
+            calculatedCaseCount += 1
+            let required = Set(composition.map(\.component))
             XCTAssertTrue(
                 required.isSubset(of: advertised),
                 "\(builtInCase.name) contains a component not advertised by General Properties."
@@ -20,9 +27,9 @@ final class BuiltInCaseNativeCoolPropTests: XCTestCase {
 
             let request = CalculationRequest(
                 modelID: provider.descriptor.id,
-                pressurePa: builtInCase.defaultPressurePa,
-                temperatureK: builtInCase.defaultTemperatureK,
-                composition: builtInCase.composition,
+                pressurePa: pressurePa,
+                temperatureK: temperatureK,
+                composition: composition,
                 requestedProperties: [
                     .density,
                     .molarMass,
@@ -69,6 +76,7 @@ final class BuiltInCaseNativeCoolPropTests: XCTestCase {
                 "\(builtInCase.name) returned an unavailable phase after a successful state calculation."
             )
         }
+        XCTAssertEqual(calculatedCaseCount, 4)
     }
 
     private func requireNativeCoolPropProvider() throws

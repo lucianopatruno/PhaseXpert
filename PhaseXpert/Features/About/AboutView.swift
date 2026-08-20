@@ -46,8 +46,9 @@ struct AboutView: View {
             }
 
             Section("Advanced CCS Properties — teqp / EOS-CG") {
-                Text("teqp v0.23.1 evaluates Helmholtz-energy models locally. Pure CO₂ properties are available; CO₂+N₂, CO₂+H₂ and CO₂+CH₄ density, CO₂+CH₄ VLE, and CO₂+O₂ density are enabled only in their independently validated composition and T/P gates.")
-                Text("The N₂ gate is homogeneous gas density only at xN₂ = 0.0127, 283.15 K and 10–45 bar(a). The O₂ gate requires xO₂ = 0.05032089 and the seven Lozano-Martín isotherm bands. Ternary mixtures remain diagnostic; Ar, CO and H₂S are research-only; wet Advanced mixtures are diagnostic. Unsupported requests never fall back to CoolProp or drop components.")
+                Text("teqp v0.23.1 evaluates Helmholtz-energy models locally. Pure CO₂ properties are available; binary CO₂+N₂, CO₂+H₂, CO₂+CH₄ and CO₂+O₂ density, plus CO₂+CH₄ VLE, are enabled only in their independently validated gates.")
+                Text("Limited dry multicomponent density and density-derived M, v and Z are available at four exact Razmjoo compositions: CO₂/N₂/O₂/Ar 92.0/4.3/1.6/2.1 mol%, CO₂/CH₄/H₂ 95.0/3.3/1.7 mol%, CO₂/N₂/CH₄/H₂ 94.2/2.3/2.2/1.3 mol%, and CO₂/N₂/Ar/CH₄/H₂ 95.2/2.8/0.5/1.0/0.5 mol%. The operating guidance is the authoritative source for their measured T/P slices.")
+                Text("A generic multicomponent phase-equilibrium solver is under research evaluation. CO₂+N₂+CH₄ bubble/dew comparisons, stability and TP flash are not production calculator capabilities; interior flash phase fractions are not independently validated. Phase maps, caloric, acoustic and transport properties remain unsupported. Unsupported requests never fall back to CoolProp, normalize compositions or drop components.")
                     .foregroundStyle(.secondary)
             }
 
