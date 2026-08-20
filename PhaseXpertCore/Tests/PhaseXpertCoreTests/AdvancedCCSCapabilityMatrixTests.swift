@@ -93,7 +93,7 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
         )
     }
 
-    func testNitrogenIsSurveyedButNotProductionEnabled() throws {
+    func testNitrogenHasOnlyNarrowHomogeneousGasDensityGate() throws {
         XCTAssertTrue(
             TeqpFormulationCatalog.surveyedBinaryImpurities.contains(.nitrogen)
         )
@@ -101,28 +101,50 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
             TeqpFormulationCatalog.co2NitrogenGernertGergDiagnostic.status,
             .failedValidation
         )
-        XCTAssertFalse(
+        XCTAssertTrue(
             TeqpFormulationCatalog.productionFormulations.contains {
-                $0.components == [.carbonDioxide, .nitrogen]
+                $0.id == TeqpFormulationCatalog.co2NitrogenGernertGasDensity.id
             }
         )
 
         let matrix = AdvancedCCSCapabilityMatrix()
-        let binary = try CanonicalComposition([
-            .init(component: .carbonDioxide, moleFraction: 0.97),
-            .init(component: .nitrogen, moleFraction: 0.03)
+        let validated = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.9873),
+            .init(component: .nitrogen, moleFraction: 0.0127)
         ])
 
-        let decision = matrix.decision(
-            for: binary,
+        let density = matrix.decision(
+            for: validated,
             property: .density,
-            pressurePa: 10_000_000,
-            temperatureK: 303.15
+            pressurePa: 3_000_000,
+            temperatureK: 283.15
         )
+        XCTAssertTrue(density.isSupported)
+        XCTAssertEqual(density.validationState, .validated)
+        XCTAssertEqual(
+            density.formulationID,
+            TeqpFormulationCatalog.co2NitrogenGernertGasDensity.id
+        )
+        XCTAssertFalse(matrix.decision(
+            for: validated,
+            property: .speedOfSound,
+            pressurePa: 3_000_000,
+            temperatureK: 283.15
+        ).isSupported)
 
-        XCTAssertFalse(decision.isSupported)
-        XCTAssertEqual(decision.validationState, .unsupported)
-        XCTAssertNil(decision.formulationID)
+        let broad = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.95),
+            .init(component: .nitrogen, moleFraction: 0.05)
+        ])
+        let broadDecision = matrix.decision(
+            for: broad,
+            property: .density,
+            pressurePa: 3_000_000,
+            temperatureK: 283.15
+        )
+        XCTAssertFalse(broadDecision.isSupported)
+        XCTAssertEqual(broadDecision.validationState, .unsupported)
+        XCTAssertNil(broadDecision.formulationID)
     }
 
     func testOxygenDensityIsEnabledOnlyInsideExactValidatedGasDomain() throws {

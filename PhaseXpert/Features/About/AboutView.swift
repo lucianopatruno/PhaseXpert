@@ -46,8 +46,8 @@ struct AboutView: View {
             }
 
             Section("Advanced CCS Properties — teqp / EOS-CG") {
-                Text("teqp v0.23.1 evaluates Helmholtz-energy models locally. Pure CO₂ properties are available; CO₂+H₂ and CO₂+CH₄ density, CO₂+CH₄ VLE, and CO₂+O₂ density are enabled only in their independently validated composition and T/P gates.")
-                Text("The O₂ gate requires xO₂ = 0.05032089 and the seven Lozano-Martín isotherm bands. N₂ and ternary mixtures remain diagnostic; Ar, CO and H₂S are research-only; wet Advanced mixtures are diagnostic. Unsupported requests never fall back to CoolProp or drop components.")
+                Text("teqp v0.23.1 evaluates Helmholtz-energy models locally. Pure CO₂ properties are available; CO₂+N₂, CO₂+H₂ and CO₂+CH₄ density, CO₂+CH₄ VLE, and CO₂+O₂ density are enabled only in their independently validated composition and T/P gates.")
+                Text("The N₂ gate is homogeneous gas density only at xN₂ = 0.0127, 283.15 K and 10–45 bar(a). The O₂ gate requires xO₂ = 0.05032089 and the seven Lozano-Martín isotherm bands. Ternary mixtures remain diagnostic; Ar, CO and H₂S are research-only; wet Advanced mixtures are diagnostic. Unsupported requests never fall back to CoolProp or drop components.")
                     .foregroundStyle(.secondary)
             }
 
