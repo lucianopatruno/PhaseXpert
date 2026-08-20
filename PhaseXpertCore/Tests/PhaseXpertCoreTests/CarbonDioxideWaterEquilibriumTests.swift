@@ -158,6 +158,53 @@ final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
         }
     }
 
+    func testDirectMeyerHarveyDropoutPressureDiagnosticRemainsPreliminary() throws {
+        let rows = try meyerHarveyRows().filter {
+            (303.14...353.15).contains($0.temperatureK)
+        }
+        let evaluated = rows.compactMap { row -> (row: MeyerHarveyArtifact.Row, errorMPa: Double, relativeErrorPercent: Double)? in
+            guard let predicted = try? model.waterDropoutPressurePa(
+                temperatureK: row.temperatureK,
+                waterMoleFraction: row.measuredWaterMoleFraction
+            ) else { return nil }
+            let predictedMPa = predicted / 1_000_000
+            return (
+                row,
+                predictedMPa - row.pressureMPa,
+                (predictedMPa - row.pressureMPa) / row.pressureMPa * 100
+            )
+        }
+        let errors = evaluated.map(\.errorMPa)
+        let relativeErrors = evaluated.map(\.relativeErrorPercent)
+        let mae = errors.map(abs).reduce(0, +) / Double(errors.count)
+        let bias = errors.reduce(0, +) / Double(errors.count)
+        let rms = sqrt(errors.map { $0 * $0 }.reduce(0, +) / Double(errors.count))
+        let aard = relativeErrors.map(abs).reduce(0, +) / Double(relativeErrors.count)
+        let relativeBias = relativeErrors.reduce(0, +) / Double(relativeErrors.count)
+        let relativeRMS = sqrt(relativeErrors.map { $0 * $0 }.reduce(0, +) / Double(relativeErrors.count))
+        let worstAbsolute = try XCTUnwrap(evaluated.max { abs($0.errorMPa) < abs($1.errorMPa) })
+        let worstRelative = try XCTUnwrap(evaluated.max {
+            abs($0.relativeErrorPercent) < abs($1.relativeErrorPercent)
+        })
+
+        print("CO2_H2O_DROPOUT_PRESSURE_DIAGNOSTIC rows=\(rows.count) converged=\(evaluated.count) maeMPa=\(mae) biasMPa=\(bias) rmsMPa=\(rms) aardPercent=\(aard) biasPercent=\(relativeBias) rmsPercent=\(relativeRMS) worstAbsMPa=\(abs(worstAbsolute.errorMPa)) worstAbsState=T\(worstAbsolute.row.temperatureK)K_P\(worstAbsolute.row.pressureMPa)MPa worstRelPercent=\(abs(worstRelative.relativeErrorPercent)) worstRelState=T\(worstRelative.row.temperatureK)K_P\(worstRelative.row.pressureMPa)MPa")
+
+        XCTAssertEqual(rows.count, 40)
+        XCTAssertEqual(evaluated.count, 35)
+        XCTAssertEqual(mae, 0.153_352, accuracy: 1e-5)
+        XCTAssertEqual(bias, -0.153_352, accuracy: 1e-5)
+        XCTAssertEqual(rms, 0.254_876, accuracy: 1e-5)
+        XCTAssertEqual(aard, 4.208_242, accuracy: 1e-5)
+        XCTAssertEqual(relativeBias, -4.208_242, accuracy: 1e-5)
+        XCTAssertEqual(relativeRMS, 5.952_205, accuracy: 1e-5)
+        XCTAssertEqual(abs(worstAbsolute.errorMPa), 0.812_114, accuracy: 1e-5)
+        XCTAssertEqual(worstAbsolute.row.temperatureK, 303.15, accuracy: 1e-12)
+        XCTAssertEqual(worstAbsolute.row.pressureMPa, 5.0055, accuracy: 1e-12)
+        XCTAssertEqual(abs(worstRelative.relativeErrorPercent), 16.224_430, accuracy: 1e-5)
+        XCTAssertEqual(worstRelative.row.temperatureK, 303.15, accuracy: 1e-12)
+        XCTAssertEqual(worstRelative.row.pressureMPa, 5.0055, accuracy: 1e-12)
+    }
+
     func testIndependentSanchezVicenteTrusler2022CarbonDioxideRichWaterRows() throws {
         let rows: [(temperature: Double, pressure: Double, experimentalWater: Double)] = [
             (373.27, 4.71, 1 - 0.97323),
@@ -205,30 +252,45 @@ final class CarbonDioxideWaterEquilibriumTests: XCTestCase {
         XCTAssertEqual(metrics.worstPercent, 2.256_479, accuracy: 1e-5)
     }
 
-    func testMulticomponentWetStreamIsNotSilentlyAccepted() async {
+    func testMulticomponentWetStreamsAreNotSilentlyAccepted() async {
         let provider = CoolPropProvider(engine: WaterEquilibriumMockEngine())
-        let composition: [MixtureComponent] = [
-            .init(component: .carbonDioxide, moleFraction: 0.9895),
-            .init(component: .nitrogen, moleFraction: 0.01),
-            .init(component: .water, moleFraction: 0.0005)
+        let compositions: [[MixtureComponent]] = [
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.9895),
+                .init(component: .nitrogen, moleFraction: 0.01),
+                .init(component: .water, moleFraction: 0.0005)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.9895),
+                .init(component: .methane, moleFraction: 0.01),
+                .init(component: .water, moleFraction: 0.0005)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.9895),
+                .init(component: .oxygen, moleFraction: 0.01),
+                .init(component: .water, moleFraction: 0.0005)
+            ]
         ]
-        XCTAssertTrue(provider.applicabilityIssues(for: composition).contains {
-            $0.severity == .error && $0.message.contains("never drops additional components")
-        })
-        do {
-            _ = try await provider.calculate(CalculationRequest(
-                modelID: provider.descriptor.id,
-                pressurePa: 4_710_000,
-                temperatureK: 373.27,
-                composition: composition,
-                requestedProperties: [.density],
-                clientVersion: "test"
-            ))
-            XCTFail("Binary water equilibrium must not be applied to wet multicomponent streams.")
-        } catch let ProviderError.invalidRequest(message) {
-            XCTAssertTrue(message.contains("binary CO₂/H₂O"))
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+
+        for composition in compositions {
+            XCTAssertTrue(provider.applicabilityIssues(for: composition).contains {
+                $0.severity == .error && $0.message.contains("never drops additional components")
+            })
+            do {
+                _ = try await provider.calculate(CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: 4_710_000,
+                    temperatureK: 373.27,
+                    composition: composition,
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                ))
+                XCTFail("Binary water equilibrium must not be applied to wet multicomponent streams.")
+            } catch let ProviderError.invalidRequest(message) {
+                XCTAssertTrue(message.contains("binary CO₂/H₂O"))
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
         }
     }
 
