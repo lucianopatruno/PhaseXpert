@@ -38,8 +38,10 @@ struct AboutView: View {
             }
 
             Section("General Properties — CoolProp") {
-                Text("CoolProp 8 HEOS provides pure-CO₂ properties and validation-gated dry-mixture calculations. Binary CO₂/H₂O homogeneous-gas density, molar mass, specific volume and Z are preliminary at xH₂O = 1–1000 ppm, 76.85–150 °C and 5–50 bar(a).")
-                Text("Homogeneous wet-gas properties do not predict water equilibrium, dropout or aqueous chemistry. H₂O mixtures do not use the Phase Map, and Cp/Cv, sound speed and transport properties remain unavailable for wet mixtures.")
+                Text("CoolProp 8.0.0 HEOS provides pure-CO₂ properties and calculable CO₂-rich dry mixtures with N₂, CH₄, O₂, Ar, H₂, CO and H₂S. The General Properties capability matrix separates calculable states from independently validated property domains.")
+                Text("Dry-mixture density, molar mass, specific volume and Z are limited-production only for the committed CO₂/CH₄ xCH₄ = 0.05 Ghafri density slices, CO₂/O₂ xO₂ = 0.05032089 Lozano-Martín gas-density isotherms, and CO₂/H₂ xH₂ = 0.05362 Souissi gas-density isotherms. N₂, Ar, CO, H₂S and dry multicomponent states remain preliminary or validation pending.")
+                Text("Binary CO₂/H₂O homogeneous-gas density, molar mass, specific volume and Z remain preliminary at xH₂O = 1–1000 ppm, 76.85–150 °C and 5–50 bar(a).")
+                Text("Homogeneous wet-gas properties do not predict water equilibrium, dropout or aqueous chemistry. H₂O mixtures do not use the Phase Map, and mixture Cp/Cv, sound speed and transport properties remain unavailable.")
                     .foregroundStyle(.secondary)
             }
 
@@ -60,6 +62,8 @@ struct AboutView: View {
                 reference("CoolProp: Open-source thermophysical property library", url: "https://doi.org/10.1021/ie4033999")
                 reference("Span–Wagner CO₂ equation of state", url: "https://doi.org/10.1063/1.555991")
                 reference("IAPWS-95 water formulation", url: "https://doi.org/10.1063/1.1461829")
+                reference("CO₂-rich binary p-ρ-T measurements", url: "https://doi.org/10.1021/je300590v")
+                reference("CO₂/O₂ density measurements", url: "https://doi.org/10.1021/acs.jced.0c00484")
                 reference("EOS-CG-2021 CCS mixture model", url: "https://doi.org/10.1007/s10765-023-03263-6")
                 reference("Spycher–Pruess–Ennis-King CO₂/H₂O model", url: "https://doi.org/10.1016/S0016-7037(03)00273-4")
             }

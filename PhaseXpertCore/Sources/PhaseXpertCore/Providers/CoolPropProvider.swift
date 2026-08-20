@@ -390,9 +390,9 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     public var descriptor: ModelDescriptor {
         ModelDescriptor(
             id: "coolprop-heos",
-            name: "General Properties (CoolProp)",
+            name: "General Properties",
             modelVersion: engine.libraryVersion,
-            providerVersion: "0.10.0",
+            providerVersion: "0.11.0",
             availability: engine.isAvailable ? .preliminary : .unavailable,
             calculationMode: .local,
             supportedComponents: engine.isAvailable
@@ -420,13 +420,13 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ]
                 : [],
             domain: .initialCO2Transport,
-            scientificBasis: "CoolProp HEOS pure-fluid CO₂, restricted dry CO₂-rich mixtures, and a preliminary homogeneous CO₂-rich water-vapor route.",
-            equationOrMethod: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash.",
+            scientificBasis: "CoolProp HEOS pure-fluid CO₂, restricted dry CO₂-rich mixtures, and a preliminary homogeneous CO₂-rich water-vapor route. The General Properties capability matrix separates calculable states from independently validated states.",
+            equationOrMethod: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [
                 "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties.",
-                "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄, H₂, CO and H₂S with total impurity in (0, 10] mol%; this temporary product guardrail is not a validated accuracy range.",
+                "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄, H₂, CO and H₂S with total impurity in (0, 10] mol%; this product guardrail remains calculability scope, not a validated accuracy range.",
                 "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.",
                 "Preliminary integration; no production accuracy claim.",
                 "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.",
@@ -464,6 +464,42 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     title: "Pressure-Density-Temperature Measurements of Binary Mixtures Rich in CO₂ for Pipeline Transportation in the CCS Process",
                     year: 2012,
                     doiOrURL: "https://doi.org/10.1021/je300590v"
+                ),
+                SourceReference(
+                    authors: "Arai, Kaminishi and Saito",
+                    title: "The Experimental Determination of the P-V-T-X Relations for the Carbon Dioxide-Nitrogen and the Carbon Dioxide-Methane Systems",
+                    year: 1971,
+                    doiOrURL: "https://doi.org/10.1252/jcej.4.113"
+                ),
+                SourceReference(
+                    authors: "Petropoulou et al.",
+                    title: "Vapor-Liquid Equilibrium of the Carbon Dioxide/Methane Mixture at Three Isotherms",
+                    year: 2018,
+                    doiOrURL: "https://doi.org/10.1016/j.fluid.2017.12.015"
+                ),
+                SourceReference(
+                    authors: "Ahamada, Valtz, Chabab, Blanco-Martín and Coquelet",
+                    title: "Experimental Density Data of Three Carbon Dioxide and Oxygen Binary Mixtures at Temperatures from 276 to 416 K and at Pressures up to 20 MPa",
+                    year: 2020,
+                    doiOrURL: "https://doi.org/10.1021/acs.jced.0c00484"
+                ),
+                SourceReference(
+                    authors: "Westman et al.",
+                    title: "Vapor-Liquid Equilibrium Data for the Carbon Dioxide and Oxygen System",
+                    year: 2016,
+                    doiOrURL: "https://doi.org/10.1016/j.fluid.2016.04.002"
+                ),
+                SourceReference(
+                    authors: "Løvseth et al.",
+                    title: "Thermodynamics of the Carbon Dioxide plus Argon System",
+                    year: 2018,
+                    doiOrURL: "https://doi.org/10.1016/j.fluid.2018.03.006"
+                ),
+                SourceReference(
+                    authors: "Chapoy et al.",
+                    title: "Vapour-Liquid Equilibrium Data for the Carbon Dioxide plus Carbon Monoxide System",
+                    year: 2020,
+                    doiOrURL: "https://doi.org/10.1016/j.fluid.2020.112733"
                 ),
                 SourceReference(
                     authors: "Huber, Sykioti, Assael and Perkins",
@@ -677,7 +713,12 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 expandedProperties: nil,
                 solverMethod: "CoolProp PropsSI(P,T), HEOS dry CO₂-rich mixture; pinned library interaction entries only",
                 warnings: [
-                    "DRY MIXTURE — VALIDATION PENDING: density and phase have not completed independent validation.",
+                    "DRY MIXTURE — PROPERTY-SPECIFIC VALIDATION: density and derived volumetric properties are calculable; the General Properties capability matrix reports whether the current state is limited-production or preliminary.",
+                    GeneralPropertiesCapabilityMatrix.capabilitySummary(
+                        for: request.composition,
+                        pressurePa: request.pressurePa,
+                        temperatureK: request.temperatureK
+                    ),
                     "The 10 mol% total-impurity cap is a PhaseXpert product guardrail, not a validated accuracy range.",
                     "Mixture dynamic viscosity and expanded properties are not enabled; phase diagrams are scoped to pure CO₂."
                 ]
@@ -708,6 +749,11 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 solverMethod: "CoolProp AbstractState(HEOS, CO₂/H₂O), imposed homogeneous gas phase; Gernert CO₂-Water pair",
                 warnings: [
                     "WET GAS — PRELIMINARY / VALIDATION PENDING: only homogeneous density and derived M, v and Z are available.",
+                    GeneralPropertiesCapabilityMatrix.capabilitySummary(
+                        for: request.composition,
+                        pressurePa: request.pressurePa,
+                        temperatureK: request.temperatureK
+                    ),
                     "The homogeneous CoolProp state does not itself determine aqueous equilibrium, water dropout or pH."
                 ]
             )

@@ -84,6 +84,9 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
         )
     ]
 
+    public static let validatedRangeSummary =
+        "30–80 °C at 4.999–50.055 bar(a), plus 100 °C at 47.0–150.9 bar(a)."
+
     // Largest absolute model/experiment discrepancy in the independently
     // encoded 2022 CO₂-rich-phase validation rows. It defines only the
     // uncertainty-aware classification band, not an adjustable fit tolerance.

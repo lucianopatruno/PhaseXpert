@@ -98,7 +98,7 @@ private struct MoreView: View {
                             modelID: "coolprop-heos"
                         )
                     } label: {
-                        Label("General Properties / CoolProp", systemImage: "function")
+                        Label("General Properties", systemImage: "function")
                     }
                     .accessibilityIdentifier("more-general-model")
 
