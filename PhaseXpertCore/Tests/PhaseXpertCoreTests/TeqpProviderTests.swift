@@ -288,7 +288,11 @@ final class TeqpProviderTests: XCTestCase {
                 "teqp-v0.23.1-co2-n2-gerg-gas-density-mazzoccoli2012",
                 "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
                 "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
-                "teqp-v0.23.1-eoscg2021-co2-o2-gas-density-lozano-martin2020"
+                "teqp-v0.23.1-eoscg2021-co2-o2-gas-density-lozano-martin2020",
+                "teqp-v0.23.1-eoscg2021-multicomponent-oxycomb-i-density-razmjoo2026",
+                "teqp-v0.23.1-eoscg2021-multicomponent-precomb-i-density-razmjoo2026",
+                "teqp-v0.23.1-eoscg2021-multicomponent-precomb-ii-density-razmjoo2026",
+                "teqp-v0.23.1-eoscg2021-multicomponent-transport-spec-density-razmjoo2026"
             ]
         )
         XCTAssertTrue(TeqpFormulationCatalog.pureCarbonDioxide.supportsPhaseEnvelope)
@@ -302,7 +306,7 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
-            [.carbonDioxide, .nitrogen, .oxygen, .methane, .hydrogen]
+            [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
         )
         XCTAssertTrue(
             TeqpFormulationCatalog.productionSupportedProperties
@@ -356,7 +360,7 @@ final class TeqpProviderTests: XCTestCase {
                 $0.components == [.carbonDioxide, .oxygen]
             }
         )
-        XCTAssertFalse(TeqpFormulationCatalog.productionFormulations.contains { $0.components.contains(.argon) })
+        XCTAssertTrue(TeqpFormulationCatalog.productionFormulations.contains { $0.components.contains(.argon) })
         XCTAssertTrue(
             TeqpFormulationCatalog.productionFormulations.contains {
                 $0.components == [.carbonDioxide, .hydrogen]
@@ -725,7 +729,7 @@ final class TeqpProviderTests: XCTestCase {
     func testCO2N2BroadStatesRemainValidationGatedDespiteNativeBridge() async {
         let provider = TeqpProvider(engine: FailingEngine())
         let descriptor = provider.descriptor
-        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .nitrogen, .oxygen, .methane, .hydrogen])
+        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen])
         XCTAssertTrue(descriptor.supportedComponents.contains(.nitrogen))
         XCTAssertTrue(
             descriptor.limitations.contains {
@@ -838,6 +842,32 @@ final class TeqpProviderTests: XCTestCase {
             XCTAssertTrue(message.contains("CO₂ + N₂ + CH₄"), message)
             XCTAssertTrue(message.contains("No CoolProp fallback"), message)
         })
+    }
+
+    func testValidatedMulticomponentMixtureCalculatesDensityAndDerivedProperties() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.942),
+            MixtureComponent(component: .nitrogen, moleFraction: 0.023),
+            MixtureComponent(component: .methane, moleFraction: 0.022),
+            MixtureComponent(component: .hydrogen, moleFraction: 0.013)
+        ]
+        XCTAssertTrue(provider.applicabilityIssues(for: composition).isEmpty)
+
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 10_000_000,
+            temperatureK: 313.15,
+            composition: composition,
+            requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor, .speedOfSound],
+            clientVersion: "test"
+        ))
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.value, 104.7)
+        XCTAssertEqual(response.properties.first { $0.property == .molarMass }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .speedOfSound }?.status, .unavailable)
+        XCTAssertTrue(response.warnings.contains { $0.contains("no component is dropped") })
     }
 
     func testHydrogenGasDensityLimitedDomainIsCalculatedWithoutFallback() async throws {

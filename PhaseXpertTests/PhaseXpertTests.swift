@@ -4,6 +4,7 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    @MainActor
     func testIFEContactMailLinkIncludesSubject() throws {
         let url = IFEContactMailLink.url
 
@@ -470,26 +471,31 @@ final class PhaseXpertTests: XCTestCase {
         }
 
         XCTAssertEqual(viewModel.selectedDescriptor?.name, "Advanced CCS Properties")
-        XCTAssertEqual(Set(viewModel.supportedImpurityComponents), [.oxygen, .methane, .hydrogen])
-        XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.nitrogen))
+        XCTAssertEqual(Set(viewModel.supportedImpurityComponents), [.oxygen, .argon, .methane, .hydrogen, .nitrogen])
+        XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.nitrogen))
         XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.oxygen))
-        XCTAssertFalse(viewModel.supportedImpurityComponents.contains(.argon))
+        XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.argon))
 
         let firstID = try XCTUnwrap(viewModel.addImpurity())
         XCTAssertEqual(
             viewModel.composition.first { $0.id == firstID }?.component,
-            .oxygen
+            .argon
         )
         let methaneOptions = viewModel.impurityOptions(including: .methane)
-        XCTAssertEqual(Set(methaneOptions), [.oxygen, .methane, .hydrogen])
-        XCTAssertFalse(methaneOptions.contains(.nitrogen))
+        XCTAssertEqual(Set(methaneOptions), [.oxygen, .argon, .methane, .hydrogen, .nitrogen])
+        XCTAssertTrue(methaneOptions.contains(.nitrogen))
         XCTAssertTrue(methaneOptions.contains(.oxygen))
-        XCTAssertFalse(methaneOptions.contains(.argon))
+        XCTAssertTrue(methaneOptions.contains(.argon))
 
         let secondID = try XCTUnwrap(viewModel.addImpurity())
         XCTAssertEqual(
             viewModel.composition.first { $0.id == secondID }?.component,
             .methane
+        )
+        viewModel.updateImpurity(id: firstID, component: .nitrogen)
+        XCTAssertEqual(
+            Set(viewModel.composition.map(\.component)),
+            [.carbonDioxide, .nitrogen, .methane]
         )
     }
 
@@ -2006,7 +2012,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(fetched[0].name, "Aramis ship specification example — Copy")
         XCTAssertEqual(fetched[0].pressureBarAbsolute, 16)
         XCTAssertEqual(fetched[0].temperatureCelsius, -25, accuracy: 1e-12)
-        XCTAssertEqual(BuiltInCaseCatalog.cases.count, 4)
+        XCTAssertEqual(BuiltInCaseCatalog.cases.count, 5)
     }
 
     @MainActor

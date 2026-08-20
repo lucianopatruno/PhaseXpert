@@ -53,6 +53,10 @@ establish a defensible user-facing N₂ range for that pinned binary model.
 | CO₂+H₂ | yes | no | no | no | no | no | no | xH₂ = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; encoded Souissi 2017 gas-pressure bounds |
 | CO₂+CH₄ | yes | no | no | no | limited phase classification | yes, limited continuous segment | no | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE phase classification and continuous EOS-CG-2021 bubble/dew curve from 293.13 K to 298.142 K; intermediate curve points are calculated within experimentally validated bounds, not measured rows |
 | CO₂+H₂+CH₄ | no | no | no | no | no | no | no | no validated simultaneous impurity domain |
+| OxyComb I CO₂+N₂+O₂+Ar | limited | no | no | no | no | no | no | exact 0.920/0.043/0.016/0.021 composition; 312.35 K, 1.952–6.951 MPa and 312.60 K, 7.049–11.002 MPa |
+| PreComb I CO₂+CH₄+H₂ | limited | no | no | no | no | no | no | exact 0.950/0.033/0.017 composition; 313.00 K, 1.995–7.000 MPa |
+| PreComb II CO₂+N₂+CH₄+H₂ | limited | no | no | no | no | no | no | exact 0.942/0.023/0.022/0.013 composition; 313.15 K, 2.000–20.002 MPa |
+| TransportSpec CO₂+N₂+Ar+CH₄+H₂ | limited | no | no | no | no | no | no | exact 0.952/0.028/0.005/0.010/0.005 composition; 293.15 K at 1.998–5.499 or 8.501–22.000 MPa, and 313.15 K at 1.996–22.000 MPa |
 
 The app displays these Advanced CCS production limits before calculation. The
 displayed ppm values, temperature sets/intervals, contextual pressure ranges,

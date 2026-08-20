@@ -146,10 +146,16 @@ public struct AdvancedCCSCapabilityMatrix: Sendable {
         }
 
         if let pressurePa, let temperatureK {
-            let nominalTemperatureToleranceK = formulation.id == TeqpFormulationCatalog
-                .co2OxygenEOSCGGasDensity.id
-                ? TeqpFormulationCatalog.co2OxygenNominalIsothermToleranceK
-                : 0
+            let nominalTemperatureToleranceK: Double
+            if formulation.components.count > 2 {
+                nominalTemperatureToleranceK = TeqpFormulationCatalog
+                    .multicomponentNominalIsothermToleranceK
+            } else if formulation.id == TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id {
+                nominalTemperatureToleranceK = TeqpFormulationCatalog
+                    .co2OxygenNominalIsothermToleranceK
+            } else {
+                nominalTemperatureToleranceK = 0
+            }
             guard capability.contains(
                 temperatureK: temperatureK,
                 pressurePa: pressurePa,

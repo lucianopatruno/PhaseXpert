@@ -33,6 +33,7 @@ public struct TeqpCompositionLimit: Codable, Equatable, Sendable {
 public enum TeqpPhaseDomain: String, Codable, Equatable, Sendable {
     case homogeneousGas
     case homogeneousLiquidOrDense
+    case homogeneousSinglePhase
     case supercritical
     case phaseEquilibrium
     case pureFluid
@@ -129,17 +130,13 @@ public extension TeqpPropertyCapability {
         pressurePa: Double,
         nominalTemperatureToleranceK: Double = 0
     ) -> Bool {
-        isothermPressureLimit(
-            for: temperatureK,
-            nominalTemperatureToleranceK: nominalTemperatureToleranceK
-        )
-        .map {
+        isothermPressureLimits.contains {
             $0.contains(
                 temperatureK: temperatureK,
                 pressurePa: pressurePa,
                 nominalTemperatureToleranceK: nominalTemperatureToleranceK
             )
-        } ?? false
+        }
     }
 }
 
@@ -227,6 +224,7 @@ public enum TeqpFormulationCatalog {
     public static let teqpVersion = "v0.23.1"
     public static let teqpCommit = "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"
     public static let co2OxygenNominalIsothermToleranceK = 0.05
+    public static let multicomponentNominalIsothermToleranceK = 0.05
 
     public static let pureCarbonDioxide = TeqpFormulation(
         id: "teqp-v0.23.1-pure-co2-span-wagner-density",
@@ -820,6 +818,128 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let oxyCombIMulticomponentDensity = multicomponentDensityFormulation(
+        id: "oxycomb-i",
+        name: "OxyComb I CO₂+N₂+O₂+Ar EOS-CG-2021 density",
+        composition: [
+            (.carbonDioxide, 0.920), (.nitrogen, 0.043),
+            (.oxygen, 0.016), (.argon, 0.021)
+        ],
+        limits: [
+            .init(temperatureK: 312.35, minimumPressurePa: 1_952_000, maximumPressurePa: 6_951_000),
+            .init(temperatureK: 312.60, minimumPressurePa: 7_049_000, maximumPressurePa: 11_002_000)
+        ],
+        metrics: "20/20 validation rows converged; AARD 0.584120%; bias -0.043177%; RMS 0.718944%; worst 1.702920%.",
+        domain: "312.35 K at 1.952–6.951 MPa and 312.60 K at 7.049–11.002 MPa"
+    )
+
+    public static let preCombIMulticomponentDensity = multicomponentDensityFormulation(
+        id: "precomb-i",
+        name: "PreComb I CO₂+CH₄+H₂ EOS-CG-2021 gas density",
+        composition: [
+            (.carbonDioxide, 0.950), (.methane, 0.033), (.hydrogen, 0.017)
+        ],
+        limits: [
+            .init(temperatureK: 313.00, minimumPressurePa: 1_995_000, maximumPressurePa: 7_000_000)
+        ],
+        metrics: "11/11 gas rows converged; AARD 0.347581%; bias +0.319395%; RMS 0.460806%; worst 0.925245%.",
+        domain: "313.00 K at 1.995–7.000 MPa"
+    )
+
+    public static let preCombIIMulticomponentDensity = multicomponentDensityFormulation(
+        id: "precomb-ii",
+        name: "PreComb II CO₂+N₂+CH₄+H₂ EOS-CG-2021 density",
+        composition: [
+            (.carbonDioxide, 0.942), (.nitrogen, 0.023),
+            (.methane, 0.022), (.hydrogen, 0.013)
+        ],
+        limits: [
+            .init(temperatureK: 313.15, minimumPressurePa: 2_000_000, maximumPressurePa: 20_002_000)
+        ],
+        metrics: "37/37 validation rows converged; AARD 0.608688%; bias -0.508935%; RMS 0.695111%; worst 1.120183%.",
+        domain: "313.15 K at 2.000–20.002 MPa"
+    )
+
+    public static let transportSpecMulticomponentDensity = multicomponentDensityFormulation(
+        id: "transport-spec",
+        name: "TransportSpec CO₂+N₂+Ar+CH₄+H₂ EOS-CG-2021 density",
+        composition: [
+            (.carbonDioxide, 0.952), (.nitrogen, 0.028), (.argon, 0.005),
+            (.methane, 0.010), (.hydrogen, 0.005)
+        ],
+        limits: [
+            .init(temperatureK: 293.15, minimumPressurePa: 1_998_000, maximumPressurePa: 5_499_000),
+            .init(temperatureK: 293.15, minimumPressurePa: 8_501_000, maximumPressurePa: 22_000_000),
+            .init(temperatureK: 313.15, minimumPressurePa: 1_996_000, maximumPressurePa: 22_000_000)
+        ],
+        metrics: "77/77 rows in the promoted 293.15 K and 313.15 K blocks converged; 293.15 K AARD 0.766256%, worst 1.105702%; 313.15 K AARD 0.261704%, worst 0.649013%.",
+        domain: "293.15 K at 1.998–5.499 MPa or 8.501–22.000 MPa; 313.15 K at 1.996–22.000 MPa"
+    )
+
+    private static func multicomponentDensityFormulation(
+        id: String,
+        name: String,
+        composition: [(ComponentID, Double)],
+        limits: [TeqpTemperaturePressureLimit],
+        metrics: String,
+        domain: String
+    ) -> TeqpFormulation {
+        let compositionLimits = composition.map {
+            TeqpCompositionLimit(
+                component: $0.0,
+                minimumMoleFraction: $0.1,
+                maximumMoleFraction: $0.1
+            )
+        }
+        return TeqpFormulation(
+            id: "teqp-v0.23.1-eoscg2021-multicomponent-\(id)-density-razmjoo2026",
+            name: name,
+            family: .eosCG2021,
+            status: .productionEnabled,
+            components: Set(composition.map(\.0)),
+            compositionLimits: compositionLimits,
+            supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume],
+            propertyCapabilities: [
+                TeqpPropertyCapability(
+                    property: .density,
+                    phaseDomain: .homogeneousSinglePhase,
+                    compositionLimits: compositionLimits,
+                    isothermPressureLimits: limits,
+                    validationArtifact: "Documentation/Validation/Razmjoo2026MulticomponentDensity.json",
+                    validationSummary: "Razmjoo et al. 2026 gravimetric-mixture VTD validation at the exact published composition; no composition interpolation.",
+                    accuracySummary: metrics,
+                    notes: [
+                        "LIMITED PASS — density and density-derived M, v and Z only at the exact published composition and measured isotherm/pressure blocks: \(domain).",
+                        "VLE, phase maps, caloric, acoustic and transport properties remain unsupported.",
+                        "No component is dropped, no composition is normalized and no fallback provider is used."
+                    ]
+                )
+            ],
+            supportsPhaseEnvelope: false,
+            provenance: "EOS-CG-2021 evaluated through teqp v0.23.1 \(teqpCommit), independently checked against Razmjoo et al. 2026 CC BY 4.0 experimental rows from Zenodo 10.5281/zenodo.15846367.",
+            limitations: [
+                "LIMITED PASS — exact published composition only; no interpolation across composition.",
+                "Temperature/pressure must remain in the measured blocks: \(domain).",
+                "VLE, phase maps, Cp, Cv, speed of sound, h, u, s and transport are unavailable.",
+                "No CoolProp fallback is used."
+            ],
+            references: [
+                SourceReference(
+                    authors: "Razmjoo, Signorini, Di Bona, Conversano and Gatti",
+                    title: "New density data and equations of state assessment for multicomponent CO₂-rich mixtures relevant to CO₂ transport for CCS applications",
+                    year: 2026,
+                    doiOrURL: "https://doi.org/10.1016/j.fuel.2026.139184"
+                ),
+                SourceReference(
+                    authors: "Razmjoo, Signorini, Di Bona, Conversano and Gatti",
+                    title: "New density data for multicomponent CO₂-rich mixtures",
+                    year: 2025,
+                    doiOrURL: "https://doi.org/10.5281/zenodo.15846367"
+                )
+            ]
+        )
+    }
+
     public static let surveyedBinaryImpurities: Set<ComponentID> = [
         .nitrogen,
         .oxygen,
@@ -834,7 +954,11 @@ public enum TeqpFormulationCatalog {
             co2NitrogenGernertGasDensity,
             co2HydrogenEOSCGGasDensity,
             co2MethaneEOSCGGasDensity,
-            co2OxygenEOSCGGasDensity
+            co2OxygenEOSCGGasDensity,
+            oxyCombIMulticomponentDensity,
+            preCombIMulticomponentDensity,
+            preCombIIMulticomponentDensity,
+            transportSpecMulticomponentDensity
         ]
     }
 

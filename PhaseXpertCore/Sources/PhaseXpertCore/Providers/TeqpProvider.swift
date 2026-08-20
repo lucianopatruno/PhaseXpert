@@ -468,7 +468,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "Native teqp Helmholtz engine with validation-gated pure CO₂ and property-specific CCS mixture formulations.",
-            equationOrMethod: "Pure CO₂ uses the pinned upstream CarbonDioxide.json multifluid model. CO₂+N₂, CO₂+H₂, CO₂+CH₄ and low-O₂ CO₂+O₂ homogeneous density use pinned teqp model data only at independently validated domains. Unsupported properties and domains do not fall back to CoolProp.",
+            equationOrMethod: "Pure CO₂ and validation-gated binary or dry multicomponent density use pinned teqp EOS-CG model data only at independently validated domains. Unsupported properties and domains do not fall back to CoolProp.",
             coefficientSetVersion: TeqpFormulationCatalog.pureCarbonDioxide.provenance,
             requiredResources: ["PhaseXpertTeqpBridge.xcframework"],
             limitations: [
@@ -478,7 +478,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "CO₂+H₂ is supported only for homogeneous gas density at xH₂ = 0.05362, on the validated 273.15 K, 293.15 K and 323.15 K isotherms, within the observed gas-pressure ranges.",
                 "CO₂+CH₄ is supported only for homogeneous density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 gas and high-temperature supercritical validation slices.",
                 "CO₂+CH₄ VLE phase classification and continuous bubble/dew phase-envelope points are validation-gated to xCH₄ = 0.05 from 293.13 K to 298.142 K inside the ordinary Petropoulou et al. 2018 temperature bounds; two-phase bulk density is unavailable.",
-                "Ar and simultaneous impurity mixtures remain unsupported and never fall back to CoolProp.",
+                "Dry simultaneous-impurity density is limited to four exact Razmjoo et al. 2026 compositions and measured isotherm/pressure blocks; every other multicomponent state remains unsupported.",
                 "CO₂+O₂ is limited to homogeneous gas density at exact xO₂ = 0.05032089 and the seven Lozano-Martín et al. 2020 experimental isotherm bands.",
                 "Dynamic viscosity and all transport properties are unavailable for this provider.",
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
@@ -541,6 +541,12 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     title: "Accurate experimental (p, ρ, T) data of the (CO₂ + O₂) binary system for the development of models for CCS processes",
                     year: 2020,
                     doiOrURL: "https://doi.org/10.1016/j.jct.2020.106210"
+                ),
+                SourceReference(
+                    authors: "Razmjoo, Signorini, Di Bona, Conversano and Gatti",
+                    title: "New density data and equations of state assessment for multicomponent CO₂-rich mixtures relevant to CO₂ transport for CCS applications",
+                    year: 2026,
+                    doiOrURL: "https://doi.org/10.1016/j.fuel.2026.139184"
                 )
             ]
         )
@@ -576,6 +582,9 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 for: canonical,
                 property: .density
             )
+            if decision.isSupported {
+                return []
+            }
             return [
                 ValidationIssue(
                     code: .componentOutsideModelRange,
@@ -598,6 +607,16 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     ) -> OperatingRangeGuidance? {
         guard engine.isAvailable else { return nil }
         guard !isPureCarbonDioxide(context.composition) else { return nil }
+
+        if let canonical = try? CanonicalComposition(context.composition),
+           canonical.components.count > 2 {
+            return multicomponentOperatingRangeGuidance(
+                composition: canonical,
+                pressurePa: context.pressurePa,
+                temperatureK: context.temperatureK,
+                requestedProperties: context.requestedProperties
+            )
+        }
 
         if let nitrogen = context.composition.first(where: { $0.component == .nitrogen }) {
             return nitrogenOperatingRangeGuidance(
@@ -720,8 +739,15 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 pressurePa: request.pressurePa,
                 temperatureK: request.temperatureK
             )
-            throw ProviderError.invalidRequest(
-                "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
+            guard decision.isSupported else {
+                throw ProviderError.invalidRequest(
+                    "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
+                )
+            }
+            return try await calculateMulticomponentDensity(
+                request,
+                composition: canonical,
+                decision: decision
             )
         }
         if isSupportedNitrogenGasComposition(request.composition) {
@@ -972,6 +998,83 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 message: "This property is not enabled for the experimental teqp pure-CO₂ milestone."
             )
         }
+    }
+
+    private func calculateMulticomponentDensity(
+        _ request: CalculationRequest,
+        composition: CanonicalComposition,
+        decision: AdvancedCCSCapabilityDecision
+    ) async throws -> CalculationResponse {
+        let startedAt = Date()
+        let raw = try await engine.calculateNComponentDensity(
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            composition: composition
+        )
+        guard raw.converged,
+              raw.densityRootCount == 1,
+              raw.densityKilogramsPerCubicMetre.isFinite,
+              raw.densityKilogramsPerCubicMetre > 0 else {
+            throw ProviderError.malformedResponse(
+                "teqp did not return one finite positive density root for the validated multicomponent state."
+            )
+        }
+
+        let supported: Set<PropertyID> = [
+            .density, .molarMass, .specificVolume, .compressibilityFactor
+        ]
+        let derived = DerivedPropertyCalculator().values(
+            requestedProperties: request.requestedProperties,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            composition: composition.components,
+            densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre
+        )
+        let derivedByProperty = Dictionary(
+            uniqueKeysWithValues: derived.map { ($0.property, $0) }
+        )
+        let values = request.requestedProperties
+            .sorted { $0.rawValue < $1.rawValue }
+            .map { property -> PropertyValue in
+                if property == .density {
+                    return PropertyValue(
+                        property: .density,
+                        value: raw.densityKilogramsPerCubicMetre,
+                        unit: "kg/m³",
+                        status: .calculated,
+                        message: "Native teqp EOS-CG-2021 N-component density inside the exact Razmjoo et al. 2026 validation gate."
+                    )
+                }
+                if let value = derivedByProperty[property] {
+                    return value
+                }
+                return PropertyValue(
+                    property: property,
+                    value: nil,
+                    unit: "",
+                    status: .unavailable,
+                    message: supported.contains(property)
+                        ? "The density-derived result is unavailable because a required input was invalid."
+                        : "This property is not validated for dry multicomponent Advanced CCS; no fallback calculation is used."
+                )
+            }
+
+        return CalculationResponse(
+            requestID: request.requestID,
+            model: descriptor,
+            phase: phaseRegion(for: raw.phaseIdentifier),
+            properties: values,
+            solver: SolverMetadata(
+                method: "teqp v0.23.1 EOS-CG-2021 generic N-component density solve; formulation \(decision.formulationID ?? raw.formulationID); exact-composition validation artifact Documentation/Validation/Razmjoo2026MulticomponentDensity.json; derived M=ΣxᵢMᵢ, v=1/ρ, Z=pM/(ρRT)",
+                converged: true,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            warnings: [
+                "LIMITED PASS — dry multicomponent density and density-derived M, v and Z only at the exact published composition and measured T/P gate.",
+                "VLE, phase maps, caloric, acoustic and transport properties remain unsupported; no component is dropped and no fallback provider is used."
+            ],
+            isScientificResult: true
+        )
     }
 
     private func calculateHydrogenGasDensity(
@@ -1787,6 +1890,77 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             throw ProviderError.invalidRequest("CO₂+CH₄ validation metadata is incomplete.")
         }
         return capability
+    }
+
+    private func multicomponentOperatingRangeGuidance(
+        composition: CanonicalComposition,
+        pressurePa: Double?,
+        temperatureK: Double?,
+        requestedProperties: Set<PropertyID>
+    ) -> OperatingRangeGuidance {
+        let compositionDecision = capabilityMatrix.decision(
+            for: composition,
+            property: .density
+        )
+        guard compositionDecision.isSupported,
+              let formulationID = compositionDecision.formulationID,
+              let formulation = TeqpFormulationCatalog.productionFormulations.first(where: {
+                  $0.id == formulationID
+              }),
+              let capability = formulation.propertyCapabilities.first(where: {
+                  $0.property == .density
+              }) else {
+            return OperatingRangeGuidance(
+                title: "Model limits",
+                summary: [.init(
+                    severity: .unsupported,
+                    title: "Exact composition unsupported",
+                    detail: compositionDecision.reasons.joined(separator: " ")
+                )]
+            )
+        }
+
+        var issues: [OperatingGuidanceLine] = []
+        if let pressurePa, let temperatureK {
+            let stateDecision = capabilityMatrix.decision(
+                for: composition,
+                property: .density,
+                pressurePa: pressurePa,
+                temperatureK: temperatureK
+            )
+            if !stateDecision.isSupported {
+                issues.append(.init(
+                    severity: .unsupported,
+                    title: "State outside measured blocks",
+                    detail: stateDecision.reasons.joined(separator: " ")
+                ))
+            }
+        }
+        let compositionText = composition.components
+            .map { "\($0.component.symbol) \(String(format: "%.4g", $0.moleFraction * 100)) mol%" }
+            .joined(separator: ", ")
+        let stateBlocks = capability.isothermPressureLimits.map {
+            "\(celsiusString($0.temperatureK)) °C / \(pressureRangeString($0))"
+        }.joined(separator: "; ")
+        return OperatingRangeGuidance(
+            title: "Validated exact multicomponent range",
+            summary: [
+                .init(severity: .information, title: "Exact composition", detail: compositionText),
+                .init(severity: .information, title: "Measured T/P blocks", detail: stateBlocks)
+            ],
+            currentInputIssues: issues,
+            propertyAvailability: propertyAvailabilityLines(
+                requestedProperties: requestedProperties,
+                supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume],
+                system: formulation.name
+            ),
+            phaseDiagram: [.init(
+                severity: .unsupported,
+                title: "Phase diagram",
+                detail: "Multicomponent phase equilibrium is not production-validated."
+            )],
+            suggestions: []
+        )
     }
 
     private func hydrogenOperatingRangeGuidance(

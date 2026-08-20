@@ -179,9 +179,9 @@ final class PhaseXpertUITests: XCTestCase {
 
         openImpurityMenu("CH₄", in: app)
         XCTAssertTrue(app.buttons["H₂"].waitForExistence(timeout: 2))
-        XCTAssertFalse(app.buttons["N₂"].exists)
+        XCTAssertTrue(app.buttons["N₂"].exists)
         XCTAssertTrue(app.buttons["O₂"].exists)
-        XCTAssertFalse(app.buttons["Ar"].exists)
+        XCTAssertTrue(app.buttons["Ar"].exists)
         app.buttons["H₂"].tap()
 
         XCTAssertTrue(app.buttons["H₂ impurity menu"].waitForExistence(timeout: 3))

@@ -121,6 +121,82 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         let nearCritical: Bool
     }
 
+    private struct MulticomponentDensityArtifact: Decodable {
+        let rows: [MulticomponentDensityRow]
+    }
+
+    private struct MulticomponentDensityRow: Decodable {
+        let id: String
+        let compositionMoleFraction: [String: Double]
+        let temperatureK: Double
+        let pressurePa: Double
+        let experimentalDensityKgM3: Double
+
+        enum CodingKeys: String, CodingKey {
+            case id
+            case compositionMoleFraction = "composition_mole_fraction"
+            case temperatureK = "temperature_k"
+            case pressurePa = "pressure_pa"
+            case experimentalDensityKgM3 = "experimental_density_kg_m3"
+        }
+    }
+
+    func testRazmjooMulticomponentDensityValidationMatrixReproducesCommittedMetrics() async throws {
+        let provider = TeqpProvider(engine: try requireNativeTeqpEngine())
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let artifactURL = repositoryRoot
+            .appendingPathComponent("Documentation/Validation/Razmjoo2026MulticomponentDensity.json")
+        let artifact = try JSONDecoder().decode(
+            MulticomponentDensityArtifact.self,
+            from: Data(contentsOf: artifactURL)
+        )
+        XCTAssertEqual(artifact.rows.count, 330)
+
+        var deviations: [Double] = []
+        var nonconverged = 0
+        for row in artifact.rows {
+            let composition = try row.compositionMoleFraction.map { key, value in
+                MixtureComponent(component: try componentID(key), moleFraction: value)
+            }
+            do {
+                let result = try await provider.diagnosticNComponentDensity(
+                    pressurePa: row.pressurePa,
+                    temperatureK: row.temperatureK,
+                    composition: composition
+                )
+                let relativeDeviation = 100 * (
+                    result.densityKilogramsPerCubicMetre - row.experimentalDensityKgM3
+                ) / row.experimentalDensityKgM3
+                deviations.append(relativeDeviation)
+            } catch {
+                nonconverged += 1
+            }
+        }
+        XCTAssertEqual(deviations.count, 171)
+        XCTAssertEqual(nonconverged, 159)
+        let aard = deviations.map(abs).reduce(0, +) / Double(deviations.count)
+        let bias = deviations.reduce(0, +) / Double(deviations.count)
+        let rms = sqrt(deviations.map { $0 * $0 }.reduce(0, +) / Double(deviations.count))
+        XCTAssertEqual(aard, 0.6103034863, accuracy: 1e-9)
+        XCTAssertEqual(bias, -0.1084971261, accuracy: 1e-9)
+        XCTAssertEqual(rms, 0.8441244056, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(deviations.map(abs).max()), 4.3727922783, accuracy: 1e-9)
+    }
+
+    private func componentID(_ key: String) throws -> ComponentID {
+        switch key {
+        case "carbonDioxide": .carbonDioxide
+        case "nitrogen": .nitrogen
+        case "methane": .methane
+        case "hydrogen": .hydrogen
+        case "oxygen": .oxygen
+        case "argon": .argon
+        default: throw XCTSkip("Unsupported validation component key: \(key)")
+        }
+    }
+
     func testNativeGenericNComponentDensityAcrossAuditedSystems() async throws {
         let provider = TeqpProvider(engine: try requireNativeTeqpEngine())
         let systems: [[MixtureComponent]] = [

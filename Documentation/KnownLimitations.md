@@ -35,9 +35,12 @@
   VLE phase classification and bubble/dew phase-envelope points are enabled
   only for exact xCH₄ = 0.05 from 293.13 K to 298.142 K inside the
   Petropoulou 2018 ordinary VLE temperature bounds.
-  Viscosity, transport properties, enthalpy, entropy, internal energy, N₂,
-  O₂, Ar, simultaneous impurities, impurity heat capacities, impurity speed of
-  sound and impurity phase-equilibrium outputs are unavailable. Pure-CO₂
+  Binary N₂ and O₂ density also have narrow exact validation gates. Four exact
+  Razmjoo 2026 dry multicomponent compositions have limited density plus
+  density-derived M, v and Z support only in their measured T/P blocks.
+  Viscosity, transport properties, enthalpy, entropy, internal energy,
+  arbitrary simultaneous impurities, impurity heat capacities, impurity speed
+  of sound and impurity phase-equilibrium outputs are unavailable. Pure-CO₂
   phase-envelope generation is available through the native teqp saturation
   calculation; CH₄ impurity phase-envelope support is limited to an 82-point
   continuous bubble/dew curve inside the validated Petropoulou temperature

@@ -179,9 +179,11 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   classification and continuous bubble/dew phase-envelope curves are available
   only for xCH₄ = 0.05 from 293.13 K to 298.142 K inside the Petropoulou
   ordinary VLE temperature bounds; two-phase bulk density, critical
-  termination, H₂ phase envelopes, N₂, O₂, Ar,
-  simultaneous impurities, mixture Cp/Cv/speed, h/u/s and transport remain
-  unavailable for teqp. The native teqp bridge can now calculate diagnostic
+  termination and H₂ phase envelopes remain unavailable. N₂ and O₂ binary
+  density and four exact Razmjoo 2026 multicomponent density compositions are
+  limited to their independent validation gates; arbitrary simultaneous
+  impurities, mixture Cp/Cv/speed, h/u/s and transport remain unavailable for
+  teqp. The native teqp bridge can now calculate diagnostic
   fixed-composition homogeneous Cv, Cp and speed of sound for CO₂+H₂ and
   CO₂+CH₄. CH₄ critical-region and 303.15 K VLE calculations remain diagnostic
   and are not drawn as production critical termination.
