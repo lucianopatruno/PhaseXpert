@@ -185,7 +185,9 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
   impurities, mixture Cp/Cv/speed, h/u/s and transport remain unavailable for
   teqp. The native teqp bridge can now calculate diagnostic
   fixed-composition homogeneous Cv, Cp and speed of sound for CO₂+H₂ and
-  CO₂+CH₄. CH₄ critical-region and 303.15 K VLE calculations remain diagnostic
+  CO₂+CH₄. Generic multicomponent bubble/dew, global-stability and TP-flash
+  infrastructure is research-only and is not exposed as validated calculator
+  output. CH₄ critical-region and 303.15 K VLE calculations remain diagnostic
   and are not drawn as production critical termination.
 - Advanced CCS guidance is generated from the same capability metadata used by
   provider validation. It does not broaden support, does not snap inputs, and

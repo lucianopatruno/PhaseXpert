@@ -870,6 +870,31 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertTrue(response.warnings.contains { $0.contains("no component is dropped") })
     }
 
+    func testEveryValidatedMulticomponentCompositionRoutesThroughGenericDensityAndDerivedProperties() async throws {
+        let cases: [([MixtureComponent], Double, Double)] = [
+            ([.init(component: .carbonDioxide, moleFraction: 0.920), .init(component: .nitrogen, moleFraction: 0.043), .init(component: .oxygen, moleFraction: 0.016), .init(component: .argon, moleFraction: 0.021)], 3_000_000, 312.35),
+            ([.init(component: .carbonDioxide, moleFraction: 0.950), .init(component: .methane, moleFraction: 0.033), .init(component: .hydrogen, moleFraction: 0.017)], 3_000_000, 313.00),
+            ([.init(component: .carbonDioxide, moleFraction: 0.942), .init(component: .nitrogen, moleFraction: 0.023), .init(component: .methane, moleFraction: 0.022), .init(component: .hydrogen, moleFraction: 0.013)], 10_000_000, 313.15),
+            ([.init(component: .carbonDioxide, moleFraction: 0.952), .init(component: .nitrogen, moleFraction: 0.028), .init(component: .argon, moleFraction: 0.005), .init(component: .methane, moleFraction: 0.010), .init(component: .hydrogen, moleFraction: 0.005)], 10_000_000, 313.15)
+        ]
+        let provider = TeqpProvider(engine: MockEngine())
+        for (composition, pressure, temperature) in cases {
+            let response = try await provider.calculate(CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: pressure,
+                temperatureK: temperature,
+                composition: composition,
+                requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor],
+                clientVersion: "test"
+            ))
+            for property in response.properties {
+                XCTAssertEqual(property.status, .calculated, "\(composition) \(property.property)")
+                XCTAssertNotNil(property.value)
+            }
+            XCTAssertTrue(response.solver.method.contains("N-component"))
+        }
+    }
+
     func testHydrogenGasDensityLimitedDomainIsCalculatedWithoutFallback() async throws {
         let provider = TeqpProvider(engine: MockEngine())
         XCTAssertEqual(provider.descriptor.name, "Advanced CCS Properties")

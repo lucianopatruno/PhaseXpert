@@ -48,7 +48,7 @@ struct AboutView: View {
             Section("Advanced CCS Properties — teqp / EOS-CG") {
                 Text("teqp v0.23.1 evaluates Helmholtz-energy models locally. Pure CO₂ properties are available; binary CO₂+N₂, CO₂+H₂, CO₂+CH₄ and CO₂+O₂ density, plus CO₂+CH₄ VLE, are enabled only in their independently validated gates.")
                 Text("Limited dry multicomponent density and density-derived M, v and Z are available at four exact Razmjoo compositions: CO₂/N₂/O₂/Ar 92.0/4.3/1.6/2.1 mol%, CO₂/CH₄/H₂ 95.0/3.3/1.7 mol%, CO₂/N₂/CH₄/H₂ 94.2/2.3/2.2/1.3 mol%, and CO₂/N₂/Ar/CH₄/H₂ 95.2/2.8/0.5/1.0/0.5 mol%. The operating guidance is the authoritative source for their measured T/P slices.")
-                Text("The target CO₂+N₂+CH₄ ternary, ternary VLE, phase maps, caloric, acoustic and transport properties remain unsupported. Unsupported requests never fall back to CoolProp, normalize compositions or drop components.")
+                Text("A generic multicomponent phase-equilibrium solver is under research evaluation. CO₂+N₂+CH₄ bubble/dew comparisons, stability and TP flash are not production calculator capabilities; interior flash phase fractions are not independently validated. Phase maps, caloric, acoustic and transport properties remain unsupported. Unsupported requests never fall back to CoolProp, normalize compositions or drop components.")
                     .foregroundStyle(.secondary)
             }
 

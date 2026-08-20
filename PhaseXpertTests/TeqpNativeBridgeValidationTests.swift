@@ -240,6 +240,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertEqual(tpdStatus, 0, String(cString: error))
         XCTAssertEqual(tpd.status, PXTeqpStabilityUnstable)
         XCTAssertLessThan(tpd.minimum_tpd, -2e-6)
+        XCTAssertEqual(minimum.reduce(0, +), 1, accuracy: 1e-12)
 
         var liquid = [Double](repeating: 0, count: 3)
         var vapor = [Double](repeating: 0, count: 3)
@@ -252,6 +253,67 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertLessThan(flash.vapor_fraction, 1)
         XCTAssertLessThan(flash.maximum_material_balance_residual, 2e-8)
         XCTAssertLessThan(flash.maximum_log_fugacity_residual, 2e-7)
+        XCTAssertLessThan(flash.relative_liquid_pressure_residual, 2e-7)
+        XCTAssertLessThan(flash.relative_vapor_pressure_residual, 2e-7)
+        XCTAssertGreaterThan(flash.liquid_molar_density_mol_m3, flash.vapor_molar_density_mol_m3)
+        XCTAssertGreaterThan(flash.liquid_minimum_stability_eigenvalue, 0)
+        XCTAssertGreaterThan(flash.vapor_minimum_stability_eigenvalue, 0)
+        XCTAssertEqual(liquid.reduce(0, +), 1, accuracy: 1e-12)
+        XCTAssertEqual(vapor.reduce(0, +), 1, accuracy: 1e-12)
+        for index in feed.indices {
+            let reconstructed = (1 - flash.vapor_fraction) * liquid[index]
+                + flash.vapor_fraction * vapor[index]
+            XCTAssertEqual(reconstructed, feed[index], accuracy: 2e-8)
+        }
+
+        var repeatedMinimum = [Double](repeating: 0, count: 3)
+        var repeatedTPD = PXTeqpTPDResult()
+        error = [CChar](repeating: 0, count: 512)
+        XCTAssertEqual(px_teqp_calculate_ncomponent_tpd(&ids, &feed, 3, 7_050_000, 298.138, &repeatedMinimum, 3, &repeatedTPD, &error, error.count), 0)
+        XCTAssertEqual(repeatedTPD.status, tpd.status)
+        XCTAssertEqual(repeatedTPD.minimum_tpd, tpd.minimum_tpd, accuracy: 1e-14)
+        XCTAssertEqual(repeatedMinimum, minimum)
+
+        var repeatedLiquid = [Double](repeating: 0, count: 3)
+        var repeatedVapor = [Double](repeating: 0, count: 3)
+        var repeatedFlash = PXTeqpTPFlashResult()
+        error = [CChar](repeating: 0, count: 512)
+        XCTAssertEqual(px_teqp_calculate_ncomponent_tp_flash(&ids, &feed, 3, 7_050_000, 298.138, &repeatedLiquid, 3, &repeatedVapor, 3, &repeatedFlash, &error, error.count), 0)
+        XCTAssertEqual(repeatedFlash.vapor_fraction, flash.vapor_fraction, accuracy: 1e-14)
+        XCTAssertEqual(repeatedLiquid, liquid)
+        XCTAssertEqual(repeatedVapor, vapor)
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
+    func testGenericTPDAndTPFlashRejectInvalidABIInputs() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
+        var output = [Double](repeating: 0, count: 3)
+        var vaporOutput = [Double](repeating: 0, count: 3)
+        var tpd = PXTeqpTPDResult()
+        var flash = PXTeqpTPFlashResult()
+        var error = [CChar](repeating: 0, count: 256)
+        let invalidFeeds = [
+            [0.97, 0.02, 0.02],
+            [1.0, 0.0, 0.0],
+            [0.97, -0.01, 0.04],
+            [Double.nan, 0.01, 0.99],
+            [Double.infinity, 0.01, 0.01]
+        ]
+        for rawFeed in invalidFeeds {
+            var feed = rawFeed
+            XCTAssertNotEqual(px_teqp_calculate_ncomponent_tpd(&ids, &feed, 3, 7_050_000, 298.138, &output, 3, &tpd, &error, error.count), 0)
+            XCTAssertNotEqual(px_teqp_calculate_ncomponent_tp_flash(&ids, &feed, 3, 7_050_000, 298.138, &output, 3, &vaporOutput, 3, &flash, &error, error.count), 0)
+        }
+        var validFeed = [0.9697, 0.0152, 0.0151]
+        for (pressure, temperature) in [(0.0, 298.138), (-1.0, 298.138), (Double.nan, 298.138), (7_050_000.0, 0.0), (7_050_000.0, Double.infinity)] {
+            XCTAssertNotEqual(px_teqp_calculate_ncomponent_tpd(&ids, &validFeed, 3, pressure, temperature, &output, 3, &tpd, &error, error.count), 0)
+            XCTAssertNotEqual(px_teqp_calculate_ncomponent_tp_flash(&ids, &validFeed, 3, pressure, temperature, &output, 3, &vaporOutput, 3, &flash, &error, error.count), 0)
+        }
+        XCTAssertNotEqual(px_teqp_calculate_ncomponent_tpd(&ids, &validFeed, 1, 7_050_000, 298.138, &output, 3, &tpd, &error, error.count), 0)
+        XCTAssertNotEqual(px_teqp_calculate_ncomponent_tp_flash(&ids, &validFeed, 3, 7_050_000, 298.138, &output, 2, &vaporOutput, 3, &flash, &error, error.count), 0)
         #else
         throw XCTSkip("Native teqp unavailable")
         #endif

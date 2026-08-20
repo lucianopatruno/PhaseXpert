@@ -10,8 +10,10 @@
   native predictions and explicit non-convergence, and added capability,
   provider, metadata and native regression coverage.
 - Kept the exact CO₂/N₂/CH₄ density target and its 62-row Ottøy ternary VLE
-  matrix research-only because lawful Zhang density rows and a validated
-  pressure-predictive ternary VLE solver are not available.
+  matrix research-only because lawful Zhang density rows remain unavailable and
+  the predictive bubble/dew, global-stability and TP-flash solvers have not
+  established a validated production domain. The solvers are available only as
+  deterministic research diagnostics.
 
 - Added a provider-facing operating-range guidance API for Advanced CCS
   Properties so the app can display production-validated composition,

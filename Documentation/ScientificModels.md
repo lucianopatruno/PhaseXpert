@@ -27,12 +27,16 @@ An experimental native teqp provider is also available. It is not the default
 provider. It solves density locally through teqp's pinned pure-CO₂ multifluid
 model, exposes pure-CO₂ saturation for the Phase Diagram workflow, and reports
 unsupported properties as unavailable rather than borrowing them from CoolProp.
-Its impurity support is property-specific: EOS-CG-2021 CO₂+H₂ homogeneous
+Its impurity support is property-specific: CO₂+N₂, EOS-CG-2021 CO₂+H₂ homogeneous
 gas-density slices, CO₂+CH₄ homogeneous gas/supercritical density slices and
 the limited CO₂+CH₄ Petropoulou ordinary-isotherm VLE gate are enabled only
-inside their encoded ThermoML validation domains. The native bridge also contains validation-gated CO₂+N₂
-research infrastructure built from pinned upstream teqp data. Gate C did not
-establish a defensible user-facing N₂ range for that pinned binary model.
+inside their encoded validation domains. CO₂+N₂ density is limited to the
+Mazzoccoli 2012 homogeneous-gas block at xN₂ = 0.0127, 283.15 K and
+1.0–4.5 MPa(a); broader N₂ formulations remain research-only or failed validation.
+The native bridge also contains arbitrary-N bubble/dew, tangent-plane-stability
+and TP-flash research infrastructure. Ottøy boundary comparisons and internal
+flash consistency do not independently validate an interior phase split, so
+these APIs do not create a production VLE or phase-classification gate.
 
 ## Alternatives considered
 
@@ -50,6 +54,7 @@ establish a defensible user-facing N₂ range for that pinned binary model.
 | System | Density | Cv | Cp | Speed | VLE | Phase envelope | Critical | Domain |
 | ------ | ------: | -: | -: | ----: | --: | -------------: | -------: | ------ |
 | CO₂ | yes | yes | yes | yes | pure saturation | pure saturation | yes | Span-Wagner pure-fluid teqp path; preliminary until independently accepted |
+| CO₂+N₂ | limited | no | no | no | no | no | no | xN₂ = 0.0127 exactly; T = 283.15 K; homogeneous gas density at 1.0–4.5 MPa(a), Mazzoccoli 2012 |
 | CO₂+H₂ | yes | no | no | no | no | no | no | xH₂ = 0.05362 exactly; T = 273.15 K, 293.15 K or 323.15 K; encoded Souissi 2017 gas-pressure bounds |
 | CO₂+CH₄ | yes | no | no | no | limited phase classification | yes, limited continuous segment | no | xCH₄ = 0.05 exactly; Ghafri 2016 301.14 K gas block plus 308.15-313.15 K high-temperature supercritical density slices; Petropoulou 2018 VLE phase classification and continuous EOS-CG-2021 bubble/dew curve from 293.13 K to 298.142 K; intermediate curve points are calculated within experimentally validated bounds, not measured rows |
 | CO₂+H₂+CH₄ | no | no | no | no | no | no | no | no validated simultaneous impurity domain |
