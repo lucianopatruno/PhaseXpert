@@ -30,7 +30,7 @@ final class PhaseXpertUITests: XCTestCase {
             "Run calculation button should be reachable by scrolling the calculator form."
         )
 
-        openMoreRow("General Properties / CoolProp", in: app)
+        openMoreRow("General Properties", in: app)
         XCTAssertTrue(app.staticTexts["Identity"].waitForExistence(timeout: 2))
     }
 

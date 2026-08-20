@@ -69,7 +69,7 @@ final class ProviderAndAPITests: XCTestCase {
         XCTAssertEqual(registry.provider(id: "coolprop-heos")?.descriptor.id, "coolprop-heos")
         XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.name,
-            "General Properties (CoolProp)"
+            "General Properties"
         )
         XCTAssertEqual(
             registry.provider(id: "coolprop-heos")?.descriptor.availability,

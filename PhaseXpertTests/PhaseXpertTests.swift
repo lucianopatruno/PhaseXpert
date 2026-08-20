@@ -89,6 +89,10 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
         XCTAssertFalse(viewModel.canRunCalculation)
         XCTAssertNil(viewModel.waterEquilibriumPreview)
+        XCTAssertEqual(
+            viewModel.waterEquilibriumUnavailableMessage,
+            "Water calculations are unavailable at this condition. Validated water-equilibrium ranges are \(SpycherPruess2003WaterEquilibrium.validatedRangeSummary)"
+        )
         await viewModel.calculate()
         XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
         XCTAssertNil(viewModel.calculationRecord)

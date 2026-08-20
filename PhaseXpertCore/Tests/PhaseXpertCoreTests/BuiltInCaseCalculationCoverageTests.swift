@@ -62,7 +62,7 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
         XCTAssertTrue(required.isSubset(of: advertised))
         XCTAssertTrue(advertised.contains(.carbonMonoxide))
         XCTAssertTrue(advertised.contains(.hydrogenSulfide))
-        XCTAssertEqual(provider.descriptor.providerVersion, "0.10.0")
+        XCTAssertEqual(provider.descriptor.providerVersion, "0.11.0")
     }
 
     func testEveryBuiltInCasePassesPreliminaryProviderCompositionGate() async throws {
@@ -108,6 +108,11 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
                     "\(builtInCase.name) did not calculate \(property.rawValue)"
                 )
             }
+            XCTAssertTrue(response.warnings.contains {
+                $0.contains("Preliminary / validation pending")
+                    || $0.contains("preliminary / validation pending")
+                    || $0.contains("PRELIMINARY / VALIDATION PENDING")
+            })
         }
     }
 

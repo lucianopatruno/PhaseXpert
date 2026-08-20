@@ -272,6 +272,13 @@ struct CalculatorView: View {
 
                 if let equilibrium = viewModel.displayedWaterEquilibrium {
                     WaterEquilibriumSection(equilibrium: equilibrium)
+                } else if let waterMessage = viewModel.waterEquilibriumUnavailableMessage {
+                    Section {
+                        Label(waterMessage, systemImage: "info.circle.fill")
+                            .foregroundStyle(Color.ifePrimary)
+                    } header: {
+                        Text("Water equilibrium")
+                    }
                 }
 
                 if !viewModel.validationReport.issues.isEmpty {

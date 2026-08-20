@@ -158,6 +158,17 @@ final class CalculatorViewModel {
         waterEquilibriumPreview
     }
 
+    var waterEquilibriumUnavailableMessage: String? {
+        guard isBinaryCarbonDioxideWaterComposition,
+              !homogeneousWetPropertiesAreInPreliminaryDomain,
+              waterEquilibriumPreview == nil,
+              parsedPressurePa != nil,
+              parsedTemperatureK != nil else {
+            return nil
+        }
+        return "Water calculations are unavailable at this condition. Validated water-equilibrium ranges are \(SpycherPruess2003WaterEquilibrium.validatedRangeSummary)"
+    }
+
     var canRunCalculation: Bool {
         if isBinaryCarbonDioxideWaterComposition {
             return homogeneousWetPropertiesAreInPreliminaryDomain
