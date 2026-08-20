@@ -352,6 +352,77 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2NitrogenGernertGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-co2-n2-gerg-gas-density-mazzoccoli2012",
+        name: "CO₂+N₂ Gernert/GERG homogeneous gas density",
+        family: .multifluid,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .nitrogen],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .nitrogen,
+                minimumMoleFraction: 0.0127,
+                maximumMoleFraction: 0.0127
+            )
+        ],
+        supportedProperties: [
+            .density,
+            .molarMass,
+            .compressibilityFactor,
+            .specificVolume
+        ],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .nitrogen,
+                        minimumMoleFraction: 0.0127,
+                        maximumMoleFraction: 0.0127
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 283.15,
+                        minimumPressurePa: 1_000_000,
+                        maximumPressurePa: 4_500_000
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/AdvancedCCSTeqpIndependentValidation2026-08-20.json",
+                validationSummary: "Mazzoccoli et al. 2012 ThermoML gas-density validation at exact xN₂ = 0.0127 and 283.15 K.",
+                accuracySummary: "5/5 converged; AARD 0.599354%; bias +0.022493%; RMS 0.765116%; worst 1.442151%.",
+                notes: [
+                    "Validated only for the contiguous 283.15 K homogeneous gas pressure series at the exact Mazzoccoli et al. 2012 N₂ mole fraction.",
+                    "The same dataset fails liquid/dense and broader temperature support, so no interpolation to other N₂ compositions or isotherms is claimed.",
+                    "VLE, phase envelope, Cp, Cv, speed of sound, h, u, s and transport are unavailable for this mixture."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "CarbonDioxide.json Span-JPCRD-1996; Nitrogen.json Span-JPCRD-2000; Gernert-Thesis-2013 reducing parameters and Kunz-JCED-2012 GERG-2008 departure function evaluated through teqp v0.23.1 \(teqpCommit).",
+        limitations: [
+            "LIMITED PASS — homogeneous gas density only at xN₂ = 0.0127.",
+            "Temperature must be 283.15 K and pressure must remain between 1.0 MPa and 4.5 MPa.",
+            "Liquid/dense density, phase equilibrium, phase envelope, heat capacities, speed of sound, reference-state properties and transport are unavailable.",
+            "No CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(
+                authors: "Mazzoccoli, Bosio and Arato",
+                title: "CO₂-rich binary p-rho-T measurements for CCS pipeline conditions",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1021/je300590v"
+            ),
+            SourceReference(
+                authors: "Kunz and Wagner",
+                title: "The GERG-2008 Wide-Range Equation of State for Natural Gases and Other Mixtures",
+                year: 2012,
+                doiOrURL: "https://doi.org/10.1021/je300655b"
+            )
+        ]
+    )
+
     public static let co2MethaneEOSCGGasDensity = TeqpFormulation(
         id: "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
         name: "CO₂+CH₄ EOS-CG-2021 homogeneous gas density",
@@ -760,6 +831,7 @@ public enum TeqpFormulationCatalog {
     public static var productionFormulations: [TeqpFormulation] {
         [
             pureCarbonDioxide,
+            co2NitrogenGernertGasDensity,
             co2HydrogenEOSCGGasDensity,
             co2MethaneEOSCGGasDensity,
             co2OxygenEOSCGGasDensity
