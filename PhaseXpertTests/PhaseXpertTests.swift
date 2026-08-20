@@ -18,6 +18,28 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testImpuritySelectorsAreAlphabeticalByVisibleSymbol() {
+        let viewModel = CalculatorViewModel()
+        XCTAssertEqual(
+            viewModel.supportedImpurityComponents.map(\.symbol),
+            ["Ar", "CH₄", "CO", "H₂", "H₂O", "H₂S", "N₂", "O₂"]
+        )
+
+        let streamMixing = StreamMixingViewModel()
+        let streamID = streamMixing.streams[0].id
+        let streamSymbols = streamMixing.impurityOptions(
+            streamID: streamID,
+            including: .argon
+        ).map(\.symbol)
+        XCTAssertEqual(
+            streamSymbols,
+            streamSymbols.sorted {
+                $0.localizedStandardCompare($1) == .orderedAscending
+            }
+        )
+    }
+
+    @MainActor
     func testPhoneCaseSixtyCelsiusFortyBarRunsEquilibriumWhenHomogeneousIsUnavailable() async throws {
         let viewModel = wetGeneralViewModel(pressureBar: 40, temperatureCelsius: 60)
         viewModel.validate()

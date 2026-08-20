@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
     private let wrapsInNavigationStack: Bool
 
     init(wrapsInNavigationStack: Bool = true) {
@@ -83,10 +82,6 @@ struct AboutView: View {
             }
 
             Section("Application") {
-                Toggle(isOn: $prefersDarkAppearance) {
-                    Label("Dark mode", systemImage: "moon.fill")
-                }
-                .tint(.ifePrimary)
                 LabeledContent("Version", value: Bundle.main.releaseVersion)
                 LabeledContent("Minimum iOS", value: "18.0")
                 LabeledContent("Data handling", value: "On-device")

@@ -506,6 +506,25 @@ private struct BuiltInCaseDetailView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section {
+                if builtInCase.hasCalculationPreset {
+                    Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
+                        navigationState.openBuiltInCaseInCalculator(builtInCase)
+                    }
+                    .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
+
+                    Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
+                        duplicateAction()
+                    }
+                    .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
+                } else {
+                    Label("Project information only", systemImage: "info.circle")
+                        .foregroundStyle(.secondary)
+                }
+            } footer: {
+                Text(builtInCase.hasCalculationPreset ? "Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes." : "This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states.")
+            }
+
             if !builtInCase.projectFacts.isEmpty {
                 Section("Project facts") {
                     ForEach(builtInCase.projectFacts, id: \.self) { fact in
@@ -538,25 +557,6 @@ private struct BuiltInCaseDetailView: View {
                         description: Text("Public sources did not provide an exact composition and operating state suitable for a thermodynamic input preset.")
                     )
                 }
-            }
-
-            Section {
-                if builtInCase.hasCalculationPreset {
-                    Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
-                        navigationState.openBuiltInCaseInCalculator(builtInCase)
-                    }
-                    .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
-
-                    Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
-                        duplicateAction()
-                    }
-                    .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
-                } else {
-                    Label("Project information only", systemImage: "info.circle")
-                        .foregroundStyle(.secondary)
-                }
-            } footer: {
-                Text(builtInCase.hasCalculationPreset ? "Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes." : "This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states.")
             }
 
             Section("Modeling basis") {

@@ -102,7 +102,8 @@ public enum BuiltInCaseCatalog {
                 "Water, reactive trace compounds, metals and other components outside PhaseXpert's thermodynamic catalog are not modeled."
             ],
             limitations: [
-                "Representative source-based case, not actual composition or measured composition."
+                "Representative source-based case, not actual composition or measured composition.",
+                "The published 15 barg and -26 °C transport condition is rounded; at the encoded 1.600 MPa(a) and 247.15 K, the pinned CoolProp dry-mixture model places this specification-limit composition just below the saturation boundary."
             ]
         ),
         BuiltInCase(

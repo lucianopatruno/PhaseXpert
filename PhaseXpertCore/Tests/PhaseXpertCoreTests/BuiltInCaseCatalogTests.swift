@@ -28,6 +28,9 @@ final class BuiltInCaseCatalogTests: XCTestCase {
         XCTAssertTrue(northernLights.assumptions.contains {
             $0.contains("do not define a continuously fixed project stream")
         })
+        XCTAssertTrue(northernLights.limitations.contains {
+            $0.contains("just below the saturation boundary")
+        })
 
         let brevik = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("brevik-ccs-conditioned-export-example"))
         XCTAssertEqual(brevik.name, "Heidelberg Materials – Brevik CCS conditioned export example")

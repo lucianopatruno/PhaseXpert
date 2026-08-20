@@ -70,6 +70,15 @@ private struct MoreView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section("Settings") {
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Label("Appearance", systemImage: "circle.lefthalf.filled")
+                    }
+                    .accessibilityIdentifier("more-appearance")
+                }
+
                 Section("Tools") {
                     NavigationLink {
                         StreamMixingView(
@@ -122,6 +131,28 @@ private struct MoreView: View {
             }
             .navigationTitle("More")
         }
+    }
+}
+
+private struct SettingsView: View {
+    @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle(isOn: $prefersDarkAppearance) {
+                    Label("Dark mode", systemImage: "moon.fill")
+                }
+                .tint(.ifePrimary)
+                .accessibilityIdentifier("appearance-dark-mode")
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("Uses the existing PhaseXpert appearance preference for this app.")
+            }
+        }
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

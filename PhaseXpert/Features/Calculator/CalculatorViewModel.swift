@@ -199,12 +199,14 @@ final class CalculatorViewModel {
         return ComponentID.allCases.filter {
             $0 != .carbonDioxide && supported.contains($0)
         }
+        .sortedByVisibleImpurityName()
     }
 
     func impurityOptions(including current: ComponentID) -> [ComponentID] {
-        supportedImpurityComponents.contains(current)
+        let options = supportedImpurityComponents.contains(current)
             ? supportedImpurityComponents
             : [current] + supportedImpurityComponents
+        return options.sortedByVisibleImpurityName()
     }
 
     @discardableResult
@@ -1096,6 +1098,7 @@ final class StreamMixingViewModel {
         return ComponentID.allCases.filter {
             $0 != .carbonDioxide && ($0 == current || !selected.contains($0))
         }
+        .sortedByVisibleImpurityName()
     }
 
     func formattedCompositionValue(_ moleFraction: Double, basis: CompositionUnit) -> String {
@@ -1438,6 +1441,14 @@ final class StreamMixingViewModel {
             String(format: "%.10g", value)
         case .tonnesPerHour:
             String(format: "%.12g", value)
+        }
+    }
+}
+
+extension Array where Element == ComponentID {
+    func sortedByVisibleImpurityName() -> [ComponentID] {
+        sorted {
+            $0.symbol.localizedStandardCompare($1.symbol) == .orderedAscending
         }
     }
 }

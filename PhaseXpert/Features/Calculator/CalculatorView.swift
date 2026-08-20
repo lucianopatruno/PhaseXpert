@@ -385,7 +385,7 @@ struct CalculatorView: View {
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ifeBackground)
-            .navigationTitle("PhaseXpert")
+            .toolbarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.validate()
                 loadPendingInputs()
@@ -1758,7 +1758,7 @@ private struct ModelSelectionRow: View {
     private var displayName: String {
         switch descriptor.id {
         case "coolprop-heos":
-            "General Properties (CoolProp)"
+            "General Properties"
         case "ife-model":
             "IFE Model — Unavailable"
         default:
