@@ -16,10 +16,11 @@ public struct BuiltInCase: Identifiable, Codable, Equatable, Sendable {
     public let id: String
     public let name: String
     public let shortDescription: String
-    public let defaultPressurePa: Double
-    public let defaultTemperatureK: Double
-    public let composition: [MixtureComponent]
+    public let defaultPressurePa: Double?
+    public let defaultTemperatureK: Double?
+    public let composition: [MixtureComponent]?
     public let sources: [BuiltInCaseSource]
+    public let projectFacts: [String]
     public let modelingBasis: String
     public let assumptions: [String]
     public let limitations: [String]
@@ -28,10 +29,11 @@ public struct BuiltInCase: Identifiable, Codable, Equatable, Sendable {
         id: String,
         name: String,
         shortDescription: String,
-        defaultPressurePa: Double,
-        defaultTemperatureK: Double,
-        composition: [MixtureComponent],
+        defaultPressurePa: Double?,
+        defaultTemperatureK: Double?,
+        composition: [MixtureComponent]?,
         sources: [BuiltInCaseSource],
+        projectFacts: [String] = [],
         modelingBasis: String,
         assumptions: [String],
         limitations: [String]
@@ -43,13 +45,18 @@ public struct BuiltInCase: Identifiable, Codable, Equatable, Sendable {
         self.defaultTemperatureK = defaultTemperatureK
         self.composition = composition
         self.sources = sources
+        self.projectFacts = projectFacts
         self.modelingBasis = modelingBasis
         self.assumptions = assumptions
         self.limitations = limitations
     }
 
+    public var hasCalculationPreset: Bool {
+        defaultPressurePa != nil && defaultTemperatureK != nil && composition?.isEmpty == false
+    }
+
     public var label: String {
-        "Representative source-based case"
+        hasCalculationPreset ? "Representative source-based case" : "Project information"
     }
 }
 
@@ -80,18 +87,28 @@ public enum BuiltInCaseCatalog {
                     nil
                 )
             ],
+            projectFacts: [
+                "Four ships planned for CO₂ transport.",
+                "Transport distance is approximately 700 km for Norwegian projects.",
+                "Liquefied CO₂ transport condition is approximately 15 barg and -26 °C.",
+                "Onshore terminal in Øygarden includes buffer storage, pumps and heating.",
+                "Phase 1 terminal capacity is approximately 1.5 million tonnes CO₂/year.",
+                "Each storage tank is approximately 680 m³ and over 30 m tall.",
+                "Offshore pipeline is approximately 110 km, 12 inch diameter, and sized for about 5 million tonnes CO₂/year."
+            ],
             modelingBasis: "Supported thermodynamic impurities set at the published Northern Lights limits, with CO2 as balance. This is a specification-limit example, not an asserted operating or measured composition.",
             assumptions: [
                 "Published specifications are limits or design conditions and do not define a continuously fixed project stream.",
                 "Water, reactive trace compounds, metals and other components outside PhaseXpert's thermodynamic catalog are not modeled."
             ],
             limitations: [
-                "Representative source-based case, not actual composition or measured composition."
+                "Representative source-based case, not actual composition or measured composition.",
+                "The published 15 barg and -26 °C transport condition is rounded; at the encoded 1.600 MPa(a) and 247.15 K, the pinned CoolProp dry-mixture model places this specification-limit composition just below the saturation boundary."
             ]
         ),
         BuiltInCase(
             id: "brevik-ccs-conditioned-export-example",
-            name: "Brevik CCS conditioned export example",
+            name: "Heidelberg Materials – Brevik CCS conditioned export example",
             shortDescription: "Approximately 99 mol% CO2 representative conditioned product with N2 closure and supported trace limits.",
             defaultPressurePa: 1_600_000,
             defaultTemperatureK: 247.15,
@@ -115,6 +132,12 @@ public enum BuiltInCaseCatalog {
                     nil
                 )
             ],
+            projectFacts: [
+                "Heidelberg Materials – Brevik CCS captures approximately 400,000 tonnes CO₂/year.",
+                "The capture plant uses post-combustion amine technology.",
+                "The scope includes CO₂ cleaning, liquefaction and buffer storage.",
+                "CO₂ is delivered to Northern Lights at quayside."
+            ],
             modelingBasis: "Approximately 99 mol% CO2 representative conditioned product, with the remaining modeled balance assigned to N2 and the supported Northern Lights trace limits retained.",
             assumptions: [
                 "The N2 closure is an explicit PhaseXpert modeling assumption, not a published Brevik measurement.",
@@ -122,6 +145,41 @@ public enum BuiltInCaseCatalog {
             ],
             limitations: [
                 "Representative source-based case, not actual composition or measured composition."
+            ]
+        ),
+        BuiltInCase(
+            id: "hafslund-celsio-oslo-ccs-project-information",
+            name: "Hafslund Celsio – Oslo CCS",
+            shortDescription: "Project information for the planned Klemetsrud waste-to-energy CO₂ capture chain; no public exact stream composition/P/T preset is encoded.",
+            defaultPressurePa: nil,
+            defaultTemperatureK: nil,
+            composition: nil,
+            sources: [
+                source(
+                    "CCS Norway chain summary for Hafslund Celsio – Oslo CCS",
+                    "https://ccsnorway.com/full-scale-capture-transport-and-storage/",
+                    "2026"
+                ),
+                source(
+                    "Hafslund press release: Carbon capture in Oslo becomes a reality",
+                    "https://kommunikasjon.ntb.no/pressemelding/18397537/carbon-capture-in-oslo-becomes-a-reality?lang=en&publisherId=17848223",
+                    "2025-01-27"
+                )
+            ],
+            projectFacts: [
+                "Capture target is approximately 350,000 tonnes CO₂/year.",
+                "The project uses amine capture technology.",
+                "The chain includes CO₂ cleaning, liquefaction and four days of buffer storage.",
+                "Captured CO₂ is delivered to Northern Lights at the quay in the port area of Oslo.",
+                "Hafslund reports a CO₂ terminal at the Port of Oslo and planned operation in the third quarter of 2029."
+            ],
+            modelingBasis: "Information-only project entry. No public authoritative exact CO₂ composition, impurity composition or representative transport/loading P/T was found for a PhaseXpert thermodynamic preset.",
+            assumptions: [
+                "PhaseXpert does not infer a Celsio stream from Northern Lights or Brevik specifications.",
+                "Project facts are separate from thermodynamic validation status."
+            ],
+            limitations: [
+                "No calculation preset is provided because exact public composition and operating state were not identified."
             ]
         ),
         BuiltInCase(

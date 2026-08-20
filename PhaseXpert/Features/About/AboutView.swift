@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
     private let wrapsInNavigationStack: Bool
 
     init(wrapsInNavigationStack: Bool = true) {
@@ -65,6 +64,16 @@ struct AboutView: View {
                 reference("Spycher–Pruess–Ennis-King CO₂/H₂O model", url: "https://doi.org/10.1016/S0016-7037(03)00273-4")
             }
 
+            Section("FALCON / IFE") {
+                Text("The IFE logo is the bundled official English IFE SVG asset already present in PhaseXpert. The FALCON page links to IFE's official CO₂ flow-loop webpage and loads its photograph remotely from IFE rather than redistributing a copy.")
+                    .foregroundStyle(.secondary)
+                NavigationLink {
+                    FalconView()
+                } label: {
+                    Label("FALCON CO₂ flow loop", systemImage: "point.3.connected.trianglepath.dotted")
+                }
+            }
+
             Section("Contact") {
                 Link(destination: contactURL) {
                     Label("firmapost@ife.no", systemImage: "envelope")
@@ -73,10 +82,6 @@ struct AboutView: View {
             }
 
             Section("Application") {
-                Toggle(isOn: $prefersDarkAppearance) {
-                    Label("Dark mode", systemImage: "moon.fill")
-                }
-                .tint(.ifePrimary)
                 LabeledContent("Version", value: Bundle.main.releaseVersion)
                 LabeledContent("Minimum iOS", value: "18.0")
                 LabeledContent("Data handling", value: "On-device")
@@ -94,11 +99,7 @@ struct AboutView: View {
     }
 
     private var contactURL: URL {
-        var components = URLComponents()
-        components.scheme = "mailto"
-        components.path = "firmapost@ife.no"
-        components.queryItems = [URLQueryItem(name: "subject", value: "PhaseXpert")]
-        return components.url!
+        IFEContactMailLink.url
     }
 
     private func reference(_ title: String, url: String) -> some View {
@@ -110,5 +111,28 @@ struct AboutView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+enum IFEContactMailLink {
+    static let recipient = "firmapost@ife.no"
+    static let subject = "PhaseXpert"
+
+    static var url: URL {
+        guard
+            let encodedSubject = subject.addingPercentEncoding(
+                withAllowedCharacters: mailtoQueryAllowedCharacters
+            ),
+            let url = URL(string: "mailto:\(recipient)?subject=\(encodedSubject)")
+        else {
+            preconditionFailure("PhaseXpert contact mail URL could not be constructed.")
+        }
+        return url
+    }
+
+    private static var mailtoQueryAllowedCharacters: CharacterSet {
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&+=?")
+        return allowed
     }
 }

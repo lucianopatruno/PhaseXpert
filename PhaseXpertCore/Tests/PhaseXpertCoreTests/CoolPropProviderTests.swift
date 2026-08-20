@@ -686,6 +686,15 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
+    func testNorthernLightsPresetUsesGaugeConvertedAbsoluteTransportPressure() throws {
+        let northernLights = try XCTUnwrap(BuiltInCaseCatalog.cases.first {
+            $0.id == "northern-lights-cargo-specification-example"
+        })
+
+        XCTAssertEqual(northernLights.defaultPressurePa, 1_600_000)
+        XCTAssertEqual(northernLights.defaultTemperatureK, 247.15)
+    }
+
     func testPureCO2SaturationBoundaryIsFiniteOrderedAndIncludesCriticalPoint() async throws {
         let provider = CoolPropProvider(engine: MockEngine())
         let request = PhaseEnvelopeRequest(

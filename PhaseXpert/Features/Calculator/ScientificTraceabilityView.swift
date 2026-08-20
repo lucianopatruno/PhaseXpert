@@ -43,6 +43,23 @@ struct ScientificTraceabilityView: View {
                         }
                     }
 
+                    Section("Available properties") {
+                        if descriptor.supportedProperties.isEmpty {
+                            Text("No production calculation properties are declared for this model.")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text(
+                                descriptor.supportedProperties
+                                    .sorted { propertyDisplayName($0) < propertyDisplayName($1) }
+                                    .map { propertyDisplayName($0) }
+                                    .joined(separator: ", ")
+                            )
+                        }
+                        Text("Property-specific gates can be narrower than the broad model domain. Unsupported or out-of-domain values remain explicitly unavailable in the calculation results.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+
                     if !descriptor.limitations.isEmpty {
                         Section("Recorded limitations") {
                             ForEach(descriptor.limitations, id: \.self) { limitation in
@@ -166,6 +183,28 @@ struct ScientificTraceabilityView: View {
 
     private func number(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0...6)))
+    }
+
+    private func propertyDisplayName(_ property: PropertyID) -> String {
+        switch property {
+        case .density: "Density"
+        case .dynamicViscosity: "Dynamic viscosity"
+        case .molarMass: "Molar mass"
+        case .compressibilityFactor: "Compressibility factor"
+        case .specificVolume: "Specific volume"
+        case .enthalpy: "Enthalpy"
+        case .entropy: "Entropy"
+        case .internalEnergy: "Internal energy"
+        case .isobaricHeatCapacity: "Cp"
+        case .isochoricHeatCapacity: "Cv"
+        case .heatCapacityRatio: "Heat-capacity ratio"
+        case .speedOfSound: "Speed of sound"
+        case .thermalConductivity: "Thermal conductivity"
+        case .jouleThomsonCoefficient: "Joule-Thomson coefficient"
+        case .isothermalCompressibility: "Isothermal compressibility"
+        case .thermalExpansionCoefficient: "Thermal expansion coefficient"
+        case .vapourFraction: "Vapour fraction"
+        }
     }
 
     @ViewBuilder

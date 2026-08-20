@@ -53,7 +53,8 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
         let provider = CoolPropProvider(engine: BuiltInCaseMockCoolPropEngine())
         let required = Set(
             BuiltInCaseCatalog.cases
-                .flatMap(\.composition)
+                .compactMap(\.composition)
+                .flatMap { $0 }
                 .map(\.component)
         )
         let advertised = Set(provider.descriptor.supportedComponents)
@@ -67,8 +68,11 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
     func testEveryBuiltInCasePassesPreliminaryProviderCompositionGate() async throws {
         let provider = CoolPropProvider(engine: BuiltInCaseMockCoolPropEngine())
 
-        for builtInCase in BuiltInCaseCatalog.cases {
-            let issues = provider.applicabilityIssues(for: builtInCase.composition)
+        for builtInCase in BuiltInCaseCatalog.cases where builtInCase.hasCalculationPreset {
+            let composition = try XCTUnwrap(builtInCase.composition)
+            let pressurePa = try XCTUnwrap(builtInCase.defaultPressurePa)
+            let temperatureK = try XCTUnwrap(builtInCase.defaultTemperatureK)
+            let issues = provider.applicabilityIssues(for: composition)
             XCTAssertFalse(
                 issues.contains { $0.severity == .error },
                 "\(builtInCase.name) has provider applicability errors: \(issues)"
@@ -77,9 +81,9 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
             let response = try await provider.calculate(
                 CalculationRequest(
                     modelID: provider.descriptor.id,
-                    pressurePa: builtInCase.defaultPressurePa,
-                    temperatureK: builtInCase.defaultTemperatureK,
-                    composition: builtInCase.composition,
+                    pressurePa: pressurePa,
+                    temperatureK: temperatureK,
+                    composition: composition,
                     requestedProperties: [
                         .density,
                         .molarMass,

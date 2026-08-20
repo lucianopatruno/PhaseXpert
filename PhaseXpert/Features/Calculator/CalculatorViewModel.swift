@@ -199,12 +199,14 @@ final class CalculatorViewModel {
         return ComponentID.allCases.filter {
             $0 != .carbonDioxide && supported.contains($0)
         }
+        .sortedByVisibleImpurityName()
     }
 
     func impurityOptions(including current: ComponentID) -> [ComponentID] {
-        supportedImpurityComponents.contains(current)
+        let options = supportedImpurityComponents.contains(current)
             ? supportedImpurityComponents
             : [current] + supportedImpurityComponents
+        return options.sortedByVisibleImpurityName()
     }
 
     @discardableResult
@@ -402,18 +404,25 @@ final class CalculatorViewModel {
     }
 
     func loadInputs(from builtInCase: BuiltInCase) {
-        lastValidPressurePa = builtInCase.defaultPressurePa
-        lastValidTemperatureK = builtInCase.defaultTemperatureK
+        guard
+            let defaultPressurePa = builtInCase.defaultPressurePa,
+            let defaultTemperatureK = builtInCase.defaultTemperatureK,
+            let compositionPreset = builtInCase.composition
+        else {
+            return
+        }
+        lastValidPressurePa = defaultPressurePa
+        lastValidTemperatureK = defaultTemperatureK
         pressureText = Self.format(
-            pressureDisplayUnit.displayValue(from: builtInCase.defaultPressurePa),
+            pressureDisplayUnit.displayValue(from: defaultPressurePa),
             for: pressureDisplayUnit
         )
         temperatureText = Self.format(
-            temperatureDisplayUnit.displayValue(from: builtInCase.defaultTemperatureK),
+            temperatureDisplayUnit.displayValue(from: defaultTemperatureK),
             for: temperatureDisplayUnit
         )
         compositionBasis = .molePercent
-        composition = builtInCase.composition.map {
+        composition = compositionPreset.map {
             CompositionInput(
                 component: $0.component,
                 value: String(format: "%.8g", $0.moleFraction * 100)
@@ -1089,6 +1098,7 @@ final class StreamMixingViewModel {
         return ComponentID.allCases.filter {
             $0 != .carbonDioxide && ($0 == current || !selected.contains($0))
         }
+        .sortedByVisibleImpurityName()
     }
 
     func formattedCompositionValue(_ moleFraction: Double, basis: CompositionUnit) -> String {
@@ -1222,20 +1232,27 @@ final class StreamMixingViewModel {
     }
 
     func loadBuiltInCase(_ builtInCase: BuiltInCase, into streamID: UUID) {
-        guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
+        guard
+            let index = streams.firstIndex(where: { $0.id == streamID }),
+            let defaultPressurePa = builtInCase.defaultPressurePa,
+            let defaultTemperatureK = builtInCase.defaultTemperatureK,
+            let compositionPreset = builtInCase.composition
+        else {
+            return
+        }
         let pressureUnit = streams[index].pressureDisplayUnit
         let temperatureUnit = streams[index].temperatureDisplayUnit
         streams[index].name = builtInCase.name
         streams[index].pressureText = Self.formatPressure(
-            pressureUnit.displayValue(from: builtInCase.defaultPressurePa),
+            pressureUnit.displayValue(from: defaultPressurePa),
             for: pressureUnit
         )
         streams[index].temperatureText = Self.formatTemperature(
-            temperatureUnit.displayValue(from: builtInCase.defaultTemperatureK),
+            temperatureUnit.displayValue(from: defaultTemperatureK),
             for: temperatureUnit
         )
         streams[index].compositionBasis = .molePercent
-        streams[index].composition = builtInCase.composition.map {
+        streams[index].composition = compositionPreset.map {
             CompositionInput(
                 component: $0.component,
                 value: Self.formatCompositionValue($0.moleFraction * 100, basis: .molePercent)
@@ -1424,6 +1441,14 @@ final class StreamMixingViewModel {
             String(format: "%.10g", value)
         case .tonnesPerHour:
             String(format: "%.12g", value)
+        }
+    }
+}
+
+extension Array where Element == ComponentID {
+    func sortedByVisibleImpurityName() -> [ComponentID] {
+        sorted {
+            $0.symbol.localizedStandardCompare($1.symbol) == .orderedAscending
         }
     }
 }

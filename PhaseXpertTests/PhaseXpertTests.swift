@@ -4,6 +4,41 @@ import XCTest
 @testable import PhaseXpert
 
 final class PhaseXpertTests: XCTestCase {
+    func testIFEContactMailLinkIncludesSubject() throws {
+        let url = IFEContactMailLink.url
+
+        XCTAssertEqual(url.scheme, "mailto")
+        XCTAssertEqual(url.absoluteString, "mailto:firmapost@ife.no?subject=PhaseXpert")
+        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        XCTAssertEqual(components.path, "firmapost@ife.no")
+        XCTAssertEqual(
+            components.queryItems?.first(where: { $0.name == "subject" })?.value,
+            "PhaseXpert"
+        )
+    }
+
+    @MainActor
+    func testImpuritySelectorsAreAlphabeticalByVisibleSymbol() {
+        let viewModel = CalculatorViewModel()
+        XCTAssertEqual(
+            viewModel.supportedImpurityComponents.map(\.symbol),
+            ["Ar", "CH₄", "CO", "H₂", "H₂O", "H₂S", "N₂", "O₂"]
+        )
+
+        let streamMixing = StreamMixingViewModel()
+        let streamID = streamMixing.streams[0].id
+        let streamSymbols = streamMixing.impurityOptions(
+            streamID: streamID,
+            including: .argon
+        ).map(\.symbol)
+        XCTAssertEqual(
+            streamSymbols,
+            streamSymbols.sorted {
+                $0.localizedStandardCompare($1) == .orderedAscending
+            }
+        )
+    }
+
     @MainActor
     func testPhoneCaseSixtyCelsiusFortyBarRunsEquilibriumWhenHomogeneousIsUnavailable() async throws {
         let viewModel = wetGeneralViewModel(pressureBar: 40, temperatureCelsius: 60)

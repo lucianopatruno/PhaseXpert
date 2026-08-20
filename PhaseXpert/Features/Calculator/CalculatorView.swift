@@ -28,14 +28,9 @@ struct CalculatorView: View {
         NavigationStack {
             Form {
                 Section {
-                    if let descriptor = viewModel.selectedDescriptor {
-                        ScientificStatusBanner(
-                            title: modelBannerTitle(descriptor),
-                            message: modelBannerMessage(descriptor)
-                        )
-                        .listRowInsets(EdgeInsets())
+                    CalculatorBrandHeader()
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                         .listRowBackground(Color.clear)
-                    }
                 }
 
                 Section {
@@ -333,6 +328,14 @@ struct CalculatorView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
                     .accessibilityIdentifier("run-calculation")
+
+                    Button("Reset", systemImage: "arrow.counterclockwise") {
+                        resetCalculator()
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(viewModel.isCalculating)
+                    .accessibilityIdentifier("reset-calculator")
+                    .accessibilityHint("Restores the clean calculator defaults and clears results.")
                 } header: {
                     IFESectionHeader(step: 6, title: "Run calculation")
                 }
@@ -382,7 +385,7 @@ struct CalculatorView: View {
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ifeBackground)
-            .navigationTitle("PhaseXpert")
+            .toolbarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.validate()
                 loadPendingInputs()
@@ -413,25 +416,6 @@ struct CalculatorView: View {
             }
             .onSubmit { viewModel.validate() }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset", systemImage: "arrow.counterclockwise") {
-                        focusedField = nil
-                        pressureSelection = nil
-                        temperatureSelection = nil
-                        compositionSelections.removeAll()
-                        recordToSave = nil
-                        saveConfirmation = nil
-                        saveError = nil
-                        navigationState.pendingCalculationRecord = nil
-                        navigationState.pendingBuiltInCase = nil
-                        navigationState.latestCalculationRecord = nil
-                        viewModel.reset()
-                    }
-                    .disabled(viewModel.isCalculating)
-                    .accessibilityIdentifier("reset-calculator")
-                    .accessibilityHint("Restores the clean calculator defaults and clears results.")
-                }
-
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Scientific traceability", systemImage: "checkmark.shield") {
                         viewModel.validate()
@@ -534,6 +518,20 @@ struct CalculatorView: View {
             compositionSelections.removeValue(forKey: id)
         }
         viewModel.removeImpurities(at: offsets)
+    }
+
+    private func resetCalculator() {
+        focusedField = nil
+        pressureSelection = nil
+        temperatureSelection = nil
+        compositionSelections.removeAll()
+        recordToSave = nil
+        saveConfirmation = nil
+        saveError = nil
+        navigationState.pendingCalculationRecord = nil
+        navigationState.pendingBuiltInCase = nil
+        navigationState.latestCalculationRecord = nil
+        viewModel.reset()
     }
 
     private func compositionSelectionBinding(
@@ -725,23 +723,27 @@ struct CalculatorView: View {
         }
     }
 
-    private func modelBannerTitle(_ descriptor: ModelDescriptor) -> String {
-        switch descriptor.availability {
-        case .available: "Model available"
-        case .preliminary: "Preliminary scientific model"
-        case .unavailable: "Model unavailable"
-        }
-    }
+}
 
-    private func modelBannerMessage(_ descriptor: ModelDescriptor) -> String {
-        switch descriptor.availability {
-        case .available:
-            "Review the model domain and limitations before calculating."
-        case .preliminary:
-            "Operational local model. Full provenance is available in Calculation Details."
-        case .unavailable:
-            "This model is not available in this version."
+private struct CalculatorBrandHeader: View {
+    var body: some View {
+        HStack(alignment: .center, spacing: IFESpacing.regular) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("PhaseXpert")
+                    .font(.largeTitle.weight(.semibold))
+                    .foregroundStyle(Color.ifeText)
+                Text("Phase behavior and properties of CO₂ mixtures")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: IFESpacing.regular)
+            Image("IFELogoEnglish")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 82, height: 34)
+                .accessibilityLabel("IFE — Institute for Energy Technology")
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -1725,13 +1727,15 @@ private struct ModelSelectionRow: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     HStack(spacing: IFESpacing.small) {
+                        if descriptor.availability == .unavailable {
+                            IFEStatusBadge(
+                                text: "Unavailable",
+                                systemImage: "slash.circle",
+                                color: .pxUnavailable
+                            )
+                        }
                         IFEStatusBadge(
-                            text: descriptor.availability.rawValue.capitalized,
-                            systemImage: statusIcon,
-                            color: statusColor
-                        )
-                        IFEStatusBadge(
-                            text: descriptor.calculationMode.rawValue.capitalized,
+                            text: "Local",
                             systemImage: "iphone",
                             color: .secondary
                         )
@@ -1754,7 +1758,7 @@ private struct ModelSelectionRow: View {
     private var displayName: String {
         switch descriptor.id {
         case "coolprop-heos":
-            "General Properties (CoolProp)"
+            "General Properties"
         case "ife-model":
             "IFE Model — Unavailable"
         default:
@@ -1773,27 +1777,6 @@ private struct ModelSelectionRow: View {
         }
     }
 
-    private var statusIcon: String {
-        switch descriptor.availability {
-        case .available:
-            "checkmark.circle"
-        case .preliminary:
-            "exclamationmark.triangle"
-        case .unavailable:
-            "slash.circle"
-        }
-    }
-
-    private var statusColor: Color {
-        switch descriptor.availability {
-        case .available:
-            .pxSuccess
-        case .preliminary:
-            .pxWarning
-        case .unavailable:
-            .pxUnavailable
-        }
-    }
 }
 
 private struct UnitAwareNumericField: View {
