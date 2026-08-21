@@ -75,6 +75,8 @@ public struct TeqpNComponentDensityResult: Equatable, Sendable {
     public let densityKilogramsPerCubicMetre: Double
     public let molarDensityMolesPerCubicMetre: Double
     public let densityRootCount: Int
+    public let selectedRootIndex: Int?
+    public let rootDiagnostics: [TeqpDensityRootDiagnostic]
     public let converged: Bool
     public let phaseIdentifier: String
     public let formulationID: String
@@ -84,6 +86,8 @@ public struct TeqpNComponentDensityResult: Equatable, Sendable {
         densityKilogramsPerCubicMetre: Double,
         molarDensityMolesPerCubicMetre: Double,
         densityRootCount: Int,
+        selectedRootIndex: Int? = nil,
+        rootDiagnostics: [TeqpDensityRootDiagnostic] = [],
         converged: Bool,
         phaseIdentifier: String,
         formulationID: String,
@@ -92,10 +96,58 @@ public struct TeqpNComponentDensityResult: Equatable, Sendable {
         self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
         self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
         self.densityRootCount = densityRootCount
+        self.selectedRootIndex = selectedRootIndex
+        self.rootDiagnostics = rootDiagnostics
         self.converged = converged
         self.phaseIdentifier = phaseIdentifier
         self.formulationID = formulationID
         self.composition = composition
+    }
+}
+
+public struct TeqpDensityRootDiagnostic: Equatable, Sendable {
+    public let molarDensityMolesPerCubicMetre: Double
+    public let densityKilogramsPerCubicMetre: Double
+    public let pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double
+    public let minimumStabilityEigenvalue: Double
+    public let isMechanicallyStable: Bool
+    public let isLocallyStable: Bool
+
+    public init(
+        molarDensityMolesPerCubicMetre: Double,
+        densityKilogramsPerCubicMetre: Double,
+        pressureDerivativeWithRespectToMolarDensityJoulesPerMole: Double,
+        minimumStabilityEigenvalue: Double,
+        isMechanicallyStable: Bool,
+        isLocallyStable: Bool
+    ) {
+        self.molarDensityMolesPerCubicMetre = molarDensityMolesPerCubicMetre
+        self.densityKilogramsPerCubicMetre = densityKilogramsPerCubicMetre
+        self.pressureDerivativeWithRespectToMolarDensityJoulesPerMole =
+            pressureDerivativeWithRespectToMolarDensityJoulesPerMole
+        self.minimumStabilityEigenvalue = minimumStabilityEigenvalue
+        self.isMechanicallyStable = isMechanicallyStable
+        self.isLocallyStable = isLocallyStable
+    }
+}
+
+public enum TeqpDensityRootSelectionHint: Equatable, Sendable {
+    case automatic
+    case homogeneousGas
+    case homogeneousLiquidOrDense
+    case supercritical
+
+    public init(phaseDomain: TeqpPhaseDomain?) {
+        switch phaseDomain {
+        case .homogeneousGas:
+            self = .homogeneousGas
+        case .homogeneousLiquidOrDense:
+            self = .homogeneousLiquidOrDense
+        case .supercritical:
+            self = .supercritical
+        default:
+            self = .automatic
+        }
     }
 }
 
@@ -418,7 +470,8 @@ public protocol TeqpEngine: Sendable {
     func calculateNComponentDensity(
         pressurePa: Double,
         temperatureK: Double,
-        composition: CanonicalComposition
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
     ) async throws -> TeqpNComponentDensityResult
 
     func calculateNComponentVLE(
@@ -546,7 +599,8 @@ public struct UnavailableTeqpEngine: TeqpEngine {
     public func calculateNComponentDensity(
         pressurePa: Double,
         temperatureK: Double,
-        composition: CanonicalComposition
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
     ) async throws -> TeqpNComponentDensityResult {
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -811,7 +865,8 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         return try await engine.calculateNComponentDensity(
             pressurePa: pressurePa,
             temperatureK: temperatureK,
-            composition: canonical
+            composition: canonical,
+            rootSelectionHint: .automatic
         )
     }
 
@@ -1126,14 +1181,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         let raw = try await engine.calculateNComponentDensity(
             pressurePa: request.pressurePa,
             temperatureK: request.temperatureK,
-            composition: composition
+            composition: composition,
+            rootSelectionHint: TeqpDensityRootSelectionHint(phaseDomain: decision.phaseDomain)
         )
         guard raw.converged,
-              raw.densityRootCount == 1,
               raw.densityKilogramsPerCubicMetre.isFinite,
               raw.densityKilogramsPerCubicMetre > 0 else {
             throw ProviderError.malformedResponse(
-                "teqp did not return one finite positive density root for the validated multicomponent state."
+                "teqp did not return a finite positive selected density root for the validated multicomponent state."
             )
         }
 

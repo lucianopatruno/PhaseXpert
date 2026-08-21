@@ -376,7 +376,8 @@ public struct NativeTeqpEngine: TeqpEngine {
     public func calculateNComponentDensity(
         pressurePa: Double,
         temperatureK: Double,
-        composition: CanonicalComposition
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
     ) async throws -> TeqpNComponentDensityResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         try Task.checkCancellation()
@@ -385,6 +386,7 @@ public struct NativeTeqpEngine: TeqpEngine {
             try nativeComponentID(for: entry.component)
         }
         let fractions = canonicalComponents.map(\.moleFraction)
+        let nativeRootSelectionHint = nativeDensityRootSelectionHint(for: rootSelectionHint)
         let result = try await Task.detached(priority: .userInitiated) {
             var nativeResult = PXTeqpNComponentDensityResult()
             var errorBuffer = [CChar](repeating: 0, count: 768)
@@ -396,6 +398,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                         idBuffer.count,
                         pressurePa,
                         temperatureK,
+                        nativeRootSelectionHint,
                         &nativeResult,
                         &errorBuffer,
                         errorBuffer.count
@@ -414,6 +417,10 @@ public struct NativeTeqpEngine: TeqpEngine {
                 densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
                 molarDensityMolesPerCubicMetre: nativeResult.molar_density_mol_m3,
                 densityRootCount: Int(nativeResult.density_root_count),
+                selectedRootIndex: nativeResult.selected_root_index >= 0
+                    ? Int(nativeResult.selected_root_index)
+                    : nil,
+                rootDiagnostics: densityRootDiagnostics(from: nativeResult),
                 converged: nativeResult.converged == 1,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
                 formulationID: TeqpNComponentDiagnostic.formulationID,
@@ -666,6 +673,78 @@ private func nativeFormulation(
         PXTeqpBinaryFormulationEOSCGCO2H2
     case .eoscgCarbonDioxideMethane:
         PXTeqpBinaryFormulationEOSCGCO2CH4
+    }
+}
+
+private func nativeDensityRootSelectionHint(
+    for hint: TeqpDensityRootSelectionHint
+) -> PXTeqpDensityRootSelectionHint {
+    switch hint {
+    case .automatic:
+        PXTeqpDensityRootSelectionAutomatic
+    case .homogeneousGas:
+        PXTeqpDensityRootSelectionHomogeneousGas
+    case .homogeneousLiquidOrDense:
+        PXTeqpDensityRootSelectionHomogeneousLiquidOrDense
+    case .supercritical:
+        PXTeqpDensityRootSelectionSupercritical
+    }
+}
+
+private func densityRootDiagnostics(
+    from result: PXTeqpNComponentDensityResult
+) -> [TeqpDensityRootDiagnostic] {
+    let count = max(0, min(
+        Int(result.root_diagnostic_count),
+        Int(PXTeqpMaximumDensityRootDiagnostics)
+    ))
+    guard count > 0 else { return [] }
+    let molarDensities = doubleArray(
+        from: result.root_molar_densities_mol_m3,
+        count: count
+    )
+    let densities = doubleArray(
+        from: result.root_densities_kg_m3,
+        count: count
+    )
+    let derivatives = doubleArray(
+        from: result.root_dp_drho_molar_j_mol,
+        count: count
+    )
+    let stabilityEigenvalues = doubleArray(
+        from: result.root_minimum_stability_eigenvalues,
+        count: count
+    )
+    let mechanicallyStable = intArray(
+        from: result.root_is_mechanically_stable,
+        count: count
+    )
+    let locallyStable = intArray(
+        from: result.root_is_locally_stable,
+        count: count
+    )
+    return (0..<count).map { index in
+        TeqpDensityRootDiagnostic(
+            molarDensityMolesPerCubicMetre: molarDensities[index],
+            densityKilogramsPerCubicMetre: densities[index],
+            pressureDerivativeWithRespectToMolarDensityJoulesPerMole:
+                derivatives[index],
+            minimumStabilityEigenvalue: stabilityEigenvalues[index],
+            isMechanicallyStable: mechanicallyStable[index] != 0,
+            isLocallyStable: locallyStable[index] != 0
+        )
+    }
+}
+
+private func doubleArray<T>(from values: T, count: Int) -> [Double] {
+    withUnsafeBytes(of: values) { rawBuffer in
+        Array(rawBuffer.bindMemory(to: Double.self).prefix(count))
+    }
+}
+
+private func intArray<T>(from values: T, count: Int) -> [Int32] {
+    withUnsafeBytes(of: values) { rawBuffer in
+        Array(rawBuffer.bindMemory(to: Int32.self).prefix(count))
     }
 }
 

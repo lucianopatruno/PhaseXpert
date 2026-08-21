@@ -1860,6 +1860,27 @@ struct SelectedRoot {
     StableBranch branch;
 };
 
+struct DensityRootDiagnostic {
+    Root root;
+    double mass_density_kg_m3;
+    double dp_drho_molar_j_mol;
+    double minimum_stability_eigenvalue;
+    bool mechanically_stable;
+    bool locally_stable;
+};
+
+bool valid_root_selection_hint(PXTeqpDensityRootSelectionHint hint) {
+    switch (hint) {
+    case PXTeqpDensityRootSelectionAutomatic:
+    case PXTeqpDensityRootSelectionHomogeneousGas:
+    case PXTeqpDensityRootSelectionHomogeneousLiquidOrDense:
+    case PXTeqpDensityRootSelectionSupercritical:
+        return true;
+    default:
+        return false;
+    }
+}
+
 template<typename Model>
 std::vector<Root> density_roots_for_molefractions(
     const Model &model,
@@ -1921,6 +1942,189 @@ std::vector<Root> density_roots_for_molefractions(
         previous_residual = current_residual;
     }
     return roots;
+}
+
+template<typename Model>
+double pressure_derivative_wrt_molar_density(
+    const Model &model,
+    double temperature_k,
+    const Eigen::ArrayXd &molefractions,
+    double molar_density_mol_m3
+) {
+    const double step = std::max(1e-3, 1e-5 * molar_density_mol_m3);
+    const double lower = std::max(1e-9, molar_density_mol_m3 - step);
+    const double upper = molar_density_mol_m3 + step;
+    return (
+        model.pressurePa(temperature_k, molefractions, upper)
+        - model.pressurePa(temperature_k, molefractions, lower)
+    ) / (upper - lower);
+}
+
+template<typename Model>
+std::vector<DensityRootDiagnostic> density_root_diagnostics(
+    const Model &model,
+    const std::vector<Root> &roots,
+    double temperature_k,
+    const Eigen::ArrayXd &molefractions
+) {
+    std::vector<DensityRootDiagnostic> diagnostics;
+    diagnostics.reserve(roots.size());
+    const double molar_mass = model.mixtureMolarMassKgMol(molefractions);
+    for (const auto &root : roots) {
+        DensityRootDiagnostic diagnostic{};
+        diagnostic.root = root;
+        diagnostic.mass_density_kg_m3 = root.molar_density_mol_m3 * molar_mass;
+        diagnostic.dp_drho_molar_j_mol = std::numeric_limits<double>::quiet_NaN();
+        diagnostic.minimum_stability_eigenvalue = std::numeric_limits<double>::quiet_NaN();
+        diagnostic.mechanically_stable = false;
+        diagnostic.locally_stable = false;
+
+        if (std::isfinite(root.molar_density_mol_m3)
+            && root.molar_density_mol_m3 > 0.0
+            && std::isfinite(diagnostic.mass_density_kg_m3)
+            && diagnostic.mass_density_kg_m3 > 0.0) {
+            try {
+                diagnostic.dp_drho_molar_j_mol =
+                    pressure_derivative_wrt_molar_density(
+                        model,
+                        temperature_k,
+                        molefractions,
+                        root.molar_density_mol_m3
+                    );
+                diagnostic.mechanically_stable =
+                    std::isfinite(diagnostic.dp_drho_molar_j_mol)
+                    && diagnostic.dp_drho_molar_j_mol > 0.0;
+            } catch (...) {
+                diagnostic.mechanically_stable = false;
+            }
+            try {
+                const Eigen::ArrayXd rhovec =
+                    root.molar_density_mol_m3 * molefractions;
+                diagnostic.minimum_stability_eigenvalue =
+                    model.minimumStabilityEigenvalue(temperature_k, rhovec);
+                diagnostic.locally_stable =
+                    std::isfinite(diagnostic.minimum_stability_eigenvalue)
+                    && diagnostic.minimum_stability_eigenvalue > 0.0;
+            } catch (...) {
+                diagnostic.locally_stable = false;
+            }
+        }
+        diagnostics.push_back(diagnostic);
+    }
+    return diagnostics;
+}
+
+void fill_ncomponent_root_diagnostics(
+    PXTeqpNComponentDensityResult *result,
+    const std::vector<DensityRootDiagnostic> &diagnostics
+) {
+    result->root_diagnostic_count = static_cast<int>(std::min<std::size_t>(
+        diagnostics.size(),
+        PXTeqpMaximumDensityRootDiagnostics
+    ));
+    for (int index = 0; index < result->root_diagnostic_count; ++index) {
+        const auto &diagnostic = diagnostics[static_cast<std::size_t>(index)];
+        result->root_molar_densities_mol_m3[index] =
+            diagnostic.root.molar_density_mol_m3;
+        result->root_densities_kg_m3[index] = diagnostic.mass_density_kg_m3;
+        result->root_dp_drho_molar_j_mol[index] =
+            diagnostic.dp_drho_molar_j_mol;
+        result->root_minimum_stability_eigenvalues[index] =
+            diagnostic.minimum_stability_eigenvalue;
+        result->root_is_mechanically_stable[index] =
+            diagnostic.mechanically_stable ? 1 : 0;
+        result->root_is_locally_stable[index] =
+            diagnostic.locally_stable ? 1 : 0;
+    }
+}
+
+std::vector<std::size_t> stable_ncomponent_root_indices(
+    const std::vector<DensityRootDiagnostic> &diagnostics
+) {
+    std::vector<std::size_t> indices;
+    for (std::size_t index = 0; index < diagnostics.size(); ++index) {
+        const auto &diagnostic = diagnostics[index];
+        if (std::isfinite(diagnostic.root.molar_density_mol_m3)
+            && diagnostic.root.molar_density_mol_m3 > 0.0
+            && std::isfinite(diagnostic.mass_density_kg_m3)
+            && diagnostic.mass_density_kg_m3 > 0.0
+            && diagnostic.mechanically_stable
+            && diagnostic.locally_stable) {
+            indices.push_back(index);
+        }
+    }
+    return indices;
+}
+
+std::optional<std::size_t> select_ncomponent_root_index(
+    const std::vector<DensityRootDiagnostic> &diagnostics,
+    PXTeqpDensityRootSelectionHint hint,
+    std::string *error_message
+) {
+    if (diagnostics.empty()) {
+        if (error_message) {
+            *error_message = "teqp did not find a finite N-component density root.";
+        }
+        return std::nullopt;
+    }
+    if (hint == PXTeqpDensityRootSelectionAutomatic) {
+        if (diagnostics.size() != 1) {
+            if (error_message) {
+                *error_message = "teqp found multiple N-component density roots; homogeneous density is not unique.";
+            }
+            return std::nullopt;
+        }
+        return 0;
+    }
+
+    const auto stable_indices = stable_ncomponent_root_indices(diagnostics);
+    if (stable_indices.empty()) {
+        if (error_message) {
+            switch (hint) {
+            case PXTeqpDensityRootSelectionHomogeneousGas:
+                *error_message = "Advanced CCS could not resolve the validated homogeneous gas branch at this state.";
+                break;
+            case PXTeqpDensityRootSelectionHomogeneousLiquidOrDense:
+                *error_message = "Advanced CCS could not resolve the validated dense homogeneous branch at this state.";
+                break;
+            case PXTeqpDensityRootSelectionSupercritical:
+                *error_message = "Advanced CCS could not resolve a stable validated supercritical branch at this state.";
+                break;
+            default:
+                *error_message = "Advanced CCS could not resolve a validated homogeneous density branch at this state.";
+                break;
+            }
+        }
+        return std::nullopt;
+    }
+
+    if (hint == PXTeqpDensityRootSelectionSupercritical) {
+        if (stable_indices.size() == 1) {
+            return stable_indices[0];
+        }
+        if (error_message) {
+            *error_message = "Advanced CCS found multiple stable supercritical density roots and cannot select a unique validated branch.";
+        }
+        return std::nullopt;
+    }
+
+    auto selected = stable_indices[0];
+    for (const auto index : stable_indices) {
+        const double candidate_density =
+            diagnostics[index].root.molar_density_mol_m3;
+        const double selected_density =
+            diagnostics[selected].root.molar_density_mol_m3;
+        if (hint == PXTeqpDensityRootSelectionHomogeneousGas) {
+            if (candidate_density < selected_density) {
+                selected = index;
+            }
+        } else if (hint == PXTeqpDensityRootSelectionHomogeneousLiquidOrDense) {
+            if (candidate_density > selected_density) {
+                selected = index;
+            }
+        }
+    }
+    return selected;
 }
 
 
@@ -3700,6 +3904,7 @@ int px_teqp_calculate_ncomponent_density(
     size_t component_count,
     double pressure_pa,
     double temperature_k,
+    PXTeqpDensityRootSelectionHint root_selection_hint,
     PXTeqpNComponentDensityResult *result,
     char *error_buffer,
     size_t error_buffer_size
@@ -3711,6 +3916,21 @@ int px_teqp_calculate_ncomponent_density(
     result->density_kg_m3 = std::numeric_limits<double>::quiet_NaN();
     result->molar_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
     result->density_root_count = 0;
+    result->root_diagnostic_count = 0;
+    for (int index = 0; index < PXTeqpMaximumDensityRootDiagnostics; ++index) {
+        result->root_molar_densities_mol_m3[index] =
+            std::numeric_limits<double>::quiet_NaN();
+        result->root_densities_kg_m3[index] =
+            std::numeric_limits<double>::quiet_NaN();
+        result->root_dp_drho_molar_j_mol[index] =
+            std::numeric_limits<double>::quiet_NaN();
+        result->root_minimum_stability_eigenvalues[index] =
+            std::numeric_limits<double>::quiet_NaN();
+        result->root_is_mechanically_stable[index] = 0;
+        result->root_is_locally_stable[index] = 0;
+    }
+    result->selected_root_index = -1;
+    result->selected_root_hint = root_selection_hint;
     result->converged = 0;
     result->phase = PXTeqpPhaseUnknown;
 
@@ -3725,6 +3945,10 @@ int px_teqp_calculate_ncomponent_density(
     if (!std::isfinite(pressure_pa) || !std::isfinite(temperature_k)
         || pressure_pa <= 0 || temperature_k <= 0) {
         copy_text("Pressure and temperature must be finite and positive.", error_buffer, error_buffer_size);
+        return 3;
+    }
+    if (!valid_root_selection_hint(root_selection_hint)) {
+        copy_text("N-component teqp density received an invalid root-selection hint.", error_buffer, error_buffer_size);
         return 3;
     }
 
@@ -3763,18 +3987,32 @@ int px_teqp_calculate_ncomponent_density(
             molefractions
         );
         result->density_root_count = static_cast<int>(roots.size());
+        const auto diagnostics = density_root_diagnostics(
+            model,
+            roots,
+            temperature_k,
+            molefractions
+        );
+        fill_ncomponent_root_diagnostics(result, diagnostics);
         if (roots.empty()) {
             copy_text("teqp did not find a finite N-component density root.", error_buffer, error_buffer_size);
             return 7;
         }
-        if (roots.size() != 1) {
-            copy_text("teqp found multiple N-component density roots; homogeneous density is not unique.", error_buffer, error_buffer_size);
+        std::string selection_error;
+        const auto selected_index = select_ncomponent_root_index(
+            diagnostics,
+            root_selection_hint,
+            &selection_error
+        );
+        if (!selected_index.has_value()) {
+            copy_text(selection_error, error_buffer, error_buffer_size);
             return 8;
         }
 
-        result->molar_density_mol_m3 = roots[0].molar_density_mol_m3;
-        result->density_kg_m3 = roots[0].molar_density_mol_m3
-            * model.mixtureMolarMassKgMol(molefractions);
+        result->selected_root_index = static_cast<int>(*selected_index);
+        const auto &selected = diagnostics[*selected_index];
+        result->molar_density_mol_m3 = selected.root.molar_density_mol_m3;
+        result->density_kg_m3 = selected.mass_density_kg_m3;
         if (!std::isfinite(result->molar_density_mol_m3)
             || !std::isfinite(result->density_kg_m3)
             || result->molar_density_mol_m3 <= 0.0
@@ -3784,7 +4022,20 @@ int px_teqp_calculate_ncomponent_density(
         }
 
         result->converged = 1;
-        result->phase = PXTeqpPhaseUnknown;
+        switch (root_selection_hint) {
+        case PXTeqpDensityRootSelectionHomogeneousGas:
+            result->phase = PXTeqpPhaseGas;
+            break;
+        case PXTeqpDensityRootSelectionHomogeneousLiquidOrDense:
+            result->phase = PXTeqpPhaseLiquid;
+            break;
+        case PXTeqpDensityRootSelectionSupercritical:
+            result->phase = PXTeqpPhaseSupercritical;
+            break;
+        default:
+            result->phase = PXTeqpPhaseUnknown;
+            break;
+        }
         copy_text("", error_buffer, error_buffer_size);
         return 0;
     } catch (const std::exception &error) {

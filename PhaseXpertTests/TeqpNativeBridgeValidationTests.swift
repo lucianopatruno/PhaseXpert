@@ -33,6 +33,35 @@ private struct PXTestTeqpBinaryCriticalResult {
     var third_order_residual: Double = 0
 }
 
+private struct PXTestTeqpNComponentDensityResult {
+    var density_kg_m3: Double = 0
+    var molar_density_mol_m3: Double = 0
+    var density_root_count: Int32 = 0
+    var root_diagnostic_count: Int32 = 0
+    var root_molar_densities_mol_m3: (
+        Double, Double, Double, Double, Double, Double, Double, Double
+    ) = (.nan, .nan, .nan, .nan, .nan, .nan, .nan, .nan)
+    var root_densities_kg_m3: (
+        Double, Double, Double, Double, Double, Double, Double, Double
+    ) = (.nan, .nan, .nan, .nan, .nan, .nan, .nan, .nan)
+    var root_dp_drho_molar_j_mol: (
+        Double, Double, Double, Double, Double, Double, Double, Double
+    ) = (.nan, .nan, .nan, .nan, .nan, .nan, .nan, .nan)
+    var root_minimum_stability_eigenvalues: (
+        Double, Double, Double, Double, Double, Double, Double, Double
+    ) = (.nan, .nan, .nan, .nan, .nan, .nan, .nan, .nan)
+    var root_is_mechanically_stable: (
+        Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32
+    ) = (0, 0, 0, 0, 0, 0, 0, 0)
+    var root_is_locally_stable: (
+        Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32
+    ) = (0, 0, 0, 0, 0, 0, 0, 0)
+    var selected_root_index: Int32 = -1
+    var selected_root_hint: Int32 = 0
+    var converged: Int32 = 0
+    var phase: Int32 = 0
+}
+
 @_silgen_name("px_teqp_calculate_binary_thermodynamic_state")
 private func px_test_teqp_calculate_binary_thermodynamic_state(
     _ formulation: Int32,
@@ -49,6 +78,19 @@ private func px_test_teqp_calculate_binary_critical_point(
     _ formulation: Int32,
     _ component2MoleFraction: Double,
     _ result: UnsafeMutablePointer<PXTestTeqpBinaryCriticalResult>,
+    _ errorBuffer: UnsafeMutablePointer<CChar>,
+    _ errorBufferSize: Int
+) -> Int32
+
+@_silgen_name("px_teqp_calculate_ncomponent_density")
+private func px_test_teqp_calculate_ncomponent_density(
+    _ componentIDs: UnsafePointer<Int32>,
+    _ moleFractions: UnsafePointer<Double>,
+    _ componentCount: Int,
+    _ pressurePa: Double,
+    _ temperatureK: Double,
+    _ rootSelectionHint: Int32,
+    _ result: UnsafeMutablePointer<PXTestTeqpNComponentDensityResult>,
     _ errorBuffer: UnsafeMutablePointer<CChar>,
     _ errorBufferSize: Int
 ) -> Int32
@@ -473,6 +515,145 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             XCTAssertTrue(result.converged)
             XCTAssertTrue(result.densityKilogramsPerCubicMetre.isFinite)
             XCTAssertGreaterThan(result.densityKilogramsPerCubicMetre, 0)
+        }
+    }
+
+    func testNativeN2ValidatedGasRootSelectionAtPhysicalPhoneState() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let result = try requireNativeNComponentDensity(
+            composition: [
+                (Int32(PXTeqpComponentCarbonDioxide.rawValue), 0.9873),
+                (Int32(PXTeqpComponentNitrogen.rawValue), 0.0127)
+            ],
+            pressurePa: 4_000_000,
+            temperatureK: 283.15,
+            rootSelectionHint: Int32(PXTeqpDensityRootSelectionHomogeneousGas.rawValue)
+        )
+
+        let rootDensities = doubleArray(
+            from: result.root_densities_kg_m3,
+            count: Int(result.root_diagnostic_count)
+        )
+        let molarRootDensities = doubleArray(
+            from: result.root_molar_densities_mol_m3,
+            count: Int(result.root_diagnostic_count)
+        )
+        let mechanical = intArray(
+            from: result.root_is_mechanically_stable,
+            count: Int(result.root_diagnostic_count)
+        )
+        let local = intArray(
+            from: result.root_is_locally_stable,
+            count: Int(result.root_diagnostic_count)
+        )
+        let diagnostic = [
+            "N2-GAS-ROOTS count=\(result.density_root_count)",
+            "molar=\(molarRootDensities)",
+            "density=\(rootDensities)",
+            "mechanical=\(mechanical)",
+            "local=\(local)",
+            "selected=\(result.selected_root_index)",
+            "selectedDensity=\(result.density_kg_m3)"
+        ].joined(separator: " ")
+        print(diagnostic)
+
+        XCTAssertEqual(result.converged, 1)
+        XCTAssertEqual(result.phase, Int32(PXTeqpPhaseGas.rawValue))
+        XCTAssertGreaterThan(result.density_root_count, 1)
+        XCTAssertEqual(result.selected_root_index, 0)
+        XCTAssertEqual(result.density_kg_m3, rootDensities[0], accuracy: 1e-10)
+        XCTAssertGreaterThan(result.density_kg_m3, 0)
+        XCTAssertTrue(result.density_kg_m3.isFinite)
+        XCTAssertTrue(result.molar_density_mol_m3.isFinite)
+        XCTAssertGreaterThan(result.molar_density_mol_m3, 0)
+        #endif
+    }
+
+    func testNativeProviderN2ValidatedStateCalculatesDerivedDensityProperties() async throws {
+        let provider = TeqpProvider(engine: try requireNativeTeqpEngine())
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 4_000_000,
+            temperatureK: 283.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9873),
+                .init(component: .nitrogen, moleFraction: 0.0127)
+            ],
+            requestedProperties: [
+                .density,
+                .molarMass,
+                .specificVolume,
+                .compressibilityFactor,
+                .speedOfSound
+            ],
+            clientVersion: "test"
+        ))
+
+        XCTAssertEqual(response.phase, .gas)
+        XCTAssertTrue(response.solver.method.contains("generic N-component density solve"))
+        for property in [PropertyID.density, .molarMass, .specificVolume, .compressibilityFactor] {
+            let value = try XCTUnwrap(response.properties.first { $0.property == property })
+            XCTAssertEqual(value.status, .calculated, property.rawValue)
+            XCTAssertTrue(try XCTUnwrap(value.value).isFinite, property.rawValue)
+            XCTAssertGreaterThan(try XCTUnwrap(value.value), 0, property.rawValue)
+        }
+        XCTAssertEqual(response.properties.first { $0.property == .speedOfSound }?.status, .unavailable)
+    }
+
+    func testNativeN2ValidatedPressureSweepSelectsGasRoot() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        for pressurePa in [1_000_000.0, 2_000_000.0, 3_000_000.0, 4_000_000.0, 4_500_000.0] {
+            let result = try requireNativeNComponentDensity(
+                composition: [
+                    (Int32(PXTeqpComponentCarbonDioxide.rawValue), 0.9873),
+                    (Int32(PXTeqpComponentNitrogen.rawValue), 0.0127)
+                ],
+                pressurePa: pressurePa,
+                temperatureK: 283.15,
+                rootSelectionHint: Int32(PXTeqpDensityRootSelectionHomogeneousGas.rawValue)
+            )
+            XCTAssertEqual(result.converged, 1, "\(pressurePa)")
+            XCTAssertEqual(result.phase, Int32(PXTeqpPhaseGas.rawValue), "\(pressurePa)")
+            XCTAssertGreaterThan(result.density_kg_m3, 0, "\(pressurePa)")
+            XCTAssertTrue(result.density_kg_m3.isFinite, "\(pressurePa)")
+        }
+        #endif
+    }
+
+    func testNativePR59MulticomponentDensityGatesStillExecuteThroughProvider() async throws {
+        let provider = TeqpProvider(engine: try requireNativeTeqpEngine())
+        let formulations = [
+            TeqpFormulationCatalog.oxyCombIMulticomponentDensity,
+            TeqpFormulationCatalog.preCombIMulticomponentDensity,
+            TeqpFormulationCatalog.preCombIIMulticomponentDensity,
+            TeqpFormulationCatalog.transportSpecMulticomponentDensity
+        ]
+
+        for formulation in formulations {
+            let capability = try XCTUnwrap(formulation.propertyCapabilities.first)
+            let limit = try XCTUnwrap(capability.isothermPressureLimits.first)
+            let composition = capability.compositionLimits.map {
+                MixtureComponent(
+                    component: $0.component,
+                    moleFraction: $0.minimumMoleFraction
+                )
+            }
+            let response = try await provider.calculate(CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: (limit.minimumPressurePa + limit.maximumPressurePa) / 2,
+                temperatureK: limit.temperatureK,
+                composition: composition,
+                requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor],
+                clientVersion: "test"
+            ))
+            XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated, formulation.id)
+            XCTAssertEqual(response.properties.first { $0.property == .molarMass }?.status, .calculated, formulation.id)
+            XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated, formulation.id)
+            XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated, formulation.id)
         }
     }
 
@@ -1135,6 +1316,47 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             )
         }
         return engine
+    }
+
+    private func doubleArray<T>(from values: T, count: Int) -> [Double] {
+        withUnsafeBytes(of: values) { rawBuffer in
+            Array(rawBuffer.bindMemory(to: Double.self).prefix(max(0, count)))
+        }
+    }
+
+    private func intArray<T>(from values: T, count: Int) -> [Int32] {
+        withUnsafeBytes(of: values) { rawBuffer in
+            Array(rawBuffer.bindMemory(to: Int32.self).prefix(max(0, count)))
+        }
+    }
+
+    private func requireNativeNComponentDensity(
+        composition: [(Int32, Double)],
+        pressurePa: Double,
+        temperatureK: Double,
+        rootSelectionHint: Int32
+    ) throws -> PXTestTeqpNComponentDensityResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        var ids = composition.map(\.0)
+        var fractions = composition.map(\.1)
+        var result = PXTestTeqpNComponentDensityResult()
+        var error = [CChar](repeating: 0, count: 768)
+        let status = px_test_teqp_calculate_ncomponent_density(
+            &ids,
+            &fractions,
+            ids.count,
+            pressurePa,
+            temperatureK,
+            rootSelectionHint,
+            &result,
+            &error,
+            error.count
+        )
+        XCTAssertEqual(status, 0, String(cString: error))
+        return result
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
     }
 
     private func requireNativeMixtureThermodynamicState(
