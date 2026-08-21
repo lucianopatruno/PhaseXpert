@@ -679,6 +679,27 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertEqual(response.properties.first { $0.property == .speedOfSound }?.status, .unavailable)
     }
 
+    func testNativeHydrogenSulfideProductionGateSelectsGasRoot() throws {
+        _ = try requireNativeTeqpEngine()
+
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        let result = try requireNativeNComponentDensity(
+            composition: [
+                (Int32(PXTeqpComponentCarbonDioxide.rawValue), 0.9505),
+                (Int32(PXTeqpComponentHydrogenSulfide.rawValue), 0.0495)
+            ],
+            pressurePa: 2_000_000,
+            temperatureK: 272.55,
+            rootSelectionHint: Int32(PXTeqpDensityRootSelectionHomogeneousGas.rawValue)
+        )
+        XCTAssertEqual(result.converged, 1)
+        XCTAssertEqual(result.phase, Int32(PXTeqpPhaseGas.rawValue))
+        XCTAssertEqual(result.selected_root_index, 0)
+        XCTAssertGreaterThan(result.density_kg_m3, 0)
+        XCTAssertTrue(result.density_kg_m3.isFinite)
+        #endif
+    }
+
     func testNativeN2ValidatedPressureSweepSelectsGasRoot() throws {
         _ = try requireNativeTeqpEngine()
 

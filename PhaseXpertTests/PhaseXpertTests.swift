@@ -489,7 +489,10 @@ final class PhaseXpertTests: XCTestCase {
         }
 
         XCTAssertEqual(viewModel.selectedDescriptor?.name, "Advanced CCS Properties")
-        XCTAssertEqual(Set(viewModel.supportedImpurityComponents), [.oxygen, .argon, .methane, .hydrogen, .nitrogen])
+        XCTAssertEqual(
+            Set(viewModel.supportedImpurityComponents),
+            [.oxygen, .argon, .methane, .hydrogen, .nitrogen, .hydrogenSulfide]
+        )
         XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.nitrogen))
         XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.oxygen))
         XCTAssertTrue(viewModel.supportedImpurityComponents.contains(.argon))
@@ -500,7 +503,10 @@ final class PhaseXpertTests: XCTestCase {
             .argon
         )
         let methaneOptions = viewModel.impurityOptions(including: .methane)
-        XCTAssertEqual(Set(methaneOptions), [.oxygen, .argon, .methane, .hydrogen, .nitrogen])
+        XCTAssertEqual(
+            Set(methaneOptions),
+            [.oxygen, .argon, .methane, .hydrogen, .nitrogen, .hydrogenSulfide]
+        )
         XCTAssertTrue(methaneOptions.contains(.nitrogen))
         XCTAssertTrue(methaneOptions.contains(.oxygen))
         XCTAssertTrue(methaneOptions.contains(.argon))

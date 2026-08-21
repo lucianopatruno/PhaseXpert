@@ -743,14 +743,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         if isSupportedOxygenGasComposition(composition) {
             return []
         }
+        let decision = capabilityMatrix.decision(
+            for: canonical,
+            property: .density
+        )
+        if decision.isSupported {
+            return []
+        }
         if canonical.components.count > 2 {
-            let decision = capabilityMatrix.decision(
-                for: canonical,
-                property: .density
-            )
-            if decision.isSupported {
-                return []
-            }
             return [
                 ValidationIssue(
                     code: .componentOutsideModelRange,
@@ -773,16 +773,6 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     ) -> OperatingRangeGuidance? {
         guard engine.isAvailable else { return nil }
         guard !isPureCarbonDioxide(context.composition) else { return nil }
-
-        if let canonical = try? CanonicalComposition(context.composition),
-           canonical.components.count > 2 {
-            return multicomponentOperatingRangeGuidance(
-                composition: canonical,
-                pressurePa: context.pressurePa,
-                temperatureK: context.temperatureK,
-                requestedProperties: context.requestedProperties
-            )
-        }
 
         if let nitrogen = context.composition.first(where: { $0.component == .nitrogen }) {
             return nitrogenOperatingRangeGuidance(
@@ -816,6 +806,16 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 requestedProperties: context.requestedProperties
             )
         }
+        if let canonical = try? CanonicalComposition(context.composition),
+           canonical.componentSet == [.carbonDioxide, .hydrogenSulfide],
+           capabilityMatrix.decision(for: canonical, property: .density).isSupported {
+            return multicomponentOperatingRangeGuidance(
+                composition: canonical,
+                pressurePa: context.pressurePa,
+                temperatureK: context.temperatureK,
+                requestedProperties: context.requestedProperties
+            )
+        }
         if context.composition.contains(where: { $0.component != .carbonDioxide }) {
             return OperatingRangeGuidance(
                 title: "Model limits",
@@ -823,7 +823,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     .init(
                         severity: .unsupported,
                         title: "Mixture unsupported",
-                        detail: "Advanced CCS Properties is production-enabled only for pure CO₂, CO₂+N₂ density, CO₂+H₂ density, CO₂+CH₄ density/VLE and low-O₂ CO₂+O₂ density gates. No CoolProp fallback is used."
+                        detail: "Advanced CCS Properties is production-enabled only for pure CO₂ and the capability-matrix density/VLE gates, including the exact low-pressure CO₂+H₂S gas-density block. No CoolProp fallback is used."
                     )
                 ]
             )
@@ -2126,7 +2126,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             "\(celsiusString($0.temperatureK)) °C / \(pressureRangeString($0))"
         }.joined(separator: "; ")
         return OperatingRangeGuidance(
-            title: "Validated exact multicomponent range",
+            title: "Validated exact-composition range",
             summary: [
                 .init(severity: .information, title: "Exact composition", detail: compositionText),
                 .init(severity: .information, title: "Measured T/P blocks", detail: stateBlocks)
@@ -2140,7 +2140,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             phaseDiagram: [.init(
                 severity: .unsupported,
                 title: "Phase diagram",
-                detail: "Multicomponent phase equilibrium is not production-validated."
+                detail: "Phase equilibrium is not production-validated for this density gate."
             )],
             suggestions: []
         )

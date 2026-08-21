@@ -308,4 +308,33 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
         ])
         XCTAssertFalse(matrix.decision(for: nominal, property: .density, pressurePa: 3_940_000, temperatureK: 275.001).isSupported)
     }
+
+    func testHydrogenSulfideDensityGateIsExactAndPropertySpecific() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let validated = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.9505),
+            .init(component: .hydrogenSulfide, moleFraction: 0.0495)
+        ])
+        for property in [PropertyID.density, .molarMass, .specificVolume, .compressibilityFactor] {
+            let decision = matrix.decision(
+                for: validated, property: property,
+                pressurePa: 2_000_000, temperatureK: 272.55
+            )
+            XCTAssertTrue(decision.isSupported, property.rawValue)
+            XCTAssertEqual(decision.phaseDomain, .homogeneousGas)
+            XCTAssertEqual(decision.formulationID, TeqpFormulationCatalog.co2HydrogenSulfideGasDensity.id)
+        }
+        XCTAssertFalse(matrix.decision(for: validated, property: .speedOfSound, pressurePa: 2_000_000, temperatureK: 272.55).isSupported)
+        XCTAssertTrue(matrix.decision(for: validated, property: .density, pressurePa: 301_000, temperatureK: 272.54).isSupported)
+        XCTAssertTrue(matrix.decision(for: validated, property: .density, pressurePa: 3_196_000, temperatureK: 272.56).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 300_999, temperatureK: 272.55).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 3_196_001, temperatureK: 272.55).isSupported)
+        XCTAssertFalse(matrix.decision(for: validated, property: .density, pressurePa: 2_000_000, temperatureK: 272.561).isSupported)
+
+        let nearbyComposition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.950399),
+            .init(component: .hydrogenSulfide, moleFraction: 0.049601)
+        ])
+        XCTAssertFalse(matrix.decision(for: nearbyComposition, property: .density, pressurePa: 2_000_000, temperatureK: 272.55).isSupported)
+    }
 }

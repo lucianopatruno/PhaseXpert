@@ -630,6 +630,63 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2HydrogenSulfideGasDensity = TeqpFormulation(
+        id: "teqp-v0.23.1-multifluid-co2-h2s-gas-density-nazeri2016",
+        name: "CO₂+H₂S homogeneous gas density",
+        family: .multifluid,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .hydrogenSulfide],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .hydrogenSulfide,
+                minimumMoleFraction: 0.0495,
+                maximumMoleFraction: 0.0495
+            )
+        ],
+        supportedProperties: [.density, .molarMass, .compressibilityFactor, .specificVolume],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .density,
+                phaseDomain: .homogeneousGas,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .hydrogenSulfide,
+                        minimumMoleFraction: 0.0495,
+                        maximumMoleFraction: 0.0495
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 272.55,
+                        minimumTemperatureK: 272.54,
+                        maximumTemperatureK: 272.56,
+                        minimumPressurePa: 301_000,
+                        maximumPressurePa: 3_196_000
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/Nazeri2016CO2H2SDensityValidation.json",
+                validationSummary: "Nazeri et al. 2016 Table 3 homogeneous-gas density at exact xH₂S = 0.0495; all 19 contiguous gas rows are included.",
+                accuracySummary: "19/19 converged; AARD 0.616767%; bias +0.232906%; RMS 0.767045%; worst +1.595572%.",
+                notes: [
+                    "LIMITED PASS — thermodynamic density and density-derived M, v and Z only at exact xH₂S = 0.0495, 272.54–272.56 K and 0.301–3.196 MPa; this does not imply corrosion, toxicity, water or pH prediction.",
+                    "The source-reported homogeneous gas phase selects the stable low-density root; no phase inference or composition interpolation is used.",
+                    "VLE, caloric, acoustic, transport, corrosion, toxicity, water and pH properties remain unavailable."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "teqp v0.23.1 multifluid model using Span-JPCRD-1996 CO₂, Lemmon-JCED-2006 H₂S, and the Kunz-JCED-2012 CO₂+H₂S reducing record (betaT 1.016034583, gammaT 0.92601888, betaV 0.906630564, gammaV 1.024085837, F=0; no departure function).",
+        limitations: [
+            "No state outside the exact Nazeri 2016 gas block is production-enabled.",
+            "H₂S support is thermodynamic density only and does not imply corrosion, toxicity, water or pH prediction.",
+            "No CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(authors: "Nazeri, Chapoy, Valtz, Coquelet and Tohidi", title: "Densities and derived thermophysical properties of the 0.9505 CO₂ + 0.0495 H₂S mixture from 273 K to 353 K and pressures up to 41 MPa", year: 2016, doiOrURL: "https://doi.org/10.1016/j.fluid.2016.04.024"),
+            SourceReference(authors: "Kunz and Wagner", title: "The GERG-2008 Wide-Range Equation of State for Natural Gases and Other Mixtures", year: 2012, doiOrURL: "https://doi.org/10.1021/je300655b")
+        ]
+    )
+
     public static let co2NitrogenGernertGergDiagnostic = TeqpFormulation(
         id: "teqp-v0.23.1-co2-n2-gerg-diagnostic",
         name: "CO₂+N₂ Gernert/GERG diagnostic model",
@@ -945,7 +1002,9 @@ public enum TeqpFormulationCatalog {
         .oxygen,
         .argon,
         .hydrogen,
-        .methane
+        .methane,
+        .carbonMonoxide,
+        .hydrogenSulfide
     ]
 
     public static var productionFormulations: [TeqpFormulation] {
@@ -955,6 +1014,7 @@ public enum TeqpFormulationCatalog {
             co2HydrogenEOSCGGasDensity,
             co2MethaneEOSCGGasDensity,
             co2OxygenEOSCGGasDensity,
+            co2HydrogenSulfideGasDensity,
             oxyCombIMulticomponentDensity,
             preCombIMulticomponentDensity,
             preCombIIMulticomponentDensity,
