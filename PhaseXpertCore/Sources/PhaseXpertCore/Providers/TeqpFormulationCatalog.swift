@@ -350,6 +350,71 @@ public enum TeqpFormulationCatalog {
         ]
     )
 
+    public static let co2OxygenEOSCGDenseSpeedOfSound = TeqpFormulation(
+        id: "teqp-v0.23.1-eoscg2021-co2-o2-dense-speed-of-sound-alsiyabi2013",
+        name: "CO₂+O₂ EOS-CG-2021 dense-fluid speed of sound",
+        family: .eosCG2021,
+        status: .productionEnabled,
+        components: [.carbonDioxide, .oxygen],
+        compositionLimits: [
+            TeqpCompositionLimit(
+                component: .oxygen,
+                minimumMoleFraction: 0.0652,
+                maximumMoleFraction: 0.0652
+            )
+        ],
+        supportedProperties: [.speedOfSound],
+        propertyCapabilities: [
+            TeqpPropertyCapability(
+                property: .speedOfSound,
+                phaseDomain: .homogeneousLiquidOrDense,
+                compositionLimits: [
+                    TeqpCompositionLimit(
+                        component: .oxygen,
+                        minimumMoleFraction: 0.0652,
+                        maximumMoleFraction: 0.0652
+                    )
+                ],
+                isothermPressureLimits: [
+                    TeqpTemperaturePressureLimit(
+                        temperatureK: 301.15,
+                        minimumPressurePa: 24_120_000,
+                        maximumPressurePa: 40_830_000
+                    )
+                ],
+                validationArtifact: "Documentation/Validation/AlSiyabi2013AdvancedSpeedOfSoundValidation.json",
+                validationSummary: "Al-Siyabi 2013 Table 3.2 complete high-pressure tail at exact xO₂ = 0.0652 and 301.15 K.",
+                accuracySummary: "6/6 points; MAE 0.538573 m/s; bias +0.474074 m/s; RMS 0.639985 m/s; AARD 0.085971%; worst 0.978416 m/s.",
+                notes: [
+                    "LIMITED PASS — speed of sound only for the contiguous six-point dense-fluid block.",
+                    "Every included row is within the reported ±1 m/s speed-of-sound accuracy.",
+                    "Density, Cp and Cv are not promoted by this acoustic validation."
+                ]
+            )
+        ],
+        supportsPhaseEnvelope: false,
+        provenance: "EOS-CG-2021 CO₂+O₂ evaluated with teqp v0.23.1 \(teqpCommit); independent acoustic validation against Al-Siyabi 2013 doctoral thesis Table 3.2.",
+        limitations: [
+            "LIMITED PASS — dense-fluid speed of sound only at xO₂ = 0.0652, T = 301.15 K and 24.12–40.83 MPa.",
+            "No acoustic composition, temperature or pressure extrapolation is permitted.",
+            "Cp and Cv remain internal unvalidated derivatives; no CoolProp fallback is used."
+        ],
+        references: [
+            SourceReference(
+                authors: "Ibrahim Al-Siyabi",
+                title: "Effect of impurities on CO₂ stream properties",
+                year: 2013,
+                doiOrURL: "http://hdl.handle.net/10399/2643"
+            ),
+            SourceReference(
+                authors: "Neumann, Herrig, Bell, Beckmüller, Lemmon, Thol and Span",
+                title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
+                year: 2023,
+                doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+            )
+        ]
+    )
+
     public static let co2NitrogenGernertGasDensity = TeqpFormulation(
         id: "teqp-v0.23.1-co2-n2-gerg-gas-density-mazzoccoli2012",
         name: "CO₂+N₂ Gernert/GERG homogeneous gas density",
@@ -1012,6 +1077,7 @@ public enum TeqpFormulationCatalog {
             pureCarbonDioxide,
             co2NitrogenGernertGasDensity,
             co2HydrogenEOSCGGasDensity,
+            co2OxygenEOSCGDenseSpeedOfSound,
             co2MethaneEOSCGGasDensity,
             co2OxygenEOSCGGasDensity,
             co2HydrogenSulfideGasDensity,

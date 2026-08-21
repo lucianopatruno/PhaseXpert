@@ -1,0 +1,6067 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "author": "Ibrahim Al-Siyabi",
+    "title": "Effect of impurities on CO2 stream properties",
+    "year": 2013,
+    "repositoryHandle": "http://hdl.handle.net/10399/2643",
+    "sourceFile": "Al-SiyabiI_0313_pe.pdf",
+    "table": "Table 3.2, pages 47-52 of the thesis",
+    "pressureBasis": "absolute",
+    "speedOfSoundUnit": "m/s",
+    "reportedSpeedOfSoundAccuracyMetresPerSecond": 1,
+    "reportedCompositionUncertaintyMolePercent": 0.3,
+    "temperatureStabilityK": 0.05,
+    "extraction": "Exact numerical PDF tables; no graph digitization or EOS-derived source values."
+  },
+  "teqp": {
+    "version": "0.23.1",
+    "commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+    "rootSelection": "homogeneousLiquidOrDense"
+  },
+  "compositions": {
+    "N2": {
+      "CO2": 0.9556,
+      "N2": 0.0444
+    },
+    "CH4": {
+      "CO2": 0.9539,
+      "CH4": 0.0461
+    },
+    "H2": {
+      "CO2": 0.9547,
+      "H2": 0.0453
+    },
+    "O2": {
+      "CO2": 0.9348,
+      "O2": 0.0652
+    },
+    "MIXb": {
+      "CO2": 0.9532,
+      "CH4": 0.021,
+      "H2": 0.008,
+      "N2": 0.0178
+    }
+  },
+  "systems": {
+    "N2": {
+      "metrics": {
+        "rows": 60,
+        "converged": 60,
+        "convergencePercent": 100.0,
+        "MAEMetresPerSecond": 14.97839629457256,
+        "biasMetresPerSecond": -14.97839629457256,
+        "RMSMetresPerSecond": 15.077696889042576,
+        "AARDPercent": 2.300656181769555,
+        "worstAbsoluteDeviationMetresPerSecond": -18.49101149787157,
+        "worstAbsoluteRowID": "alsiyabi2013-n2-001",
+        "worstRelativeDeviationPercent": -3.621210353279319,
+        "worstRelativeRowID": "alsiyabi2013-n2-033"
+      },
+      "isotherms": [
+        {
+          "temperatureK": 268.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 17.10607426133753,
+            "biasMetresPerSecond": -17.10607426133753,
+            "RMSMetresPerSecond": 17.118629916635122,
+            "AARDPercent": 2.3319166956782706,
+            "worstAbsoluteDeviationMetresPerSecond": -18.49101149787157,
+            "worstAbsoluteRowID": "alsiyabi2013-n2-001",
+            "worstRelativeDeviationPercent": -2.9920730579080206,
+            "worstRelativeRowID": "alsiyabi2013-n2-001"
+          }
+        },
+        {
+          "temperatureK": 278.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 15.343735718074925,
+            "biasMetresPerSecond": -15.343735718074925,
+            "RMSMetresPerSecond": 15.350438520637526,
+            "AARDPercent": 2.284408216986683,
+            "worstAbsoluteDeviationMetresPerSecond": -15.873980785234949,
+            "worstAbsoluteRowID": "alsiyabi2013-n2-017",
+            "worstRelativeDeviationPercent": -2.9700248954328927,
+            "worstRelativeRowID": "alsiyabi2013-n2-002"
+          }
+        },
+        {
+          "temperatureK": 283.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 15.310384039209287,
+            "biasMetresPerSecond": -15.310384039209287,
+            "RMSMetresPerSecond": 15.328019826530308,
+            "AARDPercent": 2.3751801325433717,
+            "worstAbsoluteDeviationMetresPerSecond": -17.027471764810855,
+            "worstAbsoluteRowID": "alsiyabi2013-n2-003",
+            "worstRelativeDeviationPercent": -3.32567807906462,
+            "worstRelativeRowID": "alsiyabi2013-n2-003"
+          }
+        },
+        {
+          "temperatureK": 288.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 14.707706255948386,
+            "biasMetresPerSecond": -14.707706255948386,
+            "RMSMetresPerSecond": 14.727262877649139,
+            "AARDPercent": 2.250610601128394,
+            "worstAbsoluteDeviationMetresPerSecond": -16.072613053140515,
+            "worstAbsoluteRowID": "alsiyabi2013-n2-031",
+            "worstRelativeDeviationPercent": -3.073157371537383,
+            "worstRelativeRowID": "alsiyabi2013-n2-031"
+          }
+        },
+        {
+          "temperatureK": 293.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 13.878321894422697,
+            "biasMetresPerSecond": -13.878321894422697,
+            "RMSMetresPerSecond": 14.062534306463949,
+            "AARDPercent": 2.2410284174437405,
+            "worstAbsoluteDeviationMetresPerSecond": -17.135341787783204,
+            "worstAbsoluteRowID": "alsiyabi2013-n2-032",
+            "worstRelativeDeviationPercent": -3.4616852096531727,
+            "worstRelativeRowID": "alsiyabi2013-n2-032"
+          }
+        },
+        {
+          "temperatureK": 301.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 13.524155598442547,
+            "biasMetresPerSecond": -13.524155598442547,
+            "RMSMetresPerSecond": 13.62875170652519,
+            "AARDPercent": 2.320793026836871,
+            "worstAbsoluteDeviationMetresPerSecond": -16.80241603921604,
+            "worstAbsoluteRowID": "alsiyabi2013-n2-033",
+            "worstRelativeDeviationPercent": -3.621210353279319,
+            "worstRelativeRowID": "alsiyabi2013-n2-033"
+          }
+        }
+      ]
+    },
+    "CH4": {
+      "metrics": {
+        "rows": 61,
+        "converged": 61,
+        "convergencePercent": 100.0,
+        "MAEMetresPerSecond": 1.9032123939247343,
+        "biasMetresPerSecond": -0.6362695411432486,
+        "RMSMetresPerSecond": 2.161184191018404,
+        "AARDPercent": 0.29325980475417535,
+        "worstAbsoluteDeviationMetresPerSecond": 4.541146856003934,
+        "worstAbsoluteRowID": "alsiyabi2013-ch4-001",
+        "worstRelativeDeviationPercent": 0.7683028846957838,
+        "worstRelativeRowID": "alsiyabi2013-ch4-033"
+      },
+      "isotherms": [
+        {
+          "temperatureK": 268.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 2.4065929339092462,
+            "biasMetresPerSecond": -0.6509193890351753,
+            "RMSMetresPerSecond": 2.693048611761306,
+            "AARDPercent": 0.32592940431721523,
+            "worstAbsoluteDeviationMetresPerSecond": 4.541146856003934,
+            "worstAbsoluteRowID": "alsiyabi2013-ch4-001",
+            "worstRelativeDeviationPercent": 0.7396004651472206,
+            "worstRelativeRowID": "alsiyabi2013-ch4-001"
+          }
+        },
+        {
+          "temperatureK": 278.15,
+          "metrics": {
+            "rows": 11,
+            "converged": 11,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 2.475183167344064,
+            "biasMetresPerSecond": -0.8269823605451786,
+            "RMSMetresPerSecond": 2.5772667654365646,
+            "AARDPercent": 0.3701860169392498,
+            "worstAbsoluteDeviationMetresPerSecond": -3.4870967959657264,
+            "worstAbsoluteRowID": "alsiyabi2013-ch4-029",
+            "worstRelativeDeviationPercent": 0.5633162082650301,
+            "worstRelativeRowID": "alsiyabi2013-ch4-002"
+          }
+        },
+        {
+          "temperatureK": 283.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 2.099129540132998,
+            "biasMetresPerSecond": -0.725768437146877,
+            "RMSMetresPerSecond": 2.2976244648107693,
+            "AARDPercent": 0.3209856354830435,
+            "worstAbsoluteDeviationMetresPerSecond": -3.167034787286184,
+            "worstAbsoluteRowID": "alsiyabi2013-ch4-021",
+            "worstRelativeDeviationPercent": 0.5551434646941309,
+            "worstRelativeRowID": "alsiyabi2013-ch4-003"
+          }
+        },
+        {
+          "temperatureK": 288.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 1.6694855796822707,
+            "biasMetresPerSecond": -0.17157451836286555,
+            "RMSMetresPerSecond": 1.8705606152671788,
+            "AARDPercent": 0.27063967545934625,
+            "worstAbsoluteDeviationMetresPerSecond": 2.7121393547811294,
+            "worstAbsoluteRowID": "alsiyabi2013-ch4-035",
+            "worstRelativeDeviationPercent": 0.5615195351513725,
+            "worstRelativeRowID": "alsiyabi2013-ch4-035"
+          }
+        },
+        {
+          "temperatureK": 293.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 1.523163970517237,
+            "biasMetresPerSecond": -0.2480611102829357,
+            "RMSMetresPerSecond": 1.7553943567033041,
+            "AARDPercent": 0.2756610204671052,
+            "worstAbsoluteDeviationMetresPerSecond": 3.0501624522422617,
+            "worstAbsoluteRowID": "alsiyabi2013-ch4-033",
+            "worstRelativeDeviationPercent": 0.7683028846957838,
+            "worstRelativeRowID": "alsiyabi2013-ch4-033"
+          }
+        },
+        {
+          "temperatureK": 301.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 1.1885220946206574,
+            "biasMetresPerSecond": -1.1752401495462663,
+            "RMSMetresPerSecond": 1.4397376872231942,
+            "AARDPercent": 0.1884644546405845,
+            "worstAbsoluteDeviationMetresPerSecond": -2.4726710943461967,
+            "worstAbsoluteRowID": "alsiyabi2013-ch4-058",
+            "worstRelativeDeviationPercent": -0.3532387277637424,
+            "worstRelativeRowID": "alsiyabi2013-ch4-058"
+          }
+        }
+      ]
+    },
+    "H2": {
+      "metrics": {
+        "rows": 57,
+        "converged": 57,
+        "convergencePercent": 100.0,
+        "MAEMetresPerSecond": 5.869324812823277,
+        "biasMetresPerSecond": -5.311570363329619,
+        "RMSMetresPerSecond": 7.380977467567033,
+        "AARDPercent": 0.9895109644540967,
+        "worstAbsoluteDeviationMetresPerSecond": -25.30436607313544,
+        "worstAbsoluteRowID": "alsiyabi2013-h2-031",
+        "worstRelativeDeviationPercent": -6.053676094051541,
+        "worstRelativeRowID": "alsiyabi2013-h2-031"
+      },
+      "isotherms": [
+        {
+          "temperatureK": 268.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 3.679320852623005,
+            "biasMetresPerSecond": -3.679320852623005,
+            "RMSMetresPerSecond": 4.079181420641864,
+            "AARDPercent": 0.5186991705320141,
+            "worstAbsoluteDeviationMetresPerSecond": -6.449670641296279,
+            "worstAbsoluteRowID": "alsiyabi2013-h2-007",
+            "worstRelativeDeviationPercent": -0.9526839942830546,
+            "worstRelativeRowID": "alsiyabi2013-h2-007"
+          }
+        },
+        {
+          "temperatureK": 278.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 4.062817170434323,
+            "biasMetresPerSecond": -0.8836168083204712,
+            "RMSMetresPerSecond": 5.752109702270225,
+            "AARDPercent": 0.5453626943648248,
+            "worstAbsoluteDeviationMetresPerSecond": 15.89600181056926,
+            "worstAbsoluteRowID": "alsiyabi2013-h2-029",
+            "worstRelativeDeviationPercent": 1.999497083090473,
+            "worstRelativeRowID": "alsiyabi2013-h2-029"
+          }
+        },
+        {
+          "temperatureK": 283.15,
+          "metrics": {
+            "rows": 9,
+            "converged": 9,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 6.278426390189275,
+            "biasMetresPerSecond": -6.278426390189275,
+            "RMSMetresPerSecond": 6.851039443396748,
+            "AARDPercent": 1.0278072812406456,
+            "worstAbsoluteDeviationMetresPerSecond": -13.433339755117231,
+            "worstAbsoluteRowID": "alsiyabi2013-h2-003",
+            "worstRelativeDeviationPercent": -2.730353608763665,
+            "worstRelativeRowID": "alsiyabi2013-h2-003"
+          }
+        },
+        {
+          "temperatureK": 288.15,
+          "metrics": {
+            "rows": 9,
+            "converged": 9,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 8.435844718326223,
+            "biasMetresPerSecond": -8.435844718326223,
+            "RMSMetresPerSecond": 10.293091305804651,
+            "AARDPercent": 1.4925838421527318,
+            "worstAbsoluteDeviationMetresPerSecond": -24.590454428437056,
+            "worstAbsoluteRowID": "alsiyabi2013-h2-030",
+            "worstRelativeDeviationPercent": -5.3690948533705365,
+            "worstRelativeRowID": "alsiyabi2013-h2-030"
+          }
+        },
+        {
+          "temperatureK": 293.15,
+          "metrics": {
+            "rows": 9,
+            "converged": 9,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 8.608392658003298,
+            "biasMetresPerSecond": -8.608392658003298,
+            "RMSMetresPerSecond": 10.516355663399976,
+            "AARDPercent": 1.619081080574037,
+            "worstAbsoluteDeviationMetresPerSecond": -25.30436607313544,
+            "worstAbsoluteRowID": "alsiyabi2013-h2-031",
+            "worstRelativeDeviationPercent": -6.053676094051541,
+            "worstRelativeRowID": "alsiyabi2013-h2-031"
+          }
+        },
+        {
+          "temperatureK": 301.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 4.722616020168436,
+            "biasMetresPerSecond": -4.722616020168436,
+            "RMSMetresPerSecond": 4.865434079971913,
+            "AARDPercent": 0.850625648920839,
+            "worstAbsoluteDeviationMetresPerSecond": -6.688842533960326,
+            "worstAbsoluteRowID": "alsiyabi2013-h2-032",
+            "worstRelativeDeviationPercent": -1.5925815557048395,
+            "worstRelativeRowID": "alsiyabi2013-h2-032"
+          }
+        }
+      ]
+    },
+    "O2": {
+      "metrics": {
+        "rows": 62,
+        "converged": 62,
+        "convergencePercent": 100.0,
+        "MAEMetresPerSecond": 3.806427324349483,
+        "biasMetresPerSecond": 3.760565813001372,
+        "RMSMetresPerSecond": 5.323032823509094,
+        "AARDPercent": 0.6738186221574699,
+        "worstAbsoluteDeviationMetresPerSecond": 12.991071726492464,
+        "worstAbsoluteRowID": "alsiyabi2013-o2-003",
+        "worstRelativeDeviationPercent": 2.9528689705186646,
+        "worstRelativeRowID": "alsiyabi2013-o2-033"
+      },
+      "isotherms": [
+        {
+          "temperatureK": 268.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 3.5550930781489454,
+            "biasMetresPerSecond": 3.356766966224666,
+            "RMSMetresPerSecond": 5.509837131245497,
+            "AARDPercent": 0.5465153812673444,
+            "worstAbsoluteDeviationMetresPerSecond": 12.216866011864681,
+            "worstAbsoluteRowID": "alsiyabi2013-o2-001",
+            "worstRelativeDeviationPercent": 2.039543574601783,
+            "worstRelativeRowID": "alsiyabi2013-o2-001"
+          }
+        },
+        {
+          "temperatureK": 278.15,
+          "metrics": {
+            "rows": 11,
+            "converged": 11,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 5.211366468872215,
+            "biasMetresPerSecond": 5.211366468872215,
+            "RMSMetresPerSecond": 6.536680566907428,
+            "AARDPercent": 0.8638095914660059,
+            "worstAbsoluteDeviationMetresPerSecond": 11.76392410763333,
+            "worstAbsoluteRowID": "alsiyabi2013-o2-002",
+            "worstRelativeDeviationPercent": 2.18660299398389,
+            "worstRelativeRowID": "alsiyabi2013-o2-002"
+          }
+        },
+        {
+          "temperatureK": 283.15,
+          "metrics": {
+            "rows": 11,
+            "converged": 11,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 5.271180562247418,
+            "biasMetresPerSecond": 5.271180562247418,
+            "RMSMetresPerSecond": 6.674698977551918,
+            "AARDPercent": 0.9637294063032038,
+            "worstAbsoluteDeviationMetresPerSecond": 12.991071726492464,
+            "worstAbsoluteRowID": "alsiyabi2013-o2-003",
+            "worstRelativeDeviationPercent": 2.925917055516321,
+            "worstRelativeRowID": "alsiyabi2013-o2-003"
+          }
+        },
+        {
+          "temperatureK": 288.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 4.974442059391651,
+            "biasMetresPerSecond": 4.974442059391651,
+            "RMSMetresPerSecond": 6.14034647933012,
+            "AARDPercent": 0.9131519764413222,
+            "worstAbsoluteDeviationMetresPerSecond": 12.93356609087175,
+            "worstAbsoluteRowID": "alsiyabi2013-o2-033",
+            "worstRelativeDeviationPercent": 2.9528689705186646,
+            "worstRelativeRowID": "alsiyabi2013-o2-033"
+          }
+        },
+        {
+          "temperatureK": 293.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 2.0633552292855084,
+            "biasMetresPerSecond": 2.016039297128606,
+            "RMSMetresPerSecond": 2.8081860432141905,
+            "AARDPercent": 0.39510482983672646,
+            "worstAbsoluteDeviationMetresPerSecond": 5.429770447847545,
+            "worstAbsoluteRowID": "alsiyabi2013-o2-034",
+            "worstRelativeDeviationPercent": 1.195984680142631,
+            "worstRelativeRowID": "alsiyabi2013-o2-034"
+          }
+        },
+        {
+          "temperatureK": 301.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 1.4761573099090923,
+            "biasMetresPerSecond": 1.4374579836319867,
+            "RMSMetresPerSecond": 1.928511906729185,
+            "AARDPercent": 0.31261037228478983,
+            "worstAbsoluteDeviationMetresPerSecond": 3.4048687642411437,
+            "worstAbsoluteRowID": "alsiyabi2013-o2-038",
+            "worstRelativeDeviationPercent": 0.8653244406203209,
+            "worstRelativeRowID": "alsiyabi2013-o2-035"
+          }
+        }
+      ]
+    },
+    "MIXb": {
+      "metrics": {
+        "rows": 60,
+        "converged": 60,
+        "convergencePercent": 100.0,
+        "MAEMetresPerSecond": 6.835265281463573,
+        "biasMetresPerSecond": 6.835265281463573,
+        "RMSMetresPerSecond": 8.201763357163086,
+        "AARDPercent": 1.2767936664216262,
+        "worstAbsoluteDeviationMetresPerSecond": 21.308766595864313,
+        "worstAbsoluteRowID": "alsiyabi2013-mixb-032",
+        "worstRelativeDeviationPercent": 6.457201998746761,
+        "worstRelativeRowID": "alsiyabi2013-mixb-032"
+      },
+      "isotherms": [
+        {
+          "temperatureK": 268.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 6.884165896386048,
+            "biasMetresPerSecond": 6.884165896386048,
+            "RMSMetresPerSecond": 8.364524685664895,
+            "AARDPercent": 1.0490056595124888,
+            "worstAbsoluteDeviationMetresPerSecond": 17.362679601114564,
+            "worstAbsoluteRowID": "alsiyabi2013-mixb-001",
+            "worstRelativeDeviationPercent": 3.0784892909777595,
+            "worstRelativeRowID": "alsiyabi2013-mixb-001"
+          }
+        },
+        {
+          "temperatureK": 278.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 6.835188931940683,
+            "biasMetresPerSecond": 6.835188931940683,
+            "RMSMetresPerSecond": 7.938484049666402,
+            "AARDPercent": 1.1482843993508103,
+            "worstAbsoluteDeviationMetresPerSecond": 14.177589138225926,
+            "worstAbsoluteRowID": "alsiyabi2013-mixb-005",
+            "worstRelativeDeviationPercent": 2.6500166613506404,
+            "worstRelativeRowID": "alsiyabi2013-mixb-005"
+          }
+        },
+        {
+          "temperatureK": 283.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 7.804591913681241,
+            "biasMetresPerSecond": 7.804591913681241,
+            "RMSMetresPerSecond": 9.579675035787147,
+            "AARDPercent": 1.4625611222857606,
+            "worstAbsoluteDeviationMetresPerSecond": 20.213125524155203,
+            "worstAbsoluteRowID": "alsiyabi2013-mixb-003",
+            "worstRelativeDeviationPercent": 4.8706326564229405,
+            "worstRelativeRowID": "alsiyabi2013-mixb-003"
+          }
+        },
+        {
+          "temperatureK": 288.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 6.588955474379515,
+            "biasMetresPerSecond": 6.588955474379515,
+            "RMSMetresPerSecond": 7.81350685661462,
+            "AARDPercent": 1.3109007735357794,
+            "worstAbsoluteDeviationMetresPerSecond": 13.979576197362576,
+            "worstAbsoluteRowID": "alsiyabi2013-mixb-031",
+            "worstRelativeDeviationPercent": 3.7378545982252875,
+            "worstRelativeRowID": "alsiyabi2013-mixb-031"
+          }
+        },
+        {
+          "temperatureK": 293.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 7.533128865167828,
+            "biasMetresPerSecond": 7.533128865167828,
+            "RMSMetresPerSecond": 9.278901657056908,
+            "AARDPercent": 1.646953745147768,
+            "worstAbsoluteDeviationMetresPerSecond": 21.308766595864313,
+            "worstAbsoluteRowID": "alsiyabi2013-mixb-032",
+            "worstRelativeDeviationPercent": 6.457201998746761,
+            "worstRelativeRowID": "alsiyabi2013-mixb-032"
+          }
+        },
+        {
+          "temperatureK": 301.15,
+          "metrics": {
+            "rows": 10,
+            "converged": 10,
+            "convergencePercent": 100.0,
+            "MAEMetresPerSecond": 5.36556060722612,
+            "biasMetresPerSecond": 5.36556060722612,
+            "RMSMetresPerSecond": 5.631132357397819,
+            "AARDPercent": 1.0430562986971499,
+            "worstAbsoluteDeviationMetresPerSecond": 8.923265531586026,
+            "worstAbsoluteRowID": "alsiyabi2013-mixb-036",
+            "worstRelativeDeviationPercent": 2.080015275427978,
+            "worstRelativeRowID": "alsiyabi2013-mixb-036"
+          }
+        }
+      ]
+    }
+  },
+  "candidateBlocks": [
+    {
+      "id": "alsiyabi2013-o2-301k-high-pressure-tail",
+      "system": "O2",
+      "decision": "promoted",
+      "property": "speedOfSound",
+      "phaseDomain": "homogeneousLiquidOrDense",
+      "exactComposition": {
+        "CO2": 0.9348,
+        "O2": 0.0652
+      },
+      "temperatureK": 301.15,
+      "minimumPressurePa": 24120000,
+      "maximumPressurePa": 40830000,
+      "includedRows": [
+        "alsiyabi2013-o2-047",
+        "alsiyabi2013-o2-050",
+        "alsiyabi2013-o2-053",
+        "alsiyabi2013-o2-056",
+        "alsiyabi2013-o2-059",
+        "alsiyabi2013-o2-062"
+      ],
+      "metrics": {
+        "rows": 6,
+        "converged": 6,
+        "convergencePercent": 100.0,
+        "MAEMetresPerSecond": 0.5385729664132176,
+        "biasMetresPerSecond": 0.4740740892847081,
+        "RMSMetresPerSecond": 0.639985399710561,
+        "AARDPercent": 0.08597117691058803,
+        "worstAbsoluteDeviationMetresPerSecond": 0.9784160570457061,
+        "worstAbsoluteRowID": "alsiyabi2013-o2-047",
+        "worstRelativeDeviationPercent": 0.1695695072869508,
+        "worstRelativeRowID": "alsiyabi2013-o2-047"
+      },
+      "immediateExcludedLowerPressureRow": "alsiyabi2013-o2-044",
+      "rationale": "The complete contiguous six-row high-pressure tail is entirely within the reported +/-1 m/s accuracy, with sub-1 m/s MAE and RMS. The immediately adjacent 21.39 MPa row errs by +1.896119 m/s and defines the conservative lower boundary."
+    }
+  ],
+  "decisions": {
+    "N2": "rejected: systematic -14.978396 m/s bias and 2.300656% AARD",
+    "CH4": "rejected: full matrix MAE 1.903212 m/s; no complete isotherm is uncertainty-consistent",
+    "H2": "rejected: full matrix MAE 5.869325 m/s and pressure-dependent systematic deviations",
+    "O2OutsidePromotedBlock": "rejected: lower-pressure and other-isotherm errors exceed measurement accuracy",
+    "MIXb": "rejected: no complete isotherm is uncertainty-consistent; best 301.15 K full isotherm has 5.365561 m/s MAE and 8.923266 m/s worst error",
+    "H2S": "research-only: no primary row-level binary acoustic matrix obtained"
+  },
+  "performanceMilliseconds": {
+    "promotedBlockMean": 21.563062333674072,
+    "promotedBlockMedian": 20.529312500912056,
+    "promotedBlockWorst": 24.439417000394315
+  },
+  "rows": [
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 9450000.0,
+      "experimental": 618.0,
+      "rowID": "alsiyabi2013-n2-001",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 599.5089885021284,
+        "density": 943.2233625989645,
+        "roots": 3,
+        "stability": 0.20099706886376234,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.11445799912326
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 9490000.0,
+      "experimental": 534.0,
+      "rowID": "alsiyabi2013-n2-002",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 518.1400670583884,
+        "density": 885.1528276641285,
+        "roots": 3,
+        "stability": 0.15429090448922606,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.968458999865106
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 10510000.0,
+      "experimental": 512.0,
+      "rowID": "alsiyabi2013-n2-003",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 494.97252823518915,
+        "density": 862.9208453282521,
+        "roots": 3,
+        "stability": 0.1441116112383243,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.214624999833177
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 11140000.0,
+      "experimental": 640.0,
+      "rowID": "alsiyabi2013-n2-004",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 622.0876031395401,
+        "density": 953.9204871824782,
+        "roots": 3,
+        "stability": 0.218723608291656,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.729124999183114
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 11080000.0,
+      "experimental": 561.0,
+      "rowID": "alsiyabi2013-n2-005",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 545.8459417150701,
+        "density": 899.4907663427864,
+        "roots": 3,
+        "stability": 0.17554507248069498,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.77833299942722
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 12230000.0,
+      "experimental": 542.0,
+      "rowID": "alsiyabi2013-n2-006",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 526.2478842378428,
+        "density": 880.0424259866788,
+        "roots": 3,
+        "stability": 0.16805964382775743,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.50604099915654
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 13100000.0,
+      "experimental": 663.0,
+      "rowID": "alsiyabi2013-n2-007",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 645.7347181929871,
+        "density": 965.1270074152063,
+        "roots": 3,
+        "stability": 0.23746585430956113,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.83683300083794
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 13750000.0,
+      "experimental": 600.0,
+      "rowID": "alsiyabi2013-n2-008",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 585.2162377452966,
+        "density": 919.7916541803831,
+        "roots": 3,
+        "stability": 0.20674604409551883,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.856042000465095
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 14200000.0,
+      "experimental": 572.0,
+      "rowID": "alsiyabi2013-n2-009",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 556.9765311022268,
+        "density": 896.6701935682,
+        "roots": 3,
+        "stability": 0.1923718029418044,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.812082998731057
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 16750000.0,
+      "experimental": 702.0,
+      "rowID": "alsiyabi2013-n2-010",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 684.701314338711,
+        "density": 983.4373746445001,
+        "roots": 3,
+        "stability": 0.26839564794152004,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.693957999465056
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 16910000.0,
+      "experimental": 640.0,
+      "rowID": "alsiyabi2013-n2-011",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 624.5039084392452,
+        "density": 939.7781830107363,
+        "roots": 3,
+        "stability": 0.23855518402411777,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.493291999737266
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 17440000.0,
+      "experimental": 615.0,
+      "rowID": "alsiyabi2013-n2-012",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 599.9097680040011,
+        "density": 919.485998231528,
+        "roots": 3,
+        "stability": 0.22720683004763254,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.10708299835096
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 20300000.0,
+      "experimental": 735.0,
+      "rowID": "alsiyabi2013-n2-013",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 718.1642201393132,
+        "density": 998.8990916190086,
+        "roots": 3,
+        "stability": 0.29470038073813615,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.001500000144006
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 20510000.0,
+      "experimental": 679.0,
+      "rowID": "alsiyabi2013-n2-014",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 663.1301279263674,
+        "density": 959.0296766688045,
+        "roots": 3,
+        "stability": 0.2700240386750795,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.37500000046566
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 20730000.0,
+      "experimental": 653.0,
+      "rowID": "alsiyabi2013-n2-015",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 637.1890143757633,
+        "density": 938.82507652295,
+        "roots": 3,
+        "stability": 0.2578699381370573,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.274249999507447
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 24520000.0,
+      "experimental": 771.0,
+      "rowID": "alsiyabi2013-n2-016",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 753.933580461359,
+        "density": 1015.0956246676378,
+        "roots": 3,
+        "stability": 0.32228893347993537,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.305000000211294
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 24200000.0,
+      "experimental": 714.0,
+      "rowID": "alsiyabi2013-n2-017",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 698.126019214765,
+        "density": 976.0667295533032,
+        "roots": 3,
+        "stability": 0.2983787785008083,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.900333000303362
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 24310000.0,
+      "experimental": 688.0,
+      "rowID": "alsiyabi2013-n2-018",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 672.9295831903345,
+        "density": 956.9044196075072,
+        "roots": 3,
+        "stability": 0.2872947587184939,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.4603749991511
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 27870000.0,
+      "experimental": 797.0,
+      "rowID": "alsiyabi2013-n2-019",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 779.9685054797134,
+        "density": 1026.6555567313826,
+        "roots": 3,
+        "stability": 0.34190694633540525,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.92512500025623
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 27510000.0,
+      "experimental": 742.0,
+      "rowID": "alsiyabi2013-n2-020",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 726.6292146259431,
+        "density": 989.6396248792986,
+        "roots": 3,
+        "stability": 0.32118831303592266,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.777166000698344
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 27830000.0,
+      "experimental": 720.0,
+      "rowID": "alsiyabi2013-n2-021",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 704.545741353017,
+        "density": 972.5032874503481,
+        "roots": 3,
+        "stability": 0.31312746921219814,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.559750000960776
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 31390000.0,
+      "experimental": 822.0,
+      "rowID": "alsiyabi2013-n2-022",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 805.5298933583515,
+        "density": 1037.8166046801457,
+        "roots": 3,
+        "stability": 0.360718073597857,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.98741599972709
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 31150000.0,
+      "experimental": 771.0,
+      "rowID": "alsiyabi2013-n2-023",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 755.5375204444849,
+        "density": 1003.12447649853,
+        "roots": 3,
+        "stability": 0.34393839522522984,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.067625001000124
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 31160000.0,
+      "experimental": 747.0,
+      "rowID": "alsiyabi2013-n2-024",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 732.0037369727247,
+        "density": 985.7491020300499,
+        "roots": 3,
+        "stability": 0.33528063480302445,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.935166998853674
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 35060000.0,
+      "experimental": 847.0,
+      "rowID": "alsiyabi2013-n2-025",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 830.5486676750829,
+        "density": 1048.5635080658267,
+        "roots": 3,
+        "stability": 0.37865016235490817,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.34004099975573
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 34860000.0,
+      "experimental": 798.0,
+      "rowID": "alsiyabi2013-n2-026",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 782.8874608917207,
+        "density": 1015.6266882779629,
+        "roots": 3,
+        "stability": 0.3650182006279459,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.44829200026288
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 34720000.0,
+      "experimental": 774.0,
+      "rowID": "alsiyabi2013-n2-027",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 759.2574246667302,
+        "density": 998.6248779030033,
+        "roots": 3,
+        "stability": 0.3569135211907752,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.386791999655543
+      }
+    },
+    {
+      "system": "N2",
+      "T": 268.15,
+      "P": 38190000.0,
+      "experimental": 867.0,
+      "rowID": "alsiyabi2013-n2-028",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 850.7617660994381,
+        "density": 1057.1223456184964,
+        "roots": 3,
+        "stability": 0.39276515906940135,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.645000000920845
+      }
+    },
+    {
+      "system": "N2",
+      "T": 278.15,
+      "P": 38580000.0,
+      "experimental": 823.0,
+      "rowID": "alsiyabi2013-n2-029",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 808.5461447579694,
+        "density": 1027.1377126529308,
+        "roots": 3,
+        "stability": 0.3843383808709984,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.178500001245993
+      }
+    },
+    {
+      "system": "N2",
+      "T": 283.15,
+      "P": 38300000.0,
+      "experimental": 799.0,
+      "rowID": "alsiyabi2013-n2-030",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 784.8639474700776,
+        "density": 1010.4846281666561,
+        "roots": 3,
+        "stability": 0.3768459737305724,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.56408400030341
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 13290000.0,
+      "experimental": 523.0,
+      "rowID": "alsiyabi2013-n2-031",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 506.9273869468595,
+        "density": 859.9678838550437,
+        "roots": 1,
+        "stability": 0.16057462560670688,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.31345799898554
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 13710000.0,
+      "experimental": 495.0,
+      "rowID": "alsiyabi2013-n2-032",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 477.8646582122168,
+        "density": 832.9964859807203,
+        "roots": 1,
+        "stability": 0.14537343030983513,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.25216700026067
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 15030000.0,
+      "experimental": 464.0,
+      "rowID": "alsiyabi2013-n2-033",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 447.19758396078396,
+        "density": 796.4422650835538,
+        "roots": 1,
+        "stability": 0.13308706625092456,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.66283300014038
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 15800000.0,
+      "experimental": 562.0,
+      "rowID": "alsiyabi2013-n2-034",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 546.606127355111,
+        "density": 882.4797079985099,
+        "roots": 1,
+        "stability": 0.19206222777350593,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.239249999984168
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 15760000.0,
+      "experimental": 529.0,
+      "rowID": "alsiyabi2013-n2-035",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 513.2659613516477,
+        "density": 854.4372373913071,
+        "roots": 1,
+        "stability": 0.1730200931625525,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.419291999336565
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 16570000.0,
+      "experimental": 491.0,
+      "rowID": "alsiyabi2013-n2-036",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 475.487682786855,
+        "density": 815.6039837206922,
+        "roots": 1,
+        "stability": 0.15474196350846836,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.72500000031141
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 18310000.0,
+      "experimental": 595.0,
+      "rowID": "alsiyabi2013-n2-037",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 580.4149474242142,
+        "density": 901.188773431717,
+        "roots": 1,
+        "stability": 0.21964474263759634,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.36866600085341
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 18080000.0,
+      "experimental": 562.0,
+      "rowID": "alsiyabi2013-n2-038",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 547.5235860151913,
+        "density": 874.5356117086518,
+        "roots": 1,
+        "stability": 0.2007072152272403,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.67904099971929
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 18620000.0,
+      "experimental": 523.0,
+      "rowID": "alsiyabi2013-n2-039",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 508.38402603687103,
+        "density": 836.9158078373364,
+        "roots": 1,
+        "stability": 0.18091498743516915,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.986041999000008
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 20990000.0,
+      "experimental": 627.0,
+      "rowID": "alsiyabi2013-n2-040",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 612.1513307936502,
+        "density": 918.3422810361928,
+        "roots": 1,
+        "stability": 0.24591671561637057,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.663790999809862
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 21170000.0,
+      "experimental": 602.0,
+      "rowID": "alsiyabi2013-n2-041",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 586.7835147377723,
+        "density": 896.851124939899,
+        "roots": 1,
+        "stability": 0.23320944017991294,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.729250000338652
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 20980000.0,
+      "experimental": 555.0,
+      "rowID": "alsiyabi2013-n2-042",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 541.4121502946109,
+        "density": 857.4573545904553,
+        "roots": 1,
+        "stability": 0.20804176409017014,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.16604100128461
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 23920000.0,
+      "experimental": 658.0,
+      "rowID": "alsiyabi2013-n2-043",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 643.1661180939819,
+        "density": 934.7104972143657,
+        "roots": 1,
+        "stability": 0.27174484594744375,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.847250000675558
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 24240000.0,
+      "experimental": 635.0,
+      "rowID": "alsiyabi2013-n2-044",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 620.85093882447,
+        "density": 915.6176865307473,
+        "roots": 1,
+        "stability": 0.2617943086923525,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.10991599956469
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 24120000.0,
+      "experimental": 593.0,
+      "rowID": "alsiyabi2013-n2-045",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 579.7158902157828,
+        "density": 880.3664228384473,
+        "roots": 1,
+        "stability": 0.24025824597695525,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.90770800007158
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 27350000.0,
+      "experimental": 691.0,
+      "rowID": "alsiyabi2013-n2-046",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 675.8797724931306,
+        "density": 951.5443631777073,
+        "roots": 1,
+        "stability": 0.2989533586019458,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.98449999964214
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 27920000.0,
+      "experimental": 671.0,
+      "rowID": "alsiyabi2013-n2-047",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 657.1491312885521,
+        "density": 935.0138634147207,
+        "roots": 1,
+        "stability": 0.2923604641812945,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.016583000251558
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 27960000.0,
+      "experimental": 634.0,
+      "rowID": "alsiyabi2013-n2-048",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 620.485547866445,
+        "density": 903.7806019001375,
+        "roots": 1,
+        "stability": 0.2750631900391469,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.688708999747178
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 30970000.0,
+      "experimental": 722.0,
+      "rowID": "alsiyabi2013-n2-049",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 707.233026114643,
+        "density": 967.2645523229893,
+        "roots": 1,
+        "stability": 0.3248235124290359,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.078708000364713
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 30790000.0,
+      "experimental": 697.0,
+      "rowID": "alsiyabi2013-n2-050",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 682.8859595018803,
+        "density": 948.3995726832064,
+        "roots": 1,
+        "stability": 0.3139589476707885,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.71637499931967
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 30950000.0,
+      "experimental": 662.0,
+      "rowID": "alsiyabi2013-n2-051",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 648.9072706993094,
+        "density": 919.549855867196,
+        "roots": 1,
+        "stability": 0.2994314884186531,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.530832999109407
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 34820000.0,
+      "experimental": 752.0,
+      "rowID": "alsiyabi2013-n2-052",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 737.8145053981559,
+        "density": 982.2173838623213,
+        "roots": 1,
+        "stability": 0.34971616774325137,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.97074999882898
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 34000000.0,
+      "experimental": 723.0,
+      "rowID": "alsiyabi2013-n2-053",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 709.5859937225578,
+        "density": 961.9740794374529,
+        "roots": 1,
+        "stability": 0.3361948990666427,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.97620899885078
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 35200000.0,
+      "experimental": 698.0,
+      "rowID": "alsiyabi2013-n2-054",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 685.6051419926299,
+        "density": 939.2759120513101,
+        "roots": 1,
+        "stability": 0.33079259679580464,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.963332998595433
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 37510000.0,
+      "experimental": 772.0,
+      "rowID": "alsiyabi2013-n2-055",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 757.8059957441566,
+        "density": 991.7964764493978,
+        "roots": 1,
+        "stability": 0.3657473184112517,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.668458000727696
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 38070000.0,
+      "experimental": 749.0,
+      "rowID": "alsiyabi2013-n2-056",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 740.8870433683193,
+        "density": 977.4991378604624,
+        "roots": 1,
+        "stability": 0.36192415669047034,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.977292000476154
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 38450000.0,
+      "experimental": 723.0,
+      "rowID": "alsiyabi2013-n2-057",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 711.3614345781432,
+        "density": 952.7158258682983,
+        "roots": 1,
+        "stability": 0.3526129878276976,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.411207999335602
+      }
+    },
+    {
+      "system": "N2",
+      "T": 288.15,
+      "P": 39780000.0,
+      "experimental": 787.0,
+      "rowID": "alsiyabi2013-n2-058",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 773.9237270766131,
+        "density": 999.411006152967,
+        "roots": 1,
+        "stability": 0.3785082140629184,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.922833001051913
+      }
+    },
+    {
+      "system": "N2",
+      "T": 293.15,
+      "P": 41640000.0,
+      "experimental": 779.0,
+      "rowID": "alsiyabi2013-n2-059",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 766.4199940331656,
+        "density": 989.8680727743728,
+        "roots": 1,
+        "stability": 0.3825579615603949,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.447416000431986
+      }
+    },
+    {
+      "system": "N2",
+      "T": 301.15,
+      "P": 41520000.0,
+      "experimental": 745.0,
+      "rowID": "alsiyabi2013-n2-060",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 734.2017155841434,
+        "density": 964.3707978760089,
+        "roots": 1,
+        "stability": 0.3717604562953423,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.497791998423054
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 8870000.0,
+      "experimental": 614.0,
+      "rowID": "alsiyabi2013-ch4-001",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 618.5411468560039,
+        "density": 930.5085680968239,
+        "roots": 3,
+        "stability": 0.2208150249119654,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.404999999300344
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 7430000.0,
+      "experimental": 503.0,
+      "rowID": "alsiyabi2013-ch4-002",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 505.8334805275731,
+        "density": 860.5468211364167,
+        "roots": 3,
+        "stability": 0.15358395836459965,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.499708999224822
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 9580000.0,
+      "experimental": 502.0,
+      "rowID": "alsiyabi2013-ch4-003",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 504.78682019276454,
+        "density": 849.96660923806,
+        "roots": 3,
+        "stability": 0.1596090342284783,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.226832999876933
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 11090000.0,
+      "experimental": 644.0,
+      "rowID": "alsiyabi2013-ch4-004",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 647.3565298715544,
+        "density": 943.5272450947982,
+        "roots": 3,
+        "stability": 0.2421132545634328,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.941958001363673
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 8540000.0,
+      "experimental": 526.0,
+      "rowID": "alsiyabi2013-ch4-005",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 528.8333181261801,
+        "density": 871.6125784898971,
+        "roots": 3,
+        "stability": 0.17030850151416943,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.073374999308726
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 10990000.0,
+      "experimental": 529.0,
+      "rowID": "alsiyabi2013-ch4-006",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 531.4089524484397,
+        "density": 863.7362824133243,
+        "roots": 3,
+        "stability": 0.17970879261375278,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.03345800100942
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 13860000.0,
+      "experimental": 678.0,
+      "rowID": "alsiyabi2013-ch4-007",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 678.8806909968121,
+        "density": 957.8234777763142,
+        "roots": 3,
+        "stability": 0.26527946301773087,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.860041999389068
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 10540000.0,
+      "experimental": 562.0,
+      "rowID": "alsiyabi2013-ch4-008",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 563.860792608279,
+        "density": 888.7082121077528,
+        "roots": 3,
+        "stability": 0.19660885120655355,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.736458000304992
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 13940000.0,
+      "experimental": 576.0,
+      "rowID": "alsiyabi2013-ch4-009",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 577.6710328737264,
+        "density": 887.5139416576857,
+        "roots": 3,
+        "stability": 0.21550073082831048,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.619792000114103
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 17200000.0,
+      "experimental": 713.0,
+      "rowID": "alsiyabi2013-ch4-010",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 712.480167789076,
+        "density": 972.9583015264494,
+        "roots": 3,
+        "stability": 0.28948555193469167,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.179957999673206
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 13890000.0,
+      "experimental": 610.0,
+      "rowID": "alsiyabi2013-ch4-011",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 611.5375131753617,
+        "density": 912.0672484861188,
+        "roots": 3,
+        "stability": 0.23318268584074886,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.99862500128802
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 16950000.0,
+      "experimental": 617.0,
+      "rowID": "alsiyabi2013-ch4-012",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 616.7093371542169,
+        "density": 907.2922080855602,
+        "roots": 3,
+        "stability": 0.24600359192320717,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.984875000474858
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 20750000.0,
+      "experimental": 746.0,
+      "rowID": "alsiyabi2013-ch4-013",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 744.4729694962292,
+        "density": 987.178024838155,
+        "roots": 3,
+        "stability": 0.31183705806770406,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.54337500037218
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 17680000.0,
+      "experimental": 657.0,
+      "rowID": "alsiyabi2013-ch4-014",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 655.904478401817,
+        "density": 933.566084821208,
+        "roots": 3,
+        "stability": 0.26716097078382844,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.651999999652617
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 21090000.0,
+      "experimental": 663.0,
+      "rowID": "alsiyabi2013-ch4-015",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 662.2635246731447,
+        "density": 929.891843727849,
+        "roots": 3,
+        "stability": 0.2812846956488532,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.324416000628844
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 24410000.0,
+      "experimental": 776.0,
+      "rowID": "alsiyabi2013-ch4-016",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 774.4967835087806,
+        "density": 1000.3097827420686,
+        "roots": 3,
+        "stability": 0.33205132070191884,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.806749999086605
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 21330000.0,
+      "experimental": 695.0,
+      "rowID": "alsiyabi2013-ch4-017",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 692.740224044193,
+        "density": 951.0867439106185,
+        "roots": 3,
+        "stability": 0.2948256419787599,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 101.34095799912757
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 24710000.0,
+      "experimental": 700.0,
+      "rowID": "alsiyabi2013-ch4-018",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 696.98040277611,
+        "density": 946.7024568996658,
+        "roots": 3,
+        "stability": 0.30757986365306444,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 51.29362499974377
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 27720000.0,
+      "experimental": 802.0,
+      "rowID": "alsiyabi2013-ch4-019",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 799.6302879755445,
+        "density": 1011.130443028044,
+        "roots": 3,
+        "stability": 0.3483368852056529,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.254500000504777
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 24430000.0,
+      "experimental": 723.0,
+      "rowID": "alsiyabi2013-ch4-020",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 720.8784967516264,
+        "density": 964.2240491866798,
+        "roots": 3,
+        "stability": 0.3154205459566376,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 63.20837500061316
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 27910000.0,
+      "experimental": 728.0,
+      "rowID": "alsiyabi2013-ch4-021",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 724.8329652127138,
+        "density": 959.9108318338966,
+        "roots": 3,
+        "stability": 0.3281339723927652,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.490458001513616
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 31290000.0,
+      "experimental": 828.0,
+      "rowID": "alsiyabi2013-ch4-022",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 824.9936974609312,
+        "density": 1021.8872574738152,
+        "roots": 3,
+        "stability": 0.36414193464470757,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.11658399978478
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 28300000.0,
+      "experimental": 756.0,
+      "rowID": "alsiyabi2013-ch4-023",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 752.9770002544404,
+        "density": 978.9286381421188,
+        "roots": 3,
+        "stability": 0.33819601687674783,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.345999999946798
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 31210000.0,
+      "experimental": 753.0,
+      "rowID": "alsiyabi2013-ch4-024",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 751.3913067815627,
+        "density": 972.270070179267,
+        "roots": 3,
+        "stability": 0.34718893160601455,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.48404200024379
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 34820000.0,
+      "experimental": 852.0,
+      "rowID": "alsiyabi2013-ch4-025",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 848.582675756535,
+        "density": 1031.7457184534574,
+        "roots": 3,
+        "stability": 0.3782498598739755,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.143540999328252
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 31410000.0,
+      "experimental": 780.0,
+      "rowID": "alsiyabi2013-ch4-026",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 776.8374976744886,
+        "density": 989.6605533090665,
+        "roots": 3,
+        "stability": 0.3545602646941381,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.271582999266684
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 34940000.0,
+      "experimental": 782.0,
+      "rowID": "alsiyabi2013-ch4-027",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 779.2768118436047,
+        "density": 985.0015676659078,
+        "roots": 3,
+        "stability": 0.36655046717773,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.84199999869452
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 268.15,
+      "P": 38050000.0,
+      "experimental": 872.0,
+      "rowID": "alsiyabi2013-ch4-028",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 869.0558563981814,
+        "density": 1040.190706914477,
+        "roots": 3,
+        "stability": 0.3900208080244946,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.720416999116424
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 35270000.0,
+      "experimental": 808.0,
+      "rowID": "alsiyabi2013-ch4-029",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 804.5129032040343,
+        "density": 1001.8975106372574,
+        "roots": 3,
+        "stability": 0.3728785792891321,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.39920799972606
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 283.15,
+      "P": 37370000.0,
+      "experimental": 799.0,
+      "rowID": "alsiyabi2013-ch4-030",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 796.4211616722478,
+        "density": 992.706980999633,
+        "roots": 3,
+        "stability": 0.37809934835274206,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.57899999919755
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 278.15,
+      "P": 38000000.0,
+      "experimental": 826.0,
+      "rowID": "alsiyabi2013-ch4-031",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 822.9874892660094,
+        "density": 1009.9429884472246,
+        "roots": 3,
+        "stability": 0.38468887579784933,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.632250000853674
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 8470000.0,
+      "experimental": 429.0,
+      "rowID": "alsiyabi2013-ch4-032",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 429.55910650718965,
+        "density": 798.5161517896621,
+        "roots": 3,
+        "stability": 0.11183174472165724,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.13362500051153
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 9260000.0,
+      "experimental": 397.0,
+      "rowID": "alsiyabi2013-ch4-033",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 400.05016245224226,
+        "density": 768.2865501797569,
+        "roots": 1,
+        "stability": 0.09741279158259253,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.614333000703482
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 10360000.0,
+      "experimental": 354.0,
+      "rowID": "alsiyabi2013-ch4-034",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 354.00137635674594,
+        "density": 713.196107076852,
+        "roots": 1,
+        "stability": 0.07588888028899181,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.054583998804446
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 10770000.0,
+      "experimental": 483.0,
+      "rowID": "alsiyabi2013-ch4-035",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 485.71213935478113,
+        "density": 829.9961435668031,
+        "roots": 3,
+        "stability": 0.1523883304355888,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.432249999634223
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 10740000.0,
+      "experimental": 439.0,
+      "rowID": "alsiyabi2013-ch4-036",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 441.2120137762559,
+        "density": 793.8205048434571,
+        "roots": 1,
+        "stability": 0.12616452493610503,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.562708001511055
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 12270000.0,
+      "experimental": 411.0,
+      "rowID": "alsiyabi2013-ch4-037",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 411.065033368626,
+        "density": 755.7244967291498,
+        "roots": 1,
+        "stability": 0.11432604054312143,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.693916998628993
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 13820000.0,
+      "experimental": 538.0,
+      "rowID": "alsiyabi2013-ch4-038",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 540.7011424473834,
+        "density": 860.0083085502584,
+        "roots": 1,
+        "stability": 0.19468380781159686,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.74304199979815
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 12960000.0,
+      "experimental": 488.0,
+      "rowID": "alsiyabi2013-ch4-039",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 489.0751703504795,
+        "density": 822.2461997608247,
+        "roots": 1,
+        "stability": 0.16199739229069238,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.486958000125014
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 14810000.0,
+      "experimental": 467.0,
+      "rowID": "alsiyabi2013-ch4-040",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 466.6195056823399,
+        "density": 793.0574875937895,
+        "roots": 1,
+        "stability": 0.15578622113330137,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.45104199978232
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 16950000.0,
+      "experimental": 584.0,
+      "rowID": "alsiyabi2013-ch4-041",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 585.3995507432611,
+        "density": 883.7963446655414,
+        "roots": 1,
+        "stability": 0.229979702736754,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.057000000946573
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 18120000.0,
+      "experimental": 570.0,
+      "rowID": "alsiyabi2013-ch4-042",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 570.0381677221939,
+        "density": 867.8906603661201,
+        "roots": 1,
+        "stability": 0.2260044619038686,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.914833000773797
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 17980000.0,
+      "experimental": 521.0,
+      "rowID": "alsiyabi2013-ch4-043",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 520.1944999592665,
+        "density": 826.3387393574178,
+        "roots": 1,
+        "stability": 0.19824992848008824,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.617750001401873
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 20890000.0,
+      "experimental": 632.0,
+      "rowID": "alsiyabi2013-ch4-044",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 632.1176162539817,
+        "density": 908.0063002715003,
+        "roots": 1,
+        "stability": 0.2669387221742273,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.595625000278233
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 20760000.0,
+      "experimental": 603.0,
+      "rowID": "alsiyabi2013-ch4-045",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 602.761339385838,
+        "density": 885.5801503033227,
+        "roots": 1,
+        "stability": 0.25229438751115263,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.671332999991137
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 20370000.0,
+      "experimental": 555.0,
+      "rowID": "alsiyabi2013-ch4-046",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 553.766387760234,
+        "density": 846.1950426776755,
+        "roots": 1,
+        "stability": 0.2255630066580039,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.367000000391272
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 24460000.0,
+      "experimental": 670.0,
+      "rowID": "alsiyabi2013-ch4-047",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 668.5959900718295,
+        "density": 926.398979854838,
+        "roots": 1,
+        "stability": 0.29540203634215617,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.636666999867884
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 23950000.0,
+      "experimental": 639.0,
+      "rowID": "alsiyabi2013-ch4-048",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 637.663404032595,
+        "density": 903.9778399080806,
+        "roots": 1,
+        "stability": 0.2801899690464774,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.503250000838307
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 24260000.0,
+      "experimental": 602.0,
+      "rowID": "alsiyabi2013-ch4-049",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 600.5140060529934,
+        "density": 872.7922818758892,
+        "roots": 1,
+        "stability": 0.2638890811451213,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.667750000138767
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 27870000.0,
+      "experimental": 701.0,
+      "rowID": "alsiyabi2013-ch4-050",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 699.8385472541509,
+        "density": 941.7766006858731,
+        "roots": 1,
+        "stability": 0.3192663516131796,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.46916699995927
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 27740000.0,
+      "experimental": 676.0,
+      "rowID": "alsiyabi2013-ch4-051",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 674.4302739866865,
+        "density": 922.8306150213143,
+        "roots": 1,
+        "stability": 0.30913265686565594,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.807500000155414
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 27550000.0,
+      "experimental": 637.0,
+      "rowID": "alsiyabi2013-ch4-052",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 634.8094232878102,
+        "density": 891.5925942724507,
+        "roots": 1,
+        "stability": 0.2918681604398644,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.36816599968006
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 31220000.0,
+      "experimental": 730.0,
+      "rowID": "alsiyabi2013-ch4-053",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 727.9421322915787,
+        "density": 955.3098948591122,
+        "roots": 1,
+        "stability": 0.34019582755957994,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.186082999425707
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 31050000.0,
+      "experimental": 705.0,
+      "rowID": "alsiyabi2013-ch4-054",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 703.4555779799535,
+        "density": 937.3323502046919,
+        "roots": 1,
+        "stability": 0.33148635354477407,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 26.37904199946206
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 30810000.0,
+      "experimental": 667.0,
+      "rowID": "alsiyabi2013-ch4-055",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 665.4332140914987,
+        "density": 907.8964029014949,
+        "roots": 1,
+        "stability": 0.31652907824227483,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.255792000578367
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 34400000.0,
+      "experimental": 755.0,
+      "rowID": "alsiyabi2013-ch4-056",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 752.7272207365544,
+        "density": 967.0124520777389,
+        "roots": 1,
+        "stability": 0.358155337845822,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.336916999847745
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 34600000.0,
+      "experimental": 734.0,
+      "rowID": "alsiyabi2013-ch4-057",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 732.1247761204147,
+        "density": 951.3319356729945,
+        "roots": 1,
+        "stability": 0.3530158751165794,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.717749999879743
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 34560000.0,
+      "experimental": 700.0,
+      "rowID": "alsiyabi2013-ch4-058",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 697.5273289056538,
+        "density": 924.5119692843627,
+        "roots": 1,
+        "stability": 0.3418739635656317,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.086457998942933
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 288.15,
+      "P": 37820000.0,
+      "experimental": 780.0,
+      "rowID": "alsiyabi2013-ch4-059",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 777.6908091556609,
+        "density": 978.5843545699953,
+        "roots": 1,
+        "stability": 0.3757163421417274,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.497500000303262
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 293.15,
+      "P": 37870000.0,
+      "experimental": 759.0,
+      "rowID": "alsiyabi2013-ch4-060",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 756.7085030905113,
+        "density": 963.0875450021599,
+        "roots": 1,
+        "stability": 0.37097138341449903,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.71024999997462
+      }
+    },
+    {
+      "system": "CH4",
+      "T": 301.15,
+      "P": 38220000.0,
+      "experimental": 728.0,
+      "rowID": "alsiyabi2013-ch4-061",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 726.3168230393688,
+        "density": 939.0239385706732,
+        "roots": 1,
+        "stability": 0.3640498234596432,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.968042000182322
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 10540000.0,
+      "experimental": 620.0,
+      "rowID": "alsiyabi2013-h2-001",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 615.2475843492883,
+        "density": 908.379521236061,
+        "roots": 3,
+        "stability": 0.17966737817467757,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.866792000058922
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 10770000.0,
+      "experimental": 542.0,
+      "rowID": "alsiyabi2013-h2-002",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 541.6589084291184,
+        "density": 856.4354219435468,
+        "roots": 3,
+        "stability": 0.1469417506661383,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.3200839987403
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 9710000.0,
+      "experimental": 492.0,
+      "rowID": "alsiyabi2013-h2-003",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 478.56666024488277,
+        "density": 813.8990891586498,
+        "roots": 3,
+        "stability": 0.11231009423999351,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.1800419989886
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 13020000.0,
+      "experimental": 652.0,
+      "rowID": "alsiyabi2013-h2-004",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 646.4844034879949,
+        "density": 922.9146431046174,
+        "roots": 3,
+        "stability": 0.2008369328156025,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.62674999999581
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 13960000.0,
+      "experimental": 592.0,
+      "rowID": "alsiyabi2013-h2-005",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 590.1102071529774,
+        "density": 880.9805170269796,
+        "roots": 3,
+        "stability": 0.18050678989712327,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.987250000369386
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 12730000.0,
+      "experimental": 542.0,
+      "rowID": "alsiyabi2013-h2-006",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 536.2006901809062,
+        "density": 845.0297600654661,
+        "roots": 3,
+        "stability": 0.151368831717507,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.7557079999533
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 15160000.0,
+      "experimental": 677.0,
+      "rowID": "alsiyabi2013-h2-007",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 670.5503293587037,
+        "density": 934.0624995898125,
+        "roots": 3,
+        "stability": 0.21710746216160767,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.623458000452956
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 17290000.0,
+      "experimental": 634.0,
+      "rowID": "alsiyabi2013-h2-008",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 631.6803015250391,
+        "density": 901.7059351713393,
+        "roots": 3,
+        "stability": 0.20967792614085395,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.58762499918521
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 15030000.0,
+      "experimental": 574.0,
+      "rowID": "alsiyabi2013-h2-009",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 571.2058241054414,
+        "density": 863.5450021899587,
+        "roots": 1,
+        "stability": 0.17598116707644818,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.790500001065084
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 17520000.0,
+      "experimental": 701.0,
+      "rowID": "alsiyabi2013-h2-010",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 694.8195436064564,
+        "density": 945.2078520029609,
+        "roots": 3,
+        "stability": 0.23335464395174216,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.000374998446205
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 20880000.0,
+      "experimental": 673.0,
+      "rowID": "alsiyabi2013-h2-011",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 670.1909430423584,
+        "density": 920.5095042442284,
+        "roots": 3,
+        "stability": 0.23653846688483457,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.155541998974513
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 17580000.0,
+      "experimental": 609.0,
+      "rowID": "alsiyabi2013-h2-012",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 604.662634116541,
+        "density": 880.9237338347185,
+        "roots": 1,
+        "stability": 0.19978588422613552,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.371166998913395
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 20580000.0,
+      "experimental": 725.0,
+      "rowID": "alsiyabi2013-h2-013",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 723.5846509109002,
+        "density": 958.2508496517005,
+        "roots": 3,
+        "stability": 0.25227437531873637,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.308540999190882
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 24480000.0,
+      "experimental": 708.0,
+      "rowID": "alsiyabi2013-h2-014",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 704.3632533874215,
+        "density": 936.820702844007,
+        "roots": 3,
+        "stability": 0.25995151607828704,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.129165999402176
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 20660000.0,
+      "experimental": 646.0,
+      "rowID": "alsiyabi2013-h2-015",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 639.9961680304083,
+        "density": 898.8999840659174,
+        "roots": 1,
+        "stability": 0.224942395778461,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.282458000816405
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 25390000.0,
+      "experimental": 767.0,
+      "rowID": "alsiyabi2013-h2-016",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 764.2153380213532,
+        "density": 976.3128907013246,
+        "roots": 3,
+        "stability": 0.2781433493608187,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.709333000719198
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 28110000.0,
+      "experimental": 739.0,
+      "rowID": "alsiyabi2013-h2-017",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 735.5466695448714,
+        "density": 951.3778073514317,
+        "roots": 3,
+        "stability": 0.28078653902429135,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.410915999193094
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 24110000.0,
+      "experimental": 681.0,
+      "rowID": "alsiyabi2013-h2-018",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 674.9712237383421,
+        "density": 916.2787869310324,
+        "roots": 1,
+        "stability": 0.2495992848191242,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.54883299994981
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 28410000.0,
+      "experimental": 790.0,
+      "rowID": "alsiyabi2013-h2-019",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 787.529933835508,
+        "density": 986.4734242794525,
+        "roots": 3,
+        "stability": 0.29243679463839756,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.962167000514455
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 31330000.0,
+      "experimental": 765.0,
+      "rowID": "alsiyabi2013-h2-020",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 761.0754326680055,
+        "density": 963.0593779992396,
+        "roots": 3,
+        "stability": 0.29736913437006474,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.651332999681472
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 27960000.0,
+      "experimental": 716.0,
+      "rowID": "alsiyabi2013-h2-021",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 709.888018048312,
+        "density": 933.1972343492284,
+        "roots": 1,
+        "stability": 0.2737372973578225,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.73362499929499
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 31380000.0,
+      "experimental": 812.0,
+      "rowID": "alsiyabi2013-h2-022",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 809.1374464049061,
+        "density": 995.755654730257,
+        "roots": 3,
+        "stability": 0.30527690197972285,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.073999999221996
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 34740000.0,
+      "experimental": 790.0,
+      "rowID": "alsiyabi2013-h2-023",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 786.3413054667094,
+        "density": 974.4143455851546,
+        "roots": 3,
+        "stability": 0.31329364419456285,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.902541001007194
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 31350000.0,
+      "experimental": 744.0,
+      "rowID": "alsiyabi2013-h2-024",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 737.9281267945722,
+        "density": 946.4686385109602,
+        "roots": 1,
+        "stability": 0.2926364733876767,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.641708999799448
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 34660000.0,
+      "experimental": 834.0,
+      "rowID": "alsiyabi2013-h2-025",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 831.7064676802961,
+        "density": 1005.3147503487087,
+        "roots": 3,
+        "stability": 0.3182383284213784,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.101541999087203
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 38330000.0,
+      "experimental": 814.0,
+      "rowID": "alsiyabi2013-h2-026",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 811.3008088897249,
+        "density": 985.4357937185245,
+        "roots": 3,
+        "stability": 0.3284970930882863,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.439458000211744
+      }
+    },
+    {
+      "system": "H2",
+      "T": 283.15,
+      "P": 35160000.0,
+      "experimental": 773.0,
+      "rowID": "alsiyabi2013-h2-027",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 767.0748172288905,
+        "density": 959.9713330207281,
+        "roots": 1,
+        "stability": 0.3117159983965611,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.83333299944934
+      }
+    },
+    {
+      "system": "H2",
+      "T": 268.15,
+      "P": 38070000.0,
+      "experimental": 856.0,
+      "rowID": "alsiyabi2013-h2-028",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 853.931093818363,
+        "density": 1014.59555190306,
+        "roots": 3,
+        "stability": 0.3305256854489671,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.3416249993752
+      }
+    },
+    {
+      "system": "H2",
+      "T": 278.15,
+      "P": 38270000.0,
+      "experimental": 795.0,
+      "rowID": "alsiyabi2013-h2-029",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 810.8960018105693,
+        "density": 985.2585559490938,
+        "roots": 3,
+        "stability": 0.32825494390564514,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.31537499978731
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 9780000.0,
+      "experimental": 458.0,
+      "rowID": "alsiyabi2013-h2-030",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 433.40954557156294,
+        "density": 777.333519834879,
+        "roots": 1,
+        "stability": 0.09003311357032882,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.707833000211394
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 10070000.0,
+      "experimental": 418.0,
+      "rowID": "alsiyabi2013-h2-031",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 392.69563392686456,
+        "density": 739.0738969139231,
+        "roots": 1,
+        "stability": 0.07121344324026435,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.94533299957402
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 13340000.0,
+      "experimental": 420.0,
+      "rowID": "alsiyabi2013-h2-032",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 413.3111574660397,
+        "density": 734.2147418502537,
+        "roots": 1,
+        "stability": 0.09397213419344969,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.811167000123532
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 13390000.0,
+      "experimental": 521.0,
+      "rowID": "alsiyabi2013-h2-033",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 510.6845405120485,
+        "density": 822.3455184064455,
+        "roots": 1,
+        "stability": 0.1415535484761878,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.02283299973351
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 13880000.0,
+      "experimental": 493.0,
+      "rowID": "alsiyabi2013-h2-034",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 483.3562605713786,
+        "density": 797.2338458694709,
+        "roots": 1,
+        "stability": 0.13009647144121533,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 18.13616700019338
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 15860000.0,
+      "experimental": 472.0,
+      "rowID": "alsiyabi2013-h2-035",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 466.1328223294896,
+        "density": 771.0480578158144,
+        "roots": 1,
+        "stability": 0.12974205927731633,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.97799999844574
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 17230000.0,
+      "experimental": 576.0,
+      "rowID": "alsiyabi2013-h2-036",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 569.5963541897136,
+        "density": 854.9179587097868,
+        "roots": 1,
+        "stability": 0.18343340771704422,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.231165999779478
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 17710000.0,
+      "experimental": 553.0,
+      "rowID": "alsiyabi2013-h2-037",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 545.8336256540565,
+        "density": 833.8467555642453,
+        "roots": 1,
+        "stability": 0.17458766928675223,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.102167000208283
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 18210000.0,
+      "experimental": 512.0,
+      "rowID": "alsiyabi2013-h2-038",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 506.03911580753885,
+        "density": 796.741704121793,
+        "roots": 1,
+        "stability": 0.15825399326262465,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.90287500040722
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 20990000.0,
+      "experimental": 622.0,
+      "rowID": "alsiyabi2013-h2-039",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 615.9633413333607,
+        "density": 879.6084171973413,
+        "roots": 1,
+        "stability": 0.21695036468025988,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 18.79249999910826
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 21280000.0,
+      "experimental": 599.0,
+      "rowID": "alsiyabi2013-h2-040",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 592.1626559117025,
+        "density": 859.6842090537793,
+        "roots": 1,
+        "stability": 0.2084719724436718,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.95174999946903
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 21350000.0,
+      "experimental": 556.0,
+      "rowID": "alsiyabi2013-h2-041",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 550.6827453921154,
+        "density": 823.9414992282793,
+        "roots": 1,
+        "stability": 0.19116737293308939,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.623125000085565
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 24550000.0,
+      "experimental": 660.0,
+      "rowID": "alsiyabi2013-h2-042",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 653.648470717967,
+        "density": 899.0573845062485,
+        "roots": 1,
+        "stability": 0.24408181640171722,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.1753749994823
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 24570000.0,
+      "experimental": 635.0,
+      "rowID": "alsiyabi2013-h2-043",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 628.7543991756835,
+        "density": 879.3848180699747,
+        "roots": 1,
+        "stability": 0.2353088808477269,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.32116699956532
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 24310000.0,
+      "experimental": 591.0,
+      "rowID": "alsiyabi2013-h2-044",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 586.7087985847679,
+        "density": 844.9350973329223,
+        "roots": 1,
+        "stability": 0.21814622099684394,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.727457999484614
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 28170000.0,
+      "experimental": 694.0,
+      "rowID": "alsiyabi2013-h2-045",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 687.7331152037465,
+        "density": 916.1637963531433,
+        "roots": 1,
+        "stability": 0.26826606623171756,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.794124999563792
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 28250000.0,
+      "experimental": 671.0,
+      "rowID": "alsiyabi2013-h2-046",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 664.9738023162752,
+        "density": 898.2914704656766,
+        "roots": 1,
+        "stability": 0.2616362522772524,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.57608300007996
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 27630000.0,
+      "experimental": 627.0,
+      "rowID": "alsiyabi2013-h2-047",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 622.318458445628,
+        "density": 864.9467451621626,
+        "roots": 1,
+        "stability": 0.24487327016331434,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.302584000091883
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 31480000.0,
+      "experimental": 722.0,
+      "rowID": "alsiyabi2013-h2-048",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 716.1163094986468,
+        "density": 930.0594714250465,
+        "roots": 1,
+        "stability": 0.2879987048458409,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.965916999761248
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 31540000.0,
+      "experimental": 700.0,
+      "rowID": "alsiyabi2013-h2-049",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 694.2549745379496,
+        "density": 913.1548916121824,
+        "roots": 1,
+        "stability": 0.28257736525656313,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.01358399927267
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 31020000.0,
+      "experimental": 659.0,
+      "rowID": "alsiyabi2013-h2-050",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 654.8815332742075,
+        "density": 882.6454212402544,
+        "roots": 1,
+        "stability": 0.2691398607621974,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.80233300027612
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 35250000.0,
+      "experimental": 751.0,
+      "rowID": "alsiyabi2013-h2-051",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 745.921995391788,
+        "density": 944.3177642077891,
+        "roots": 1,
+        "stability": 0.30820354885412177,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.102791999917827
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 34960000.0,
+      "experimental": 728.0,
+      "rowID": "alsiyabi2013-h2-052",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 722.2995965026499,
+        "density": 927.0482262346175,
+        "roots": 1,
+        "stability": 0.3022277602531243,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.980833000474377
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 34320000.0,
+      "experimental": 688.0,
+      "rowID": "alsiyabi2013-h2-053",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 683.7952910470786,
+        "density": 897.9038451890799,
+        "roots": 1,
+        "stability": 0.2903933144957628,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 18.36645799994585
+      }
+    },
+    {
+      "system": "H2",
+      "T": 288.15,
+      "P": 38380000.0,
+      "experimental": 774.0,
+      "rowID": "alsiyabi2013-h2-054",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 769.0037251162299,
+        "density": 955.1325099697243,
+        "roots": 1,
+        "stability": 0.32342086199387615,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.385375000638305
+      }
+    },
+    {
+      "system": "H2",
+      "T": 293.15,
+      "P": 38220000.0,
+      "experimental": 752.0,
+      "rowID": "alsiyabi2013-h2-055",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 747.19351748141,
+        "density": 939.1105660455414,
+        "roots": 1,
+        "stability": 0.3192602702969546,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.290583999667433
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 37760000.0,
+      "experimental": 715.0,
+      "rowID": "alsiyabi2013-h2-056",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 711.6348901195373,
+        "density": 912.2093339639902,
+        "roots": 1,
+        "stability": 0.3104822333689819,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.615040999473422
+      }
+    },
+    {
+      "system": "H2",
+      "T": 301.15,
+      "P": 40750000.0,
+      "experimental": 737.0,
+      "rowID": "alsiyabi2013-h2-057",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 734.2690273319126,
+        "density": 923.5746852752462,
+        "roots": 1,
+        "stability": 0.32647762059086094,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.14916699974856
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 10420000.0,
+      "experimental": 599.0,
+      "rowID": "alsiyabi2013-o2-001",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 611.2168660118647,
+        "density": 941.5378770731247,
+        "roots": 4,
+        "stability": 0.19374500645174977,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.278667000544374
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 11460000.0,
+      "experimental": 538.0,
+      "rowID": "alsiyabi2013-o2-002",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 549.7639241076333,
+        "density": 893.9658747305558,
+        "roots": 4,
+        "stability": 0.16863984868034057,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.054500000696862
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 8930000.0,
+      "experimental": 444.0,
+      "rowID": "alsiyabi2013-o2-003",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 456.99107172649246,
+        "density": 833.293865179446,
+        "roots": 4,
+        "stability": 0.11268748727376375,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.760833999607712
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 13180000.0,
+      "experimental": 635.0,
+      "rowID": "alsiyabi2013-o2-004",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 645.3246125795625,
+        "density": 958.0358221036539,
+        "roots": 4,
+        "stability": 0.2159055862778868,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.085999999035266
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 12180000.0,
+      "experimental": 550.0,
+      "rowID": "alsiyabi2013-o2-005",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 560.925396931293,
+        "density": 899.8562491627139,
+        "roots": 4,
+        "stability": 0.1763243070729778,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.49170799991407
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 11540000.0,
+      "experimental": 500.0,
+      "rowID": "alsiyabi2013-o2-006",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 511.71930446089044,
+        "density": 864.2875903223471,
+        "roots": 4,
+        "stability": 0.14991429431843892,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.74712499861198
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 17570000.0,
+      "experimental": 686.0,
+      "rowID": "alsiyabi2013-o2-007",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 691.470575280988,
+        "density": 980.1619617742027,
+        "roots": 4,
+        "stability": 0.24483721176968712,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.235875000158558
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 14550000.0,
+      "experimental": 584.0,
+      "rowID": "alsiyabi2013-o2-008",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 594.0343972455702,
+        "density": 917.2212802036479,
+        "roots": 4,
+        "stability": 0.1990765383469405,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.520834000213654
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 14220000.0,
+      "experimental": 546.0,
+      "rowID": "alsiyabi2013-o2-009",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 555.2196442707584,
+        "density": 888.4016662922214,
+        "roots": 4,
+        "stability": 0.18032940329327876,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.989500001334818
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 21090000.0,
+      "experimental": 720.0,
+      "rowID": "alsiyabi2013-o2-010",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 723.745126785606,
+        "density": 995.3730177552105,
+        "roots": 4,
+        "stability": 0.26403029035224884,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.012250000145286
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 17150000.0,
+      "experimental": 618.0,
+      "rowID": "alsiyabi2013-o2-011",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 625.6613038771723,
+        "density": 933.6002452552393,
+        "roots": 4,
+        "stability": 0.22052707469904265,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 25.036917000761605
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 17260000.0,
+      "experimental": 589.0,
+      "rowID": "alsiyabi2013-o2-012",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 595.9572327205005,
+        "density": 910.5125223037476,
+        "roots": 2,
+        "stability": 0.20877302835851563,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.172124998585787
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 24280000.0,
+      "experimental": 749.0,
+      "rowID": "alsiyabi2013-o2-013",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 750.4174367492893,
+        "density": 1007.739754833742,
+        "roots": 4,
+        "stability": 0.27911844807096836,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.23412500138511
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 20360000.0,
+      "experimental": 655.0,
+      "rowID": "alsiyabi2013-o2-014",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 660.0554034365327,
+        "density": 951.1139332855234,
+        "roots": 4,
+        "stability": 0.24325723766762938,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.8085829999618
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 20840000.0,
+      "experimental": 632.0,
+      "rowID": "alsiyabi2013-o2-015",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 636.6967950009051,
+        "density": 932.1035279336019,
+        "roots": 2,
+        "stability": 0.23663740243897494,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.98545800051943
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 28270000.0,
+      "experimental": 780.0,
+      "rowID": "alsiyabi2013-o2-016",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 781.1229448307071,
+        "density": 1021.7311709765422,
+        "roots": 4,
+        "stability": 0.29554448825284285,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.644166999976733
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 23940000.0,
+      "experimental": 691.0,
+      "rowID": "alsiyabi2013-o2-017",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 694.1244642701326,
+        "density": 968.1082133717813,
+        "roots": 4,
+        "stability": 0.2649182203461974,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.30562499971711
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 24100000.0,
+      "experimental": 666.0,
+      "rowID": "alsiyabi2013-o2-018",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 669.2411431829102,
+        "density": 948.9400318988946,
+        "roots": 2,
+        "stability": 0.25817648399874515,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.22933300031582
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 31360000.0,
+      "experimental": 803.0,
+      "rowID": "alsiyabi2013-o2-019",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 803.2617379838505,
+        "density": 1031.6531518501824,
+        "roots": 4,
+        "stability": 0.30673248616613064,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.16504100013117
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 28010000.0,
+      "experimental": 726.0,
+      "rowID": "alsiyabi2013-o2-020",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 728.8854145773222,
+        "density": 985.0567091320022,
+        "roots": 4,
+        "stability": 0.28594386611924133,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.085957999981474
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 27830000.0,
+      "experimental": 700.0,
+      "rowID": "alsiyabi2013-o2-021",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 702.6985753902637,
+        "density": 965.8487752811521,
+        "roots": 2,
+        "stability": 0.27943879321388193,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.77775000159454
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 34540000.0,
+      "experimental": 825.0,
+      "rowID": "alsiyabi2013-o2-022",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 824.801228922615,
+        "density": 1041.1741973980857,
+        "roots": 4,
+        "stability": 0.3170785117209327,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.809167000857997
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 31480000.0,
+      "experimental": 754.0,
+      "rowID": "alsiyabi2013-o2-023",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 755.9866529011149,
+        "density": 997.9905316288546,
+        "roots": 4,
+        "stability": 0.3014869911224343,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.248165999670164
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 31160000.0,
+      "experimental": 728.0,
+      "rowID": "alsiyabi2013-o2-024",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 729.9777105073721,
+        "density": 979.3312361077122,
+        "roots": 2,
+        "stability": 0.2960030256242105,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.209833000786602
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 37650000.0,
+      "experimental": 845.0,
+      "rowID": "alsiyabi2013-o2-025",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 844.8133102045906,
+        "density": 1049.9055643319737,
+        "roots": 4,
+        "stability": 0.3262106542863743,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.110208999336464
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 34820000.0,
+      "experimental": 779.0,
+      "rowID": "alsiyabi2013-o2-026",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 780.3156931599304,
+        "density": 1009.3941988064462,
+        "roots": 4,
+        "stability": 0.31476076871836384,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.321916999615496
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 35030000.0,
+      "experimental": 758.0,
+      "rowID": "alsiyabi2013-o2-027",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 759.2740079452923,
+        "density": 993.5104186279425,
+        "roots": 2,
+        "stability": 0.31293896483843114,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.115499999927124
+      }
+    },
+    {
+      "system": "O2",
+      "T": 268.15,
+      "P": 40840000.0,
+      "experimental": 865.0,
+      "rowID": "alsiyabi2013-o2-028",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 864.393830313173,
+        "density": 1058.3449786027575,
+        "roots": 4,
+        "stability": 0.3346983997884018,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.311959001148352
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 37970000.0,
+      "experimental": 801.0,
+      "rowID": "alsiyabi2013-o2-029",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 801.9399245580885,
+        "density": 1019.3694259841247,
+        "roots": 4,
+        "stability": 0.32599874069948664,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.84183399954054
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 38350000.0,
+      "experimental": 781.0,
+      "rowID": "alsiyabi2013-o2-030",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 782.7200124403647,
+        "density": 1004.6401916855508,
+        "roots": 2,
+        "stability": 0.32581735356550195,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.053417000279296
+      }
+    },
+    {
+      "system": "O2",
+      "T": 278.15,
+      "P": 40520000.0,
+      "experimental": 817.0,
+      "rowID": "alsiyabi2013-o2-031",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 818.6324560928042,
+        "density": 1026.969310089794,
+        "roots": 4,
+        "stability": 0.3343060172421898,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.974207998937345
+      }
+    },
+    {
+      "system": "O2",
+      "T": 283.15,
+      "P": 41000000.0,
+      "experimental": 799.0,
+      "rowID": "alsiyabi2013-o2-032",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 800.4874885389717,
+        "density": 1012.9497282247502,
+        "roots": 2,
+        "stability": 0.3351622849022943,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.43866699973296
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 10640000.0,
+      "experimental": 438.0,
+      "rowID": "alsiyabi2013-o2-033",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 450.93356609087175,
+        "density": 818.6203750608493,
+        "roots": 2,
+        "stability": 0.11506337406265492,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.023833001687308
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 12920000.0,
+      "experimental": 454.0,
+      "rowID": "alsiyabi2013-o2-034",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 459.42977044784755,
+        "density": 813.2734006127776,
+        "roots": 2,
+        "stability": 0.12750925807982066,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.983209000405623
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 12800000.0,
+      "experimental": 391.0,
+      "rowID": "alsiyabi2013-o2-035",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 394.38341856282545,
+        "density": 748.6139552978344,
+        "roots": 2,
+        "stability": 0.09336455171584317,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.984583001132705
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 13870000.0,
+      "experimental": 505.0,
+      "rowID": "alsiyabi2013-o2-036",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 514.3595854699647,
+        "density": 856.601029909144,
+        "roots": 2,
+        "stability": 0.15917069170336148,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.9091659997066
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 14730000.0,
+      "experimental": 489.0,
+      "rowID": "alsiyabi2013-o2-037",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 493.7183629194939,
+        "density": 834.9417376146416,
+        "roots": 2,
+        "stability": 0.15175477140111765,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.818832999590086
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 13980000.0,
+      "experimental": 419.0,
+      "rowID": "alsiyabi2013-o2-038",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 422.40486876424114,
+        "density": 770.1960833352911,
+        "roots": 2,
+        "stability": 0.11232877438207481,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.164042000236805
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 17060000.0,
+      "experimental": 555.0,
+      "rowID": "alsiyabi2013-o2-039",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 562.2272131576055,
+        "density": 884.091938217457,
+        "roots": 2,
+        "stability": 0.19324604992907796,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.422624998900574
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 17260000.0,
+      "experimental": 530.0,
+      "rowID": "alsiyabi2013-o2-040",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 533.9059168620139,
+        "density": 859.3668527086018,
+        "roots": 2,
+        "stability": 0.18070874835658324,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.95362500019837
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 17630000.0,
+      "experimental": 488.0,
+      "rowID": "alsiyabi2013-o2-041",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 490.8457293668088,
+        "density": 818.1149364842079,
+        "roots": 2,
+        "stability": 0.16113835584508507,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.93845799936389
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 20790000.0,
+      "experimental": 603.0,
+      "rowID": "alsiyabi2013-o2-042",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 608.1716308518094,
+        "density": 909.6138229609944,
+        "roots": 2,
+        "stability": 0.225655623454021,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.32320899949991
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 21840000.0,
+      "experimental": 590.0,
+      "rowID": "alsiyabi2013-o2-043",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 592.8132294311756,
+        "density": 893.6080574849934,
+        "roots": 2,
+        "stability": 0.22312827489407758,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.82087500113994
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 21390000.0,
+      "experimental": 543.0,
+      "rowID": "alsiyabi2013-o2-044",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 544.8961186067362,
+        "density": 852.6848643979819,
+        "roots": 2,
+        "stability": 0.2009572793479119,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.256375001030392
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 24010000.0,
+      "experimental": 638.0,
+      "rowID": "alsiyabi2013-o2-045",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 642.340508267974,
+        "density": 928.0445973603223,
+        "roots": 2,
+        "stability": 0.2491535722352544,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.075249999237712
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 24280000.0,
+      "experimental": 618.0,
+      "rowID": "alsiyabi2013-o2-046",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 619.5282070609868,
+        "density": 908.5822906604005,
+        "roots": 2,
+        "stability": 0.24200338179416164,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.57262500077195
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 24120000.0,
+      "experimental": 577.0,
+      "rowID": "alsiyabi2013-o2-047",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 577.9784160570457,
+        "density": 872.8240324562483,
+        "roots": 2,
+        "stability": 0.2253134315554931,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.593958000972634
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 28330000.0,
+      "experimental": 680.0,
+      "rowID": "alsiyabi2013-o2-048",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 682.7951583134501,
+        "density": 949.2512052094021,
+        "roots": 2,
+        "stability": 0.2759437118831624,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.090541999205016
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 27680000.0,
+      "experimental": 652.0,
+      "rowID": "alsiyabi2013-o2-049",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 653.0977898782099,
+        "density": 926.9274382961786,
+        "roots": 2,
+        "stability": 0.26514233687826755,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.246499998800573
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 27350000.0,
+      "experimental": 612.0,
+      "rowID": "alsiyabi2013-o2-050",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 612.6248537953395,
+        "density": 893.2013080175882,
+        "roots": 2,
+        "stability": 0.250458573548905,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.076625000001513
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 31210000.0,
+      "experimental": 705.0,
+      "rowID": "alsiyabi2013-o2-051",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 707.2179019994555,
+        "density": 961.7319238783735,
+        "roots": 2,
+        "stability": 0.29144811212498845,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 21.381582999310922
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 31090000.0,
+      "experimental": 683.0,
+      "rowID": "alsiyabi2013-o2-052",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 683.5236121788624,
+        "density": 943.1107623758098,
+        "roots": 2,
+        "stability": 0.285397548862454,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.805124999853433
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 31150000.0,
+      "experimental": 648.0,
+      "rowID": "alsiyabi2013-o2-053",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 648.8740511419417,
+        "density": 913.7949111281897,
+        "roots": 2,
+        "stability": 0.2760779888258708,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.464667000851477
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 34670000.0,
+      "experimental": 732.0,
+      "rowID": "alsiyabi2013-o2-054",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 734.4712662064258,
+        "density": 975.378557675148,
+        "roots": 2,
+        "stability": 0.30807032995490524,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.26179200038314
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 34540000.0,
+      "experimental": 712.0,
+      "rowID": "alsiyabi2013-o2-055",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 711.7634203392155,
+        "density": 957.7642599141757,
+        "roots": 2,
+        "stability": 0.3034716395478521,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 19.366167000043788
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 34590000.0,
+      "experimental": 678.0,
+      "rowID": "alsiyabi2013-o2-056",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 678.5552589822508,
+        "density": 930.1340865288121,
+        "roots": 2,
+        "stability": 0.2963459846647098,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.1952910010732
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 38150000.0,
+      "experimental": 758.0,
+      "rowID": "alsiyabi2013-o2-057",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 759.9967858766256,
+        "density": 987.8993517065293,
+        "roots": 2,
+        "stability": 0.3229369584063942,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.671540998999262
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 38160000.0,
+      "experimental": 739.0,
+      "rowID": "alsiyabi2013-o2-058",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 739.2033733880336,
+        "density": 971.676379132536,
+        "roots": 2,
+        "stability": 0.32028407180941615,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.79612499983341
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 37910000.0,
+      "experimental": 705.0,
+      "rowID": "alsiyabi2013-o2-059",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 705.005361190516,
+        "density": 944.3177562874453,
+        "roots": 2,
+        "stability": 0.3137623674371707,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 24.439417000394315
+      }
+    },
+    {
+      "system": "O2",
+      "T": 288.15,
+      "P": 40780000.0,
+      "experimental": 777.0,
+      "rowID": "alsiyabi2013-o2-060",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 778.2308043597342,
+        "density": 996.6945823612404,
+        "roots": 2,
+        "stability": 0.3331194213423408,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 22.1487500002695
+      }
+    },
+    {
+      "system": "O2",
+      "T": 293.15,
+      "P": 40820000.0,
+      "experimental": 758.0,
+      "rowID": "alsiyabi2013-o2-061",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 758.1767104654468,
+        "density": 981.1152415906721,
+        "roots": 2,
+        "stability": 0.3314451000925738,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 20.540666999295354
+      }
+    },
+    {
+      "system": "O2",
+      "T": 301.15,
+      "P": 40830000.0,
+      "experimental": 727.0,
+      "rowID": "alsiyabi2013-o2-062",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 726.8065033686145,
+        "density": 955.7542350814762,
+        "roots": 2,
+        "stability": 0.32760823662360644,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 23.608415998751298
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 7570000.0,
+      "experimental": 564.0,
+      "rowID": "alsiyabi2013-mixb-001",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 581.3626796011146,
+        "density": 917.0583278227157,
+        "roots": 3,
+        "stability": 0.18419131531098373,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.18041599924618
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 8100000.0,
+      "experimental": 488.0,
+      "rowID": "alsiyabi2013-mixb-002",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 500.8405810094215,
+        "density": 859.9118468789253,
+        "roots": 3,
+        "stability": 0.14048210304245692,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.63354199938476
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 7540000.0,
+      "experimental": 415.0,
+      "rowID": "alsiyabi2013-mixb-003",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 435.2131255241552,
+        "density": 814.5951544478071,
+        "roots": 3,
+        "stability": 0.10156007548172366,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.70700000035868
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 10390000.0,
+      "experimental": 609.0,
+      "rowID": "alsiyabi2013-mixb-004",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 622.272400858748,
+        "density": 935.8332983616663,
+        "roots": 3,
+        "stability": 0.21510837403376173,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 69.62462500086986
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 10670000.0,
+      "experimental": 535.0,
+      "rowID": "alsiyabi2013-mixb-005",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 549.1775891382259,
+        "density": 884.202294514336,
+        "roots": 3,
+        "stability": 0.1762056123502639,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 69.56858299963642
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 10530000.0,
+      "experimental": 491.0,
+      "rowID": "alsiyabi2013-mixb-006",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 505.773173077836,
+        "density": 852.5451302075146,
+        "roots": 3,
+        "stability": 0.15123098654734474,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.60175000110758
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 14020000.0,
+      "experimental": 656.0,
+      "rowID": "alsiyabi2013-mixb-007",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 665.5970810414718,
+        "density": 955.9045464131559,
+        "roots": 3,
+        "stability": 0.24864752212865304,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.25599999865517
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 13780000.0,
+      "experimental": 585.0,
+      "rowID": "alsiyabi2013-mixb-008",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 595.1224605880873,
+        "density": 907.3216288600509,
+        "roots": 3,
+        "stability": 0.21185582312905668,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.50945900077932
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 13890000.0,
+      "experimental": 551.0,
+      "rowID": "alsiyabi2013-mixb-009",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 561.9578004947821,
+        "density": 882.3404236601301,
+        "roots": 3,
+        "stability": 0.19429744368470836,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.53679099892906
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 17150000.0,
+      "experimental": 691.0,
+      "rowID": "alsiyabi2013-mixb-010",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 697.8821044364654,
+        "density": 970.7337015551562,
+        "roots": 3,
+        "stability": 0.27371003514384107,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.46766700032458
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 17020000.0,
+      "experimental": 627.0,
+      "rowID": "alsiyabi2013-mixb-011",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 634.8758537108985,
+        "density": 927.0778198930866,
+        "roots": 3,
+        "stability": 0.2433889616593707,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.71645800129045
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 17540000.0,
+      "experimental": 602.0,
+      "rowID": "alsiyabi2013-mixb-012",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 610.1478462495265,
+        "density": 907.3532352230155,
+        "roots": 3,
+        "stability": 0.23263920602909052,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.589792000741
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 20960000.0,
+      "experimental": 728.0,
+      "rowID": "alsiyabi2013-mixb-013",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 732.9574140902965,
+        "density": 986.6012269073432,
+        "roots": 3,
+        "stability": 0.3007153016563622,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.40899999931571
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 20710000.0,
+      "experimental": 668.0,
+      "rowID": "alsiyabi2013-mixb-014",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 673.9140657112498,
+        "density": 946.1087778282257,
+        "roots": 3,
+        "stability": 0.27453444539488253,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.91012500070792
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 21240000.0,
+      "experimental": 645.0,
+      "rowID": "alsiyabi2013-mixb-015",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 651.2264149298828,
+        "density": 928.1479409967956,
+        "roots": 3,
+        "stability": 0.26576416051860074,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.59466700007033
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 24000000.0,
+      "experimental": 754.0,
+      "rowID": "alsiyabi2013-mixb-016",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 758.4720718844237,
+        "density": 997.9517670151414,
+        "roots": 3,
+        "stability": 0.3200970196982379,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.05712499954097
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 24240000.0,
+      "experimental": 702.0,
+      "rowID": "alsiyabi2013-mixb-017",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 707.0198896206804,
+        "density": 961.900737071185,
+        "roots": 3,
+        "stability": 0.3008357891270033,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.88816699918243
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 24570000.0,
+      "experimental": 679.0,
+      "rowID": "alsiyabi2013-mixb-018",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 683.8089839359716,
+        "density": 944.2477266486256,
+        "roots": 3,
+        "stability": 0.29205206492152996,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.37941599951591
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 28130000.0,
+      "experimental": 787.0,
+      "rowID": "alsiyabi2013-mixb-019",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 790.4369414374679,
+        "density": 1011.9266207165977,
+        "roots": 3,
+        "stability": 0.3439603770334474,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.06975000088278
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 27850000.0,
+      "experimental": 734.0,
+      "rowID": "alsiyabi2013-mixb-020",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 737.7493254562287,
+        "density": 976.2518956783953,
+        "roots": 3,
+        "stability": 0.3250023177168326,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.33737499982817
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 27970000.0,
+      "experimental": 710.0,
+      "rowID": "alsiyabi2013-mixb-021",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 713.975031554983,
+        "density": 958.8258313844655,
+        "roots": 3,
+        "stability": 0.3162435171457077,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 69.4769579986314
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 31260000.0,
+      "experimental": 810.0,
+      "rowID": "alsiyabi2013-mixb-022",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 812.9806144764434,
+        "density": 1021.6163055707917,
+        "roots": 3,
+        "stability": 0.36046218806345176,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.80075000096986
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 31480000.0,
+      "experimental": 763.0,
+      "rowID": "alsiyabi2013-mixb-023",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 766.1830221901075,
+        "density": 989.2628553492524,
+        "roots": 3,
+        "stability": 0.347053072199129,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 69.86333399981959
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 31410000.0,
+      "experimental": 739.0,
+      "rowID": "alsiyabi2013-mixb-024",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 742.0334869563269,
+        "density": 972.0999792563479,
+        "roots": 3,
+        "stability": 0.33851651378459563,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.91458299974329
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 35250000.0,
+      "experimental": 837.0,
+      "rowID": "alsiyabi2013-mixb-025",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 839.9894880422929,
+        "density": 1033.046710178202,
+        "roots": 3,
+        "stability": 0.3798317087586719,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.60616599967761
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 34630000.0,
+      "experimental": 786.0,
+      "rowID": "alsiyabi2013-mixb-026",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 789.2332398066036,
+        "density": 999.6235401408708,
+        "roots": 3,
+        "stability": 0.3646580880344975,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.97058300010394
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 34990000.0,
+      "experimental": 766.0,
+      "rowID": "alsiyabi2013-mixb-027",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 769.1310817826321,
+        "density": 984.6623944593291,
+        "roots": 3,
+        "stability": 0.35974323954991505,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 65.58412500089617
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 268.15,
+      "P": 38360000.0,
+      "experimental": 857.0,
+      "rowID": "alsiyabi2013-mixb-028",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 859.8908630951362,
+        "density": 1041.3481519813645,
+        "roots": 3,
+        "stability": 0.39380353927162987,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 65.95491699954437
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 278.15,
+      "P": 38260000.0,
+      "experimental": 812.0,
+      "rowID": "alsiyabi2013-mixb-029",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 814.2358620879037,
+        "density": 1010.6779475830124,
+        "roots": 3,
+        "stability": 0.3834390619843898,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.45475000045553
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 283.15,
+      "P": 38470000.0,
+      "experimental": 791.0,
+      "rowID": "alsiyabi2013-mixb-030",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 793.7789746307161,
+        "density": 995.8763778563498,
+        "roots": 3,
+        "stability": 0.37875803937803226,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.95562499994412
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 7890000.0,
+      "experimental": 374.0,
+      "rowID": "alsiyabi2013-mixb-031",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 387.9795761973626,
+        "density": 774.2071816345203,
+        "roots": 3,
+        "stability": 0.07676134435154262,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 68.95712500045192
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 8550000.0,
+      "experimental": 330.0,
+      "rowID": "alsiyabi2013-mixb-032",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 351.3087665958643,
+        "density": 735.134283791269,
+        "roots": 1,
+        "stability": 0.06007248465198815,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.95516699942527
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 10760000.0,
+      "experimental": 342.0,
+      "rowID": "alsiyabi2013-mixb-033",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 348.75497807767954,
+        "density": 707.5577270971928,
+        "roots": 1,
+        "stability": 0.06646712852314203,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.97504099934304
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 10380000.0,
+      "experimental": 446.0,
+      "rowID": "alsiyabi2013-mixb-034",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 459.17245367678987,
+        "density": 816.5496125917381,
+        "roots": 1,
+        "stability": 0.12426006054131242,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.20500000058382
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 11400000.0,
+      "experimental": 427.0,
+      "rowID": "alsiyabi2013-mixb-035",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 439.2984415427239,
+        "density": 793.6441545728295,
+        "roots": 1,
+        "stability": 0.11670445721340594,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.1924999999901
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 14110000.0,
+      "experimental": 429.0,
+      "rowID": "alsiyabi2013-mixb-036",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 437.923265531586,
+        "density": 775.1682956800374,
+        "roots": 1,
+        "stability": 0.12619238662928967,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.6588330000668
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 13620000.0,
+      "experimental": 512.0,
+      "rowID": "alsiyabi2013-mixb-037",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 522.2567454430273,
+        "density": 852.3729158322549,
+        "roots": 1,
+        "stability": 0.17135231833657869,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.3457919999928
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 14090000.0,
+      "experimental": 485.0,
+      "rowID": "alsiyabi2013-mixb-038",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 494.5264938282957,
+        "density": 827.3374083051053,
+        "roots": 1,
+        "stability": 0.15751122991594646,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.25416700080677
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 17150000.0,
+      "experimental": 487.0,
+      "rowID": "alsiyabi2013-mixb-039",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 494.2296051576012,
+        "density": 812.3229645029857,
+        "roots": 1,
+        "stability": 0.16894772899473876,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.55187499927706
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 17150000.0,
+      "experimental": 567.0,
+      "rowID": "alsiyabi2013-mixb-040",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 574.4278740084674,
+        "density": 880.9614152196517,
+        "roots": 1,
+        "stability": 0.21257288195139032,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.40091699955519
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 17170000.0,
+      "experimental": 536.0,
+      "rowID": "alsiyabi2013-mixb-041",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 543.7138354604217,
+        "density": 855.9044058329143,
+        "roots": 1,
+        "stability": 0.19610677212359098,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.6721660001931
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 20670000.0,
+      "experimental": 540.0,
+      "rowID": "alsiyabi2013-mixb-042",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 545.8152582220779,
+        "density": 844.0005609893844,
+        "roots": 1,
+        "stability": 0.21039926168602952,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 67.44129199978488
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 20880000.0,
+      "experimental": 614.0,
+      "rowID": "alsiyabi2013-mixb-043",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 619.5737942469448,
+        "density": 904.9255747027327,
+        "roots": 1,
+        "stability": 0.24915017703434378,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.19875000069442
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 21640000.0,
+      "experimental": 595.0,
+      "rowID": "alsiyabi2013-mixb-044",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 600.8034759481878,
+        "density": 887.6387462862258,
+        "roots": 1,
+        "stability": 0.24250556579896443,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.38066699956835
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 24150000.0,
+      "experimental": 583.0,
+      "rowID": "alsiyabi2013-mixb-045",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 588.2604537490569,
+        "density": 868.7825098488983,
+        "roots": 1,
+        "stability": 0.24554741558629117,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.09620799968252
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 24300000.0,
+      "experimental": 651.0,
+      "rowID": "alsiyabi2013-mixb-046",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 655.3490995431187,
+        "density": 923.3752146771601,
+        "roots": 1,
+        "stability": 0.2783668457034,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.38520799929393
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 24290000.0,
+      "experimental": 625.0,
+      "rowID": "alsiyabi2013-mixb-047",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 629.6937874258161,
+        "density": 903.1472096046625,
+        "roots": 1,
+        "stability": 0.2663222363094984,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 66.64204099979543
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 27570000.0,
+      "experimental": 620.0,
+      "rowID": "alsiyabi2013-mixb-048",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 624.5671844793546,
+        "density": 889.1758316729616,
+        "roots": 1,
+        "stability": 0.2760134190787165,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 63.87150000045949
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 28120000.0,
+      "experimental": 688.0,
+      "rowID": "alsiyabi2013-mixb-049",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 690.9406702617598,
+        "density": 941.240633756858,
+        "roots": 1,
+        "stability": 0.3073889567548515,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.36758300151268
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 27700000.0,
+      "experimental": 659.0,
+      "rowID": "alsiyabi2013-mixb-050",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 663.1916525653952,
+        "density": 920.6723073764163,
+        "roots": 1,
+        "stability": 0.29400795651913353,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 63.82333299916354
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 31440000.0,
+      "experimental": 657.0,
+      "rowID": "alsiyabi2013-mixb-051",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 661.1185360220943,
+        "density": 909.0052032430051,
+        "roots": 1,
+        "stability": 0.3068009390352147,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 63.7069580006937
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 31410000.0,
+      "experimental": 716.0,
+      "rowID": "alsiyabi2013-mixb-052",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 718.8328775824649,
+        "density": 954.8996846906804,
+        "roots": 1,
+        "stability": 0.32997338277312,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 63.8810000000376
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 31230000.0,
+      "experimental": 691.0,
+      "rowID": "alsiyabi2013-mixb-053",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 694.575185405164,
+        "density": 936.6527200588027,
+        "roots": 1,
+        "stability": 0.3198703084255494,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.03120800132456
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 34890000.0,
+      "experimental": 687.0,
+      "rowID": "alsiyabi2013-mixb-054",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 690.6753678901273,
+        "density": 924.5505891144464,
+        "roots": 1,
+        "stability": 0.3316327397873711,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.2596659999981
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 35050000.0,
+      "experimental": 745.0,
+      "rowID": "alsiyabi2013-mixb-055",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 747.368207838744,
+        "density": 968.5693497392338,
+        "roots": 1,
+        "stability": 0.3528394097649813,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 65.24512500072888
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 34730000.0,
+      "experimental": 720.0,
+      "rowID": "alsiyabi2013-mixb-056",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 723.1391636648782,
+        "density": 950.8384917832625,
+        "roots": 1,
+        "stability": 0.3432367500844724,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.40616699910606
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 38180000.0,
+      "experimental": 713.0,
+      "rowID": "alsiyabi2013-mixb-057",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 716.7788463106865,
+        "density": 937.933699765684,
+        "roots": 1,
+        "stability": 0.35342672502798733,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.3235410007037
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 288.15,
+      "P": 38700000.0,
+      "experimental": 771.0,
+      "rowID": "alsiyabi2013-mixb-058",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 773.988255945116,
+        "density": 981.0534184783369,
+        "roots": 1,
+        "stability": 0.373885576036635,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 63.883749999149586
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 293.15,
+      "P": 38150000.0,
+      "experimental": 746.0,
+      "rowID": "alsiyabi2013-mixb-059",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 749.0804862149313,
+        "density": 963.4363670845308,
+        "roots": 1,
+        "stability": 0.36424255514746967,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 64.1610419988865
+      }
+    },
+    {
+      "system": "MIXb",
+      "T": 301.15,
+      "P": 40550000.0,
+      "experimental": 731.0,
+      "rowID": "alsiyabi2013-mixb-060",
+      "prediction": {
+        "code": 0,
+        "converged": true,
+        "speed": 734.5321106319969,
+        "density": 946.858741130016,
+        "roots": 1,
+        "stability": 0.36814203418025887,
+        "phase": 3,
+        "message": "",
+        "runtimeMs": 106.00245800014818
+      }
+    }
+  ]
+}

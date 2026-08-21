@@ -436,6 +436,76 @@ public struct NativeTeqpEngine: TeqpEngine {
         #endif
     }
 
+    public func calculateNComponentThermodynamicState(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
+    ) async throws -> TeqpMixtureThermodynamicResult {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        try Task.checkCancellation()
+        let components = composition.components
+        let ids = try components.map { try nativeComponentID(for: $0.component) }
+        let fractions = components.map(\.moleFraction)
+        let nativeHint = nativeDensityRootSelectionHint(for: rootSelectionHint)
+        let result = try await Task.detached(priority: .userInitiated) {
+            var nativeResult = PXTeqpMixtureThermodynamicResult()
+            var errorBuffer = [CChar](repeating: 0, count: 768)
+            let status = ids.withUnsafeBufferPointer { idBuffer in
+                fractions.withUnsafeBufferPointer { fractionBuffer in
+                    px_teqp_calculate_ncomponent_thermodynamic_state(
+                        idBuffer.baseAddress,
+                        fractionBuffer.baseAddress,
+                        idBuffer.count,
+                        pressurePa,
+                        temperatureK,
+                        nativeHint,
+                        &nativeResult,
+                        &errorBuffer,
+                        errorBuffer.count
+                    )
+                }
+            }
+            guard status == 0, nativeResult.converged == 1 else {
+                let message = String(cString: errorBuffer)
+                throw ProviderError.malformedResponse(
+                    message.isEmpty
+                        ? "teqp native N-component thermodynamic calculation failed."
+                        : message
+                )
+            }
+            return TeqpMixtureThermodynamicResult(
+                densityKilogramsPerCubicMetre: nativeResult.density_kg_m3,
+                molarDensityMolesPerCubicMetre: nativeResult.molar_density_mol_m3,
+                pressurePa: nativeResult.pressure_pa,
+                pressureDerivativeWithRespectToMolarDensityJoulesPerMole:
+                    nativeResult.dp_drho_molar_j_mol,
+                pressureDerivativeWithRespectToTemperaturePascalsPerKelvin:
+                    nativeResult.dp_dt_pa_k,
+                isochoricHeatCapacityJoulesPerKilogramKelvin:
+                    nativeResult.isochoric_heat_capacity_j_kg_k,
+                isobaricHeatCapacityJoulesPerKilogramKelvin:
+                    nativeResult.isobaric_heat_capacity_j_kg_k,
+                heatCapacityRatio: nativeResult.heat_capacity_ratio,
+                speedOfSoundMetresPerSecond: nativeResult.speed_of_sound_m_s,
+                speedOfSoundSquaredMetresSquaredPerSecondSquared:
+                    nativeResult.speed_of_sound_squared_m2_s2,
+                minimumStabilityEigenvalue: nativeResult.minimum_stability_eigenvalue,
+                densityRootCount: Int(nativeResult.density_root_count),
+                converged: true,
+                phaseIdentifier: phaseIdentifier(forRawPhase: Int32(nativeResult.phase.rawValue)),
+                formulationID: TeqpNComponentDiagnostic.formulationID
+            )
+        }.value
+        try Task.checkCancellation()
+        return result
+        #else
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+        #endif
+    }
+
     public func calculateNComponentVLE(
         temperatureK: Double,
         specifiedComposition: CanonicalComposition,

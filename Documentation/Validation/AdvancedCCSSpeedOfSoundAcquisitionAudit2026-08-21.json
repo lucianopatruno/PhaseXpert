@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-21",
+  "routesSearched": [
+    "repository inventory",
+    "NIST TRC ThermoML DOI and property search",
+    "publisher article and supplementary-material pages",
+    "institutional accepted manuscripts and doctoral repositories",
+    "Crossref and DataCite metadata",
+    "Zenodo, Figshare and Mendeley Data discovery",
+    "national metrology institute publication repositories",
+    "EOS-CG/GERG acoustic validation bibliographies",
+    "backward and forward citation chains"
+  ],
+  "sources": [
+    {
+      "system": "CO2+N2, CO2+CH4, CO2+H2, CO2+O2 and CO2+CH4+H2+N2",
+      "source": "Ibrahim Al-Siyabi, Effect of impurities on CO2 stream properties, doctoral thesis, 2013",
+      "identifier": "http://hdl.handle.net/10399/2643",
+      "accessRoute": "Heriot-Watt Research Portal public PDF and repository API",
+      "numericalRowsObtained": true,
+      "rows": 300,
+      "usable": true,
+      "notes": "Exact Table 3.2 values; no graph digitization. Independent speed-of-sound accuracy +/-1 m/s; gravimetric composition uncertainty +/-0.3 mol%."
+    },
+    {
+      "system": "CO2+Ar",
+      "source": "Wegge et al., Speed-of-sound measurements in (argon + carbon dioxide), 2016",
+      "identifier": "10.1016/j.jct.2016.03.036",
+      "accessRoute": "NIST publication repository public manuscript and ThermoML discovery",
+      "numericalRowsObtained": false,
+      "usable": false,
+      "notes": "High-quality primary acoustic source, but compositions are 25.019 and 49.896 mol% Ar and therefore outside the requested priority systems and existing low-Ar CCS scope."
+    },
+    {
+      "system": "CH4+N2+CO2+CO biogas",
+      "source": "Fernandez-Vicente et al., Speeds of sound for a biogas mixture, 2016",
+      "identifier": "10.1016/j.jct.2016.07.033",
+      "accessRoute": "publisher, EURAMET/CORE repository and arXiv-indexed manuscript",
+      "numericalRowsObtained": false,
+      "usable": false,
+      "notes": "Primary row-level tables are traceable, but the mixture is methane-rich rather than a dry high-CO2 CCS stream."
+    },
+    {
+      "system": "CO2+H2S",
+      "source": "acid-gas acoustic and thermophysical-property literature search",
+      "identifier": null,
+      "accessRoute": "ThermoML/TRC, publisher supplements, institutional repositories, petroleum theses, DataCite/Zenodo/Figshare/Mendeley and citation chains",
+      "numericalRowsObtained": false,
+      "usable": false,
+      "notes": "No primary binary CO2+H2S row-level speed-of-sound matrix was found; pure-gas handbook values and EOS/software calculations were rejected as validation evidence. Worth revisiting if an acid-gas resonator dataset is published."
+    },
+    {
+      "system": "CO2-rich multicomponent CCS",
+      "source": "GERG/EOS-CG and CCS-mixture acoustic literature",
+      "identifier": null,
+      "accessRoute": "ThermoML, metrology repositories, theses and citation chains",
+      "numericalRowsObtained": true,
+      "rows": 60,
+      "usable": true,
+      "notes": "Al-Siyabi MIXb exact CO2/CH4/H2/N2 rows were evaluated. The complete matrix failed production accuracy; no property gate was promoted."
+    }
+  ]
+}

@@ -334,6 +334,18 @@ int px_teqp_calculate_ncomponent_density(
     size_t error_buffer_size
 );
 
+int px_teqp_calculate_ncomponent_thermodynamic_state(
+    const int *component_ids,
+    const double *mole_fractions,
+    size_t component_count,
+    double pressure_pa,
+    double temperature_k,
+    PXTeqpDensityRootSelectionHint root_selection_hint,
+    PXTeqpMixtureThermodynamicResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
 int px_teqp_calculate_ncomponent_vle(
     const int *component_ids,
     const double *specified_mole_fractions,

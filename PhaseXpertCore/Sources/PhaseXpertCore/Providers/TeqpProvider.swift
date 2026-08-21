@@ -474,6 +474,13 @@ public protocol TeqpEngine: Sendable {
         rootSelectionHint: TeqpDensityRootSelectionHint
     ) async throws -> TeqpNComponentDensityResult
 
+    func calculateNComponentThermodynamicState(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
+    ) async throws -> TeqpMixtureThermodynamicResult
+
     func calculateNComponentVLE(
         temperatureK: Double,
         specifiedComposition: CanonicalComposition,
@@ -485,6 +492,17 @@ public protocol TeqpEngine: Sendable {
 }
 
 public extension TeqpEngine {
+    func calculateNComponentThermodynamicState(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
+    ) async throws -> TeqpMixtureThermodynamicResult {
+        throw ProviderError.modelUnavailable(
+            "Generic teqp N-component thermodynamic diagnostics are not available in this engine."
+        )
+    }
+
     func calculateGlobalStability(pressurePa: Double, temperatureK: Double, composition: CanonicalComposition) async throws -> TeqpTPDResult {
         throw ProviderError.modelUnavailable("Generic teqp TPD diagnostics are not available in this engine.")
     }
@@ -606,6 +624,17 @@ public struct UnavailableTeqpEngine: TeqpEngine {
             "The teqp native XCFramework has not been linked."
         )
     }
+
+    public func calculateNComponentThermodynamicState(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: CanonicalComposition,
+        rootSelectionHint: TeqpDensityRootSelectionHint
+    ) async throws -> TeqpMixtureThermodynamicResult {
+        throw ProviderError.modelUnavailable(
+            "The teqp native XCFramework has not been linked."
+        )
+    }
 }
 
 public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
@@ -632,7 +661,12 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             supportedProperties: engine.isAvailable
                 ? TeqpFormulationCatalog.productionSupportedProperties
                 : [],
-            domain: .initialCO2Transport,
+            domain: ScientificDomain(
+                minimumPressurePa: ScientificDomain.initialCO2Transport.minimumPressurePa,
+                maximumPressurePa: 40_830_000,
+                minimumTemperatureK: ScientificDomain.initialCO2Transport.minimumTemperatureK,
+                maximumTemperatureK: ScientificDomain.initialCO2Transport.maximumTemperatureK
+            ),
             scientificBasis: "Native teqp Helmholtz engine with validation-gated pure CO₂ and property-specific CCS mixture formulations.",
             equationOrMethod: "Pure CO₂ and validation-gated binary or dry multicomponent density use pinned teqp EOS-CG model data only at independently validated domains. Unsupported properties and domains do not fall back to CoolProp.",
             coefficientSetVersion: TeqpFormulationCatalog.pureCarbonDioxide.provenance,
@@ -642,6 +676,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Pure CO₂ is supported for density, Cv, Cp, Cp/Cv, speed of sound and pure saturation.",
                 "CO₂+N₂ is supported only for homogeneous gas density at xN₂ = 0.0127, 283.15 K and 1.0–4.5 MPa.",
                 "CO₂+H₂ is supported only for homogeneous gas density at xH₂ = 0.05362, on the validated 273.15 K, 293.15 K and 323.15 K isotherms, within the observed gas-pressure ranges.",
+                "CO₂+O₂ speed of sound is independently supported only at exact xO₂ = 0.0652, 301.15 K and 24.12–40.83 MPa in homogeneous liquid/dense states; this acoustic gate does not validate density, Cp or Cv.",
                 "CO₂+CH₄ is supported only for homogeneous density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 gas and high-temperature supercritical validation slices.",
                 "CO₂+CH₄ VLE phase classification and continuous bubble/dew phase-envelope points are validation-gated to xCH₄ = 0.05 from 293.13 K to 298.142 K inside the ordinary Petropoulou et al. 2018 temperature bounds; two-phase bulk density is unavailable.",
                 "Dry simultaneous-impurity density is limited to four exact Razmjoo et al. 2026 compositions and measured isotherm/pressure blocks; every other multicomponent state remains unsupported.",
@@ -650,7 +685,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "Subcritical states on or too close to pure-CO₂ saturation are reported as unavailable because they do not have a unique homogeneous bulk density.",
                 "Phase classification is limited to pure-CO₂ stable vapor/liquid/supercritical states and the validated CO₂+CH₄ VLE gate; otherwise the phase remains unknown or unavailable.",
                 "Pure-CO₂ phase-envelope generation is available; CO₂+CH₄ phase-envelope points are available only inside the validated VLE gate.",
-                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cv, Cp and speed of sound are implemented only as hidden diagnostics because no independent production validation gate has passed.",
+                "Pure-CO₂ Cv, Cp and speed of sound are calculated from complete teqp ideal-gas plus residual Helmholtz derivatives; mixture Cp and Cv remain hidden diagnostics, while mixture speed of sound is exposed only inside its independent property-specific validation gate.",
                 "Absolute h, u and s remain unavailable pending reference-state validation."
             ],
             references: [
@@ -683,6 +718,12 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     title: "EOS-CG-2021: A Mixture Model for the Calculation of Thermodynamic Properties of CCS Mixtures",
                     year: 2023,
                     doiOrURL: "https://doi.org/10.1007/s10765-023-03263-6"
+                ),
+                SourceReference(
+                    authors: "Ibrahim Al-Siyabi",
+                    title: "Effect of impurities on CO2 stream properties",
+                    year: 2013,
+                    doiOrURL: "http://hdl.handle.net/10399/2643"
                 ),
                 SourceReference(
                     authors: "Mazzoccoli, Bosio and Arato",
@@ -750,6 +791,13 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         if decision.isSupported {
             return []
         }
+        let acousticDecision = capabilityMatrix.decision(
+            for: canonical,
+            property: .speedOfSound
+        )
+        if acousticDecision.isSupported {
+            return []
+        }
         if canonical.components.count > 2 {
             return [
                 ValidationIssue(
@@ -773,6 +821,26 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
     ) -> OperatingRangeGuidance? {
         guard engine.isAvailable else { return nil }
         guard !isPureCarbonDioxide(context.composition) else { return nil }
+
+        if context.requestedProperties.contains(.speedOfSound),
+           let canonical = try? CanonicalComposition(context.composition),
+           capabilityMatrix.decision(
+               for: canonical,
+               property: .speedOfSound,
+               pressurePa: context.pressurePa,
+               temperatureK: context.temperatureK
+           ).isSupported {
+            return OperatingRangeGuidance(
+                title: "Validated Advanced acoustics",
+                summary: [
+                    .init(
+                        severity: .information,
+                        title: "Speed of sound validated",
+                        detail: "Exact xO₂ = 0.0652; 301.15 K (28 °C); 241.2–408.3 bar(a), dense homogeneous fluid; Al-Siyabi 2013 Table 3.2. Density, Cp and Cv are not validated by this acoustic gate."
+                    )
+                ]
+            )
+        }
 
         if let nitrogen = context.composition.first(where: { $0.component == .nitrogen }) {
             return nitrogenOperatingRangeGuidance(
@@ -905,6 +973,21 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             pressurePa: request.pressurePa,
             temperatureK: request.temperatureK
         )
+        let acousticDecision = capabilityMatrix.decision(
+            for: canonical,
+            property: .speedOfSound,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK
+        )
+        if request.requestedProperties.contains(.speedOfSound),
+           acousticDecision.isSupported,
+           acousticDecision.validationState == .validated {
+            return try await calculateValidatedSpeedOfSound(
+                request,
+                composition: canonical,
+                decision: acousticDecision
+            )
+        }
         if densityDecision.isSupported,
            densityDecision.validationState == .validated,
            densityDecision.formulationID != TeqpFormulationCatalog.pureCarbonDioxide.id,
@@ -1255,6 +1338,71 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 validationSummary,
                 availabilityWarning,
                 "VLE, phase maps, caloric, acoustic and transport properties remain unsupported; no component is dropped and no fallback provider is used."
+            ],
+            isScientificResult: true
+        )
+    }
+
+    private func calculateValidatedSpeedOfSound(
+        _ request: CalculationRequest,
+        composition: CanonicalComposition,
+        decision: AdvancedCCSCapabilityDecision
+    ) async throws -> CalculationResponse {
+        let startedAt = Date()
+        let raw = try await engine.calculateNComponentThermodynamicState(
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            composition: composition,
+            rootSelectionHint: TeqpDensityRootSelectionHint(phaseDomain: decision.phaseDomain)
+        )
+        guard raw.converged,
+              raw.speedOfSoundMetresPerSecond.isFinite,
+              raw.speedOfSoundMetresPerSecond > 0,
+              raw.minimumStabilityEigenvalue.isFinite,
+              raw.minimumStabilityEigenvalue > 0 else {
+            throw ProviderError.malformedResponse(
+                "teqp did not return a finite positive stable speed of sound for the validated acoustic state."
+            )
+        }
+        let formulation = decision.formulationID.flatMap { formulationID in
+            TeqpFormulationCatalog.productionFormulations.first { $0.id == formulationID }
+        }
+        let capability = formulation?.propertyCapabilities
+            .first { $0.property == .speedOfSound }
+        let values = request.requestedProperties
+            .sorted { $0.rawValue < $1.rawValue }
+            .map { property -> PropertyValue in
+                guard property == .speedOfSound else {
+                    return PropertyValue(
+                        property: property,
+                        value: nil,
+                        unit: "",
+                        status: .unavailable,
+                        message: "This acoustic validation gate supports speed of sound only; no fallback calculation is used."
+                    )
+                }
+                return PropertyValue(
+                    property: .speedOfSound,
+                    value: raw.speedOfSoundMetresPerSecond,
+                    unit: "m/s",
+                    status: .calculated,
+                    message: "Native teqp speed of sound inside the independently validated Advanced acoustic gate."
+                )
+            }
+        return CalculationResponse(
+            requestID: request.requestID,
+            model: descriptor,
+            phase: phaseRegion(for: raw.phaseIdentifier, phaseDomain: decision.phaseDomain),
+            properties: values,
+            solver: SolverMetadata(
+                method: "teqp v0.23.1 generic N-component Helmholtz acoustic calculation; formulation \(decision.formulationID ?? raw.formulationID); validation artifact \(capability?.validationArtifact ?? "provider capability matrix")",
+                converged: true,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            warnings: [
+                capability?.validationSummary ?? "Matrix-approved speed-of-sound validation gate.",
+                capability?.accuracySummary ?? "LIMITED PASS — speed of sound only.",
+                "Cv and Cp are internal derivatives only and remain unvalidated user-facing properties; no CoolProp fallback is used."
             ],
             isScientificResult: true
         )
