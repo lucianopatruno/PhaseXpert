@@ -166,12 +166,15 @@ final class TeqpProviderTests: XCTestCase {
             temperatureK: Double,
             composition: CanonicalComposition
         ) async throws -> TeqpNComponentDensityResult {
-            TeqpNComponentDensityResult(
+            let phaseIdentifier = composition.componentSet == [.carbonDioxide, .methane]
+                ? methanePhaseIdentifier
+                : "unknown"
+            return TeqpNComponentDensityResult(
                 densityKilogramsPerCubicMetre: 104.7,
                 molarDensityMolesPerCubicMetre: 2_900.4,
                 densityRootCount: 1,
                 converged: true,
-                phaseIdentifier: "unknown",
+                phaseIdentifier: phaseIdentifier,
                 formulationID: TeqpNComponentDiagnostic.formulationID,
                 composition: composition.components
             )
@@ -765,43 +768,113 @@ final class TeqpProviderTests: XCTestCase {
         let provider = TeqpProvider(engine: MockEngine())
 
         let response = try await provider.calculate(nitrogenRequest(
-            pressurePa: 3_000_000,
+            pressurePa: 4_000_000,
             temperatureK: 283.15,
             nitrogenMoleFraction: 0.0127
         ))
 
         XCTAssertEqual(response.phase, .gas)
-        XCTAssertTrue(response.solver.method.contains("CO₂+N₂"))
+        XCTAssertTrue(response.solver.method.contains("generic N-component density solve"))
+        XCTAssertTrue(response.solver.method.contains(TeqpFormulationCatalog.co2NitrogenGernertGasDensity.id))
         XCTAssertTrue(response.solver.method.contains("AdvancedCCSTeqpIndependentValidation2026-08-20"))
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.value,
-            84.0
+            104.7
         )
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.status,
             .calculated
         )
-        XCTAssertTrue(response.warnings.contains { $0.contains("LIMITED PASS") })
+        for property in [PropertyID.density, .molarMass, .specificVolume, .compressibilityFactor] {
+            let value = try XCTUnwrap(response.properties.first { $0.property == property })
+            XCTAssertEqual(value.status, .calculated, property.rawValue)
+            XCTAssertTrue(try XCTUnwrap(value.value).isFinite, property.rawValue)
+        }
+        XCTAssertTrue(response.warnings.contains { $0.contains("Mazzoccoli") })
         XCTAssertTrue(response.warnings.contains { $0.contains("VLE") })
+    }
+
+    func testNitrogenGasDensityAcceptsPressureGateEdges() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+
+        for pressurePa in [1_000_000.0, 4_500_000.0] {
+            let response = try await provider.calculate(nitrogenRequest(
+                pressurePa: pressurePa,
+                temperatureK: 283.15,
+                nitrogenMoleFraction: 0.0127
+            ))
+            XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated)
+        }
+    }
+
+    func testNitrogenGuidanceUsesPositiveTenCelsiusAndAvoidsRedundantValidTemperatureIssue() throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let validGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 4_000_000,
+                temperatureK: 283.15,
+                composition: nitrogenRequest(
+                    pressurePa: 4_000_000,
+                    temperatureK: 283.15,
+                    nitrogenMoleFraction: 0.0127
+                ).composition
+            )
+        ))
+
+        XCTAssertTrue(validGuidance.summary.contains {
+            $0.title == "Validated temperature" && $0.detail == "10 °C"
+        })
+        XCTAssertTrue(validGuidance.summary.contains {
+            $0.title == "Validated pressure" && $0.detail == "10.0–45.0 bar(a)"
+        })
+        XCTAssertFalse(validGuidance.currentInputIssues.contains {
+            $0.title.localizedCaseInsensitiveContains("temperature")
+        })
+
+        let invalidTemperatureGuidance = try XCTUnwrap(provider.operatingRangeGuidance(
+            for: OperatingGuidanceContext(
+                pressurePa: 4_000_000,
+                temperatureK: 293.15,
+                composition: nitrogenRequest(
+                    pressurePa: 4_000_000,
+                    temperatureK: 293.15,
+                    nitrogenMoleFraction: 0.0127
+                ).composition
+            )
+        ))
+        XCTAssertTrue(invalidTemperatureGuidance.currentInputIssues.contains {
+            $0.title == "Temperature outside validated range"
+                && $0.detail == "Current: 20 °C · Validated: 10 °C"
+        })
     }
 
     func testNitrogenGasDensityRejectsOutsideExactDomain() async {
         let provider = TeqpProvider(engine: FailingEngine())
         let rejectedRequests = [
             nitrogenRequest(
-                pressurePa: 3_000_000,
+                pressurePa: 999_999,
+                temperatureK: 283.15,
+                nitrogenMoleFraction: 0.0127
+            ),
+            nitrogenRequest(
+                pressurePa: 4_500_001,
+                temperatureK: 283.15,
+                nitrogenMoleFraction: 0.0127
+            ),
+            nitrogenRequest(
+                pressurePa: 4_000_000,
                 temperatureK: 283.15,
                 nitrogenMoleFraction: 0.05
             ),
             nitrogenRequest(
-                pressurePa: 3_000_000,
-                temperatureK: 293.15,
+                pressurePa: 4_000_000,
+                temperatureK: 283.171,
                 nitrogenMoleFraction: 0.0127
             ),
             nitrogenRequest(
-                pressurePa: 5_000_000,
+                pressurePa: 4_000_000,
                 temperatureK: 283.15,
-                nitrogenMoleFraction: 0.0127
+                nitrogenMoleFraction: 0.012801
             )
         ]
 
@@ -809,6 +882,43 @@ final class TeqpProviderTests: XCTestCase {
             await XCTAssertThrowsErrorAsync({
                 try await provider.calculate(request)
             })
+        }
+    }
+
+    func testValidatedBinaryAdvancedDensityRoutesRemainAvailable() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let requests = [
+            hydrogenRequest(pressurePa: 3_000_000, temperatureK: 293.15, hydrogenMoleFraction: 0.05362),
+            methaneRequest(pressurePa: 4_979_790, temperatureK: 301.147, methaneMoleFraction: 0.05),
+            oxygenRequest(pressurePa: 3_000_000, temperatureK: 293.15, oxygenMoleFraction: 0.05032089)
+        ]
+
+        for request in requests {
+            let response = try await provider.calculate(request)
+            XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated)
+            XCTAssertTrue(response.solver.method.contains("generic N-component density solve"))
+        }
+    }
+
+    func testAllPR59MulticomponentDensityGatesRouteThroughGenericSolver() async throws {
+        let provider = TeqpProvider(engine: MockEngine())
+        let formulations = [
+            TeqpFormulationCatalog.oxyCombIMulticomponentDensity,
+            TeqpFormulationCatalog.preCombIMulticomponentDensity,
+            TeqpFormulationCatalog.preCombIIMulticomponentDensity,
+            TeqpFormulationCatalog.transportSpecMulticomponentDensity
+        ]
+
+        for formulation in formulations {
+            let limit = try XCTUnwrap(formulation.propertyCapabilities.first?.isothermPressureLimits.first)
+            let response = try await provider.calculate(multicomponentDensityRequest(
+                formulation: formulation,
+                pressurePa: (limit.minimumPressurePa + limit.maximumPressurePa) / 2,
+                temperatureK: limit.temperatureK
+            ))
+            XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated, formulation.id)
+            XCTAssertTrue(response.solver.method.contains("generic N-component density solve"), formulation.id)
+            XCTAssertTrue(response.solver.method.contains(formulation.id), formulation.id)
         }
     }
 
@@ -921,12 +1031,13 @@ final class TeqpProviderTests: XCTestCase {
         )
 
         XCTAssertEqual(response.phase, .gas)
-        XCTAssertTrue(response.solver.method.contains("EOS-CG-2021 CO₂+H₂"))
+        XCTAssertTrue(response.solver.method.contains("generic N-component density solve"))
         XCTAssertTrue(response.solver.method.contains("teqp v0.23.1"))
+        XCTAssertTrue(response.solver.method.contains(TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id))
         XCTAssertTrue(response.solver.method.contains("EOSCGDirectTeqpDensityProbeResults"))
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.value,
-            11.42
+            104.7
         )
         XCTAssertEqual(
             response.properties.first { $0.property == .isobaricHeatCapacity }?.status,
@@ -935,20 +1046,11 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertTrue(
             response.properties.first { $0.property == .isobaricHeatCapacity }?
                 .message?
-                .contains("Souissi et al. 2017") == true
+                .contains("not validated") == true
         )
-        XCTAssertTrue(
-            response.properties.first { $0.property == .isobaricHeatCapacity }?
-                .message?
-                .contains("CoolProp fallback") == true
-        )
-        XCTAssertTrue(
-            response.warnings.contains {
-                $0.contains("LIMITED PASS")
-            }
-        )
-        XCTAssertTrue(response.warnings.contains { $0.contains("Phase equilibrium") })
-        XCTAssertTrue(response.warnings.contains { $0.contains("No CoolProp fallback") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("Souissi et al. 2017") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("VLE") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("no fallback provider") })
     }
 
     func testHydrogenOutOfValidatedDomainIsRejectedBeforeEngineCall() async {
@@ -1076,12 +1178,13 @@ final class TeqpProviderTests: XCTestCase {
         )
 
         XCTAssertEqual(response.phase, .gas)
-        XCTAssertTrue(response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
+        XCTAssertTrue(response.solver.method.contains("generic N-component density solve"))
         XCTAssertTrue(response.solver.method.contains("teqp v0.23.1"))
+        XCTAssertTrue(response.solver.method.contains(TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.id))
         XCTAssertTrue(response.solver.method.contains("MethaneDensityDomainExpansion2026-08-15"))
         XCTAssertEqual(
             response.properties.first { $0.property == .density }?.value,
-            117.93
+            104.7
         )
         XCTAssertEqual(
             response.properties.first { $0.property == .speedOfSound }?.status,
@@ -1090,15 +1193,10 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertTrue(
             response.properties.first { $0.property == .speedOfSound }?
                 .message?
-                .contains("Ghafri et al. 2016") == true
+                .contains("not validated") == true
         )
-        XCTAssertTrue(
-            response.properties.first { $0.property == .speedOfSound }?
-                .message?
-                .contains("CoolProp fallback") == true
-        )
-        XCTAssertTrue(response.warnings.contains { $0.contains("LIMITED PASS") })
-        XCTAssertTrue(response.warnings.contains { $0.contains("Phase equilibrium") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("Ghafri et al. 2016") })
+        XCTAssertTrue(response.warnings.contains { $0.contains("VLE") })
     }
 
     func testMethaneOutOfValidatedDomainIsRejectedBeforeEngineCall() async {
@@ -1172,7 +1270,7 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertTrue(
             response.warnings.contains {
-                $0.contains("gas/supercritical T/P slices")
+                $0.contains("Ghafri et al. 2016")
             }
         )
     }
@@ -1787,7 +1885,7 @@ final class TeqpProviderTests: XCTestCase {
         ))
         let density = try XCTUnwrap(response.properties.first { $0.property == .density })
         XCTAssertEqual(density.status, .calculated)
-        XCTAssertEqual(try XCTUnwrap(density.value), 109.300351603473, accuracy: 1e-12)
+        XCTAssertEqual(try XCTUnwrap(density.value), 104.7, accuracy: 1e-12)
     }
 
     func testOxygenDensityRejectsOutsidePressureTemperatureAndCompositionGates() async throws {
@@ -2010,6 +2108,23 @@ final class TeqpProviderTests: XCTestCase {
                 .init(component: .methane, moleFraction: methaneMoleFraction)
             ],
             requestedProperties: [.density],
+            clientVersion: "test"
+        )
+    }
+
+    private func multicomponentDensityRequest(
+        formulation: TeqpFormulation,
+        pressurePa: Double,
+        temperatureK: Double
+    ) -> CalculationRequest {
+        CalculationRequest(
+            modelID: "teqp-pure-co2-experimental",
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: formulation.compositionLimits.map {
+                .init(component: $0.component, moleFraction: $0.minimumMoleFraction)
+            },
+            requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor],
             clientVersion: "test"
         )
     }

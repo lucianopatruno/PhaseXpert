@@ -844,22 +844,27 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                 "The state point is outside the experimental teqp domain."
             )
         }
-        if canonical.components.count > 2 {
-            let decision = capabilityMatrix.decision(
-                for: canonical,
-                property: .density,
-                pressurePa: request.pressurePa,
-                temperatureK: request.temperatureK
-            )
-            guard decision.isSupported else {
-                throw ProviderError.invalidRequest(
-                    "\(decision.reasons.joined(separator: " ")) No CoolProp fallback is used."
-                )
-            }
+        let densityDecision = capabilityMatrix.decision(
+            for: canonical,
+            property: .density,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK
+        )
+        if densityDecision.isSupported,
+           densityDecision.validationState == .validated,
+           densityDecision.formulationID != TeqpFormulationCatalog.pureCarbonDioxide.id,
+           request.requestedProperties.contains(where: {
+               [.density, .molarMass, .specificVolume, .compressibilityFactor].contains($0)
+           }) {
             return try await calculateMulticomponentDensity(
                 request,
                 composition: canonical,
-                decision: decision
+                decision: densityDecision
+            )
+        }
+        if canonical.components.count > 2 {
+            throw ProviderError.invalidRequest(
+                "\(densityDecision.reasons.joined(separator: " ")) No CoolProp fallback is used."
             )
         }
         if isSupportedNitrogenGasComposition(request.composition) {
@@ -1135,6 +1140,16 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         let supported: Set<PropertyID> = [
             .density, .molarMass, .specificVolume, .compressibilityFactor
         ]
+        let formulation = decision.formulationID.flatMap { formulationID in
+            TeqpFormulationCatalog.productionFormulations.first { $0.id == formulationID }
+        }
+        let capability = formulation?.propertyCapabilities.first { $0.property == .density }
+        let formulationName = formulation?.name ?? "Advanced CCS"
+        let validationArtifact = capability?.validationArtifact ?? "provider capability matrix"
+        let validationSummary = capability?.validationSummary
+            ?? "Matrix-approved density validation gate."
+        let availabilityWarning = capability?.notes.first
+            ?? "LIMITED PASS — density and density-derived M, v and Z only inside the selected validation gate."
         let derived = DerivedPropertyCalculator().values(
             requestedProperties: request.requestedProperties,
             pressurePa: request.pressurePa,
@@ -1154,7 +1169,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                         value: raw.densityKilogramsPerCubicMetre,
                         unit: "kg/m³",
                         status: .calculated,
-                        message: "Native teqp EOS-CG-2021 N-component density inside the exact Razmjoo et al. 2026 validation gate."
+                        message: "Native teqp density inside the \(formulationName) validation gate."
                     )
                 }
                 if let value = derivedByProperty[property] {
@@ -1174,15 +1189,16 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         return CalculationResponse(
             requestID: request.requestID,
             model: descriptor,
-            phase: phaseRegion(for: raw.phaseIdentifier),
+            phase: phaseRegion(for: raw.phaseIdentifier, phaseDomain: decision.phaseDomain),
             properties: values,
             solver: SolverMetadata(
-                method: "teqp v0.23.1 EOS-CG-2021 generic N-component density solve; formulation \(decision.formulationID ?? raw.formulationID); exact-composition validation artifact Documentation/Validation/Razmjoo2026MulticomponentDensity.json; derived M=ΣxᵢMᵢ, v=1/ρ, Z=pM/(ρRT)",
+                method: "teqp v0.23.1 generic N-component density solve; formulation \(decision.formulationID ?? raw.formulationID); validation artifact \(validationArtifact); derived M=ΣxᵢMᵢ, v=1/ρ, Z=pM/(ρRT)",
                 converged: true,
                 durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
             ),
             warnings: [
-                "LIMITED PASS — dry multicomponent density and density-derived M, v and Z only at the exact published composition and measured T/P gate.",
+                validationSummary,
+                availabilityWarning,
                 "VLE, phase maps, caloric, acoustic and transport properties remain unsupported; no component is dropped and no fallback provider is used."
             ],
             isScientificResult: true
@@ -2183,16 +2199,16 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             > CalculationValidator.compositionTolerance {
             issues.append(.init(
                 severity: .unsupported,
-                title: "Composition outside validated value",
-                detail: "Entered \(ppmString(nitrogenMoleFraction)) ppm N₂; validated N₂ composition is \(ppmString(supportedMoleFraction)) ppm."
+                title: "Composition outside validated range",
+                detail: "Current N₂: \(ppmString(nitrogenMoleFraction)) ppm · Validated N₂: \(molePercentString(supportedMoleFraction)) mol%"
             ))
         }
         if let temperatureK,
            abs(temperatureK - (selectedIsotherm?.temperatureK ?? 283.15)) > 0.02 {
             issues.append(.init(
                 severity: .unsupported,
-                title: "Temperature outside validation set",
-                detail: "CO₂+N₂ density is validated only at -10 °C."
+                title: "Temperature outside validated range",
+                detail: "Current: \(celsiusString(temperatureK)) °C · Validated: \(selectedIsotherm.map { celsiusString($0.temperatureK) } ?? "10") °C"
             ))
         }
         if let pressurePa,
@@ -2202,7 +2218,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             issues.append(.init(
                 severity: .unsupported,
                 title: "Pressure outside validated range",
-                detail: "Pressure must remain within \(pressureRangeString(selectedIsotherm))."
+                detail: "Current: \(barString(pressurePa)) bar(a) · Validated: \(pressureRangeString(selectedIsotherm))"
             ))
         }
         return OperatingRangeGuidance(
@@ -2495,6 +2511,10 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         return String(format: "%.0f", ppm)
     }
 
+    private func molePercentString(_ moleFraction: Double) -> String {
+        String(format: "%.2f", moleFraction * 100)
+    }
+
     private func celsiusString(_ kelvin: Double) -> String {
         let celsius = TemperatureUnit.celsius.fromKelvin(kelvin)
         return abs(celsius.rounded() - celsius) < 0.005
@@ -2630,6 +2650,24 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             .liquid
         default:
             .unknown
+        }
+    }
+
+    private func phaseRegion(
+        for identifier: String,
+        phaseDomain: TeqpPhaseDomain?
+    ) -> PhaseRegion {
+        let region = phaseRegion(for: identifier)
+        guard region == .unknown else { return region }
+        switch phaseDomain {
+        case .homogeneousGas:
+            return .gas
+        case .homogeneousLiquidOrDense:
+            return .liquid
+        case .supercritical:
+            return .supercritical
+        case .pureFluid, .homogeneousSinglePhase, .phaseEquilibrium, .none:
+            return region
         }
     }
 

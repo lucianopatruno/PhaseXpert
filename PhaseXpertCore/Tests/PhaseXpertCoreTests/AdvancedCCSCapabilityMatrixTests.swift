@@ -228,6 +228,47 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
             pressurePa: 3_000_000,
             temperatureK: 283.15
         ).isSupported)
+        XCTAssertTrue(matrix.decision(
+            for: validated,
+            property: .density,
+            pressurePa: 1_000_000,
+            temperatureK: 283.15
+        ).isSupported)
+        XCTAssertTrue(matrix.decision(
+            for: validated,
+            property: .density,
+            pressurePa: 4_500_000,
+            temperatureK: 283.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: validated,
+            property: .density,
+            pressurePa: 999_999,
+            temperatureK: 283.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: validated,
+            property: .density,
+            pressurePa: 4_500_001,
+            temperatureK: 283.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: validated,
+            property: .density,
+            pressurePa: 4_000_000,
+            temperatureK: 283.171
+        ).isSupported)
+
+        let offComposition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.987199),
+            .init(component: .nitrogen, moleFraction: 0.012801)
+        ])
+        XCTAssertFalse(matrix.decision(
+            for: offComposition,
+            property: .density,
+            pressurePa: 4_000_000,
+            temperatureK: 283.15
+        ).isSupported)
 
         let broad = try CanonicalComposition([
             .init(component: .carbonDioxide, moleFraction: 0.95),

@@ -136,6 +136,19 @@ final class CalculatorViewModel {
         )
     }
 
+    var scientificShieldIsActive: Bool {
+        guard let guidance = operatingRangeGuidance else { return false }
+        let hasValidatedStateSummary = guidance.title.localizedCaseInsensitiveContains("validated")
+            || guidance.summary.contains {
+                $0.title.localizedCaseInsensitiveContains("validated")
+                    || $0.title.localizedCaseInsensitiveContains("measured")
+            }
+        let hasUnsupportedCurrentStateIssue = guidance.currentInputIssues.contains {
+            $0.severity == .unsupported
+        }
+        return hasValidatedStateSummary && !hasUnsupportedCurrentStateIssue
+    }
+
     /// Independent binary pure-water equilibrium preview. This intentionally
     /// does not depend on, or broaden, the homogeneous CoolProp property gate.
     var waterEquilibriumPreview: CarbonDioxideWaterEquilibriumResult? {
