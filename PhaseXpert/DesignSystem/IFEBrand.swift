@@ -70,88 +70,11 @@ struct IFECard<Content: View>: View {
 }
 
 struct IFEBackground: View {
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.colorSchemeContrast) private var colorContrast
-
     var body: some View {
-        GeometryReader { geometry in
-            Canvas { context, size in
-                drawWaveBand(
-                    in: &context,
-                    size: size,
-                    origin: CGPoint(x: size.width * 0.35, y: size.height * 0.67),
-                    width: size.width * 0.88,
-                    amplitude: size.height * 0.09,
-                    rows: 9,
-                    spacing: 14,
-                    phase: 0.15,
-                    weight: 1
-                )
-                drawWaveBand(
-                    in: &context,
-                    size: size,
-                    origin: CGPoint(x: -size.width * 0.18, y: size.height * 0.08),
-                    width: size.width * 0.58,
-                    amplitude: size.height * 0.045,
-                    rows: 5,
-                    spacing: 16,
-                    phase: .pi * 0.8,
-                    weight: 0.58
-                )
-            }
-        }
-        .background(Color.ifeBackground)
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-        .ignoresSafeArea()
-    }
-
-    private func drawWaveBand(
-        in context: inout GraphicsContext,
-        size: CGSize,
-        origin: CGPoint,
-        width: CGFloat,
-        amplitude: CGFloat,
-        rows: Int,
-        spacing: CGFloat,
-        phase: CGFloat,
-        weight: Double
-    ) {
-        let baseOpacity = colorContrast == .increased
-            ? 0.22
-            : (colorScheme == .dark ? 0.15 : 0.17)
-
-        for row in 0..<rows {
-            var x = origin.x
-            let rowOffset = CGFloat(row) * spacing
-            let rowFade = 1 - Double(row) / Double(max(rows + 2, 1))
-
-            while x <= size.width + spacing {
-                let progress = (x - origin.x) / max(width, 1)
-                let y = origin.y
-                    + rowOffset
-                    + sin(progress * .pi * 2.25 + phase + CGFloat(row) * 0.28) * amplitude
-                    + progress * size.height * 0.16
-
-                let edgeFade = min(max(Double(progress), 0), 1)
-                let opacity = baseOpacity * weight * (0.45 + 0.55 * rowFade) * (0.35 + 0.65 * edgeFade)
-                let radius = 1.7 + CGFloat((row % 3)) * 0.32
-                let color = dotColor(for: row)
-
-                context.fill(
-                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
-                    with: .color(color.opacity(opacity))
-                )
-                x += spacing * 0.86
-            }
-        }
-    }
-
-    private func dotColor(for row: Int) -> Color {
-        if colorScheme == .dark {
-            return row.isMultiple(of: 3) ? .ifeBlue : .ifeLavender
-        }
-        return row.isMultiple(of: 3) ? .ifeBlue : .ifePrimary
+        Color.ifeBackground
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .ignoresSafeArea()
     }
 }
 
