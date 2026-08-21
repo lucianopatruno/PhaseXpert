@@ -2459,8 +2459,8 @@ private struct PropertyResultRow: View {
                 title: presentation.title,
                 value: presentation.value,
                 unit: presentation.unit,
-                status: presentation.statusText,
-                statusColor: presentation.statusColor,
+                status: isValidated ? presentation.validatedStatusText : presentation.statusText,
+                statusColor: isValidated ? .pxSuccess : presentation.statusColor,
                 copyValue: presentation.copyValue
             )
             if isValidated {
@@ -2505,6 +2505,10 @@ struct PropertyResultPresentation {
 
     var statusText: String {
         [effectiveStatus.displayName, property.message].compactMap { $0 }.joined(separator: " — ")
+    }
+
+    var validatedStatusText: String {
+        ["Validated", property.message].compactMap { $0 }.joined(separator: " — ")
     }
 
     var statusColor: Color {
