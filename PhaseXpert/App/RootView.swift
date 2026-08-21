@@ -129,6 +129,8 @@ private struct MoreView: View {
                     .accessibilityIdentifier("more-falcon")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .ifeDottedBackground()
             .navigationTitle("More")
         }
     }
@@ -151,6 +153,8 @@ private struct SettingsView: View {
                 Text("Uses the existing PhaseXpert appearance preference for this app.")
             }
         }
+        .scrollContentBackground(.hidden)
+        .ifeDottedBackground()
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
     }

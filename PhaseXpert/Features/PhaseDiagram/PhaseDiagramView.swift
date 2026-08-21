@@ -408,7 +408,7 @@ struct PhaseDiagramView: View {
                     .accessibilityIdentifier("phase-diagram-no-calculation")
                 }
             }
-            .background(Color.ifeBackground.ignoresSafeArea())
+            .ifeDottedBackground()
             .navigationTitle("Phase Diagram")
             .task(id: navigationState.latestCalculationRecord?.id) {
                 viewModel.load(for: navigationState.latestCalculationRecord)
