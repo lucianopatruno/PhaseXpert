@@ -126,6 +126,83 @@ private struct NativeBinaryCriticalState {
 /// XCFramework is an iOS-only artifact. They skip when that generated local
 /// artifact is absent rather than substituting a mock engine.
 final class TeqpNativeBridgeValidationTests: XCTestCase {
+    func testOttøyProductionGateArtifactRejectsEveryNaturalBlock() throws {
+        struct Pressure: Decodable {
+            let aard_percent: Double
+            let worst_percent: Double
+        }
+        struct Candidate: Decodable {
+            let id: String
+            let observable: String
+            let rows: [String]
+            let converged: [Int]
+            let pressure: Pressure
+            let stability_rejections: Int
+            let decision: String
+        }
+        struct ProductEffects: Decodable {
+            let capability_matrix_changed: Bool
+            let provider_routing_changed: Bool
+            let property_ids_added: [String]
+            let pressure_margin_enabled: Bool
+            let tp_flash: String
+            let phase_classification: String
+        }
+        struct Artifact: Decodable {
+            let decision: String
+            let promoted_bubble_gates: [String]
+            let promoted_dew_gates: [String]
+            let candidate_blocks: [Candidate]
+            let product_effects: ProductEffects
+        }
+
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent(
+                "Documentation/Validation/AdvancedCCSTernaryVLEProductionGate2026-08-21.json"
+            )
+        let artifact = try JSONDecoder().decode(
+            Artifact.self,
+            from: Data(contentsOf: url)
+        )
+
+        XCTAssertEqual(artifact.decision, "research_only")
+        XCTAssertTrue(artifact.promoted_bubble_gates.isEmpty)
+        XCTAssertTrue(artifact.promoted_dew_gates.isEmpty)
+        XCTAssertEqual(artifact.candidate_blocks.count, 12)
+        XCTAssertEqual(
+            artifact.candidate_blocks.flatMap(\.rows).count,
+            62
+        )
+        XCTAssertEqual(
+            Set(artifact.candidate_blocks.map(\.observable)),
+            Set(["bubble", "dew"])
+        )
+        XCTAssertTrue(artifact.candidate_blocks.allSatisfy {
+            $0.decision == "rejected"
+                && $0.converged.count == 2
+                && $0.converged[0] <= $0.converged[1]
+                && $0.pressure.aard_percent.isFinite
+                && $0.pressure.worst_percent.isFinite
+                && $0.stability_rejections >= 0
+        })
+
+        let strongestBubble = try XCTUnwrap(
+            artifact.candidate_blocks.first { $0.id == "B298-N2-rich" }
+        )
+        XCTAssertEqual(strongestBubble.rows, ["L6", "L7", "L8", "L9"])
+        XCTAssertEqual(strongestBubble.converged, [4, 4])
+        XCTAssertEqual(strongestBubble.pressure.aard_percent, 0.245402, accuracy: 1e-6)
+        XCTAssertEqual(strongestBubble.pressure.worst_percent, -0.397315, accuracy: 1e-6)
+
+        XCTAssertFalse(artifact.product_effects.capability_matrix_changed)
+        XCTAssertFalse(artifact.product_effects.provider_routing_changed)
+        XCTAssertTrue(artifact.product_effects.property_ids_added.isEmpty)
+        XCTAssertFalse(artifact.product_effects.pressure_margin_enabled)
+        XCTAssertEqual(artifact.product_effects.tp_flash, "research_only")
+        XCTAssertEqual(artifact.product_effects.phase_classification, "research_only")
+    }
+
     func testDiagnosticTernaryBubbleAndDewVLE() throws {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         let ids = [PXTeqpComponentCarbonDioxide.rawValue, PXTeqpComponentNitrogen.rawValue, PXTeqpComponentMethane.rawValue]
