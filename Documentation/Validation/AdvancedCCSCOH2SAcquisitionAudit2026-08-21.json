@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-21",
+  "routesAttempted": [
+    "repository inventory",
+    "NIST TRC ThermoML direct DOI JSON",
+    "Crossref REST metadata and relations",
+    "publisher article and supplementary-material discovery",
+    "institutional accepted manuscripts",
+    "author and research-group repositories",
+    "NIST and university repositories",
+    "DataCite, Zenodo, Figshare and Mendeley Data discovery",
+    "primary-paper backward citations and later-paper forward citations",
+    "theses and dissertations"
+  ],
+  "sources": [
+    {
+      "system": "CO2+CO",
+      "doi": "10.1016/j.fluid.2020.112733",
+      "property": "none",
+      "routes": ["Crossref", "ScienceDirect", "web search"],
+      "rowsObtained": 0,
+      "outcome": "The supplied lead is a corrigendum by Ariel Chialvo about the Krichevskii parameter, not a Chapoy CO2+CO experiment; rejected as a metadata mismatch."
+    },
+    {
+      "system": "CO2+CO",
+      "doi": "10.1016/j.fluid.2018.05.006",
+      "property": "VLE TPxy",
+      "routes": ["NIST ThermoML", "SINTEF/NVA accepted manuscript", "ScienceDirect"],
+      "rowsObtained": 31,
+      "outcome": "31 paired equilibrium rows obtained from NIST ThermoML and evaluated predictively."
+    },
+    {
+      "system": "CO2+CO",
+      "doi": "10.1016/j.jct.2018.06.022",
+      "property": "VLE TPxy",
+      "routes": ["NIST ThermoML", "Heriot-Watt accepted manuscript", "ScienceDirect"],
+      "rowsObtained": 102,
+      "outcome": "102 non-pure paired equilibrium rows obtained from NIST ThermoML and evaluated predictively."
+    },
+    {
+      "system": "CO2+CO",
+      "doi": "10.1016/j.jct.2020.106180",
+      "property": "VLE TPxy",
+      "routes": ["NIST ThermoML", "Heriot-Watt accepted manuscript", "ScienceDirect"],
+      "rowsObtained": 34,
+      "outcome": "34 non-pure paired equilibrium rows obtained from NIST ThermoML and evaluated predictively."
+    },
+    {
+      "system": "CO2+CO",
+      "doi": "10.1016/j.apenergy.2019.113398",
+      "property": "density",
+      "routes": ["ScienceDirect", "Crossref", "NIST ThermoML direct DOI", "Ruhr bibliography", "institutional and thesis searches"],
+      "rowsObtained": 0,
+      "outcome": "Primary metadata and uncertainty were verified, but exact density tables were not lawfully retrieved; Applied Energy is outside the public ThermoML cooperating-journal holdings for this record."
+    },
+    {
+      "system": "CO2+H2S",
+      "doi": "10.1016/j.fluid.2013.07.050",
+      "property": "VLE TPxy",
+      "routes": ["NIST ThermoML", "ScienceDirect", "Heriot-Watt repository", "modern phase-behavior review citation chain"],
+      "rowsObtained": 19,
+      "outcome": "19 non-pure paired equilibrium rows obtained from NIST ThermoML and evaluated predictively."
+    },
+    {
+      "system": "CO2+H2S",
+      "doi": "10.1016/j.fluid.2016.04.024",
+      "property": "density",
+      "routes": ["NIST ThermoML", "Heriot-Watt accepted manuscript PDF", "ScienceDirect"],
+      "rowsObtained": 450,
+      "outcome": "All 450 ThermoML mass-density rows were obtained and evaluated; accepted-manuscript Tables 3-7 independently confirmed composition, units, phases and uncertainty metadata."
+    },
+    {
+      "system": "CO2+H2S",
+      "doi": "10.1021/je000182c",
+      "property": "density and derived saturation boundaries",
+      "routes": ["ACS", "NIST ThermoML direct DOI", "Texas A&M dissertation repository", "citation chain"],
+      "rowsObtained": 0,
+      "outcome": "Primary article metadata and Texas A&M dissertation record were located, but no independently verified machine-readable table was encoded."
+    },
+    {
+      "system": "CO2+H2S",
+      "doi": "10.1021/acs.jced.1c00446",
+      "property": "density",
+      "routes": ["ACS", "NIST ThermoML direct DOI", "public full-text discovery"],
+      "rowsObtained": 0,
+      "outcome": "Publicly indexed tables concern H2S-rich mixtures (xCO2 0.49556, 0.26989 and 0.09822), not the promoted CO2-rich CCS composition; not encoded for this limited gate."
+    },
+    {
+      "system": "CO2+Ar",
+      "doi": "10.1021/acs.jced.6b00687",
+      "property": "vapor density",
+      "routes": ["NIST ThermoML", "ACS", "targeted low-Ar search"],
+      "rowsObtained": 0,
+      "outcome": "New source found only at 24.907-50.025 mol% Ar, outside the requested approximately 0.1-5 mol% fallback target; old low-Ar evidence was not rerun."
+    }
+  ]
+}

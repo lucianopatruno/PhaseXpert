@@ -302,7 +302,7 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertEqual(
             TeqpFormulationCatalog.surveyedBinaryImpurities,
-            [.nitrogen, .oxygen, .argon, .hydrogen, .methane]
+            [.nitrogen, .oxygen, .argon, .hydrogen, .methane, .carbonMonoxide, .hydrogenSulfide]
         )
         XCTAssertEqual(
             TeqpFormulationCatalog.productionFormulations.map(\.id),
@@ -312,6 +312,7 @@ final class TeqpProviderTests: XCTestCase {
                 "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
                 "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
                 "teqp-v0.23.1-eoscg2021-co2-o2-gas-density-lozano-martin2020",
+                "teqp-v0.23.1-multifluid-co2-h2s-gas-density-nazeri2016",
                 "teqp-v0.23.1-eoscg2021-multicomponent-oxycomb-i-density-razmjoo2026",
                 "teqp-v0.23.1-eoscg2021-multicomponent-precomb-i-density-razmjoo2026",
                 "teqp-v0.23.1-eoscg2021-multicomponent-precomb-ii-density-razmjoo2026",
@@ -329,7 +330,7 @@ final class TeqpProviderTests: XCTestCase {
         )
         XCTAssertEqual(
             TeqpFormulationCatalog.productionSupportedComponents,
-            [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen]
+            [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen, .hydrogenSulfide]
         )
         XCTAssertTrue(
             TeqpFormulationCatalog.productionSupportedProperties
@@ -752,7 +753,10 @@ final class TeqpProviderTests: XCTestCase {
     func testCO2N2BroadStatesRemainValidationGatedDespiteNativeBridge() async {
         let provider = TeqpProvider(engine: FailingEngine())
         let descriptor = provider.descriptor
-        XCTAssertEqual(descriptor.supportedComponents, [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen])
+        XCTAssertEqual(
+            descriptor.supportedComponents,
+            [.carbonDioxide, .nitrogen, .oxygen, .argon, .methane, .hydrogen, .hydrogenSulfide]
+        )
         XCTAssertTrue(descriptor.supportedComponents.contains(.nitrogen))
         XCTAssertTrue(
             descriptor.limitations.contains {
@@ -1019,6 +1023,33 @@ final class TeqpProviderTests: XCTestCase {
         XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
         XCTAssertEqual(response.properties.first { $0.property == .speedOfSound }?.status, .unavailable)
         XCTAssertTrue(response.warnings.contains { $0.contains("no component is dropped") })
+    }
+
+    func testValidatedHydrogenSulfideGasDensityUsesGenericStableGasRoot() async throws {
+        let provider = TeqpProvider(engine: MockEngine(
+            nComponentDensityRootCount: 2,
+            nComponentSelectedRootIndex: 0,
+            nComponentPhaseIdentifier: "gas",
+            requiredNComponentHint: .homogeneousGas
+        ))
+        let composition: [MixtureComponent] = [
+            .init(component: .carbonDioxide, moleFraction: 0.9505),
+            .init(component: .hydrogenSulfide, moleFraction: 0.0495)
+        ]
+        XCTAssertTrue(provider.applicabilityIssues(for: composition).isEmpty)
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 2_000_000,
+            temperatureK: 272.55,
+            composition: composition,
+            requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor, .speedOfSound],
+            clientVersion: "test"
+        ))
+        XCTAssertEqual(response.phase, .gas)
+        XCTAssertEqual(response.properties.first(where: { $0.property == .density })?.value, 104.7)
+        XCTAssertEqual(response.properties.first(where: { $0.property == .speedOfSound })?.status, .unavailable)
+        XCTAssertTrue(response.solver.method.contains("Nazeri2016CO2H2SDensityValidation.json"))
+        XCTAssertTrue(response.warnings.contains { $0.contains("corrosion") })
     }
 
     func testEveryValidatedMulticomponentCompositionRoutesThroughGenericDensityAndDerivedProperties() async throws {
