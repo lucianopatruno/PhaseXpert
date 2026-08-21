@@ -165,6 +165,24 @@ final class CalculatorViewModel {
         return AdvancedValidationPresentation.compositionOptions()
     }
 
+    var validatedStateOptions: [ValidatedStateOption] {
+        guard selectedModelID == "teqp-pure-co2-experimental" else { return [] }
+        let options = AdvancedValidationPresentation.stateOptions(
+            currentPressurePa: parsedPressurePa,
+            currentTemperatureK: parsedTemperatureK
+        )
+        let activeComponents = Set(
+            domainComposition()
+                .filter { $0.moleFraction.isFinite && $0.moleFraction > 0 }
+                .map(\.component)
+        )
+        guard activeComponents.count > 1 else { return options }
+        let matching = options.filter { option in
+            Set(option.composition.map(\.component)) == activeComponents
+        }
+        return matching.isEmpty ? options : matching
+    }
+
     /// Independent binary pure-water equilibrium preview. This intentionally
     /// does not depend on, or broaden, the homogeneous CoolProp property gate.
     var waterEquilibriumPreview: CarbonDioxideWaterEquilibriumResult? {
@@ -553,6 +571,33 @@ final class CalculatorViewModel {
                 )
             )
         }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
+        validate()
+    }
+
+    func useValidatedState(_ option: ValidatedStateOption) {
+        composition = option.composition.map {
+            CompositionInput(
+                component: $0.component,
+                value: String(
+                    format: compositionBasis == .partsPerMillion ? "%.12g" : "%.8g",
+                    $0.moleFraction * (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
+                )
+            )
+        }
+        lastValidPressurePa = option.pressurePa
+        lastValidTemperatureK = option.temperatureK
+        pressureText = Self.format(
+            pressureDisplayUnit.displayValue(from: option.pressurePa),
+            for: pressureDisplayUnit
+        )
+        temperatureText = Self.format(
+            temperatureDisplayUnit.displayValue(from: option.temperatureK),
+            for: temperatureDisplayUnit
+        )
         compositionBeforeNormalization = nil
         lastNormalizedComposition = nil
         calculationRecord = nil
