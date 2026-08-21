@@ -3152,4 +3152,73 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertNil(viewModel.calculationError)
         XCTAssertTrue(viewModel.validationReport.canCalculate)
     }
+
+    @MainActor
+    func testValidatedCompositionOptionsComeFromProductionCapabilityMetadata() throws {
+        let options = AdvancedValidationPresentation.compositionOptions()
+        XCTAssertGreaterThan(options.count, 1)
+
+        let oxygen = try XCTUnwrap(options.first { option in
+            option.composition.contains {
+                $0.component == .oxygen && abs($0.moleFraction - 0.0652) < 1e-12
+            }
+        })
+        XCTAssertEqual(Set(oxygen.composition.map(\.component)), [.carbonDioxide, .oxygen])
+        XCTAssertEqual(
+            try XCTUnwrap(oxygen.composition.first(where: { $0.component == .carbonDioxide })).moleFraction,
+            0.9348,
+            accuracy: 1e-12
+        )
+        XCTAssertTrue(oxygen.properties.contains(.speedOfSound))
+    }
+
+    @MainActor
+    func testUseValidatedCompositionDoesNotChangePressureOrTemperature() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "300"
+        viewModel.temperatureText = "28"
+        viewModel.compositionBasis = .molePercent
+        let option = try XCTUnwrap(viewModel.validatedCompositionOptions.first { option in
+            option.composition.contains {
+                $0.component == .oxygen && abs($0.moleFraction - 0.0652) < 1e-12
+            }
+        })
+
+        viewModel.useValidatedComposition(option)
+
+        XCTAssertEqual(viewModel.pressureText, "300")
+        XCTAssertEqual(viewModel.temperatureText, "28")
+        XCTAssertEqual(
+            viewModel.composition.first(where: { $0.component == .oxygen })?.value,
+            "6.52"
+        )
+        XCTAssertEqual(viewModel.validatedPropertiesAtCurrentState, [.speedOfSound])
+    }
+
+    @MainActor
+    func testSavedCaseValidationStatusUsesCurrentCapabilityDecision() async throws {
+        let descriptor = try XCTUnwrap(
+            ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }
+        )
+        let record = try await makeRecord(
+            modelID: descriptor.id,
+            modelDescriptor: descriptor,
+            pressureValue: 300,
+            pressureUnit: .bara,
+            pressurePa: 30_000_000,
+            temperatureValue: 28,
+            temperatureUnit: .celsius,
+            temperatureK: 301.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9348),
+                .init(component: .oxygen, moleFraction: 0.0652)
+            ]
+        )
+
+        XCTAssertEqual(
+            AdvancedValidationPresentation.savedCaseStatus(for: record),
+            "Advanced CCS · Validated Speed of sound"
+        )
+    }
 }

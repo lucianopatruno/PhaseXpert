@@ -69,6 +69,58 @@ struct IFECard<Content: View>: View {
     }
 }
 
+struct IFEBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var colorContrast
+
+    var body: some View {
+        GeometryReader { geometry in
+            Canvas { context, size in
+                drawWave(in: &context, size: size, originY: size.height * 0.78, amplitude: 38, phase: 0)
+                drawWave(in: &context, size: size, originY: size.height * 0.16, amplitude: 22, phase: .pi)
+            }
+        }
+        .background(Color.ifeBackground)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .ignoresSafeArea()
+    }
+
+    private func drawWave(
+        in context: inout GraphicsContext,
+        size: CGSize,
+        originY: CGFloat,
+        amplitude: CGFloat,
+        phase: CGFloat
+    ) {
+        let color = colorScheme == .dark ? Color.ifeLavender : Color.ifeBlue
+        let opacity = colorContrast == .increased ? 0.16 : (colorScheme == .dark ? 0.10 : 0.075)
+        let spacing: CGFloat = 18
+        let rows = 5
+        for row in 0..<rows {
+            var x: CGFloat = -spacing
+            while x <= size.width + spacing {
+                let normalized = x / max(size.width, 1)
+                let y = originY
+                    + CGFloat(row) * spacing
+                    + sin(normalized * .pi * 2 + phase + CGFloat(row) * 0.3) * amplitude
+                let radius: CGFloat = row.isMultiple(of: 2) ? 1.8 : 1.35
+                context.fill(
+                    Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
+                    with: .color(color.opacity(opacity))
+                )
+                x += spacing
+            }
+        }
+    }
+}
+
+extension View {
+    func ifeDottedBackground() -> some View {
+        background { IFEBackground() }
+    }
+}
+
 struct IFEStatusBadge: View {
     let text: String
     let systemImage: String

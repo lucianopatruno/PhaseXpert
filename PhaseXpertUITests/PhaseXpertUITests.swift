@@ -193,7 +193,7 @@ final class PhaseXpertUITests: XCTestCase {
         )
     }
 
-    func testAdvancedCCSPropertiesShowsValidatedRangeGuidanceBeforeCalculation() {
+    func testAdvancedCCSPropertiesShowsCompactValidationBeforeCalculation() {
         let app = XCUIApplication()
         app.launch()
 
@@ -216,14 +216,14 @@ final class PhaseXpertUITests: XCTestCase {
         methane.typeText("50000")
         app.buttons["keyboard-done"].tap()
 
-        for _ in 0..<5 where !app.staticTexts["CH₄ validated composition"].waitForExistence(timeout: 0.5) {
+        let compactStatus = app.descendants(matching: .any)["compact-validation-status"]
+        for _ in 0..<5 where !compactStatus.waitForExistence(timeout: 0.5) {
             app.swipeUp()
         }
 
-        XCTAssertTrue(app.staticTexts["CH₄ validated composition"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.staticTexts["50000 ppm"].exists)
-        XCTAssertTrue(app.staticTexts["Phase diagram"].exists)
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "19.98 °C to 24.99 °C")).element.exists)
+        XCTAssertTrue(compactStatus.waitForExistence(timeout: 3))
+        XCTAssertFalse(app.staticTexts["CH₄ validated composition"].exists)
+        XCTAssertTrue(app.buttons["use-validated-composition"].exists)
     }
 
     func testOperatingPointUnitsAreSeparateAndAdaptive() {

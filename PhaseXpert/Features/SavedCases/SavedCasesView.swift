@@ -351,8 +351,10 @@ struct SavedCasesView: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
             }
+            .ifeDottedBackground()
             .navigationTitle("Saved Cases")
             .searchable(text: $searchText, prompt: "Search name, notes or model")
             .toolbar {
@@ -1062,6 +1064,11 @@ private struct SavedCaseRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                Text(AdvancedValidationPresentation.savedCaseStatus(for: record))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .accessibilityIdentifier("saved-case-validation-status")
             } else {
                 Text("Stored record unavailable")
                     .font(.caption)

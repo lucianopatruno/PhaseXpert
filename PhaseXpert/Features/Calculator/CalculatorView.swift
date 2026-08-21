@@ -21,11 +21,13 @@ struct CalculatorView: View {
     @State private var pressureSelection: TextSelection?
     @State private var temperatureSelection: TextSelection?
     @State private var compositionSelections: [UUID: TextSelection] = [:]
+    @State private var validationDetailsExpanded = false
 
     var body: some View {
         @Bindable var viewModel = viewModel
 
         NavigationStack {
+            ScrollViewReader { scrollProxy in
             Form {
                 Section {
                     CalculatorBrandHeader()
@@ -224,6 +226,29 @@ struct CalculatorView: View {
                         }
                     }
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
+
+                    if !viewModel.validatedCompositionOptions.isEmpty {
+                        if viewModel.validatedCompositionOptions.count == 1,
+                           let option = viewModel.validatedCompositionOptions.first {
+                            Button("Use validated composition", systemImage: "checkmark.shield") {
+                                focusedField = nil
+                                viewModel.useValidatedComposition(option)
+                            }
+                            .accessibilityHint("Changes composition only; pressure and temperature are unchanged.")
+                            .accessibilityIdentifier("use-validated-composition")
+                        } else {
+                            Menu("Use validated composition", systemImage: "checkmark.shield") {
+                                ForEach(viewModel.validatedCompositionOptions) { option in
+                                    Button(option.name) {
+                                        focusedField = nil
+                                        viewModel.useValidatedComposition(option)
+                                    }
+                                }
+                            }
+                            .accessibilityHint("Choose an exact validated composition. Pressure and temperature are unchanged.")
+                            .accessibilityIdentifier("use-validated-composition")
+                        }
+                    }
                 } header: {
                     IFESectionHeader(
                         step: 3,
@@ -244,20 +269,10 @@ struct CalculatorView: View {
 
                 if let guidance = viewModel.operatingRangeGuidance, !guidance.isEmpty {
                     Section {
-                        ValidatedRangeGuidanceView(guidance: guidance) { suggestion in
-                            focusedField = nil
-                            viewModel.applyGuidanceSuggestion(suggestion)
-                        }
-                    } header: {
-                        IFESectionHeader(
-                            step: 4,
-                            title: guidance.title,
-                            subtitle: "Production validation limits before calculation."
+                        CompactValidationStatusView(
+                            guidance: guidance,
+                            validatedProperties: viewModel.validatedPropertiesAtCurrentState
                         )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                focusedField = nil
-                            }
                     }
                 }
 
@@ -349,6 +364,24 @@ struct CalculatorView: View {
 
                 if let record = viewModel.calculationRecord {
                     CalculationResultSections(record: record)
+                        .id("calculation-results")
+
+                    if let guidance = viewModel.operatingRangeGuidance, !guidance.isEmpty {
+                        Section {
+                            DisclosureGroup(
+                                "Validation details",
+                                isExpanded: $validationDetailsExpanded
+                            ) {
+                                ValidatedRangeGuidanceView(guidance: guidance) { suggestion in
+                                    focusedField = nil
+                                    viewModel.applyGuidanceSuggestion(suggestion)
+                                }
+                            }
+                            .accessibilityIdentifier("validation-details-disclosure")
+                        } header: {
+                            IFESectionHeader(step: 7, title: "Scientific validation")
+                        }
+                    }
 
                     Section {
                         Button("View phase diagram", systemImage: "chart.xyaxis.line") {
@@ -391,7 +424,7 @@ struct CalculatorView: View {
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .background(Color.ifeBackground)
+            .ifeDottedBackground()
             .toolbarTitleDisplayMode(.inline)
             .onAppear {
                 viewModel.validate()
@@ -409,6 +442,13 @@ struct CalculatorView: View {
             .onChange(of: viewModel.composition) { _, _ in
                 reconcileCompositionFocus()
                 viewModel.validate()
+            }
+            .onChange(of: viewModel.calculationRecord?.id) { _, newID in
+                guard newID != nil else { return }
+                focusedField = nil
+                withAnimation(.easeInOut(duration: 0.28)) {
+                    scrollProxy.scrollTo("calculation-results", anchor: .top)
+                }
             }
             .onChange(of: focusedField) { _, newField in
                 guard let newField else { return }
@@ -509,6 +549,7 @@ struct CalculatorView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(saveError ?? "")
+            }
             }
         }
     }
@@ -803,6 +844,46 @@ private struct ValidatedRangeGuidanceView: View {
         }
         .padding(.vertical, IFESpacing.xSmall)
         .accessibilityIdentifier("validated-range-guidance")
+    }
+}
+
+private struct CompactValidationStatusView: View {
+    let guidance: OperatingRangeGuidance
+    let validatedProperties: [PropertyID]
+
+    var body: some View {
+        Label {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        } icon: {
+            Image(systemName: validatedProperties.isEmpty
+                ? "shield.lefthalf.filled"
+                : "checkmark.shield.fill")
+                .foregroundStyle(validatedProperties.isEmpty ? Color.pxWarning : Color.pxSuccess)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("compact-validation-status")
+    }
+
+    private var title: String {
+        if !validatedProperties.isEmpty { return "Limited validation" }
+        if guidance.currentInputIssues.contains(where: { $0.severity == .unsupported }) {
+            return "Outside validated range"
+        }
+        return guidance.title
+    }
+
+    private var detail: String {
+        guard !validatedProperties.isEmpty else {
+            return guidance.currentInputIssues.first?.title
+                ?? "Open validation details after calculation for scientific scope."
+        }
+        return AdvancedValidationPresentation.propertyList(validatedProperties)
     }
 }
 
@@ -1783,7 +1864,13 @@ private struct ModelSelectionRow: View {
     }
 
     private var statusDescription: String {
-        switch descriptor.availability {
+        if descriptor.id == "coolprop-heos" {
+            return "Broad engineering property coverage"
+        }
+        if descriptor.id == "teqp-pure-co2-experimental" {
+            return "Validated CCS impurity and mixture ranges"
+        }
+        return switch descriptor.availability {
         case .available:
             "Available for local calculations within the recorded provider domain."
         case .preliminary:
@@ -2007,6 +2094,10 @@ struct CalculationResultSections: View {
         calculatedProperties(in: [.density])
     }
 
+    private var validatedProperties: Set<PropertyID> {
+        Set(AdvancedValidationPresentation.validatedProperties(for: record))
+    }
+
     private func calculatedProperties(in identifiers: Set<PropertyID>) -> [PropertyValue] {
         record.response.properties
             .filter { $0.status == .calculated && identifiers.contains($0.property) }
@@ -2051,7 +2142,10 @@ struct CalculationResultSections: View {
                 )
 
                 ForEach(stateProperties, id: \.property) { property in
-                    PropertyResultRow(property: property)
+                    PropertyResultRow(
+                        property: property,
+                        isValidated: validatedProperties.contains(property.property)
+                    )
                 }
             } header: {
                 IFESectionHeader(step: 6, title: "Results and phase information")
@@ -2083,7 +2177,10 @@ struct CalculationResultSections: View {
                 if !properties.isEmpty {
                     Section(group.rawValue) {
                         ForEach(properties, id: \.property) { property in
-                            PropertyResultRow(property: property)
+                            PropertyResultRow(
+                                property: property,
+                                isValidated: validatedProperties.contains(property.property)
+                            )
                         }
                     }
                 }
@@ -2093,7 +2190,7 @@ struct CalculationResultSections: View {
                 Section {
                     IFEExpandableRow("Unavailable properties (\(unavailableProperties.count))") {
                         ForEach(unavailableProperties, id: \.property) { property in
-                            PropertyResultRow(property: property)
+                            PropertyResultRow(property: property, isValidated: false)
                         }
                     }
                 }
@@ -2333,20 +2430,30 @@ enum SavedCaseNameFormatter {
 
 private struct PropertyResultRow: View {
     let property: PropertyValue
+    var isValidated = false
 
     private var presentation: PropertyResultPresentation {
         PropertyResultPresentation(property: property)
     }
 
     var body: some View {
-        IFEValueRow(
-            title: presentation.title,
-            value: presentation.value,
-            unit: presentation.unit,
-            status: presentation.statusText,
-            statusColor: presentation.statusColor,
-            copyValue: presentation.copyValue
-        )
+        HStack(alignment: .firstTextBaseline, spacing: IFESpacing.small) {
+            IFEValueRow(
+                title: presentation.title,
+                value: presentation.value,
+                unit: presentation.unit,
+                status: presentation.statusText,
+                statusColor: presentation.statusColor,
+                copyValue: presentation.copyValue
+            )
+            if isValidated {
+                Image(systemName: "checkmark.shield.fill")
+                    .font(.caption)
+                    .foregroundStyle(Color.pxSuccess)
+                    .accessibilityLabel("\(presentation.title), validated for current state")
+                    .accessibilityIdentifier("validated-property-\(property.property.rawValue)")
+            }
+        }
     }
 }
 

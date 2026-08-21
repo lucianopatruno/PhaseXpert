@@ -149,6 +149,22 @@ final class CalculatorViewModel {
         return hasValidatedStateSummary && !hasUnsupportedCurrentStateIssue
     }
 
+    var validatedPropertiesAtCurrentState: [PropertyID] {
+        guard selectedModelID == "teqp-pure-co2-experimental",
+              let pressurePa = parsedPressurePa,
+              let temperatureK = parsedTemperatureK else { return [] }
+        return AdvancedValidationPresentation.validatedProperties(
+            composition: domainComposition(),
+            pressurePa: pressurePa,
+            temperatureK: temperatureK
+        )
+    }
+
+    var validatedCompositionOptions: [ValidatedCompositionOption] {
+        guard selectedModelID == "teqp-pure-co2-experimental" else { return [] }
+        return AdvancedValidationPresentation.compositionOptions()
+    }
+
     /// Independent binary pure-water equilibrium preview. This intentionally
     /// does not depend on, or broaden, the homogeneous CoolProp property gate.
     var waterEquilibriumPreview: CarbonDioxideWaterEquilibriumResult? {
@@ -524,6 +540,23 @@ final class CalculatorViewModel {
                 for: temperatureDisplayUnit
             )
         }
+        validate()
+    }
+
+    func useValidatedComposition(_ option: ValidatedCompositionOption) {
+        composition = option.composition.map {
+            CompositionInput(
+                component: $0.component,
+                value: String(
+                    format: compositionBasis == .partsPerMillion ? "%.12g" : "%.8g",
+                    $0.moleFraction * (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
+                )
+            )
+        }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
         validate()
     }
 
