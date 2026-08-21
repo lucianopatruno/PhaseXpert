@@ -424,10 +424,19 @@ struct CalculatorView: View {
             .onSubmit { viewModel.validate() }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Scientific traceability", systemImage: "checkmark.shield") {
+                    Button {
                         viewModel.validate()
                         showsScientificTraceability = true
+                    } label: {
+                        Label(
+                            "Scientific traceability",
+                            systemImage: viewModel.scientificShieldIsActive
+                                ? "checkmark.shield.fill"
+                                : "checkmark.shield"
+                        )
                     }
+                    .foregroundStyle(viewModel.scientificShieldIsActive ? Color.ifePrimary : .primary)
+                    .symbolRenderingMode(viewModel.scientificShieldIsActive ? .hierarchical : .monochrome)
                     .accessibilityHint("Opens model and latest calculation provenance.")
                 }
 

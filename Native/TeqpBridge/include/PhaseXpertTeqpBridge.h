@@ -108,10 +108,28 @@ typedef struct PXTeqpMixtureDensityResult {
     PXTeqpPhase phase;
 } PXTeqpMixtureDensityResult;
 
+enum { PXTeqpMaximumDensityRootDiagnostics = 8 };
+
+typedef enum PXTeqpDensityRootSelectionHint {
+    PXTeqpDensityRootSelectionAutomatic = 0,
+    PXTeqpDensityRootSelectionHomogeneousGas = 1,
+    PXTeqpDensityRootSelectionHomogeneousLiquidOrDense = 2,
+    PXTeqpDensityRootSelectionSupercritical = 3
+} PXTeqpDensityRootSelectionHint;
+
 typedef struct PXTeqpNComponentDensityResult {
     double density_kg_m3;
     double molar_density_mol_m3;
     int density_root_count;
+    int root_diagnostic_count;
+    double root_molar_densities_mol_m3[PXTeqpMaximumDensityRootDiagnostics];
+    double root_densities_kg_m3[PXTeqpMaximumDensityRootDiagnostics];
+    double root_dp_drho_molar_j_mol[PXTeqpMaximumDensityRootDiagnostics];
+    double root_minimum_stability_eigenvalues[PXTeqpMaximumDensityRootDiagnostics];
+    int root_is_mechanically_stable[PXTeqpMaximumDensityRootDiagnostics];
+    int root_is_locally_stable[PXTeqpMaximumDensityRootDiagnostics];
+    int selected_root_index;
+    PXTeqpDensityRootSelectionHint selected_root_hint;
     int converged;
     PXTeqpPhase phase;
 } PXTeqpNComponentDensityResult;
@@ -310,6 +328,7 @@ int px_teqp_calculate_ncomponent_density(
     size_t component_count,
     double pressure_pa,
     double temperature_k,
+    PXTeqpDensityRootSelectionHint root_selection_hint,
     PXTeqpNComponentDensityResult *result,
     char *error_buffer,
     size_t error_buffer_size

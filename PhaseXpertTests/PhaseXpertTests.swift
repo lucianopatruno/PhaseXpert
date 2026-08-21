@@ -135,6 +135,24 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    private func advancedNitrogenViewModel(
+        pressureBar: Double,
+        temperatureCelsius: Double,
+        nitrogenPPM: Double
+    ) -> CalculatorViewModel {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = String(format: "%.12g", pressureBar)
+        viewModel.temperatureText = String(format: "%.12g", temperatureCelsius)
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: String(format: "%.12g", 1_000_000 - nitrogenPPM)),
+            CompositionInput(component: .nitrogen, value: String(format: "%.12g", nitrogenPPM))
+        ]
+        return viewModel
+    }
+
+    @MainActor
     func testWaterEquilibriumPreviewIsBinaryOnlyAndIndependentOfHomogeneousGate() throws {
         let viewModel = CalculatorViewModel()
         viewModel.selectedModelID = "coolprop-heos"
@@ -500,6 +518,103 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testAdvancedNitrogenValidatedStateActivatesScientificShield() throws {
+        let viewModel = advancedNitrogenViewModel(
+            pressureBar: 40,
+            temperatureCelsius: 10,
+            nitrogenPPM: 12_700
+        )
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        viewModel.validate()
+
+        XCTAssertTrue(viewModel.scientificShieldIsActive)
+        let guidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+        XCTAssertTrue(guidance.currentInputIssues.isEmpty)
+        XCTAssertTrue(guidance.propertyAvailability.contains {
+            $0.title == "Cp/Cv/speed"
+                && $0.severity == .unsupported
+        })
+    }
+
+    @MainActor
+    func testAdvancedNitrogenInvalidTemperatureNeutralizesScientificShield() throws {
+        let viewModel = advancedNitrogenViewModel(
+            pressureBar: 40,
+            temperatureCelsius: 20,
+            nitrogenPPM: 12_700
+        )
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.scientificShieldIsActive)
+        let guidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+        XCTAssertTrue(guidance.currentInputIssues.contains {
+            $0.title == "Temperature outside validated range"
+                && $0.detail.contains("Current: 20 °C")
+                && $0.detail.contains("Validated: 10 °C")
+        })
+    }
+
+    @MainActor
+    func testAdvancedNitrogenInvalidCompositionNeutralizesScientificShield() throws {
+        let viewModel = advancedNitrogenViewModel(
+            pressureBar: 40,
+            temperatureCelsius: 10,
+            nitrogenPPM: 12_801
+        )
+        guard viewModel.selectedDescriptor?.availability != .unavailable else {
+            throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
+        }
+
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.scientificShieldIsActive)
+        let guidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+        XCTAssertTrue(guidance.currentInputIssues.contains {
+            $0.title == "Composition outside validated range"
+                && $0.detail.contains("Current N₂: 12801 ppm")
+                && $0.detail.contains("Validated N₂: 1.27 mol%")
+        })
+    }
+
+    @MainActor
+    func testGeneralPureCarbonDioxideKeepsNeutralScientificShieldState() {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "coolprop-heos"
+        viewModel.pressureText = "50"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "1000000")
+        ]
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.scientificShieldIsActive)
+    }
+
+    @MainActor
+    func testPreliminaryUnsupportedMixtureKeepsNeutralScientificShieldState() {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "40"
+        viewModel.temperatureText = "10"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            CompositionInput(component: .carbonDioxide, value: "970000"),
+            CompositionInput(component: .nitrogen, value: "30000")
+        ]
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.scientificShieldIsActive)
+    }
+
+    @MainActor
     func testAdvancedCCSPropertiesHydrogenCalculationUsesValidatedDensityDomain() async throws {
         let viewModel = CalculatorViewModel()
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
@@ -529,9 +644,10 @@ final class PhaseXpertTests: XCTestCase {
             record.response.properties.first { $0.property == .speedOfSound }?.status,
             .unavailable
         )
-        XCTAssertTrue(record.response.solver.method.contains("EOS-CG-2021 CO₂+H₂"))
+        XCTAssertTrue(record.response.solver.method.contains("generic N-component density solve"))
+        XCTAssertTrue(record.response.solver.method.contains("EOSCGDirectTeqpDensityProbeResults"))
         XCTAssertTrue(record.response.warnings.contains { $0.contains("Souissi") })
-        XCTAssertTrue(record.response.warnings.contains { $0.contains("No CoolProp fallback") })
+        XCTAssertTrue(record.response.warnings.contains { $0.contains("no fallback provider") })
     }
 
     @MainActor
@@ -564,7 +680,7 @@ final class PhaseXpertTests: XCTestCase {
             record.response.properties.first { $0.property == .isobaricHeatCapacity }?.status,
             .unavailable
         )
-        XCTAssertTrue(record.response.solver.method.contains("EOS-CG-2021 CO₂+CH₄"))
+        XCTAssertTrue(record.response.solver.method.contains("generic N-component density solve"))
         XCTAssertTrue(record.response.solver.method.contains("MethaneDensityDomainExpansion2026-08-15"))
         XCTAssertTrue(record.response.warnings.contains { $0.contains("Ghafri") })
     }
