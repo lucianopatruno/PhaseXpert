@@ -198,6 +198,34 @@ final class TeqpProviderTests: XCTestCase {
                 composition: composition.components
             )
         }
+
+        func calculateNComponentThermodynamicState(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: CanonicalComposition,
+            rootSelectionHint: TeqpDensityRootSelectionHint
+        ) async throws -> TeqpMixtureThermodynamicResult {
+            if let requiredNComponentHint {
+                XCTAssertEqual(rootSelectionHint, requiredNComponentHint)
+            }
+            return TeqpMixtureThermodynamicResult(
+                densityKilogramsPerCubicMetre: 725.4,
+                molarDensityMolesPerCubicMetre: 17_300,
+                pressurePa: pressurePa,
+                pressureDerivativeWithRespectToMolarDensityJoulesPerMole: 3_100,
+                pressureDerivativeWithRespectToTemperaturePascalsPerKelvin: 410_000,
+                isochoricHeatCapacityJoulesPerKilogramKelvin: 920,
+                isobaricHeatCapacityJoulesPerKilogramKelvin: 1_780,
+                heatCapacityRatio: 1.934_783,
+                speedOfSoundMetresPerSecond: 688.3,
+                speedOfSoundSquaredMetresSquaredPerSecondSquared: 473_756.89,
+                minimumStabilityEigenvalue: 1.4,
+                densityRootCount: 1,
+                converged: true,
+                phaseIdentifier: "liquid",
+                formulationID: TeqpNComponentDiagnostic.formulationID
+            )
+        }
     }
 
     private struct FailingEngine: TeqpEngine {
@@ -310,6 +338,7 @@ final class TeqpProviderTests: XCTestCase {
                 "teqp-v0.23.1-pure-co2-span-wagner-density",
                 "teqp-v0.23.1-co2-n2-gerg-gas-density-mazzoccoli2012",
                 "teqp-v0.23.1-eoscg2021-co2-h2-gas-density-souissi2017",
+                "teqp-v0.23.1-eoscg2021-co2-o2-dense-speed-of-sound-alsiyabi2013",
                 "teqp-v0.23.1-eoscg2021-co2-ch4-gas-density-ghafri2016",
                 "teqp-v0.23.1-eoscg2021-co2-o2-gas-density-lozano-martin2020",
                 "teqp-v0.23.1-multifluid-co2-h2s-gas-density-nazeri2016",
@@ -2095,6 +2124,41 @@ final class TeqpProviderTests: XCTestCase {
                 && $0.detail.contains("50000 ppm")
         } == true)
         XCTAssertEqual(guidance?.suggestions.first?.label, "Use 50000 ppm CH₄")
+    }
+
+    func testValidatedOxygenAcousticGateRoutesOnlySpeedOfSound() async throws {
+        let provider = TeqpProvider(engine: MockEngine(
+            requiredNComponentHint: .homogeneousLiquidOrDense
+        ))
+        let composition = [
+            MixtureComponent(component: .carbonDioxide, moleFraction: 0.9348),
+            MixtureComponent(component: .oxygen, moleFraction: 0.0652)
+        ]
+        XCTAssertTrue(provider.applicabilityIssues(for: composition).isEmpty)
+
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 31_150_000,
+            temperatureK: 301.15,
+            composition: composition,
+            requestedProperties: [.density, .speedOfSound, .isobaricHeatCapacity],
+            clientVersion: "test"
+        ))
+
+        let sound = try XCTUnwrap(
+            response.properties.first { $0.property == .speedOfSound }
+        )
+        XCTAssertEqual(try XCTUnwrap(sound.value), 688.3, accuracy: 1e-12)
+        XCTAssertEqual(sound.unit, "m/s")
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .unavailable)
+        XCTAssertEqual(
+            response.properties.first { $0.property == .isobaricHeatCapacity }?.status,
+            .unavailable
+        )
+        XCTAssertTrue(response.properties.contains {
+            $0.status == .unavailable
+                && $0.message?.contains("speed of sound only") == true
+        })
     }
 
     private func nitrogenRequest(

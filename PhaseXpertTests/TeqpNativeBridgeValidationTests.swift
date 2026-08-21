@@ -1405,6 +1405,29 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         }
     }
 
+    func testNativeOxygenAcousticGateStateIsFiniteStableAndAccurate() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let composition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.9348),
+            .init(component: .oxygen, moleFraction: 0.0652)
+        ])
+        let state = try await engine.calculateNComponentThermodynamicState(
+            pressurePa: 31_150_000,
+            temperatureK: 301.15,
+            composition: composition,
+            rootSelectionHint: .homogeneousLiquidOrDense
+        )
+
+        XCTAssertTrue(state.converged)
+        XCTAssertGreaterThanOrEqual(state.densityRootCount, 1)
+        XCTAssertGreaterThan(state.minimumStabilityEigenvalue, 0)
+        XCTAssertGreaterThan(state.isochoricHeatCapacityJoulesPerKilogramKelvin, 0)
+        XCTAssertGreaterThan(state.isobaricHeatCapacityJoulesPerKilogramKelvin, 0)
+        XCTAssertGreaterThan(state.speedOfSoundSquaredMetresSquaredPerSecondSquared, 0)
+        XCTAssertEqual(state.speedOfSoundMetresPerSecond, 648.874051, accuracy: 0.01)
+        XCTAssertLessThan(abs(state.speedOfSoundMetresPerSecond - 648.0), 1.0)
+    }
+
     private func requireNativeTeqpEngine() throws -> NativeTeqpEngine {
         let engine = NativeTeqpEngine()
         guard engine.isAvailable else {

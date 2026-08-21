@@ -337,4 +337,53 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
         ])
         XCTAssertFalse(matrix.decision(for: nearbyComposition, property: .density, pressurePa: 2_000_000, temperatureK: 272.55).isSupported)
     }
+
+    func testOxygenSpeedOfSoundGateIsIndependentAndExact() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let composition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.9348),
+            .init(component: .oxygen, moleFraction: 0.0652)
+        ])
+        let inside = matrix.decision(
+            for: composition,
+            property: .speedOfSound,
+            pressurePa: 31_150_000,
+            temperatureK: 301.15
+        )
+        XCTAssertTrue(inside.isSupported)
+        XCTAssertEqual(inside.phaseDomain, .homogeneousLiquidOrDense)
+        XCTAssertEqual(
+            inside.formulationID,
+            TeqpFormulationCatalog.co2OxygenEOSCGDenseSpeedOfSound.id
+        )
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .density,
+            pressurePa: 31_150_000, temperatureK: 301.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .isobaricHeatCapacity,
+            pressurePa: 31_150_000, temperatureK: 301.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .speedOfSound,
+            pressurePa: 24_119_999, temperatureK: 301.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .speedOfSound,
+            pressurePa: 40_830_001, temperatureK: 301.15
+        ).isSupported)
+        XCTAssertFalse(matrix.decision(
+            for: composition, property: .speedOfSound,
+            pressurePa: 31_150_000, temperatureK: 301.201
+        ).isSupported)
+
+        let nearby = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.934699),
+            .init(component: .oxygen, moleFraction: 0.065301)
+        ])
+        XCTAssertFalse(matrix.decision(
+            for: nearby, property: .speedOfSound,
+            pressurePa: 31_150_000, temperatureK: 301.15
+        ).isSupported)
+    }
 }

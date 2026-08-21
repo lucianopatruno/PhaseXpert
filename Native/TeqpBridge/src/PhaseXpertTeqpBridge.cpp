@@ -438,6 +438,37 @@ double minimum_stability_eigenvalue(
     const Eigen::ArrayXd &rhovec
 );
 
+template<typename Operation>
+auto derivative_step(const char *label, Operation operation) {
+    try {
+        return operation();
+    } catch (const std::exception &error) {
+        std::string message = label;
+        if (std::string(error.what()).empty()) {
+            message += " failed with empty native exception.";
+        } else {
+            message += " failed: ";
+            message += error.what();
+        }
+        throw std::runtime_error(message);
+    } catch (...) {
+        std::string message = label;
+        message += " failed with unknown native exception.";
+        throw std::runtime_error(message);
+    }
+}
+
+struct BinaryThermodynamicProperties {
+    double cv_j_kg_k;
+    double cp_j_kg_k;
+    double heat_capacity_ratio;
+    double speed_of_sound_m_s;
+    double speed_of_sound_squared_m2_s2;
+    double dp_drho_molar_j_mol;
+    double dp_dt_pa_k;
+    double minimum_stability_eigenvalue;
+};
+
 class NComponentMultifluidModel {
 public:
     using Model = decltype(teqp::build_multifluid_JSONstr(
@@ -450,6 +481,7 @@ public:
         const std::vector<int> &component_ids
     ) : component_json_strings_(componentJsonStrings(component_ids)),
         molar_masses_kg_mol_(molarMasses(component_json_strings_)),
+        ideal_model_(ideal_terms_for_components(component_json_strings_)),
         model_(teqp::build_multifluid_JSONstr(
             component_json_strings_,
             std::string(kPhaseXpertTeqpBinaryPairsJson),
@@ -519,6 +551,89 @@ public:
         return minimum_stability_eigenvalue(model_, temperature_k, rhovec);
     }
 
+    BinaryThermodynamicProperties thermodynamicProperties(
+        double temperature_k,
+        double total_molar_density_mol_m3,
+        const Eigen::ArrayXd &molefractions
+    ) const {
+        using ResidualDerivatives =
+            teqp::TDXDerivatives<Model, double, Eigen::ArrayXd>;
+        using IdealDerivatives =
+            teqp::TDXDerivatives<teqp::IdealHelmholtz, double, Eigen::ArrayXd>;
+        const auto residual_density_derivatives = derivative_step(
+            "N-component residual density derivatives",
+            [&]() {
+                return ResidualDerivatives::template get_Ar0n<2, teqp::ADBackends::autodiff>(
+                    model_, temperature_k, total_molar_density_mol_m3, molefractions
+                );
+            }
+        );
+        const double ar01 = residual_density_derivatives[1];
+        const double ar02 = residual_density_derivatives[2];
+        const double ar11 = derivative_step(
+            "N-component residual mixed temperature-density derivative",
+            [&]() {
+                return ResidualDerivatives::template get_Arxy<1, 1, teqp::ADBackends::autodiff>(
+                    model_, temperature_k, total_molar_density_mol_m3, molefractions
+                );
+            }
+        );
+        const double ar20 = derivative_step(
+            "N-component residual second temperature derivative",
+            [&]() {
+                return ResidualDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                    model_, temperature_k, total_molar_density_mol_m3, molefractions
+                );
+            }
+        );
+        const double a020 = derivative_step(
+            "N-component ideal second temperature derivative",
+            [&]() {
+                return IdealDerivatives::template get_Arxy<2, 0, teqp::ADBackends::autodiff>(
+                    ideal_model_, temperature_k, total_molar_density_mol_m3, molefractions
+                );
+            }
+        );
+        const double cv_over_r = -(a020 + ar20);
+        const double pressure_derivative_dimensionless = 1.0 + 2.0 * ar01 + ar02;
+        const double temperature_density_coupling = 1.0 + ar01 - ar11;
+        const Eigen::ArrayXd rhovec = total_molar_density_mol_m3 * molefractions;
+        const double minimum_eigenvalue =
+            minimum_stability_eigenvalue(model_, temperature_k, rhovec);
+        if (!std::isfinite(cv_over_r)
+            || !std::isfinite(pressure_derivative_dimensionless)
+            || !std::isfinite(temperature_density_coupling)
+            || !std::isfinite(minimum_eigenvalue)
+            || cv_over_r <= 0.0
+            || pressure_derivative_dimensionless <= 0.0
+            || minimum_eigenvalue <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical N-component Helmholtz derivatives.");
+        }
+        const double cp_over_r = cv_over_r
+            + temperature_density_coupling * temperature_density_coupling
+                / pressure_derivative_dimensionless;
+        const double speed_dimensionless = pressure_derivative_dimensionless
+            + temperature_density_coupling * temperature_density_coupling / cv_over_r;
+        const double molar_mass = mixtureMolarMassKgMol(molefractions);
+        const double gas_constant = model_.R(molefractions);
+        const double speed_squared =
+            speed_dimensionless * gas_constant * temperature_k / molar_mass;
+        if (!std::isfinite(cp_over_r) || !std::isfinite(speed_squared)
+            || cp_over_r <= cv_over_r || speed_squared <= 0.0) {
+            throw std::runtime_error("teqp returned non-physical N-component Cp or speed of sound.");
+        }
+        return {
+            cv_over_r * gas_constant / molar_mass,
+            cp_over_r * gas_constant / molar_mass,
+            cp_over_r / cv_over_r,
+            std::sqrt(speed_squared),
+            speed_squared,
+            gas_constant * temperature_k * pressure_derivative_dimensionless,
+            total_molar_density_mol_m3 * gas_constant * temperature_density_coupling,
+            minimum_eigenvalue
+        };
+    }
+
 private:
     static std::vector<std::string> componentJsonStrings(
         const std::vector<int> &component_ids
@@ -544,39 +659,9 @@ private:
 
     std::vector<std::string> component_json_strings_;
     std::vector<double> molar_masses_kg_mol_;
+    teqp::IdealHelmholtz ideal_model_;
     Model model_;
 };
-
-struct BinaryThermodynamicProperties {
-    double cv_j_kg_k;
-    double cp_j_kg_k;
-    double heat_capacity_ratio;
-    double speed_of_sound_m_s;
-    double speed_of_sound_squared_m2_s2;
-    double dp_drho_molar_j_mol;
-    double dp_dt_pa_k;
-    double minimum_stability_eigenvalue;
-};
-
-template<typename Operation>
-auto derivative_step(const char *label, Operation operation) {
-    try {
-        return operation();
-    } catch (const std::exception &error) {
-        std::string message = label;
-        if (std::string(error.what()).empty()) {
-            message += " failed with empty native exception.";
-        } else {
-            message += " failed: ";
-            message += error.what();
-        }
-        throw std::runtime_error(message);
-    } catch (...) {
-        std::string message = label;
-        message += " failed with unknown native exception.";
-        throw std::runtime_error(message);
-    }
-}
 
 struct BinaryCriticalPoint {
     bool converged;
@@ -4043,6 +4128,87 @@ int px_teqp_calculate_ncomponent_density(
         return 10;
     } catch (...) {
         copy_text("teqp N-component density calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 11;
+    }
+}
+
+int px_teqp_calculate_ncomponent_thermodynamic_state(
+    const int *component_ids,
+    const double *mole_fractions,
+    size_t component_count,
+    double pressure_pa,
+    double temperature_k,
+    PXTeqpDensityRootSelectionHint root_selection_hint,
+    PXTeqpMixtureThermodynamicResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+) {
+    if (result == nullptr) {
+        copy_text("Result pointer is null.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    *result = {};
+    result->density_kg_m3 = std::numeric_limits<double>::quiet_NaN();
+    result->molar_density_mol_m3 = std::numeric_limits<double>::quiet_NaN();
+    result->speed_of_sound_m_s = std::numeric_limits<double>::quiet_NaN();
+    result->speed_of_sound_squared_m2_s2 = std::numeric_limits<double>::quiet_NaN();
+    PXTeqpNComponentDensityResult density{};
+    const int density_status = px_teqp_calculate_ncomponent_density(
+        component_ids,
+        mole_fractions,
+        component_count,
+        pressure_pa,
+        temperature_k,
+        root_selection_hint,
+        &density,
+        error_buffer,
+        error_buffer_size
+    );
+    if (density_status != 0 || density.converged != 1) {
+        return density_status == 0 ? 8 : density_status;
+    }
+    try {
+        std::vector<int> ids(component_ids, component_ids + component_count);
+        Eigen::ArrayXd composition(static_cast<Eigen::Index>(component_count));
+        for (size_t index = 0; index < component_count; ++index) {
+            composition[static_cast<Eigen::Index>(index)] = mole_fractions[index];
+        }
+        NComponentMultifluidModel model(ids);
+        const auto properties = model.thermodynamicProperties(
+            temperature_k,
+            density.molar_density_mol_m3,
+            composition
+        );
+        if (!std::isfinite(properties.speed_of_sound_m_s)
+            || !std::isfinite(properties.speed_of_sound_squared_m2_s2)
+            || properties.speed_of_sound_m_s <= 0.0
+            || properties.speed_of_sound_squared_m2_s2 <= 0.0) {
+            copy_text("teqp returned invalid N-component speed of sound.", error_buffer, error_buffer_size);
+            return 9;
+        }
+        result->density_kg_m3 = density.density_kg_m3;
+        result->molar_density_mol_m3 = density.molar_density_mol_m3;
+        result->pressure_pa = pressure_pa;
+        result->dp_drho_molar_j_mol = properties.dp_drho_molar_j_mol;
+        result->dp_dt_pa_k = properties.dp_dt_pa_k;
+        result->isochoric_heat_capacity_j_kg_k = properties.cv_j_kg_k;
+        result->isobaric_heat_capacity_j_kg_k = properties.cp_j_kg_k;
+        result->heat_capacity_ratio = properties.heat_capacity_ratio;
+        result->speed_of_sound_m_s = properties.speed_of_sound_m_s;
+        result->speed_of_sound_squared_m2_s2 = properties.speed_of_sound_squared_m2_s2;
+        result->minimum_stability_eigenvalue = properties.minimum_stability_eigenvalue;
+        result->density_root_count = density.density_root_count;
+        result->converged = 1;
+        result->phase = density.phase;
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        result->converged = 0;
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 10;
+    } catch (...) {
+        result->converged = 0;
+        copy_text("teqp N-component thermodynamic calculation failed with an unknown native exception.", error_buffer, error_buffer_size);
         return 11;
     }
 }

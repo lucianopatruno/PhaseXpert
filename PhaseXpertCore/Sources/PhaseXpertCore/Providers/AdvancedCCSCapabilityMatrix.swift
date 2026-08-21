@@ -48,7 +48,8 @@ public struct AdvancedCCSCapabilityMatrix: Sendable {
         }
 
         for formulation in TeqpFormulationCatalog.productionFormulations
-            where formulation.components == composition.componentSet {
+            where formulation.components == composition.componentSet
+                && formulation.supportedProperties.contains(property) {
             if let decision = binaryDecision(
                 formulation: formulation,
                 composition: composition,
@@ -112,9 +113,16 @@ public struct AdvancedCCSCapabilityMatrix: Sendable {
             )
         }
 
-        let densityCapability = formulation.propertyCapabilities
-            .first { $0.property == .density }
-        guard let capability = densityCapability else {
+        let directlyValidatedCapability = formulation.propertyCapabilities
+            .first { $0.property == property }
+        let densityDerivedProperties: Set<PropertyID> = [
+            .molarMass, .specificVolume, .compressibilityFactor
+        ]
+        let capability = directlyValidatedCapability
+            ?? (densityDerivedProperties.contains(property)
+                ? formulation.propertyCapabilities.first { $0.property == .density }
+                : nil)
+        guard let capability else {
             return AdvancedCCSCapabilityDecision(
                 isSupported: false,
                 validationState: .unsupported,
@@ -153,6 +161,10 @@ public struct AdvancedCCSCapabilityMatrix: Sendable {
             } else if formulation.id == TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id {
                 nominalTemperatureToleranceK = TeqpFormulationCatalog
                     .co2OxygenNominalIsothermToleranceK
+            } else if formulation.id
+                == TeqpFormulationCatalog.co2OxygenEOSCGDenseSpeedOfSound.id {
+                nominalTemperatureToleranceK = TeqpFormulationCatalog
+                    .multicomponentNominalIsothermToleranceK
             } else {
                 nominalTemperatureToleranceK = 0
             }
