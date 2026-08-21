@@ -91,6 +91,9 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
             ternary.components.map(\.component),
             [.carbonDioxide, .nitrogen, .methane]
         )
+        XCTAssertFalse(TeqpFormulationCatalog.productionFormulations.contains {
+            $0.components == [.carbonDioxide, .nitrogen, .methane]
+        })
     }
 
     func testExactPreCombIIMulticomponentDensityGate() throws {
