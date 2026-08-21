@@ -3197,6 +3197,137 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testValidationDetailsAreAvailableForOutOfRangeNitrogenState() throws {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "40"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "98.73"),
+            .init(component: .nitrogen, value: "1.27")
+        ]
+        viewModel.validate()
+
+        let guidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+        XCTAssertFalse(guidance.isEmpty)
+        XCTAssertTrue(guidance.summary.contains { $0.title == "N₂ validated composition" })
+        XCTAssertTrue(guidance.summary.contains { $0.title == "Validated temperature" })
+        XCTAssertTrue(guidance.summary.contains { $0.title == "Validated pressure" })
+        XCTAssertTrue(guidance.currentInputIssues.contains {
+            $0.title == "Temperature outside validated range"
+        })
+        XCTAssertTrue(viewModel.validatedPropertiesAtCurrentState.isEmpty)
+        XCTAssertFalse(viewModel.scientificShieldIsActive)
+    }
+
+    @MainActor
+    func testValidatedStateOptionProducesInGateNitrogenState() throws {
+        let formulation = TeqpFormulationCatalog.co2NitrogenGernertGasDensity
+        let capability = try XCTUnwrap(
+            formulation.propertyCapabilities.first { $0.property == .density }
+        )
+        let limit = try XCTUnwrap(capability.isothermPressureLimits.first)
+        let nitrogenLimit = try XCTUnwrap(
+            capability.compositionLimits.first { $0.component == ComponentID.nitrogen }
+        )
+        let composition: [MixtureComponent] = [
+            .init(component: .carbonDioxide, moleFraction: 1 - nitrogenLimit.minimumMoleFraction),
+            .init(component: .nitrogen, moleFraction: nitrogenLimit.minimumMoleFraction)
+        ]
+
+        XCTAssertTrue((limit.minimumPressurePa...limit.maximumPressurePa).contains(4_000_000))
+        XCTAssertEqual(limit.temperatureK, 283.15)
+        XCTAssertEqual(nitrogenLimit.minimumMoleFraction, 0.0127, accuracy: 1e-12)
+        XCTAssertEqual(
+            Set(AdvancedValidationPresentation.validatedProperties(
+                composition: composition,
+                pressurePa: 4_000_000,
+                temperatureK: limit.temperatureK
+            )),
+            [.density, .molarMass, .specificVolume, .compressibilityFactor]
+        )
+    }
+
+    @MainActor
+    func testHydrogenSulfideValidatedStateMapsDensityDerivedPropertiesOnly() throws {
+        let composition: [MixtureComponent] = [
+            .init(component: .carbonDioxide, moleFraction: 0.9505),
+            .init(component: .hydrogenSulfide, moleFraction: 0.0495)
+        ]
+
+        let validated = Set(AdvancedValidationPresentation.validatedProperties(
+            composition: composition,
+            pressurePa: 2_000_000,
+            temperatureK: 272.55
+        ))
+
+        XCTAssertEqual(validated, [
+            .density,
+            .molarMass,
+            .specificVolume,
+            .compressibilityFactor
+        ])
+        XCTAssertFalse(validated.contains(.vapourFraction))
+        XCTAssertFalse(validated.contains(.speedOfSound))
+        XCTAssertFalse(validated.contains(.dynamicViscosity))
+        XCTAssertFalse(validated.contains(.thermalConductivity))
+        XCTAssertFalse(validated.contains(.isobaricHeatCapacity))
+        XCTAssertFalse(validated.contains(.isochoricHeatCapacity))
+
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "20"
+        viewModel.temperatureText = "-0.6"
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "95.05"),
+            .init(component: .hydrogenSulfide, value: "4.95")
+        ]
+        viewModel.validate()
+
+        XCTAssertEqual(Set(viewModel.validatedPropertiesAtCurrentState), validated)
+        XCTAssertTrue(viewModel.scientificShieldIsActive)
+        XCTAssertTrue(viewModel.operatingRangeGuidance?.summary.contains {
+            $0.detail.localizedCaseInsensitiveContains("H₂S")
+        } == true)
+    }
+
+    @MainActor
+    func testOxygenAcousticGateDoesNotValidateDensityPresentation() throws {
+        let composition: [MixtureComponent] = [
+            .init(component: .carbonDioxide, moleFraction: 0.9348),
+            .init(component: .oxygen, moleFraction: 0.0652)
+        ]
+
+        let validated = Set(AdvancedValidationPresentation.validatedProperties(
+            composition: composition,
+            pressurePa: 30_000_000,
+            temperatureK: 301.15
+        ))
+
+        XCTAssertEqual(validated, [.speedOfSound])
+        XCTAssertFalse(validated.contains(.density))
+
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.pressureText = "300"
+        viewModel.temperatureText = "28"
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "93.48"),
+            .init(component: .oxygen, value: "6.52")
+        ]
+        viewModel.validate()
+
+        XCTAssertEqual(viewModel.validatedPropertiesAtCurrentState, [.speedOfSound])
+        XCTAssertTrue(viewModel.scientificShieldIsActive)
+        XCTAssertTrue(viewModel.operatingRangeGuidance?.summary.contains {
+            $0.title == "Speed of sound validated"
+        } == true)
+    }
+
+    @MainActor
     func testSavedCaseValidationStatusUsesCurrentCapabilityDecision() async throws {
         let descriptor = try XCTUnwrap(
             ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }

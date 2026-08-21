@@ -66,7 +66,7 @@ struct FalconView: View {
             }
             .padding(IFESpacing.large)
         }
-        .background(Color.ifeBackground)
+        .ifeDottedBackground()
         .navigationTitle("FALCON")
         .navigationBarTitleDisplayMode(.inline)
     }

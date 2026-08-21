@@ -249,6 +249,29 @@ struct CalculatorView: View {
                             .accessibilityIdentifier("use-validated-composition")
                         }
                     }
+
+                    if !viewModel.validatedStateOptions.isEmpty {
+                        if viewModel.validatedStateOptions.count == 1,
+                           let option = viewModel.validatedStateOptions.first {
+                            Button("Use validated state", systemImage: "target") {
+                                focusedField = nil
+                                viewModel.useValidatedState(option)
+                            }
+                            .accessibilityHint("Changes composition and operating conditions to a validated state.")
+                            .accessibilityIdentifier("use-validated-state")
+                        } else {
+                            Menu("Use validated state", systemImage: "target") {
+                                ForEach(viewModel.validatedStateOptions) { option in
+                                    Button(option.name) {
+                                        focusedField = nil
+                                        viewModel.useValidatedState(option)
+                                    }
+                                }
+                            }
+                            .accessibilityHint("Choose a validated composition and operating point. Changes composition and operating conditions.")
+                            .accessibilityIdentifier("use-validated-state")
+                        }
+                    }
                 } header: {
                     IFESectionHeader(
                         step: 3,
@@ -273,6 +296,17 @@ struct CalculatorView: View {
                             guidance: guidance,
                             validatedProperties: viewModel.validatedPropertiesAtCurrentState
                         )
+                        DisclosureGroup(
+                            "Validation details",
+                            isExpanded: $validationDetailsExpanded
+                        ) {
+                            ValidatedRangeGuidanceView(guidance: guidance) { suggestion in
+                                focusedField = nil
+                                viewModel.applyGuidanceSuggestion(suggestion)
+                            }
+                        }
+                        .accessibilityValue(validationDetailsExpanded ? "Expanded" : "Collapsed")
+                        .accessibilityIdentifier("validation-details-disclosure")
                     }
                 }
 
@@ -365,23 +399,6 @@ struct CalculatorView: View {
                 if let record = viewModel.calculationRecord {
                     CalculationResultSections(record: record)
                         .id("calculation-results")
-
-                    if let guidance = viewModel.operatingRangeGuidance, !guidance.isEmpty {
-                        Section {
-                            DisclosureGroup(
-                                "Validation details",
-                                isExpanded: $validationDetailsExpanded
-                            ) {
-                                ValidatedRangeGuidanceView(guidance: guidance) { suggestion in
-                                    focusedField = nil
-                                    viewModel.applyGuidanceSuggestion(suggestion)
-                                }
-                            }
-                            .accessibilityIdentifier("validation-details-disclosure")
-                        } header: {
-                            IFESectionHeader(step: 7, title: "Scientific validation")
-                        }
-                    }
 
                     Section {
                         Button("View phase diagram", systemImage: "chart.xyaxis.line") {
@@ -1131,7 +1148,7 @@ struct StreamMixingView: View {
         }
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.ifeBackground)
+        .ifeDottedBackground()
         .navigationTitle("Stream Mixing")
         .accessibilityIdentifier("stream-mixing-screen")
         .onAppear { viewModel.validate() }
@@ -2442,8 +2459,8 @@ private struct PropertyResultRow: View {
                 title: presentation.title,
                 value: presentation.value,
                 unit: presentation.unit,
-                status: presentation.statusText,
-                statusColor: presentation.statusColor,
+                status: isValidated ? presentation.validatedStatusText : presentation.statusText,
+                statusColor: isValidated ? .pxSuccess : presentation.statusColor,
                 copyValue: presentation.copyValue
             )
             if isValidated {
@@ -2488,6 +2505,10 @@ struct PropertyResultPresentation {
 
     var statusText: String {
         [effectiveStatus.displayName, property.message].compactMap { $0 }.joined(separator: " — ")
+    }
+
+    var validatedStatusText: String {
+        ["Validated", property.message].compactMap { $0 }.joined(separator: " — ")
     }
 
     var statusColor: Color {

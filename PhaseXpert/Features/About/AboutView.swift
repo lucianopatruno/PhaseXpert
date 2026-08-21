@@ -99,7 +99,7 @@ struct AboutView: View {
             }
         }
         .scrollContentBackground(.hidden)
-        .background(Color.ifeBackground)
+        .ifeDottedBackground()
         .navigationTitle("About")
     }
 

@@ -76,8 +76,28 @@ struct IFEBackground: View {
     var body: some View {
         GeometryReader { geometry in
             Canvas { context, size in
-                drawWave(in: &context, size: size, originY: size.height * 0.78, amplitude: 38, phase: 0)
-                drawWave(in: &context, size: size, originY: size.height * 0.16, amplitude: 22, phase: .pi)
+                drawWaveBand(
+                    in: &context,
+                    size: size,
+                    origin: CGPoint(x: size.width * 0.35, y: size.height * 0.67),
+                    width: size.width * 0.88,
+                    amplitude: size.height * 0.09,
+                    rows: 9,
+                    spacing: 14,
+                    phase: 0.15,
+                    weight: 1
+                )
+                drawWaveBand(
+                    in: &context,
+                    size: size,
+                    origin: CGPoint(x: -size.width * 0.18, y: size.height * 0.08),
+                    width: size.width * 0.58,
+                    amplitude: size.height * 0.045,
+                    rows: 5,
+                    spacing: 16,
+                    phase: .pi * 0.8,
+                    weight: 0.58
+                )
             }
         }
         .background(Color.ifeBackground)
@@ -86,32 +106,52 @@ struct IFEBackground: View {
         .ignoresSafeArea()
     }
 
-    private func drawWave(
+    private func drawWaveBand(
         in context: inout GraphicsContext,
         size: CGSize,
-        originY: CGFloat,
+        origin: CGPoint,
+        width: CGFloat,
         amplitude: CGFloat,
-        phase: CGFloat
+        rows: Int,
+        spacing: CGFloat,
+        phase: CGFloat,
+        weight: Double
     ) {
-        let color = colorScheme == .dark ? Color.ifeLavender : Color.ifeBlue
-        let opacity = colorContrast == .increased ? 0.16 : (colorScheme == .dark ? 0.10 : 0.075)
-        let spacing: CGFloat = 18
-        let rows = 5
+        let baseOpacity = colorContrast == .increased
+            ? 0.22
+            : (colorScheme == .dark ? 0.15 : 0.17)
+
         for row in 0..<rows {
-            var x: CGFloat = -spacing
+            var x = origin.x
+            let rowOffset = CGFloat(row) * spacing
+            let rowFade = 1 - Double(row) / Double(max(rows + 2, 1))
+
             while x <= size.width + spacing {
-                let normalized = x / max(size.width, 1)
-                let y = originY
-                    + CGFloat(row) * spacing
-                    + sin(normalized * .pi * 2 + phase + CGFloat(row) * 0.3) * amplitude
-                let radius: CGFloat = row.isMultiple(of: 2) ? 1.8 : 1.35
+                let progress = (x - origin.x) / max(width, 1)
+                let y = origin.y
+                    + rowOffset
+                    + sin(progress * .pi * 2.25 + phase + CGFloat(row) * 0.28) * amplitude
+                    + progress * size.height * 0.16
+
+                let edgeFade = min(max(Double(progress), 0), 1)
+                let opacity = baseOpacity * weight * (0.45 + 0.55 * rowFade) * (0.35 + 0.65 * edgeFade)
+                let radius = 1.7 + CGFloat((row % 3)) * 0.32
+                let color = dotColor(for: row)
+
                 context.fill(
                     Path(ellipseIn: CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)),
                     with: .color(color.opacity(opacity))
                 )
-                x += spacing
+                x += spacing * 0.86
             }
         }
+    }
+
+    private func dotColor(for row: Int) -> Color {
+        if colorScheme == .dark {
+            return row.isMultiple(of: 3) ? .ifeBlue : .ifeLavender
+        }
+        return row.isMultiple(of: 3) ? .ifeBlue : .ifePrimary
     }
 }
 

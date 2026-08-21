@@ -40,7 +40,7 @@ struct ModelInformationView: View {
                     }
                 }
                 .scrollContentBackground(.hidden)
-                .background(Color.ifeBackground)
+                .ifeDottedBackground()
                 .navigationTitle("Model Information")
             }
         }
