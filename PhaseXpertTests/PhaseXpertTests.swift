@@ -647,7 +647,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertTrue(record.response.solver.method.contains("generic N-component density solve"))
         XCTAssertTrue(record.response.solver.method.contains("EOSCGDirectTeqpDensityProbeResults"))
         XCTAssertTrue(record.response.warnings.contains { $0.contains("Souissi") })
-        XCTAssertTrue(record.response.warnings.contains { $0.contains("No CoolProp fallback") })
+        XCTAssertTrue(record.response.warnings.contains { $0.contains("no fallback provider") })
     }
 
     @MainActor

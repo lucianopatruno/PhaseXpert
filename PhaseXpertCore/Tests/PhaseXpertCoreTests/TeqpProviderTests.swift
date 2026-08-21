@@ -15,6 +15,10 @@ final class TeqpProviderTests: XCTestCase {
             phaseIdentifier: "supercritical"
         )
         var methanePhaseIdentifier = "gas"
+        var nComponentDensityRootCount = 1
+        var nComponentSelectedRootIndex: Int?
+        var nComponentPhaseIdentifier = "unknown"
+        var requiredNComponentHint: TeqpDensityRootSelectionHint?
 
         func calculatePureCarbonDioxide(
             pressurePa: Double,
@@ -164,15 +168,30 @@ final class TeqpProviderTests: XCTestCase {
         func calculateNComponentDensity(
             pressurePa: Double,
             temperatureK: Double,
-            composition: CanonicalComposition
+            composition: CanonicalComposition,
+            rootSelectionHint: TeqpDensityRootSelectionHint
         ) async throws -> TeqpNComponentDensityResult {
+            if let requiredNComponentHint {
+                XCTAssertEqual(rootSelectionHint, requiredNComponentHint)
+            }
             let phaseIdentifier = composition.componentSet == [.carbonDioxide, .methane]
                 ? methanePhaseIdentifier
-                : "unknown"
+                : nComponentPhaseIdentifier
             return TeqpNComponentDensityResult(
                 densityKilogramsPerCubicMetre: 104.7,
                 molarDensityMolesPerCubicMetre: 2_900.4,
-                densityRootCount: 1,
+                densityRootCount: nComponentDensityRootCount,
+                selectedRootIndex: nComponentSelectedRootIndex,
+                rootDiagnostics: nComponentSelectedRootIndex.map { _ in [
+                    TeqpDensityRootDiagnostic(
+                        molarDensityMolesPerCubicMetre: 2_900.4,
+                        densityKilogramsPerCubicMetre: 104.7,
+                        pressureDerivativeWithRespectToMolarDensityJoulesPerMole: 1_800,
+                        minimumStabilityEigenvalue: 1.1,
+                        isMechanicallyStable: true,
+                        isLocallyStable: true
+                    )
+                ] } ?? [],
                 converged: true,
                 phaseIdentifier: phaseIdentifier,
                 formulationID: TeqpNComponentDiagnostic.formulationID,
@@ -256,7 +275,8 @@ final class TeqpProviderTests: XCTestCase {
         func calculateNComponentDensity(
             pressurePa: Double,
             temperatureK: Double,
-            composition: CanonicalComposition
+            composition: CanonicalComposition,
+            rootSelectionHint: TeqpDensityRootSelectionHint
         ) async throws -> TeqpNComponentDensityResult {
             throw ProviderError.malformedResponse(
                 "Engine should not be called for invalid diagnostic mixtures."
@@ -792,6 +812,27 @@ final class TeqpProviderTests: XCTestCase {
         }
         XCTAssertTrue(response.warnings.contains { $0.contains("Mazzoccoli") })
         XCTAssertTrue(response.warnings.contains { $0.contains("VLE") })
+    }
+
+    func testNitrogenGasDensityAcceptsNativeSelectedGasRootWhenMultipleRootsExist() async throws {
+        let provider = TeqpProvider(engine: MockEngine(
+            nComponentDensityRootCount: 2,
+            nComponentSelectedRootIndex: 0,
+            nComponentPhaseIdentifier: "gas",
+            requiredNComponentHint: .homogeneousGas
+        ))
+
+        let response = try await provider.calculate(nitrogenRequest(
+            pressurePa: 4_000_000,
+            temperatureK: 283.15,
+            nitrogenMoleFraction: 0.0127
+        ))
+
+        XCTAssertEqual(response.phase, .gas)
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .molarMass }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated)
+        XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
     }
 
     func testNitrogenGasDensityAcceptsPressureGateEdges() async throws {
