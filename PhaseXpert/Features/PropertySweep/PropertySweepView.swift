@@ -166,7 +166,7 @@ struct PropertySweepView: View {
         .navigationTitle("Property Sweep")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
-        .background(Color.ifeBackground)
+        .ifeDottedBackground()
         .onChange(of: focusedLimit) { _, newField in
             guard let newField else { return }
             Task { @MainActor in

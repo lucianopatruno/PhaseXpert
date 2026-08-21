@@ -1131,7 +1131,7 @@ struct StreamMixingView: View {
         }
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.ifeBackground)
+        .ifeDottedBackground()
         .navigationTitle("Stream Mixing")
         .accessibilityIdentifier("stream-mixing-screen")
         .onAppear { viewModel.validate() }
