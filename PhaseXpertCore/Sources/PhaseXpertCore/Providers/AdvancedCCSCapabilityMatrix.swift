@@ -158,6 +158,9 @@ public struct AdvancedCCSCapabilityMatrix: Sendable {
             if formulation.components.count > 2 {
                 nominalTemperatureToleranceK = TeqpFormulationCatalog
                     .multicomponentNominalIsothermToleranceK
+            } else if formulation.id == TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id {
+                nominalTemperatureToleranceK = TeqpFormulationCatalog
+                    .co2HydrogenNominalIsothermToleranceK
             } else if formulation.id == TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id {
                 nominalTemperatureToleranceK = TeqpFormulationCatalog
                     .co2OxygenNominalIsothermToleranceK

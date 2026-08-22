@@ -3514,6 +3514,150 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testHydrogenDiscreteIsothermsKeepValidationCardAndShieldConsistent() throws {
+        let states = try productionPresentationStates().filter {
+            $0.formulationID == TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id
+        }
+        XCTAssertEqual(states.map(\.temperatureK).sorted(), [273.15, 293.15, 323.15])
+
+        for state in states {
+            let viewModel = advancedViewModel(for: state)
+            assertPresentation(
+                viewModel: viewModel,
+                state: state,
+                expected: [
+                    .density,
+                    .molarMass,
+                    .specificVolume,
+                    .compressibilityFactor
+                ]
+            )
+        }
+
+        let invalid = advancedViewModel(
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.94638),
+                .init(component: .hydrogen, moleFraction: 0.05362)
+            ],
+            pressurePa: 2_000_000,
+            temperatureK: 313.15
+        )
+        XCTAssertFalse(invalid.scientificShieldIsActive)
+        XCTAssertTrue(invalid.validatedPropertiesAtCurrentState.isEmpty)
+    }
+
+    @MainActor
+    func testProductionCapabilityPresentationMatrixMatchesCurrentStateSnapshot() throws {
+        let states = try productionPresentationStates()
+        XCTAssertEqual(states.count, 27)
+
+        for state in states {
+            let viewModel = advancedViewModel(for: state)
+            assertPresentation(
+                viewModel: viewModel,
+                state: state,
+                expected: expectedValidatedProperties(for: state)
+            )
+        }
+    }
+
+    @MainActor
+    func testProductionCapabilityOutsidePressureBranchesDoNotValidateThatGate() throws {
+        let states = try productionPresentationStates()
+        XCTAssertEqual(states.count * 2, 54)
+
+        for state in states {
+            let below = advancedViewModel(
+                composition: state.composition,
+                pressurePa: state.minimumPressurePa - 1,
+                temperatureK: state.temperatureK
+            )
+            XCTAssertFalse(
+                below.validatedPropertiesAtCurrentState.contains(state.capabilityProperty),
+                state.failureMessage(
+                    expected: [],
+                    actual: below.validatedPropertiesAtCurrentState,
+                    shield: below.scientificShieldIsActive
+                )
+            )
+
+            let above = advancedViewModel(
+                composition: state.composition,
+                pressurePa: state.maximumPressurePa + 1,
+                temperatureK: state.temperatureK
+            )
+            XCTAssertFalse(
+                above.validatedPropertiesAtCurrentState.contains(state.capabilityProperty),
+                state.failureMessage(
+                    expected: [],
+                    actual: above.validatedPropertiesAtCurrentState,
+                    shield: above.scientificShieldIsActive
+                )
+            )
+        }
+    }
+
+    @MainActor
+    func testValidatedStateOptionsLandInsideClaimedProductionGates() throws {
+        let options = AdvancedValidationPresentation.stateOptions(
+            currentPressurePa: nil,
+            currentTemperatureK: nil
+        )
+        XCTAssertEqual(options.count, 10)
+
+        for option in options {
+            let actual = AdvancedValidationPresentation.validatedProperties(
+                composition: option.composition,
+                pressurePa: option.pressurePa,
+                temperatureK: option.temperatureK
+            )
+            XCTAssertEqual(
+                Set(actual),
+                Set(option.properties),
+                "Validated-state option \(option.id) \(option.name) \(option.detail) expected \(option.properties.map(\.rawValue)) actual \(actual.map(\.rawValue))"
+            )
+        }
+
+        let oxygenDensity = try XCTUnwrap(options.first {
+            $0.composition.contains {
+                $0.component == .oxygen && abs($0.moleFraction - 0.05032089) < 1e-12
+            }
+        })
+        XCTAssertEqual(
+            Set(oxygenDensity.properties),
+            [.density, .molarMass, .specificVolume, .compressibilityFactor]
+        )
+
+        let oxygenAcoustic = try XCTUnwrap(options.first {
+            $0.composition.contains {
+                $0.component == .oxygen && abs($0.moleFraction - 0.0652) < 1e-12
+            }
+        })
+        XCTAssertEqual(oxygenAcoustic.properties, [.speedOfSound])
+    }
+
+    @MainActor
+    func testAdvancedValidationMembershipIsInvariantUnderDisplayUnitConversions() throws {
+        let hydrogen = try XCTUnwrap(
+            productionPresentationStates().first {
+                $0.formulationID == TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id
+                    && abs($0.temperatureK - 323.15) < 1e-12
+            }
+        )
+        let viewModel = advancedViewModel(for: hydrogen)
+        let expected = viewModel.validatedPropertiesAtCurrentState
+        XCTAssertFalse(expected.isEmpty)
+        XCTAssertTrue(viewModel.scientificShieldIsActive)
+
+        viewModel.changeTemperatureDisplayUnit(to: .kelvin)
+        viewModel.changePressureDisplayUnit(to: .megapascalAbsolute)
+        viewModel.changeCompositionBasis(to: .partsPerMillion)
+
+        XCTAssertEqual(viewModel.validatedPropertiesAtCurrentState, expected)
+        XCTAssertTrue(viewModel.scientificShieldIsActive)
+    }
+
+    @MainActor
     func testSavedCaseValidationStatusUsesCurrentCapabilityDecision() async throws {
         let descriptor = try XCTUnwrap(
             ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }
@@ -3545,6 +3689,150 @@ final class PhaseXpertTests: XCTestCase {
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.compositionBasis = .molePercent
         return viewModel
+    }
+
+    @MainActor
+    private func advancedViewModel(for state: ProductionPresentationState) -> CalculatorViewModel {
+        advancedViewModel(
+            composition: state.composition,
+            pressurePa: state.pressurePa,
+            temperatureK: state.temperatureK
+        )
+    }
+
+    @MainActor
+    private func advancedViewModel(
+        composition: [MixtureComponent],
+        pressurePa: Double,
+        temperatureK: Double
+    ) -> CalculatorViewModel {
+        let viewModel = advancedViewModel()
+        viewModel.pressureText = String(format: "%.12g", pressurePa / 100_000)
+        viewModel.temperatureText = String(format: "%.12g", temperatureK - 273.15)
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = composition
+            .sorted { lhs, rhs in
+                if lhs.component == .carbonDioxide { return true }
+                if rhs.component == .carbonDioxide { return false }
+                return lhs.component.rawValue < rhs.component.rawValue
+            }
+            .map {
+                .init(
+                    component: $0.component,
+                    value: String(format: "%.12g", $0.moleFraction * 100)
+                )
+            }
+        viewModel.validate()
+        return viewModel
+    }
+
+    private struct ProductionPresentationState {
+        let formulationID: String
+        let capabilityProperty: PropertyID
+        let composition: [MixtureComponent]
+        let temperatureK: Double
+        let pressurePa: Double
+        let minimumPressurePa: Double
+        let maximumPressurePa: Double
+
+        func failureMessage(
+            expected: [PropertyID],
+            actual: [PropertyID],
+            shield: Bool
+        ) -> String {
+            let compositionText = composition
+                .map { "\($0.component.symbol)=\($0.moleFraction)" }
+                .joined(separator: ", ")
+            return "\(formulationID)|\(capabilityProperty.rawValue) [\(compositionText)] T \(temperatureK) K P \(pressurePa) Pa expected \(expected.map(\.rawValue)) actual \(actual.map(\.rawValue)) shield \(shield)"
+        }
+    }
+
+    private func productionPresentationStates() throws -> [ProductionPresentationState] {
+        try TeqpFormulationCatalog.productionFormulations
+            .filter { $0.components.count > 1 }
+            .flatMap { formulation in
+                try formulation.propertyCapabilities.flatMap { capability in
+                    let composition = try exactComposition(
+                        formulation: formulation,
+                        capability: capability
+                    )
+                    return capability.isothermPressureLimits.map { limit in
+                        ProductionPresentationState(
+                            formulationID: formulation.id,
+                            capabilityProperty: capability.property,
+                            composition: composition,
+                            temperatureK: limit.temperatureK,
+                            pressurePa: (limit.minimumPressurePa + limit.maximumPressurePa) / 2,
+                            minimumPressurePa: limit.minimumPressurePa,
+                            maximumPressurePa: limit.maximumPressurePa
+                        )
+                    }
+                }
+            }
+    }
+
+    private func exactComposition(
+        formulation: TeqpFormulation,
+        capability: TeqpPropertyCapability
+    ) throws -> [MixtureComponent] {
+        var composition = capability.compositionLimits.map {
+            MixtureComponent(component: $0.component, moleFraction: $0.minimumMoleFraction)
+        }
+        if formulation.components.contains(.carbonDioxide),
+           !composition.contains(where: { $0.component == .carbonDioxide }) {
+            let remainder = 1 - composition.reduce(0) { $0 + $1.moleFraction }
+            composition.append(.init(component: .carbonDioxide, moleFraction: remainder))
+        }
+        _ = try CanonicalComposition(composition)
+        return composition
+    }
+
+    @MainActor
+    private func assertPresentation(
+        viewModel: CalculatorViewModel,
+        state: ProductionPresentationState,
+        expected: [PropertyID]
+    ) {
+        let actual = viewModel.validatedPropertiesAtCurrentState
+        XCTAssertEqual(
+            Set(actual),
+            Set(expected),
+            state.failureMessage(
+                expected: expected,
+                actual: actual,
+                shield: viewModel.scientificShieldIsActive
+            )
+        )
+        XCTAssertFalse(expected.isEmpty)
+        XCTAssertTrue(
+            viewModel.scientificShieldIsActive,
+            state.failureMessage(
+                expected: expected,
+                actual: actual,
+                shield: viewModel.scientificShieldIsActive
+            )
+        )
+        XCTAssertFalse(
+            viewModel.operatingRangeGuidance?.currentInputIssues.contains {
+                $0.severity == .unsupported
+            } ?? true,
+            state.failureMessage(
+                expected: expected,
+                actual: actual,
+                shield: viewModel.scientificShieldIsActive
+            )
+        )
+    }
+
+    @MainActor
+    private func expectedValidatedProperties(
+        for state: ProductionPresentationState
+    ) -> [PropertyID] {
+        AdvancedValidationPresentation.validatedProperties(
+            composition: state.composition,
+            pressurePa: state.pressurePa,
+            temperatureK: state.temperatureK
+        )
     }
 
     @MainActor

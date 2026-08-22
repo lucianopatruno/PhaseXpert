@@ -223,6 +223,7 @@ public struct TeqpFormulation: Codable, Equatable, Sendable, Identifiable {
 public enum TeqpFormulationCatalog {
     public static let teqpVersion = "v0.23.1"
     public static let teqpCommit = "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"
+    public static let co2HydrogenNominalIsothermToleranceK = 0.02
     public static let co2OxygenNominalIsothermToleranceK = 0.05
     public static let multicomponentNominalIsothermToleranceK = 0.05
 

@@ -386,4 +386,174 @@ final class AdvancedCCSCapabilityMatrixTests: XCTestCase {
             pressurePa: 31_150_000, temperatureK: 301.15
         ).isSupported)
     }
+
+    func testHydrogenDiscreteValidatedIsothermsRemainProductionEnabled() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let composition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.94638),
+            .init(component: .hydrogen, moleFraction: 0.05362)
+        ])
+        let capability = try XCTUnwrap(
+            TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity
+                .propertyCapabilities
+                .first { $0.property == .density }
+        )
+
+        for limit in capability.isothermPressureLimits {
+            let pressurePa = midpointPressure(limit)
+            let expected: Set<PropertyID> = [
+                .density,
+                .molarMass,
+                .specificVolume,
+                .compressibilityFactor
+            ]
+            let actual = Set(PropertyID.allCases.filter {
+                matrix.decision(
+                    for: composition,
+                    property: $0,
+                    pressurePa: pressurePa,
+                    temperatureK: limit.temperatureK
+                ).validationState == .validated
+            })
+            XCTAssertEqual(
+                actual,
+                expected,
+                "H2 isotherm \(limit.temperatureK) K at \(pressurePa) Pa should validate density-derived properties."
+            )
+        }
+
+        XCTAssertFalse(matrix.decision(
+            for: composition,
+            property: .density,
+            pressurePa: 2_000_000,
+            temperatureK: 313.15
+        ).isSupported)
+    }
+
+    func testEveryProductionCapabilityBranchValidatesOnlyItsEncodedStates() throws {
+        let matrix = AdvancedCCSCapabilityMatrix()
+        let states = try productionCapabilityStates()
+        XCTAssertEqual(states.count, 27)
+
+        for state in states {
+            let expected = validatedProperties(
+                matrix: matrix,
+                composition: state.composition,
+                pressurePa: state.pressurePa,
+                temperatureK: state.temperatureK
+            )
+            XCTAssertFalse(
+                expected.isEmpty,
+                state.failureMessage(expected: [], actual: [])
+            )
+            XCTAssertTrue(
+                expected.contains(state.capability.property),
+                state.failureMessage(expected: [state.capability.property], actual: Array(expected))
+            )
+
+            let belowPressure = state.limit.minimumPressurePa - 1
+            XCTAssertFalse(
+                matrix.decision(
+                    for: state.composition,
+                    property: state.capability.property,
+                    pressurePa: belowPressure,
+                    temperatureK: state.temperatureK
+                ).isSupported,
+                "\(state.id) unexpectedly validated below pressure range."
+            )
+
+            let abovePressure = state.limit.maximumPressurePa + 1
+            XCTAssertFalse(
+                matrix.decision(
+                    for: state.composition,
+                    property: state.capability.property,
+                    pressurePa: abovePressure,
+                    temperatureK: state.temperatureK
+                ).isSupported,
+                "\(state.id) unexpectedly validated above pressure range."
+            )
+        }
+    }
+
+    private struct ProductionCapabilityState {
+        let formulation: TeqpFormulation
+        let capability: TeqpPropertyCapability
+        let limit: TeqpTemperaturePressureLimit
+        let composition: CanonicalComposition
+
+        var id: String {
+            "\(formulation.id)|\(capability.property.rawValue)|\(limit.temperatureK)"
+        }
+
+        var pressurePa: Double {
+            (limit.minimumPressurePa + limit.maximumPressurePa) / 2
+        }
+
+        var temperatureK: Double {
+            limit.temperatureK
+        }
+
+        func failureMessage(expected: [PropertyID], actual: [PropertyID]) -> String {
+            let components = composition.components
+                .map { "\($0.component.symbol)=\($0.moleFraction)" }
+                .joined(separator: ", ")
+            return "\(id) components [\(components)] T \(temperatureK) K P \(pressurePa) Pa expected \(expected.map(\.rawValue)) actual \(actual.map(\.rawValue))"
+        }
+    }
+
+    private func productionCapabilityStates() throws -> [ProductionCapabilityState] {
+        try TeqpFormulationCatalog.productionFormulations
+            .filter { $0.components.count > 1 }
+            .flatMap { formulation in
+                try formulation.propertyCapabilities.flatMap { capability in
+                    let composition = try canonicalComposition(
+                        formulation: formulation,
+                        capability: capability
+                    )
+                    return capability.isothermPressureLimits.map { limit in
+                        ProductionCapabilityState(
+                            formulation: formulation,
+                            capability: capability,
+                            limit: limit,
+                            composition: composition
+                        )
+                    }
+                }
+            }
+    }
+
+    private func canonicalComposition(
+        formulation: TeqpFormulation,
+        capability: TeqpPropertyCapability
+    ) throws -> CanonicalComposition {
+        var components = capability.compositionLimits.map {
+            MixtureComponent(component: $0.component, moleFraction: $0.minimumMoleFraction)
+        }
+        if formulation.components.contains(.carbonDioxide),
+           !components.contains(where: { $0.component == .carbonDioxide }) {
+            let remainder = 1 - components.reduce(0) { $0 + $1.moleFraction }
+            components.append(.init(component: .carbonDioxide, moleFraction: remainder))
+        }
+        return try CanonicalComposition(components)
+    }
+
+    private func validatedProperties(
+        matrix: AdvancedCCSCapabilityMatrix,
+        composition: CanonicalComposition,
+        pressurePa: Double,
+        temperatureK: Double
+    ) -> Set<PropertyID> {
+        Set(PropertyID.allCases.filter {
+            matrix.decision(
+                for: composition,
+                property: $0,
+                pressurePa: pressurePa,
+                temperatureK: temperatureK
+            ).validationState == .validated
+        })
+    }
+
+    private func midpointPressure(_ limit: TeqpTemperaturePressureLimit) -> Double {
+        (limit.minimumPressurePa + limit.maximumPressurePa) / 2
+    }
 }
