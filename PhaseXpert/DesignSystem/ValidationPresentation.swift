@@ -11,6 +11,7 @@ struct ValidatedCompositionOption: Identifiable, Equatable {
 struct ValidatedStateOption: Identifiable, Equatable {
     let id: String
     let name: String
+    let detail: String
     let composition: [MixtureComponent]
     let properties: [PropertyID]
     let pressurePa: Double
@@ -26,14 +27,14 @@ enum AdvancedValidationPresentation {
     ) -> [PropertyID] {
         guard let canonical = try? CanonicalComposition(composition) else { return [] }
         let matrix = AdvancedCCSCapabilityMatrix()
-        return PropertyID.allCases.filter {
+        return orderedProperties(PropertyID.allCases.filter {
             matrix.decision(
                 for: canonical,
                 property: $0,
                 pressurePa: pressurePa,
                 temperatureK: temperatureK
             ).validationState == .validated
-        }
+        })
     }
 
     static func validatedProperties(for record: CalculationRecord) -> [PropertyID] {
@@ -64,18 +65,26 @@ enum AdvancedValidationPresentation {
         currentPressurePa: Double?,
         currentTemperatureK: Double?
     ) -> [ValidatedStateOption] {
-        exactCompositionOptions().compactMap { option in
-            representativeState(
-                for: option,
-                currentPressurePa: currentPressurePa,
-                currentTemperatureK: currentTemperatureK
-            )
+        TeqpFormulationCatalog.productionFormulations
+            .filter { $0.components.count > 1 }
+            .flatMap { formulation in
+                formulation.propertyCapabilities.compactMap { capability in
+                    representativeState(
+                        formulation: formulation,
+                        capability: capability,
+                        currentPressurePa: currentPressurePa,
+                        currentTemperatureK: currentTemperatureK
+                    )
+                }
+            }
+            .sorted {
+                $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                    || ($0.name == $1.name && $0.detail.localizedStandardCompare($1.detail) == .orderedAscending)
         }
-        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     static func propertyList(_ properties: [PropertyID]) -> String {
-        let labels = properties.map { property -> String in
+        let labels = orderedProperties(properties).map { property -> String in
             switch property {
             case .molarMass: "M"
             case .specificVolume: "v"
@@ -97,7 +106,7 @@ enum AdvancedValidationPresentation {
                     id: option.id,
                     name: options[index].name,
                     composition: options[index].composition,
-                    properties: merged.sorted { $0.displayName < $1.displayName }
+                    properties: orderedProperties(Array(merged))
                 )
             } else {
                 options.append(option)
@@ -107,19 +116,20 @@ enum AdvancedValidationPresentation {
     }
 
     private static func representativeState(
-        for option: ValidatedCompositionOption,
+        formulation: TeqpFormulation,
+        capability: TeqpPropertyCapability,
         currentPressurePa: Double?,
         currentTemperatureK: Double?
     ) -> ValidatedStateOption? {
-        guard let formulation = formulation(for: option),
-              let capability = formulation.propertyCapabilities.first(where: {
-                  !$0.isothermPressureLimits.isEmpty
-              }),
+        guard let option = exactCompositionOption(
+            for: formulation,
+            capability: capability
+        ),
               let limit = representativeLimit(
-                  capability: capability,
-                  currentPressurePa: currentPressurePa,
-                  currentTemperatureK: currentTemperatureK,
-                  nominalTemperatureToleranceK: nominalTemperatureTolerance(for: formulation)
+                capability: capability,
+                currentPressurePa: currentPressurePa,
+                currentTemperatureK: currentTemperatureK,
+                nominalTemperatureToleranceK: nominalTemperatureTolerance(for: formulation)
               ) else {
             return nil
         }
@@ -140,14 +150,15 @@ enum AdvancedValidationPresentation {
            (limit.minimumPressurePa...limit.maximumPressurePa).contains(currentPressurePa) {
             pressurePa = currentPressurePa
         } else {
-            pressurePa = (limit.minimumPressurePa + limit.maximumPressurePa) / 2
+            pressurePa = limit.minimumPressurePa
         }
 
         return ValidatedStateOption(
-            id: option.id,
-            name: option.name,
+            id: "\(formulation.id)|\(capability.property.rawValue)|\(capability.validationArtifact)",
+            name: "Validated \(propertyList(presentationProperties(for: capability, formulation: formulation)).lowercased()) state",
+            detail: "\(option.name) · \(temperatureSummary(limit)) · \(pressureSummary(limit))",
             composition: option.composition,
-            properties: option.properties,
+            properties: presentationProperties(for: capability, formulation: formulation),
             pressurePa: pressurePa,
             temperatureK: temperatureK,
             phaseDomain: capability.phaseDomain
@@ -185,15 +196,6 @@ enum AdvancedValidationPresentation {
         return capability.isothermPressureLimits.first
     }
 
-    private static func formulation(
-        for option: ValidatedCompositionOption
-    ) -> TeqpFormulation? {
-        TeqpFormulationCatalog.productionFormulations.first {
-            exactCompositionOption(for: $0)?.id == option.id
-                && !$0.propertyCapabilities.isEmpty
-        }
-    }
-
     private static func exactCompositionOption(
         for formulation: TeqpFormulation
     ) -> ValidatedCompositionOption? {
@@ -223,9 +225,41 @@ enum AdvancedValidationPresentation {
             id: key,
             name: compositionName(composition),
             composition: composition,
-            properties: formulation.supportedProperties.sorted {
-                $0.displayName < $1.displayName
-            }
+            properties: orderedProperties(Array(formulation.supportedProperties))
+        )
+    }
+
+    private static func exactCompositionOption(
+        for formulation: TeqpFormulation,
+        capability: TeqpPropertyCapability
+    ) -> ValidatedCompositionOption? {
+        let exactLimits = capability.compositionLimits.filter {
+            abs($0.minimumMoleFraction - $0.maximumMoleFraction)
+                <= CalculationValidator.compositionTolerance
+        }
+        guard exactLimits.count == capability.compositionLimits.count else { return nil }
+
+        var composition = exactLimits.map {
+            MixtureComponent(component: $0.component, moleFraction: $0.minimumMoleFraction)
+        }
+        if formulation.components.contains(.carbonDioxide),
+           !composition.contains(where: { $0.component == .carbonDioxide }) {
+            let remainder = 1 - composition.reduce(0) { $0 + $1.moleFraction }
+            guard remainder >= 0 else { return nil }
+            composition.append(.init(component: .carbonDioxide, moleFraction: remainder))
+        }
+        guard Set(composition.map(\.component)) == formulation.components,
+              (try? CanonicalComposition(composition)) != nil else { return nil }
+
+        let key = composition
+            .sorted { $0.component.rawValue < $1.component.rawValue }
+            .map { "\($0.component.rawValue):\($0.moleFraction)" }
+            .joined(separator: "|")
+        return ValidatedCompositionOption(
+            id: key,
+            name: compositionName(composition),
+            composition: composition,
+            properties: presentationProperties(for: capability, formulation: formulation)
         )
     }
 
@@ -252,5 +286,53 @@ enum AdvancedValidationPresentation {
                 "\($0.component.symbol) \(($0.moleFraction * 100).formatted(.number.precision(.significantDigits(1...6)))) mol%"
             }
         return impurities.isEmpty ? "Pure CO₂" : impurities.joined(separator: " + ")
+    }
+
+    private static func orderedProperties(_ properties: [PropertyID]) -> [PropertyID] {
+        let order: [PropertyID] = [
+            .density,
+            .molarMass,
+            .specificVolume,
+            .compressibilityFactor,
+            .speedOfSound
+        ]
+        return properties.sorted { lhs, rhs in
+            let lhsIndex = order.firstIndex(of: lhs) ?? order.count
+            let rhsIndex = order.firstIndex(of: rhs) ?? order.count
+            if lhsIndex != rhsIndex { return lhsIndex < rhsIndex }
+            return lhs.displayName.localizedStandardCompare(rhs.displayName) == .orderedAscending
+        }
+    }
+
+    private static func presentationProperties(
+        for capability: TeqpPropertyCapability,
+        formulation: TeqpFormulation
+    ) -> [PropertyID] {
+        if capability.property == .density {
+            return orderedProperties([
+                .density,
+                .molarMass,
+                .specificVolume,
+                .compressibilityFactor
+            ].filter { formulation.supportedProperties.contains($0) })
+        }
+        return orderedProperties([capability.property])
+    }
+
+    private static func temperatureSummary(_ limit: TeqpTemperaturePressureLimit) -> String {
+        if abs(limit.minimumTemperatureK - limit.maximumTemperatureK) <= 1e-9 {
+            return "T \(celsius(limit.temperatureK)) °C"
+        }
+        return "T \(celsius(limit.minimumTemperatureK))–\(celsius(limit.maximumTemperatureK)) °C"
+    }
+
+    private static func pressureSummary(_ limit: TeqpTemperaturePressureLimit) -> String {
+        let minimum = limit.minimumPressurePa / 100_000
+        let maximum = limit.maximumPressurePa / 100_000
+        return "P \(minimum.formatted(.number.precision(.fractionLength(1...3))))–\(maximum.formatted(.number.precision(.fractionLength(1...3)))) bar(a)"
+    }
+
+    private static func celsius(_ kelvin: Double) -> String {
+        (kelvin - 273.15).formatted(.number.precision(.fractionLength(0...2)))
     }
 }
