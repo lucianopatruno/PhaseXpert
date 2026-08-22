@@ -269,6 +269,9 @@ enum AdvancedValidationPresentation {
         if formulation.components.count > 2 {
             return TeqpFormulationCatalog.multicomponentNominalIsothermToleranceK
         }
+        if formulation.id == TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id {
+            return TeqpFormulationCatalog.co2HydrogenNominalIsothermToleranceK
+        }
         if formulation.id == TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id {
             return TeqpFormulationCatalog.co2OxygenNominalIsothermToleranceK
         }
