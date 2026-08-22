@@ -3328,6 +3328,192 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testMulticomponentValidatedStatesActivateScientificShield() throws {
+        let validatedCompositions: [[MixtureComponent]] = [
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.950),
+                .init(component: .methane, moleFraction: 0.033),
+                .init(component: .hydrogen, moleFraction: 0.017)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.942),
+                .init(component: .nitrogen, moleFraction: 0.023),
+                .init(component: .methane, moleFraction: 0.022),
+                .init(component: .hydrogen, moleFraction: 0.013)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.920),
+                .init(component: .nitrogen, moleFraction: 0.043),
+                .init(component: .oxygen, moleFraction: 0.016),
+                .init(component: .argon, moleFraction: 0.021)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.952),
+                .init(component: .nitrogen, moleFraction: 0.028),
+                .init(component: .argon, moleFraction: 0.005),
+                .init(component: .methane, moleFraction: 0.010),
+                .init(component: .hydrogen, moleFraction: 0.005)
+            ]
+        ]
+
+        for composition in validatedCompositions {
+            let option = try validatedStateOption(matching: composition, property: .density)
+            let viewModel = advancedViewModel()
+            viewModel.useValidatedState(option)
+
+            XCTAssertEqual(
+                Set(viewModel.validatedPropertiesAtCurrentState),
+                [.density, .molarMass, .specificVolume, .compressibilityFactor]
+            )
+            XCTAssertTrue(viewModel.scientificShieldIsActive)
+        }
+    }
+
+    @MainActor
+    func testOxygenValidatedStateOptionsAreCapabilityLabelledAndInGate() throws {
+        let viewModel = advancedViewModel()
+        viewModel.compositionBasis = .molePercent
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "95"),
+            .init(component: .oxygen, value: "5")
+        ]
+        viewModel.validate()
+
+        XCTAssertTrue(viewModel.validatedCompositionOptions.isEmpty)
+        let options = viewModel.validatedStateOptions
+        XCTAssertTrue(options.contains { $0.name.localizedCaseInsensitiveContains("density") })
+        XCTAssertTrue(options.contains { $0.name.localizedCaseInsensitiveContains("speed of sound") })
+
+        let density = try XCTUnwrap(options.first {
+            $0.properties == [.density, .molarMass, .specificVolume, .compressibilityFactor]
+        })
+        viewModel.useValidatedState(density)
+        XCTAssertEqual(
+            Set(viewModel.validatedPropertiesAtCurrentState),
+            [.density, .molarMass, .specificVolume, .compressibilityFactor]
+        )
+
+        let acoustic = try XCTUnwrap(advancedViewModel().validatedStateOptions.first {
+            $0.name.localizedCaseInsensitiveContains("speed of sound")
+                && $0.composition.contains {
+                    $0.component == .oxygen && abs($0.moleFraction - 0.0652) < 1e-12
+                }
+        })
+        let acousticViewModel = advancedViewModel()
+        acousticViewModel.useValidatedState(acoustic)
+        XCTAssertEqual(acousticViewModel.validatedPropertiesAtCurrentState, [.speedOfSound])
+        XCTAssertTrue(acousticViewModel.scientificShieldIsActive)
+    }
+
+    @MainActor
+    func testValidatedPropertyOrderIsStable() {
+        XCTAssertEqual(
+            AdvancedValidationPresentation.propertyList([
+                .density,
+                .molarMass,
+                .compressibilityFactor,
+                .specificVolume
+            ]),
+            "Density · M · v · Z"
+        )
+        XCTAssertEqual(
+            AdvancedValidationPresentation.propertyList([.speedOfSound]),
+            "Speed of sound"
+        )
+    }
+
+    @MainActor
+    func testCalculationResultClearsWhenProviderOrPhysicalInputsChange() async throws {
+        let viewModel = try await calculatedTestViewModel()
+        XCTAssertNotNil(viewModel.calculationRecord)
+
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        XCTAssertNil(viewModel.calculationRecord)
+
+        let pressureViewModel = try await calculatedTestViewModel()
+        pressureViewModel.pressureText = "51"
+        XCTAssertNil(pressureViewModel.calculationRecord)
+
+        let temperatureViewModel = try await calculatedTestViewModel()
+        temperatureViewModel.temperatureText = "21"
+        XCTAssertNil(temperatureViewModel.calculationRecord)
+
+        let compositionViewModel = try await calculatedTestViewModel()
+        compositionViewModel.composition = [
+            .init(component: .carbonDioxide, value: "999000"),
+            .init(component: .nitrogen, value: "1000")
+        ]
+        XCTAssertNil(compositionViewModel.calculationRecord)
+    }
+
+    @MainActor
+    func testValidatedActionsAndCaseLoadClearExistingCalculationResult() async throws {
+        let validatedStateViewModel = try await calculatedTestViewModel()
+        let nitrogenState = try validatedStateOption(
+            matching: [
+                .init(component: .carbonDioxide, moleFraction: 0.9873),
+                .init(component: .nitrogen, moleFraction: 0.0127)
+            ],
+            property: .density
+        )
+        validatedStateViewModel.selectedModelID = "teqp-pure-co2-experimental"
+        validatedStateViewModel.useValidatedState(nitrogenState)
+        XCTAssertNil(validatedStateViewModel.calculationRecord)
+
+        let compositionViewModel = try await calculatedTestViewModel()
+        compositionViewModel.selectedModelID = "teqp-pure-co2-experimental"
+        compositionViewModel.compositionBasis = .molePercent
+        compositionViewModel.composition = [
+            .init(component: .carbonDioxide, value: "99"),
+            .init(component: .nitrogen, value: "1")
+        ]
+        let compositionOption = try XCTUnwrap(compositionViewModel.validatedCompositionOptions.first)
+        compositionViewModel.useValidatedComposition(compositionOption)
+        XCTAssertNil(compositionViewModel.calculationRecord)
+
+        let caseViewModel = try await calculatedTestViewModel()
+        let caseRecord = try await makeRecord(
+            modelID: "teqp-pure-co2-experimental",
+            modelDescriptor: try XCTUnwrap(
+                ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }
+            ),
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9873),
+                .init(component: .nitrogen, moleFraction: 0.0127)
+            ]
+        )
+        caseViewModel.loadInputs(from: caseRecord)
+        XCTAssertNil(caseViewModel.calculationRecord)
+    }
+
+    @MainActor
+    func testDisplayOnlyUnitChangesPreserveCurrentCalculationResult() async throws {
+        let viewModel = try await calculatedTestViewModel()
+        let recordID = try XCTUnwrap(viewModel.calculationRecord?.id)
+
+        viewModel.changePressureDisplayUnit(to: .megapascalAbsolute)
+        viewModel.changeTemperatureDisplayUnit(to: .kelvin)
+        viewModel.changeCompositionBasis(to: .molePercent)
+
+        XCTAssertEqual(viewModel.calculationRecord?.id, recordID)
+    }
+
+    @MainActor
+    func testNorthernLightsProviderSwitchClearsOldGeneralResult() async throws {
+        let viewModel = try await calculatedTestViewModel()
+        XCTAssertNotNil(viewModel.calculationRecord)
+
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.validate()
+
+        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertNotNil(viewModel.operatingRangeGuidance)
+
+        viewModel.selectedModelID = PhaseXpertTests.testDescriptor.id
+        XCTAssertNil(viewModel.calculationRecord)
+    }
+
+    @MainActor
     func testSavedCaseValidationStatusUsesCurrentCapabilityDecision() async throws {
         let descriptor = try XCTUnwrap(
             ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }
@@ -3351,5 +3537,61 @@ final class PhaseXpertTests: XCTestCase {
             AdvancedValidationPresentation.savedCaseStatus(for: record),
             "Advanced CCS · Validated Speed of sound"
         )
+    }
+
+    @MainActor
+    private func advancedViewModel() -> CalculatorViewModel {
+        let viewModel = CalculatorViewModel()
+        viewModel.selectedModelID = "teqp-pure-co2-experimental"
+        viewModel.compositionBasis = .molePercent
+        return viewModel
+    }
+
+    @MainActor
+    private func validatedStateOption(
+        matching composition: [MixtureComponent],
+        property: PropertyID
+    ) throws -> ValidatedStateOption {
+        try XCTUnwrap(
+            AdvancedValidationPresentation.stateOptions(
+                currentPressurePa: nil,
+                currentTemperatureK: nil
+            ).first { option in
+                option.properties.contains(property)
+                    && sameComposition(option.composition, composition)
+            }
+        )
+    }
+
+    private func sameComposition(
+        _ lhs: [MixtureComponent],
+        _ rhs: [MixtureComponent]
+    ) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let left = lhs.sorted { $0.component.rawValue < $1.component.rawValue }
+        let right = rhs.sorted { $0.component.rawValue < $1.component.rawValue }
+        return zip(left, right).allSatisfy { leftComponent, rightComponent in
+            leftComponent.component == rightComponent.component
+                && abs(leftComponent.moleFraction - rightComponent.moleFraction) < 1e-12
+        }
+    }
+
+    @MainActor
+    private func calculatedTestViewModel() async throws -> CalculatorViewModel {
+        let provider = TestCalculationProvider()
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [provider])
+        )
+        viewModel.selectedModelID = provider.descriptor.id
+        viewModel.pressureText = "50"
+        viewModel.temperatureText = "20"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "1000000")
+        ]
+        viewModel.validate()
+        await viewModel.calculate()
+        XCTAssertNotNil(viewModel.calculationRecord)
+        return viewModel
     }
 }

@@ -257,15 +257,17 @@ struct CalculatorView: View {
                                 focusedField = nil
                                 viewModel.useValidatedState(option)
                             }
+                            .accessibilityLabel("Use validated state. \(option.name), \(option.detail)")
                             .accessibilityHint("Changes composition and operating conditions to a validated state.")
                             .accessibilityIdentifier("use-validated-state")
                         } else {
                             Menu("Use validated state", systemImage: "target") {
                                 ForEach(viewModel.validatedStateOptions) { option in
-                                    Button(option.name) {
+                                    Button("\(option.name) — \(option.detail)") {
                                         focusedField = nil
                                         viewModel.useValidatedState(option)
                                     }
+                                    .accessibilityLabel("\(option.name), \(option.detail)")
                                 }
                             }
                             .accessibilityHint("Choose a validated composition and operating point. Changes composition and operating conditions.")
@@ -307,6 +309,8 @@ struct CalculatorView: View {
                         }
                         .accessibilityValue(validationDetailsExpanded ? "Expanded" : "Collapsed")
                         .accessibilityIdentifier("validation-details-disclosure")
+                    } header: {
+                        IFESectionHeader(step: 4, title: "Validation status")
                     }
                 }
 
@@ -355,7 +359,7 @@ struct CalculatorView: View {
                             }
                         }
                     } header: {
-                        IFESectionHeader(step: 5, title: "Validation and capability state")
+                        IFESectionHeader(step: nil, title: "Validation and capability state")
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 focusedField = nil
@@ -393,7 +397,7 @@ struct CalculatorView: View {
                     .accessibilityIdentifier("reset-calculator")
                     .accessibilityHint("Restores the clean calculator defaults and clears results.")
                 } header: {
-                    IFESectionHeader(step: 6, title: "Run calculation")
+                    IFESectionHeader(step: 5, title: "Run calculation")
                 }
 
                 if let record = viewModel.calculationRecord {
@@ -428,7 +432,7 @@ struct CalculatorView: View {
                         }
                         .accessibilityIdentifier("save-calculation")
                     } header: {
-                        IFESectionHeader(step: 8, title: "Traceability, save and export")
+                        IFESectionHeader(step: 7, title: "Traceability, save and export")
                     }
                 }
 
@@ -441,6 +445,12 @@ struct CalculatorView: View {
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom) {
+                Color.clear
+                    .frame(height: IFESpacing.extraLarge)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             .ifeDottedBackground()
             .toolbarTitleDisplayMode(.inline)
             .onAppear {
@@ -494,6 +504,11 @@ struct CalculatorView: View {
                     }
                     .foregroundStyle(viewModel.scientificShieldIsActive ? Color.ifePrimary : .primary)
                     .symbolRenderingMode(viewModel.scientificShieldIsActive ? .hierarchical : .monochrome)
+                    .accessibilityValue(
+                        viewModel.scientificShieldIsActive
+                            ? "Validated capability available for current state"
+                            : "No validated capability for current state"
+                    )
                     .accessibilityHint("Opens model and latest calculation provenance.")
                 }
 
@@ -547,10 +562,7 @@ struct CalculatorView: View {
             }
             .alert(
                 "Case saved",
-                isPresented: Binding(
-                    get: { saveConfirmation != nil },
-                    set: { if !$0 { saveConfirmation = nil } }
-                )
+                isPresented: saveConfirmationIsPresented
             ) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -558,10 +570,7 @@ struct CalculatorView: View {
             }
             .alert(
                 "Unable to save case",
-                isPresented: Binding(
-                    get: { saveError != nil },
-                    set: { if !$0 { saveError = nil } }
-                )
+                isPresented: saveErrorIsPresented
             ) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -577,6 +586,20 @@ struct CalculatorView: View {
         }
         compositionSelections.removeValue(forKey: id)
         viewModel.removeImpurity(id: id)
+    }
+
+    private var saveConfirmationIsPresented: Binding<Bool> {
+        Binding(
+            get: { saveConfirmation != nil },
+            set: { if !$0 { saveConfirmation = nil } }
+        )
+    }
+
+    private var saveErrorIsPresented: Binding<Bool> {
+        Binding(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )
     }
 
     private func removeImpurities(at offsets: IndexSet) {

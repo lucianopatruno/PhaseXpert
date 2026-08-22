@@ -84,15 +84,41 @@ enum TemperatureDisplayUnit: String, CaseIterable, Identifiable {
 @MainActor
 @Observable
 final class CalculatorViewModel {
-    var pressureText = "50"
-    var temperatureText = "20"
+    var pressureText = "50" {
+        didSet {
+            invalidateCalculationResultIfPhysicalValueChanged(
+                oldValue: oldValue,
+                newValue: pressureText,
+                unit: pressureDisplayUnit
+            )
+        }
+    }
+    var temperatureText = "20" {
+        didSet {
+            invalidateCalculationResultIfPhysicalValueChanged(
+                oldValue: oldValue,
+                newValue: temperatureText,
+                unit: temperatureDisplayUnit
+            )
+        }
+    }
     var pressureDisplayUnit: PressureDisplayUnit = .barAbsolute
     var temperatureDisplayUnit: TemperatureDisplayUnit = .celsius
-    var selectedModelID = "coolprop-heos"
+    var selectedModelID = "coolprop-heos" {
+        didSet {
+            if selectedModelID != oldValue {
+                invalidateCalculationResult()
+            }
+        }
+    }
     var compositionBasis: CompositionInputBasis = .partsPerMillion
     var composition: [CompositionInput] = [
         CompositionInput(component: .carbonDioxide, value: "1000000")
-    ]
+    ] {
+        didSet {
+            invalidateCalculationResultIfCompositionChanged(from: oldValue)
+        }
+    }
     private(set) var validationReport = ValidationReport(issues: [], normalizedComposition: nil)
     private(set) var calculationRecord: CalculationRecord?
     private(set) var calculationError: String?
@@ -105,6 +131,7 @@ final class CalculatorViewModel {
     private var lastNormalizedComposition: [MixtureComponent]?
     private var lastValidPressurePa = PressureUnit.bar.toPascal(50)
     private var lastValidTemperatureK = TemperatureUnit.celsius.toKelvin(20)
+    private var suppressResultInvalidation = false
 
     init(registry: ProviderRegistry = ProviderRegistry()) {
         self.registry = registry
@@ -137,16 +164,7 @@ final class CalculatorViewModel {
     }
 
     var scientificShieldIsActive: Bool {
-        guard let guidance = operatingRangeGuidance else { return false }
-        let hasValidatedStateSummary = guidance.title.localizedCaseInsensitiveContains("validated")
-            || guidance.summary.contains {
-                $0.title.localizedCaseInsensitiveContains("validated")
-                    || $0.title.localizedCaseInsensitiveContains("measured")
-            }
-        let hasUnsupportedCurrentStateIssue = guidance.currentInputIssues.contains {
-            $0.severity == .unsupported
-        }
-        return hasValidatedStateSummary && !hasUnsupportedCurrentStateIssue
+        !validatedPropertiesAtCurrentState.isEmpty
     }
 
     var validatedPropertiesAtCurrentState: [PropertyID] {
@@ -162,7 +180,12 @@ final class CalculatorViewModel {
 
     var validatedCompositionOptions: [ValidatedCompositionOption] {
         guard selectedModelID == "teqp-pure-co2-experimental" else { return [] }
-        return AdvancedValidationPresentation.compositionOptions()
+        let activeComponents = activeCompositionComponents
+        let options = AdvancedValidationPresentation.compositionOptions().filter { option in
+            activeComponents.count <= 1 || Set(option.composition.map(\.component)) == activeComponents
+        }
+        let uniqueCompositionIDs = Set(options.map(\.id))
+        return uniqueCompositionIDs.count == 1 ? options.prefix(1).map { $0 } : []
     }
 
     var validatedStateOptions: [ValidatedStateOption] {
@@ -496,6 +519,8 @@ final class CalculatorViewModel {
 
     func changePressureDisplayUnit(to newUnit: PressureDisplayUnit) {
         guard newUnit != pressureDisplayUnit else { return }
+        suppressResultInvalidation = true
+        defer { suppressResultInvalidation = false }
         if let pressurePa = parsedPressurePa {
             lastValidPressurePa = pressurePa
         }
@@ -509,6 +534,8 @@ final class CalculatorViewModel {
 
     func changeTemperatureDisplayUnit(to newUnit: TemperatureDisplayUnit) {
         guard newUnit != temperatureDisplayUnit else { return }
+        suppressResultInvalidation = true
+        defer { suppressResultInvalidation = false }
         if let temperatureK = parsedTemperatureK {
             lastValidTemperatureK = temperatureK
         }
@@ -522,6 +549,8 @@ final class CalculatorViewModel {
 
     func changeCompositionBasis(to newBasis: CompositionInputBasis) {
         guard newBasis != compositionBasis else { return }
+        suppressResultInvalidation = true
+        defer { suppressResultInvalidation = false }
         let oldBasis = compositionBasis
         let oldCarbonDioxideValue = carbonDioxideEnteredValue
         compositionBasis = newBasis
@@ -576,6 +605,13 @@ final class CalculatorViewModel {
         calculationRecord = nil
         calculationError = nil
         validate()
+    }
+
+    func invalidateCalculationResult() {
+        guard !suppressResultInvalidation else { return }
+        calculationRecord = nil
+        calculationError = nil
+        standaloneWaterEquilibriumResult = nil
     }
 
     func useValidatedState(_ option: ValidatedStateOption) {
@@ -703,15 +739,31 @@ final class CalculatorViewModel {
         "Homogeneous wet-gas properties are outside their preliminary supported range. Water-equilibrium results remain available within their separate validated range."
 
     private func domainComposition() -> [MixtureComponent] {
-        composition.map { entry in
+        domainComposition(from: composition, basis: compositionBasis)
+    }
+
+    private func domainComposition(
+        from input: [CompositionInput],
+        basis: CompositionInputBasis
+    ) -> [MixtureComponent] {
+        let carbonDioxideValue = carbonDioxideEnteredValue(in: input, basis: basis)
+        return input.map { entry in
             let enteredValue = entry.component == .carbonDioxide
-                ? carbonDioxideEnteredValue
+                ? carbonDioxideValue
                 : parse(entry.value) ?? .nan
             return MixtureComponent(
                 component: entry.component,
-                moleFraction: enteredValue / (compositionBasis == .partsPerMillion ? 1_000_000 : 100)
+                moleFraction: enteredValue / (basis == .partsPerMillion ? 1_000_000 : 100)
             )
         }
+    }
+
+    private var activeCompositionComponents: Set<ComponentID> {
+        Set(
+            domainComposition()
+                .filter { $0.moleFraction.isFinite && $0.moleFraction > 0 }
+                .map(\.component)
+        )
     }
 
     private var isBinaryCarbonDioxideWaterComposition: Bool {
@@ -752,6 +804,67 @@ final class CalculatorViewModel {
                 value: enteredValue,
                 unit: compositionBasis == .partsPerMillion ? .partsPerMillion : .molePercent
             )
+        }
+    }
+
+    private func carbonDioxideEnteredValue(
+        in input: [CompositionInput],
+        basis: CompositionInputBasis
+    ) -> Double {
+        let scale = basis == .partsPerMillion ? 1_000_000.0 : 100.0
+        let impurityTotal = input
+            .filter { $0.component != .carbonDioxide }
+            .reduce(0) { $0 + (parse($1.value) ?? 0) }
+        return scale - impurityTotal
+    }
+
+    private func invalidateCalculationResultIfPhysicalValueChanged(
+        oldValue: String,
+        newValue: String,
+        unit: PressureDisplayUnit
+    ) {
+        guard !suppressResultInvalidation else { return }
+        let oldPressure = parse(oldValue).map { unit.pascal(from: $0) }
+        let newPressure = parse(newValue).map { unit.pascal(from: $0) }
+        if oldPressure != newPressure {
+            invalidateCalculationResult()
+        }
+    }
+
+    private func invalidateCalculationResultIfPhysicalValueChanged(
+        oldValue: String,
+        newValue: String,
+        unit: TemperatureDisplayUnit
+    ) {
+        guard !suppressResultInvalidation else { return }
+        let oldTemperature = parse(oldValue).map { unit.kelvin(from: $0) }
+        let newTemperature = parse(newValue).map { unit.kelvin(from: $0) }
+        if oldTemperature != newTemperature {
+            invalidateCalculationResult()
+        }
+    }
+
+    private func invalidateCalculationResultIfCompositionChanged(
+        from oldComposition: [CompositionInput]
+    ) {
+        guard !suppressResultInvalidation else { return }
+        let oldDomain = domainComposition(from: oldComposition, basis: compositionBasis)
+        let newDomain = domainComposition()
+        if !Self.samePhysicalComposition(oldDomain, newDomain) {
+            invalidateCalculationResult()
+        }
+    }
+
+    private static func samePhysicalComposition(
+        _ lhs: [MixtureComponent],
+        _ rhs: [MixtureComponent]
+    ) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        let left = lhs.sorted { $0.component.rawValue < $1.component.rawValue }
+        let right = rhs.sorted { $0.component.rawValue < $1.component.rawValue }
+        return zip(left, right).allSatisfy { lhsComponent, rhsComponent in
+            lhsComponent.component == rhsComponent.component
+                && lhsComponent.moleFraction == rhsComponent.moleFraction
         }
     }
 
