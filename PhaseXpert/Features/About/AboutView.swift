@@ -38,14 +38,19 @@ struct AboutView: View {
             }
 
             Section("General Properties — CoolProp") {
+                Text("General Properties uses CoolProp to provide broad thermodynamic property coverage for engineering calculations across a wide range of CO₂-rich compositions and operating conditions.")
+                Text("Its key question is: can this state be calculated? A successful General Properties calculation is useful engineering output, but it does not by itself mean PhaseXpert has independently validated every property at that state.")
                 Text("CoolProp 8.0.0 HEOS provides pure-CO₂ properties and calculable CO₂-rich dry mixtures with N₂, CH₄, O₂, Ar, H₂, CO and H₂S. The General Properties capability matrix separates calculable states from independently validated property domains.")
-                Text("Dry-mixture density, molar mass, specific volume and Z are limited-production only for the committed CO₂/CH₄ xCH₄ = 0.05 Ghafri density slices, CO₂/O₂ xO₂ = 0.05032089 Lozano-Martín gas-density isotherms, and CO₂/H₂ xH₂ = 0.05362 Souissi gas-density isotherms. N₂, Ar, CO, H₂S and dry multicomponent states remain preliminary or validation pending.")
+                Text("Dry-mixture density, molar mass, specific volume and Z have limited-production validation only for the committed CO₂/CH₄, CO₂/O₂ and CO₂/H₂ density slices; other dry mixtures remain preliminary or validation pending.")
                 Text("Binary CO₂/H₂O homogeneous-gas density, molar mass, specific volume and Z remain preliminary at xH₂O = 1–1000 ppm, 76.85–150 °C and 5–50 bar(a).")
                 Text("Homogeneous wet-gas properties do not predict water equilibrium, dropout or aqueous chemistry. H₂O mixtures do not use the Phase Map, and mixture Cp/Cv, sound speed and transport properties remain unavailable.")
                     .foregroundStyle(.secondary)
             }
 
             Section("Advanced CCS Properties — teqp / EOS-CG") {
+                Text("Advanced CCS Properties uses CCS-focused teqp models. PhaseXpert exposes production properties only where that specific property has been independently validated against experimental data within defined composition, temperature, pressure and, where relevant, phase-domain limits.")
+                Text("Its key question is: is this specific property at this state independently validated? Advanced validation is property-specific: density may be validated while speed of sound is not, and speed of sound may be validated while density is not.")
+                Text("A state may therefore be calculable with General Properties while being outside the validated range in Advanced CCS Properties. That is not necessarily a contradiction or calculation error; it means PhaseXpert does not currently have sufficient independent validation evidence to expose that Advanced property/state as validated production capability.")
                 Text("teqp v0.23.1 evaluates Helmholtz-energy models locally. Pure CO₂ properties are available; binary CO₂+N₂, CO₂+H₂, CO₂+CH₄ and CO₂+O₂ density, plus CO₂+CH₄ VLE, are enabled only in their independently validated gates.")
                 Text("Limited dry multicomponent density and density-derived M, v and Z are available at four exact Razmjoo compositions: CO₂/N₂/O₂/Ar 92.0/4.3/1.6/2.1 mol%, CO₂/CH₄/H₂ 95.0/3.3/1.7 mol%, CO₂/N₂/CH₄/H₂ 94.2/2.3/2.2/1.3 mol%, and CO₂/N₂/Ar/CH₄/H₂ 95.2/2.8/0.5/1.0/0.5 mol%. The operating guidance is the authoritative source for their measured T/P slices.")
                 Text("A generic multicomponent phase-equilibrium solver is under research evaluation. CO₂+N₂+CH₄ bubble/dew comparisons, stability and TP flash are not production calculator capabilities; interior flash phase fractions are not independently validated. Phase maps, caloric, acoustic and transport properties remain unsupported. Unsupported requests never fall back to CoolProp, normalize compositions or drop components.")
