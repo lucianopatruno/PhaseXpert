@@ -792,6 +792,10 @@ struct CalculatorView: View {
             viewModel.loadInputs(from: builtInCase)
             navigationState.pendingBuiltInCase = nil
         }
+        if let batchCase = navigationState.pendingBatchCase {
+            viewModel.loadInputs(from: batchCase.input, model: batchCase.model)
+            navigationState.pendingBatchCase = nil
+        }
     }
 
     private func insertMinusSign() {

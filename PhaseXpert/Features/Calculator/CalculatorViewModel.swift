@@ -517,6 +517,31 @@ final class CalculatorViewModel {
         validate()
     }
 
+    func loadInputs(from batchInput: BatchCaseInput, model: BatchCalculationModel) {
+        guard let pressurePa = batchInput.pressurePa,
+              let temperatureK = batchInput.temperatureK,
+              !batchInput.composition.isEmpty else { return }
+        suppressResultInvalidation = true
+        defer { suppressResultInvalidation = false }
+        pressureDisplayUnit = .barAbsolute
+        temperatureDisplayUnit = .celsius
+        lastValidPressurePa = pressurePa
+        lastValidTemperatureK = temperatureK
+        pressureText = Self.format(pressureDisplayUnit.displayValue(from: pressurePa), for: pressureDisplayUnit)
+        temperatureText = Self.format(temperatureDisplayUnit.displayValue(from: temperatureK), for: temperatureDisplayUnit)
+        selectedModelID = model.id
+        compositionBasis = .molePercent
+        composition = batchInput.composition.map {
+            CompositionInput(component: $0.component, value: String(format: "%.12g", $0.moleFraction * 100))
+        }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
+        standaloneWaterEquilibriumResult = nil
+        validate()
+    }
+
     func changePressureDisplayUnit(to newUnit: PressureDisplayUnit) {
         guard newUnit != pressureDisplayUnit else { return }
         suppressResultInvalidation = true

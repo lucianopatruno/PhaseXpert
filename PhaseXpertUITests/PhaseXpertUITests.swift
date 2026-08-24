@@ -48,6 +48,43 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertLessThan(tabBar.buttons["Phase Diagram"].frame.minX, tabBar.buttons["Saved Cases"].frame.minX)
     }
 
+    func testSavedCasesBatchComparisonWorkflowAndExportEntryPoint() {
+        let app = XCUIApplication()
+        app.launch()
+        app.tabBars.buttons["Saved Cases"].tap()
+        XCTAssertTrue(app.buttons["compare-saved-cases"].waitForExistence(timeout: 3))
+        app.buttons["compare-saved-cases"].tap()
+
+        let northern = app.staticTexts["Northern Lights cargo specification example"]
+        let brevik = app.staticTexts["Heidelberg Materials – Brevik CCS conditioned export example"]
+        XCTAssertTrue(northern.waitForExistence(timeout: 3))
+        northern.tap()
+        brevik.tap()
+        let calculate = app.buttons["calculate-batch-cases"]
+        for _ in 0..<6 where !calculate.exists { app.swipeUp() }
+        XCTAssertTrue(calculate.waitForExistence(timeout: 3))
+        XCTAssertTrue(calculate.isEnabled)
+        calculate.tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["batch-comparison-table"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["General Properties"].exists)
+        for _ in 0..<8 where !app.buttons["export-batch-comparison"].exists { app.swipeUp() }
+        XCTAssertTrue(app.buttons["export-batch-comparison"].waitForExistence(timeout: 5))
+        app.buttons["export-batch-comparison"].tap()
+        XCTAssertTrue(app.buttons["Share CSV"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Share PDF"].exists)
+
+        let caseButton = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Northern Lights cargo specification example")).firstMatch
+        XCTAssertTrue(caseButton.waitForExistence(timeout: 3))
+        caseButton.tap()
+        XCTAssertTrue(app.staticTexts["Input snapshot"].waitForExistence(timeout: 3))
+        for _ in 0..<6 where !app.buttons["Open in Calculator"].exists { app.swipeUp() }
+        XCTAssertTrue(app.buttons["Open in Calculator"].exists)
+        app.buttons["Open in Calculator"].tap()
+        XCTAssertTrue(app.tabBars.buttons["Calculator"].isSelected)
+        XCTAssertTrue(app.staticTexts["Pressure"].waitForExistence(timeout: 3))
+    }
+
     func testNumericKeyboardDoesNotShowCustomOKControl() {
         let app = XCUIApplication()
         app.launch()
