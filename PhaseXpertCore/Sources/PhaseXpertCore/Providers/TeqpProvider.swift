@@ -844,6 +844,17 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
             )
         }
 
+        if let canonical = try? CanonicalComposition(context.composition),
+           (canonical.components.count > 2
+               || canonical.componentSet == [.carbonDioxide, .hydrogenSulfide]),
+           capabilityMatrix.decision(for: canonical, property: .density).isSupported {
+            return multicomponentOperatingRangeGuidance(
+                composition: canonical,
+                pressurePa: context.pressurePa,
+                temperatureK: context.temperatureK,
+                requestedProperties: context.requestedProperties
+            )
+        }
         if let nitrogen = context.composition.first(where: { $0.component == .nitrogen }) {
             return nitrogenOperatingRangeGuidance(
                 nitrogenMoleFraction: nitrogen.moleFraction,
@@ -871,16 +882,6 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         if let oxygen = context.composition.first(where: { $0.component == .oxygen }) {
             return oxygenOperatingRangeGuidance(
                 oxygenMoleFraction: oxygen.moleFraction,
-                pressurePa: context.pressurePa,
-                temperatureK: context.temperatureK,
-                requestedProperties: context.requestedProperties
-            )
-        }
-        if let canonical = try? CanonicalComposition(context.composition),
-           canonical.componentSet == [.carbonDioxide, .hydrogenSulfide],
-           capabilityMatrix.decision(for: canonical, property: .density).isSupported {
-            return multicomponentOperatingRangeGuidance(
-                composition: canonical,
                 pressurePa: context.pressurePa,
                 temperatureK: context.temperatureK,
                 requestedProperties: context.requestedProperties
