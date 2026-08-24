@@ -587,7 +587,9 @@ public struct NativeTeqpEngine: TeqpEngine {
                 referenceMolarDensityMolesPerCubicMetre: native.reference_molar_density_mol_m3,
                 iterationCount: Int(native.iteration_count),
                 densityRootEvaluations: Int(native.density_root_evaluations),
-                distinctMinimumCount: Int(native.distinct_minimum_count)
+                distinctMinimumCount: Int(native.distinct_minimum_count),
+                deterministicStartCount: Int(native.start_count),
+                successfulStartCount: Int(native.successful_start_count)
             )
         }.value
         #else

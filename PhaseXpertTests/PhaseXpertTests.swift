@@ -3562,6 +3562,49 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testRazmjooProductionGatesKeepMatrixGuidanceAndPresentationConsistent() throws {
+        let states = try productionPresentationStates().filter {
+            $0.formulationID.contains("razmjoo2026")
+        }
+        XCTAssertEqual(states.count, 7)
+        let matrix = AdvancedCCSCapabilityMatrix()
+
+        for state in states {
+            let canonical = try CanonicalComposition(state.composition)
+            let expected = expectedValidatedProperties(for: state)
+            XCTAssertEqual(
+                Set(expected),
+                [.density, .molarMass, .specificVolume, .compressibilityFactor]
+            )
+            for property in expected {
+                XCTAssertTrue(matrix.decision(
+                    for: canonical,
+                    property: property,
+                    pressurePa: state.pressurePa,
+                    temperatureK: state.temperatureK
+                ).isSupported)
+            }
+            XCTAssertFalse(matrix.decision(
+                for: canonical,
+                property: .speedOfSound,
+                pressurePa: state.pressurePa,
+                temperatureK: state.temperatureK
+            ).isSupported)
+
+            let viewModel = advancedViewModel(for: state)
+            assertPresentation(viewModel: viewModel, state: state, expected: expected)
+            let guidance = try XCTUnwrap(viewModel.operatingRangeGuidance)
+            XCTAssertTrue(guidance.currentInputIssues.isEmpty)
+            XCTAssertTrue(guidance.propertyAvailability.contains {
+                $0.severity == .unsupported && $0.title == "Cp/Cv/speed"
+            })
+            XCTAssertTrue(guidance.phaseDiagram.contains {
+                $0.severity == .unsupported
+            })
+        }
+    }
+
+    @MainActor
     func testProductionCapabilityOutsidePressureBranchesDoNotValidateThatGate() throws {
         let states = try productionPresentationStates()
         XCTAssertEqual(states.count * 2, 54)
