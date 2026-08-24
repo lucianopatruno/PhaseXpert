@@ -766,7 +766,62 @@ final class CoolPropProviderTests: XCTestCase {
         XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .calculated)
         XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .calculated)
         XCTAssertEqual(response.properties.first { $0.property == .isobaricHeatCapacity }?.status, .unavailable)
+        XCTAssertNil(response.waterEquilibrium)
         XCTAssertTrue(response.warnings.contains { $0.contains("does not itself determine aqueous equilibrium") })
+    }
+
+    func testWaterEquilibriumRunsWhenHomogeneousWetGasIsOutsidePreliminaryRange() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 4_000_000,
+            temperatureK: 333.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9999),
+                .init(component: .water, moleFraction: 0.0001)
+            ],
+            requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor],
+            clientVersion: "test"
+        ))
+
+        XCTAssertEqual(response.phase, .unavailable)
+        XCTAssertTrue(response.solver.converged)
+        XCTAssertTrue(response.solver.method.contains("Partial General Properties result"))
+        let equilibrium = try XCTUnwrap(response.waterEquilibrium)
+        XCTAssertEqual(equilibrium.currentWaterPPM, 100)
+        XCTAssertTrue(equilibrium.waterInCarbonDioxideRichPhaseMoleFraction.isFinite)
+        XCTAssertTrue(equilibrium.carbonDioxideInWaterRichPhaseMoleFraction.isFinite)
+        XCTAssertEqual(equilibrium.waterStatus, .belowSaturation)
+        for property in [PropertyID.density, .molarMass, .specificVolume, .compressibilityFactor] {
+            let value = try XCTUnwrap(response.properties.first { $0.property == property })
+            XCTAssertNil(value.value)
+            XCTAssertEqual(value.status, .unavailable)
+            XCTAssertEqual(value.message, "Outside preliminary homogeneous-property range.")
+        }
+        XCTAssertTrue(response.warnings.contains { $0.contains("PARTIAL RESULT") })
+    }
+
+    func testWaterEquilibriumFiveHundredPPMHasSameSplitOutsideHomogeneousRange() async throws {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let response = try await provider.calculate(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 4_000_000,
+            temperatureK: 333.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9995),
+                .init(component: .water, moleFraction: 0.0005)
+            ],
+            requestedProperties: [.density, .molarMass, .specificVolume, .compressibilityFactor],
+            clientVersion: "test"
+        ))
+
+        let equilibrium = try XCTUnwrap(response.waterEquilibrium)
+        XCTAssertEqual(equilibrium.currentWaterPPM, 500)
+        XCTAssertEqual(equilibrium.waterStatus, .belowSaturation)
+        XCTAssertEqual(response.properties.first { $0.property == .density }?.status, .unavailable)
+        XCTAssertEqual(response.properties.first { $0.property == .molarMass }?.status, .unavailable)
+        XCTAssertEqual(response.properties.first { $0.property == .specificVolume }?.status, .unavailable)
+        XCTAssertEqual(response.properties.first { $0.property == .compressibilityFactor }?.status, .unavailable)
     }
 
     func testValidatedWaterEquilibriumIsAttachedWithoutReplacingHomogeneousProperties() async throws {
@@ -806,7 +861,30 @@ final class CoolPropProviderTests: XCTestCase {
             ))
             XCTFail("Expected the wet state to be rejected.")
         } catch let ProviderError.invalidRequest(message) {
-            XCTAssertTrue(message.contains("350–423.15 K"))
+            XCTAssertTrue(message.contains("No General Properties CO₂/H₂O calculation family"))
+        } catch {
+            XCTFail("Expected invalidRequest, got \(error).")
+        }
+    }
+
+    func testWetMulticomponentDoesNotFallThroughToBinaryWaterEquilibrium() async {
+        let provider = CoolPropProvider(engine: MockEngine())
+        do {
+            _ = try await provider.calculate(CalculationRequest(
+                modelID: provider.descriptor.id,
+                pressurePa: 4_000_000,
+                temperatureK: 333.15,
+                composition: [
+                    .init(component: .carbonDioxide, moleFraction: 0.9899),
+                    .init(component: .nitrogen, moleFraction: 0.01),
+                    .init(component: .water, moleFraction: 0.0001)
+                ],
+                requestedProperties: [.density],
+                clientVersion: "test"
+            ))
+            XCTFail("Expected wet multicomponent state to be rejected.")
+        } catch let ProviderError.invalidRequest(message) {
+            XCTAssertTrue(message.contains("binary CO₂/H₂O"))
         } catch {
             XCTFail("Expected invalidRequest, got \(error).")
         }
@@ -824,6 +902,22 @@ final class CoolPropProviderTests: XCTestCase {
         ))
         XCTAssertTrue(guidance?.currentInputIssues.contains {
             $0.detail.contains("Water-equilibrium results remain available")
+        } == true)
+    }
+
+    func testWaterGuidanceShowsEquilibriumAvailableWhenTemperatureOnlyBlocksHomogeneousProperties() {
+        let provider = CoolPropProvider(engine: MockEngine())
+        let guidance = provider.operatingRangeGuidance(for: .init(
+            pressurePa: 4_000_000,
+            temperatureK: 333.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.9999),
+                .init(component: .water, moleFraction: 0.0001)
+            ]
+        ))
+        XCTAssertTrue(guidance?.currentInputIssues.contains {
+            $0.title == "Homogeneous properties outside preliminary range"
+                && $0.detail.contains("Water-equilibrium results remain available")
         } == true)
     }
 

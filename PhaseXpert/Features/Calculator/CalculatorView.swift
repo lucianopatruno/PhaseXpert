@@ -916,6 +916,9 @@ private struct CompactValidationStatusView: View {
 
     private var title: String {
         if !validatedProperties.isEmpty { return "Limited validation" }
+        if homogeneousUnavailableWhileWaterEquilibriumAvailable {
+            return "Capability-specific validation"
+        }
         if guidance.currentInputIssues.contains(where: { $0.severity == .unsupported }) {
             return "Outside validated range"
         }
@@ -923,11 +926,21 @@ private struct CompactValidationStatusView: View {
     }
 
     private var detail: String {
+        if homogeneousUnavailableWhileWaterEquilibriumAvailable {
+            return "Water equilibrium validated; homogeneous properties unavailable at this state"
+        }
         guard !validatedProperties.isEmpty else {
             return guidance.currentInputIssues.first?.title
                 ?? "Open validation details after calculation for scientific scope."
         }
         return AdvancedValidationPresentation.propertyList(validatedProperties)
+    }
+
+    private var homogeneousUnavailableWhileWaterEquilibriumAvailable: Bool {
+        guidance.currentInputIssues.contains {
+            $0.title == "Homogeneous properties outside preliminary range"
+                && $0.detail.contains("Water-equilibrium results remain available")
+        }
     }
 }
 

@@ -41,8 +41,12 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
-    func testPhoneCaseSixtyCelsiusFortyBarRunsEquilibriumWhenHomogeneousIsUnavailable() async throws {
-        let viewModel = wetGeneralViewModel(pressureBar: 40, temperatureCelsius: 60)
+    func testPhoneCaseSixtyCelsiusFortyBarRunsPartialEquilibriumWhenHomogeneousIsUnavailable() async throws {
+        let viewModel = wetGeneralViewModel(
+            pressureBar: 40,
+            temperatureCelsius: 60,
+            waterPPM: 100
+        )
         viewModel.validate()
 
         XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
@@ -54,12 +58,44 @@ final class PhaseXpertTests: XCTestCase {
 
         await viewModel.calculate()
 
-        let result = try XCTUnwrap(viewModel.standaloneWaterEquilibriumResult)
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        let result = try XCTUnwrap(record.response.waterEquilibrium)
+        XCTAssertEqual(result.waterStatus, .belowSaturation)
+        XCTAssertEqual(try XCTUnwrap(result.currentWaterPPM), 100, accuracy: 1e-9)
+        XCTAssertGreaterThan(result.waterInCarbonDioxideRichPhasePPM, 100)
+        XCTAssertGreaterThan(try XCTUnwrap(result.marginToSaturationPPM), 0)
+        for property in [PropertyID.density, .molarMass, .specificVolume, .compressibilityFactor] {
+            let value = try XCTUnwrap(record.response.properties.first { $0.property == property })
+            XCTAssertNil(value.value)
+            XCTAssertEqual(value.status, .unavailable)
+            XCTAssertEqual(value.message, "Outside preliminary homogeneous-property range.")
+        }
+        XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
+        XCTAssertNil(viewModel.calculationError)
+    }
+
+    @MainActor
+    func testPhoneCaseSixtyCelsiusFortyBarFiveHundredPPMRunsPartialEquilibrium() async throws {
+        let viewModel = wetGeneralViewModel(
+            pressureBar: 40,
+            temperatureCelsius: 60,
+            waterPPM: 500
+        )
+        viewModel.validate()
+
+        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertTrue(viewModel.canRunCalculation)
+        await viewModel.calculate()
+
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        let result = try XCTUnwrap(record.response.waterEquilibrium)
         XCTAssertEqual(result.waterStatus, .belowSaturation)
         XCTAssertEqual(try XCTUnwrap(result.currentWaterPPM), 500, accuracy: 1e-9)
         XCTAssertGreaterThan(result.waterInCarbonDioxideRichPhasePPM, 500)
-        XCTAssertGreaterThan(try XCTUnwrap(result.marginToSaturationPPM), 0)
-        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertEqual(
+            record.response.properties.first { $0.property == .density }?.status,
+            .unavailable
+        )
         XCTAssertNil(viewModel.calculationError)
     }
 
@@ -68,17 +104,22 @@ final class PhaseXpertTests: XCTestCase {
         let viewModel = wetGeneralViewModel(pressureBar: 100, temperatureCelsius: 100)
         viewModel.validate()
 
-        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertTrue(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
         XCTAssertTrue(viewModel.canRunCalculation)
         await viewModel.calculate()
 
-        let result = try XCTUnwrap(viewModel.standaloneWaterEquilibriumResult)
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        let result = try XCTUnwrap(record.response.waterEquilibrium)
         XCTAssertEqual(result.waterStatus, .belowSaturation)
         XCTAssertEqual(try XCTUnwrap(result.currentWaterPPM), 500, accuracy: 1e-9)
         XCTAssertEqual(result.waterInCarbonDioxideRichPhasePPM, 17_914.32, accuracy: 0.1)
         XCTAssertEqual(try XCTUnwrap(result.marginToSaturationPPM), 17_414.32, accuracy: 0.1)
         XCTAssertEqual(result.carbonDioxideInWaterRichPhaseMoleFraction * 100, 1.410471, accuracy: 0.00001)
-        XCTAssertNil(viewModel.calculationRecord)
+        XCTAssertEqual(
+            record.response.properties.first { $0.property == .density }?.status,
+            .calculated
+        )
+        XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
         XCTAssertNil(viewModel.calculationError)
     }
 
@@ -120,18 +161,83 @@ final class PhaseXpertTests: XCTestCase {
     @MainActor
     private func wetGeneralViewModel(
         pressureBar: Double,
-        temperatureCelsius: Double
+        temperatureCelsius: Double,
+        waterPPM: Double = 500
     ) -> CalculatorViewModel {
-        let viewModel = CalculatorViewModel()
+        let provider = CoolPropProvider(engine: WetMockCoolPropEngine())
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(
+            providers: [provider],
+            extraDescriptors: []
+        ))
         viewModel.selectedModelID = "coolprop-heos"
         viewModel.pressureText = String(pressureBar)
         viewModel.temperatureText = String(temperatureCelsius)
         viewModel.compositionBasis = .partsPerMillion
         viewModel.composition = [
-            CompositionInput(component: .carbonDioxide, value: "999500"),
-            CompositionInput(component: .water, value: "500")
+            CompositionInput(component: .carbonDioxide, value: String(format: "%.12g", 1_000_000 - waterPPM)),
+            CompositionInput(component: .water, value: String(format: "%.12g", waterPPM))
         ]
         return viewModel
+    }
+
+    private struct WetMockCoolPropEngine: CoolPropEngine {
+        let isAvailable = true
+        let libraryVersion = "8.0.0-test"
+
+        func calculatePureCarbonDioxide(
+            pressurePa: Double,
+            temperatureK: Double
+        ) async throws -> CoolPropEngineResult {
+            CoolPropEngineResult(
+                densityKilogramsPerCubicMetre: 700,
+                dynamicViscosityPascalSeconds: 0.00007,
+                phaseIdentifier: "supercritical_liquid"
+            )
+        }
+
+        func calculateDryCarbonDioxideMixture(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent],
+            imposedPhase: CoolPropSinglePhaseHint
+        ) async throws -> CoolPropBinaryEngineResult {
+            CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: 50,
+                phaseIdentifier: "gas"
+            )
+        }
+
+        func identifyDryCarbonDioxideMixturePhase(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropPhaseEngineResult {
+            CoolPropPhaseEngineResult(phaseIdentifier: "gas")
+        }
+
+        func calculateCarbonDioxideWaterHomogeneousGas(
+            pressurePa: Double,
+            temperatureK: Double,
+            carbonDioxideMoleFraction: Double,
+            waterMoleFraction: Double
+        ) async throws -> CoolPropBinaryEngineResult {
+            CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: 31.25,
+                phaseIdentifier: "gas"
+            )
+        }
+
+        func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+            CoolPropSaturationLimits(
+                triplePointTemperatureK: 216.592,
+                criticalPointTemperatureK: 304.1282,
+                criticalPointPressurePa: 7_377_300
+            )
+        }
+
+        func pureCarbonDioxideSaturationPressure(temperatureK: Double) async throws -> Double {
+            1_000_000
+        }
     }
 
     @MainActor

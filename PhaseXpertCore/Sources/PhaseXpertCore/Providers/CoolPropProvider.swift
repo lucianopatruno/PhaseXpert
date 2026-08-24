@@ -613,7 +613,19 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
         if let temperatureK = context.temperatureK,
            !(350...423.15).contains(temperatureK) {
-            issues.append(.init(severity: .unsupported, title: "Temperature outside preliminary range", detail: "CO₂/H₂O homogeneous gas is limited to 350–423.15 K."))
+            let equilibriumRemainsAvailable = context.pressurePa.map {
+                SpycherPruess2003WaterEquilibrium.isValidated(
+                    pressurePa: $0,
+                    temperatureK: temperatureK
+                )
+            } ?? false
+            issues.append(.init(
+                severity: .unsupported,
+                title: "Homogeneous properties outside preliminary range",
+                detail: equilibriumRemainsAvailable
+                    ? "Homogeneous wet-gas properties are limited to 350–423.15 K. Water-equilibrium results remain available within their separate validated range."
+                    : "CO₂/H₂O homogeneous gas is limited to 350–423.15 K."
+            ))
         }
         if let pressurePa = context.pressurePa,
            !(500_000...5_000_000).contains(pressurePa) {
@@ -751,16 +763,24 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ]
             )
         case let .wetCarbonDioxideGas(activeComposition):
-            guard request.temperatureK >= 350,
-                  request.temperatureK <= 423.15,
-                  request.pressurePa >= 500_000,
-                  request.pressurePa <= 5_000_000 else {
-                throw ProviderError.invalidRequest(
-                    "Preliminary CO₂/H₂O homogeneous gas support is limited to 350–423.15 K and 0.5–5 MPa."
-                )
-            }
             let carbonDioxide = activeComposition.first { $0.component == .carbonDioxide }?.moleFraction ?? 0
             let water = activeComposition.first { $0.component == .water }?.moleFraction ?? 0
+            guard homogeneousWaterGasIsCalculable(
+                pressurePa: request.pressurePa,
+                temperatureK: request.temperatureK,
+                waterMoleFraction: water
+            ) else {
+                if let response = waterEquilibriumOnlyResponse(
+                    request: request,
+                    currentWaterMoleFraction: water,
+                    startedAt: startedAt
+                ) {
+                    return response
+                }
+                throw ProviderError.invalidRequest(
+                    "No General Properties CO₂/H₂O calculation family is available at this state. Preliminary homogeneous gas support is limited to 350–423.15 K and 0.5–5 MPa; water equilibrium is limited to \(SpycherPruess2003WaterEquilibrium.validatedRangeSummary)"
+                )
+            }
             let raw = try await engine.calculateCarbonDioxideWaterHomogeneousGas(
                 pressurePa: request.pressurePa,
                 temperatureK: request.temperatureK,
@@ -856,6 +876,98 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             ] + state.warnings + equilibriumWarnings,
             isScientificResult: true,
             waterEquilibrium: waterEquilibrium
+        )
+    }
+
+    private func homogeneousWaterGasIsCalculable(
+        pressurePa: Double,
+        temperatureK: Double,
+        waterMoleFraction: Double
+    ) -> Bool {
+        (1e-6...0.001).contains(waterMoleFraction)
+            && (350...423.15).contains(temperatureK)
+            && (500_000...5_000_000).contains(pressurePa)
+    }
+
+    private func waterEquilibriumOnlyResponse(
+        request: CalculationRequest,
+        currentWaterMoleFraction: Double,
+        startedAt: Date
+    ) -> CalculationResponse? {
+        guard let waterEquilibrium = try? SpycherPruess2003WaterEquilibrium().equilibrium(
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            currentWaterMoleFraction: currentWaterMoleFraction
+        ) else {
+            return nil
+        }
+        let values = request.requestedProperties
+            .sorted { $0.rawValue < $1.rawValue }
+            .map(wetHomogeneousUnavailableProperty)
+        return CalculationResponse(
+            requestID: request.requestID,
+            model: descriptor,
+            phase: .unavailable,
+            properties: values,
+            solver: SolverMetadata(
+                method: "Partial General Properties result: binary CO₂/H₂O water equilibrium only; homogeneous wet-gas properties skipped outside preliminary property range",
+                converged: true,
+                durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
+            ),
+            warnings: [
+                "PARTIAL RESULT — water equilibrium was calculated; homogeneous wet-gas density and derived M, v and Z are unavailable at this state.",
+                "WATER EQUILIBRIUM — LIMITED PRODUCTION: binary CO₂ + pure H₂O only, independently validated in separate 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions.",
+                "HOMOGENEOUS PROPERTIES — UNAVAILABLE: preliminary CO₂/H₂O homogeneous gas support is limited to 350–423.15 K and 0.5–5 MPa."
+            ],
+            isScientificResult: true,
+            waterEquilibrium: waterEquilibrium
+        )
+    }
+
+    private func wetHomogeneousUnavailableProperty(
+        for property: PropertyID
+    ) -> PropertyValue {
+        let unit: String
+        switch property {
+        case .density:
+            unit = "kg/m³"
+        case .molarMass:
+            unit = "kg/mol"
+        case .specificVolume:
+            unit = "m³/kg"
+        case .compressibilityFactor:
+            unit = "1"
+        case .dynamicViscosity:
+            unit = "Pa·s"
+        case .enthalpy, .internalEnergy:
+            unit = "J/kg"
+        case .entropy:
+            unit = "J/(kg·K)"
+        case .isobaricHeatCapacity, .isochoricHeatCapacity:
+            unit = "J/(kg·K)"
+        case .heatCapacityRatio:
+            unit = "1"
+        case .speedOfSound:
+            unit = "m/s"
+        case .thermalConductivity:
+            unit = "W/(m·K)"
+        case .jouleThomsonCoefficient:
+            unit = "°C/bar"
+        default:
+            unit = ""
+        }
+        let message: String
+        if GeneralPropertiesCapabilityMatrix.wetHomogeneousCalculableProperties.contains(property) {
+            message = "Outside preliminary homogeneous-property range."
+        } else {
+            message = "This wet-gas property is unavailable pending independent validation."
+        }
+        return PropertyValue(
+            property: property,
+            value: nil,
+            unit: unit,
+            status: .unavailable,
+            message: message
         )
     }
 
