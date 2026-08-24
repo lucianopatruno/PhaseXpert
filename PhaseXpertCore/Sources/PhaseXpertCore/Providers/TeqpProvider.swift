@@ -400,6 +400,8 @@ public struct TeqpTPDResult: Equatable, Sendable {
     public let iterationCount: Int
     public let densityRootEvaluations: Int
     public let distinctMinimumCount: Int
+    public let deterministicStartCount: Int
+    public let successfulStartCount: Int
 }
 
 public struct TeqpTPFlashResult: Equatable, Sendable {

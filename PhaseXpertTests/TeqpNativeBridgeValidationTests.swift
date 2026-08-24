@@ -318,6 +318,83 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
+    func testKeGeorge2017CO2ArN2BoundaryDatasetAndPredictions() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        struct Source: Decodable {
+            struct Metadata: Decodable { let doi: String; let pressure_basis: String }
+            struct Row: Decodable { let id: String; let family: String; let boundary: String; let x: [Double]; let t_k: Double; let p_mpa: Double }
+            let source: Metadata
+            let rows: [Row]
+        }
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Documentation/Validation/KeGeorge2017CO2ArN2PhaseBoundary.json")
+        let source = try JSONDecoder().decode(Source.self, from: Data(contentsOf: url))
+        XCTAssertEqual(source.source.doi, "10.1016/j.ijggc.2016.11.003")
+        XCTAssertEqual(source.source.pressure_basis, "absolute")
+        XCTAssertEqual(source.rows.count, 63)
+        XCTAssertEqual(Set(source.rows.map(\.id)).count, 63)
+        XCTAssertEqual(source.rows.filter { $0.boundary == "bubble" }.count, 24)
+        XCTAssertEqual(source.rows.filter { $0.boundary == "dew" }.count, 39)
+        XCTAssertTrue(source.rows.allSatisfy { abs($0.x.reduce(0, +) - 1) < 1e-12 })
+
+        var predictions: [[String: Any]] = []
+        var runtimes: [Double] = []
+        for row in source.rows {
+            var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentArgon.rawValue), Int32(PXTeqpComponentNitrogen.rawValue)]
+            var specified = row.x
+            var liquid = [Double](repeating: .nan, count: 3)
+            var vapor = liquid
+            var result = PXTeqpNComponentVLEResult()
+            var error = [CChar](repeating: 0, count: 512)
+            let started = CFAbsoluteTimeGetCurrent()
+            let status = px_teqp_calculate_ncomponent_vle(
+                &ids, &specified, 3, row.t_k,
+                row.boundary == "bubble" ? PXTeqpEquilibriumBubble : PXTeqpEquilibriumDew,
+                &liquid, 3, &vapor, 3, &result, &error, error.count
+            )
+            runtimes.append((CFAbsoluteTimeGetCurrent() - started) * 1_000)
+            predictions.append([
+                "id": row.id, "family": row.family, "boundary": row.boundary,
+                "temperature_k": row.t_k, "experimental_pressure_pa": row.p_mpa * 1e6,
+                "predicted_pressure_pa": result.pressure_pa,
+                "converged": status == 0 && result.converged == 1,
+                "status": status, "equilibrium_status": result.status.rawValue,
+                "liquid_composition": liquid, "vapor_composition": vapor,
+                "fugacity_residual": result.maximum_log_fugacity_residual,
+                "pressure_residual": result.relative_pressure_residual,
+                "error": String(cString: error)
+            ])
+        }
+        let converged = predictions.filter { ($0["converged"] as? Bool) == true }
+        let deviations = converged.map {
+            (($0["predicted_pressure_pa"] as! Double) - ($0["experimental_pressure_pa"] as! Double))
+                / ($0["experimental_pressure_pa"] as! Double)
+        }
+        let absoluteErrors = converged.map { abs(($0["predicted_pressure_pa"] as! Double) - ($0["experimental_pressure_pa"] as! Double)) }
+        let metrics: [String: Any] = [
+            "rows": source.rows.count, "converged": converged.count,
+            "pressure_mae_pa": absoluteErrors.isEmpty ? NSNull() : absoluteErrors.reduce(0, +) / Double(absoluteErrors.count),
+            "pressure_aard_percent": deviations.isEmpty ? NSNull() : deviations.map(abs).reduce(0, +) / Double(deviations.count) * 100,
+            "pressure_bias_percent": deviations.isEmpty ? NSNull() : deviations.reduce(0, +) / Double(deviations.count) * 100,
+            "pressure_rms_percent": deviations.isEmpty ? NSNull() : sqrt(deviations.map { $0 * $0 }.reduce(0, +) / Double(deviations.count)) * 100,
+            "pressure_worst_percent": deviations.isEmpty ? NSNull() : deviations.max(by: { abs($0) < abs($1) })! * 100,
+            "runtime_ms": ["median": runtimes.sorted()[runtimes.count / 2], "mean": runtimes.reduce(0, +) / Double(runtimes.count), "worst": runtimes.max()!]
+        ]
+        let payload: [String: Any] = ["source_doi": source.source.doi, "teqp_version": "v0.23.1", "teqp_commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca", "metrics": metrics, "rows": predictions]
+        let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: URL(fileURLWithPath: "/tmp/KeGeorge2017CO2ArN2Predictions.json"))
+        let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+        attachment.name = "KeGeorge2017CO2ArN2Predictions"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertEqual(predictions.count, 63)
+        print("KE-GEORGE-SUMMARY", metrics)
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
     func testTernaryVLEIsDeterministicAndRejectsUnclosedComposition() throws {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         func solve(_ composition: [Double]) -> (Int32, PXTeqpNComponentVLEResult, [Double], [Double], String) {
@@ -347,6 +424,88 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         #endif
     }
 
+    func testGenericPseudoArclengthEnvelopeContinuationIsDeterministicAndConsistent() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        func trace() -> (Int32, PXTeqpNComponentEnvelopeResult, [Double], [Double], [Double], [Double], [Double], [Double], String, Double) {
+            let capacity = 24
+            var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
+            var specified = [0.9807, 0.0089, 0.0104]
+            var temperatures = [Double](repeating: .nan, count: capacity)
+            var pressures = temperatures
+            var liquidDensities = temperatures
+            var vaporDensities = temperatures
+            var liquid = [Double](repeating: .nan, count: capacity * ids.count)
+            var vapor = liquid
+            var result = PXTeqpNComponentEnvelopeResult()
+            var error = [CChar](repeating: 0, count: 768)
+            let started = CFAbsoluteTimeGetCurrent()
+            let status = px_teqp_trace_ncomponent_phase_envelope(
+                &ids, &specified, ids.count, PXTeqpEquilibriumBubble,
+                298.138, -1, 273.15, 303.15, 1.0, 0.01, 0.35, 100,
+                &temperatures, &pressures, &liquidDensities, &vaporDensities,
+                &liquid, liquid.count, &vapor, vapor.count, capacity,
+                &result, &error, error.count
+            )
+            return (status, result, temperatures, pressures, liquidDensities, vaporDensities, liquid, vapor, String(cString: error), (CFAbsoluteTimeGetCurrent() - started) * 1_000)
+        }
+        let first = trace()
+        XCTAssertEqual(first.0, 0, first.8)
+        XCTAssertGreaterThan(first.1.converged_point_count, 4)
+        XCTAssertLessThanOrEqual(first.1.attempted_point_count, 100)
+        let count = Int(first.1.converged_point_count)
+        for point in 0..<count {
+            XCTAssertTrue(first.2[point].isFinite)
+            XCTAssertGreaterThan(first.3[point], 0)
+            XCTAssertGreaterThan(first.4[point], first.5[point])
+            let range = (point * 3)..<(point * 3 + 3)
+            XCTAssertEqual(first.6[range].reduce(0, +), 1, accuracy: 1e-11)
+            XCTAssertEqual(first.7[range].reduce(0, +), 1, accuracy: 1e-11)
+            XCTAssertLessThan(hypot(
+                first.6[point * 3 + 1] - first.7[point * 3 + 1],
+                first.6[point * 3 + 2] - first.7[point * 3 + 2]
+            ), 0.15)
+        }
+        let repeated = trace()
+        XCTAssertEqual(repeated.0, 0, repeated.8)
+        XCTAssertEqual(repeated.1.converged_point_count, first.1.converged_point_count)
+        XCTAssertEqual(Array(repeated.2.prefix(count)), Array(first.2.prefix(count)))
+        XCTAssertEqual(Array(repeated.3.prefix(count)), Array(first.3.prefix(count)))
+        let performance: [String: Any] = [
+            "point_count": count,
+            "first_trace_ms": first.9,
+            "repeated_trace_ms": repeated.9,
+            "mean_trace_ms": 0.5 * (first.9 + repeated.9),
+            "mean_ms_per_accepted_point": 0.5 * (first.9 + repeated.9) / Double(count)
+        ]
+        let performanceData = try JSONSerialization.data(withJSONObject: performance, options: [.prettyPrinted, .sortedKeys])
+        let attachment = XCTAttachment(data: performanceData, uniformTypeIdentifier: "public.json")
+        attachment.name = "PseudoArclengthEnvelopePerformance"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+
+        var invalidSpecified = [0.9806, 0.0089, 0.0104]
+        var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
+        var temperatures = [Double](repeating: 0, count: 2)
+        var pressures = temperatures
+        var liquidDensities = temperatures
+        var vaporDensities = temperatures
+        var liquid = [Double](repeating: 0, count: 6)
+        var vapor = liquid
+        var result = PXTeqpNComponentEnvelopeResult()
+        var error = [CChar](repeating: 0, count: 256)
+        XCTAssertEqual(px_teqp_trace_ncomponent_phase_envelope(
+            &ids, &invalidSpecified, 3, PXTeqpEquilibriumBubble,
+            278.15, 1, 273.15, 303.15, 1, 0.01, 0.35, 20,
+            &temperatures, &pressures, &liquidDensities, &vaporDensities,
+            &liquid, 6, &vapor, 6, 2,
+            &result, &error, error.count
+        ), 5)
+        XCTAssertTrue(String(cString: error).contains("sum to one"))
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
     func testGenericTPDAndTernaryTPFlashDemonstrator() throws {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
         var ids = [Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentNitrogen.rawValue), Int32(PXTeqpComponentMethane.rawValue)]
@@ -354,18 +513,24 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         var minimum = [Double](repeating: 0, count: 3)
         var tpd = PXTeqpTPDResult()
         var error = [CChar](repeating: 0, count: 512)
+        let tpdStarted = CFAbsoluteTimeGetCurrent()
         let tpdStatus = px_teqp_calculate_ncomponent_tpd(&ids, &feed, 3, 7_050_000, 298.138, &minimum, 3, &tpd, &error, error.count)
+        let tpdRuntimeMS = (CFAbsoluteTimeGetCurrent() - tpdStarted) * 1_000
         print("TPD-DEMONSTRATOR", tpdStatus, tpd.status.rawValue, tpd.minimum_tpd, minimum, tpd.reference_molar_density_mol_m3, tpd.trial_molar_density_mol_m3)
         XCTAssertEqual(tpdStatus, 0, String(cString: error))
         XCTAssertEqual(tpd.status, PXTeqpStabilityUnstable)
         XCTAssertLessThan(tpd.minimum_tpd, -2e-6)
         XCTAssertEqual(minimum.reduce(0, +), 1, accuracy: 1e-12)
+        XCTAssertEqual(tpd.start_count, 7)
+        XCTAssertEqual(tpd.successful_start_count, tpd.start_count)
 
         var liquid = [Double](repeating: 0, count: 3)
         var vapor = [Double](repeating: 0, count: 3)
         var flash = PXTeqpTPFlashResult()
         error = [CChar](repeating: 0, count: 512)
+        let flashStarted = CFAbsoluteTimeGetCurrent()
         let flashStatus = px_teqp_calculate_ncomponent_tp_flash(&ids, &feed, 3, 7_050_000, 298.138, &liquid, 3, &vapor, 3, &flash, &error, error.count)
+        let flashRuntimeMS = (CFAbsoluteTimeGetCurrent() - flashStarted) * 1_000
         print("TP-FLASH-DEMONSTRATOR", flashStatus, flash.vapor_fraction, liquid, vapor, flash.maximum_material_balance_residual, flash.maximum_log_fugacity_residual, String(cString: error))
         XCTAssertEqual(flashStatus, 0, String(cString: error))
         XCTAssertGreaterThan(flash.vapor_fraction, 0)
@@ -401,6 +566,121 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertEqual(repeatedFlash.vapor_fraction, flash.vapor_fraction, accuracy: 1e-14)
         XCTAssertEqual(repeatedLiquid, liquid)
         XCTAssertEqual(repeatedVapor, vapor)
+        let performanceData = try JSONSerialization.data(withJSONObject: [
+            "tpd_ms": tpdRuntimeMS,
+            "tp_flash_ms": flashRuntimeMS,
+            "tpd_start_count": tpd.start_count,
+            "tpd_successful_start_count": tpd.successful_start_count
+        ], options: [.prettyPrinted, .sortedKeys])
+        let attachment = XCTAttachment(data: performanceData, uniformTypeIdentifier: "public.json")
+        attachment.name = "TPDFlashPerformance"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        #else
+        throw XCTSkip("Native teqp unavailable")
+        #endif
+    }
+
+    func testTheveneau2020InteriorTPFlashValidationMatrix() throws {
+        #if os(iOS) && canImport(PhaseXpertTeqpBridge)
+        struct Artifact: Decodable {
+            struct Family: Decodable { let z: [Double] }
+            struct Row: Decodable { let id: String; let family: String; let p_mpa: Double; let t_k: Double; let x: [Double]; let y: [Double] }
+            let families: [String: Family]
+            let rows: [Row]
+        }
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Documentation/Validation/Theveneau2020TernaryInteriorVLE.json")
+        let artifact = try JSONDecoder().decode(Artifact.self, from: Data(contentsOf: url))
+        XCTAssertEqual(artifact.rows.count, 31)
+        XCTAssertEqual(Set(artifact.rows.map(\.id)).count, 31)
+        var output: [[String: Any]] = []
+        var runtimes: [Double] = []
+        func jsonNumber(_ value: Double) -> Any { value.isFinite ? value : NSNull() }
+        func jsonArray(_ values: [Double]) -> [Any] { values.map(jsonNumber) }
+        for row in artifact.rows {
+            var ids = [Int32(PXTeqpComponentMethane.rawValue), Int32(PXTeqpComponentCarbonDioxide.rawValue), Int32(PXTeqpComponentHydrogenSulfide.rawValue)]
+            var feed = try XCTUnwrap(artifact.families[row.family]?.z)
+            var liquid = [Double](repeating: .nan, count: 3)
+            var vapor = liquid
+            var flash = PXTeqpTPFlashResult()
+            var error = [CChar](repeating: 0, count: 768)
+            let started = CFAbsoluteTimeGetCurrent()
+            let status = px_teqp_calculate_ncomponent_tp_flash(
+                &ids, &feed, 3, row.p_mpa * 1e6, row.t_k,
+                &liquid, 3, &vapor, 3, &flash, &error, error.count
+            )
+            runtimes.append((CFAbsoluteTimeGetCurrent() - started) * 1_000)
+            let inferredBetas = zip(zip(feed, row.x), row.y).compactMap { pair -> Double? in
+                let ((z, x), y) = pair
+                guard abs(y - x) > 1e-6 else { return nil }
+                return (z - x) / (y - x)
+            }.filter { $0.isFinite && $0 >= 0 && $0 <= 1 }
+            let inferredBeta = inferredBetas.isEmpty ? Double.nan
+                : inferredBetas.reduce(0, +) / Double(inferredBetas.count)
+            let betaSpread = inferredBetas.isEmpty ? Double.nan
+                : inferredBetas.map { abs($0 - inferredBeta) }.max()!
+            output.append([
+                "id": row.id, "family": row.family, "temperature_k": row.t_k,
+                "pressure_pa": row.p_mpa * 1e6, "feed": feed,
+                "experimental_liquid_composition": row.x,
+                "experimental_vapor_composition": row.y,
+                "inferred_experimental_beta": jsonNumber(inferredBeta),
+                "inferred_beta_component_spread": jsonNumber(betaSpread),
+                "converged": status == 0 && flash.converged == 1 && flash.vapor_fraction.isFinite,
+                "predicted_liquid_composition": jsonArray(liquid),
+                "predicted_vapor_composition": jsonArray(vapor),
+                "predicted_beta": jsonNumber(flash.vapor_fraction),
+                "material_balance_residual": jsonNumber(flash.maximum_material_balance_residual),
+                "fugacity_residual": jsonNumber(flash.maximum_log_fugacity_residual),
+                "postcheck_minimum_tpd": jsonNumber(flash.postcheck_minimum_tpd),
+                "native_status": status, "equilibrium_status": flash.status.rawValue,
+                "error": String(cString: error)
+            ])
+        }
+        let converged = output.filter { ($0["converged"] as? Bool) == true }
+        func compositionErrors(key: String, experimentalKey: String) -> [[Double]] {
+            converged.map { row in
+                let predicted = (row[key] as! [Any]).compactMap { $0 as? Double }
+                return zip(predicted, row[experimentalKey] as! [Double]).map { $0.0 - $0.1 }
+            }
+        }
+        func metrics(_ errors: [[Double]]) -> [[String: Double]] {
+            (0..<3).map { component in
+                let values = errors.map { $0[component] }
+                return [
+                    "mae": values.map(abs).reduce(0, +) / Double(values.count),
+                    "bias": values.reduce(0, +) / Double(values.count),
+                    "rms": sqrt(values.map { $0 * $0 }.reduce(0, +) / Double(values.count)),
+                    "worst": values.max(by: { abs($0) < abs($1) })!
+                ]
+            }
+        }
+        let liquidErrors = compositionErrors(key: "predicted_liquid_composition", experimentalKey: "experimental_liquid_composition")
+        let vaporErrors = compositionErrors(key: "predicted_vapor_composition", experimentalKey: "experimental_vapor_composition")
+        let betaErrors = converged.compactMap { row -> Double? in
+            guard let measured = row["inferred_experimental_beta"] as? Double,
+                  let predicted = row["predicted_beta"] as? Double else { return nil }
+            return measured.isFinite ? predicted - measured : nil
+        }
+        let summary: [String: Any] = [
+            "rows": artifact.rows.count, "converged": converged.count,
+            "liquid_component_metrics": liquidErrors.isEmpty ? [] : metrics(liquidErrors),
+            "vapor_component_metrics": vaporErrors.isEmpty ? [] : metrics(vaporErrors),
+            "beta_inference_rows": betaErrors.count,
+            "beta_mae": betaErrors.isEmpty ? NSNull() : betaErrors.map(abs).reduce(0, +) / Double(betaErrors.count),
+            "runtime_ms": ["median": runtimes.sorted()[runtimes.count / 2], "mean": runtimes.reduce(0, +) / Double(runtimes.count), "worst": runtimes.max()!]
+        ]
+        let payload: [String: Any] = ["source_doi": "10.1021/acs.jced.9b01082", "teqp_version": "v0.23.1", "teqp_commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca", "summary": summary, "rows": output]
+        let data = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+        try data.write(to: URL(fileURLWithPath: "/tmp/Theveneau2020TPFlashPredictions.json"))
+        let attachment = XCTAttachment(data: data, uniformTypeIdentifier: "public.json")
+        attachment.name = "Theveneau2020TPFlashPredictions"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertEqual(output.count, 31)
+        print("THEVENEAU-FLASH-SUMMARY", summary)
         #else
         throw XCTSkip("Native teqp unavailable")
         #endif

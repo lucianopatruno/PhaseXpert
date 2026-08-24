@@ -3136,6 +3136,8 @@ struct TPDState {
     int iterations = 0;
     int root_evaluations = 0;
     int minimum_count = 0;
+    int start_count = 0;
+    int successful_start_count = 0;
     double minimum = std::numeric_limits<double>::infinity();
     double trial_density = std::numeric_limits<double>::quiet_NaN();
     double reference_density = std::numeric_limits<double>::quiet_NaN();
@@ -3250,6 +3252,16 @@ TPDState solve_tpd(
         enriched /= enriched.sum();
         starts.push_back(enriched);
     }
+    for (Eigen::Index i = 0; i < feed.size(); ++i) {
+        for (Eigen::Index j = i + 1; j < feed.size(); ++j) {
+            Eigen::ArrayXd pair = 0.05 * feed;
+            pair[i] += 0.475;
+            pair[j] += 0.475;
+            pair /= pair.sum();
+            starts.push_back(pair);
+        }
+    }
+    out.start_count = static_cast<int>(starts.size());
     std::vector<std::pair<double, Eigen::ArrayXd>> minima;
     for (const auto &start : starts) {
         Eigen::VectorXd logits = log_ratios_from_composition(start);
@@ -3278,6 +3290,7 @@ TPDState solve_tpd(
         }
         out.iterations += iterations;
         if (!std::isfinite(value)) { continue; }
+        ++out.successful_start_count;
         const Eigen::ArrayXd composition = composition_from_log_ratios(logits);
         bool duplicate = false;
         for (const auto &minimum : minima) {
@@ -3429,11 +3442,174 @@ TPFlashState solve_tp_flash(
             out.stability_l=model.minimumStabilityEigenvalue(temperature_k,out.rho_l*x);
             out.stability_v=model.minimumStabilityEigenvalue(temperature_k,out.rho_v*y);
             if(out.rho_l<=1.02*out.rho_v || (x-y).matrix().norm()<1e-5 || out.stability_l<=0 || out.stability_v<=0){out.converged=false;out.status=PXTeqpEquilibriumNoDistinctPhaseSplit;}
+            if (out.converged) {
+                const TPDState liquid_tpd = solve_tpd(model, temperature_k, pressure_pa, x);
+                const TPDState vapor_tpd = solve_tpd(model, temperature_k, pressure_pa, y);
+                if (!liquid_tpd.converged || !vapor_tpd.converged) {
+                    out.converged = false;
+                    out.status = PXTeqpEquilibriumThermodynamicFailure;
+                } else {
+                    out.post_tpd = std::min(liquid_tpd.minimum, vapor_tpd.minimum);
+                    if (liquid_tpd.status == PXTeqpStabilityUnstable
+                        || vapor_tpd.status == PXTeqpStabilityUnstable) {
+                        out.converged = false;
+                        out.status = PXTeqpEquilibriumThermodynamicFailure;
+                    }
+                }
+            }
             break;
         }
         if(!accepted && lambda>=1e9){out.status=PXTeqpEquilibriumStagnated;break;}
     }
     return out;
+}
+
+struct EnvelopePointState {
+    NComponentVLEState state;
+    Eigen::VectorXd variables;
+    double temperature_k = std::numeric_limits<double>::quiet_NaN();
+};
+
+NComponentVLEState evaluate_ncomponent_vle_state(
+    const NComponentMultifluidModel &model,
+    double temperature_k,
+    const Eigen::ArrayXd &specified,
+    PXTeqpEquilibriumSpecification specification,
+    const Eigen::VectorXd &variables,
+    int iterations
+) {
+    NComponentVLEState state;
+    state.iterations = iterations;
+    try {
+        Eigen::ArrayXd liquid, vapor;
+        const Eigen::VectorXd residual = ncomponent_vle_residual(
+            model, temperature_k, specified, specification, variables,
+            &liquid, &vapor
+        );
+        state.liquid_composition = liquid;
+        state.vapor_composition = vapor;
+        state.liquid_density = std::exp(variables[0]);
+        state.vapor_density = std::exp(variables[1]);
+        state.fugacity_residual = residual.head(specified.size()).cwiseAbs().maxCoeff();
+        state.pressure_residual = std::abs(residual[specified.size()]);
+        const double pressure_liquid = model.pressurePa(
+            temperature_k, liquid, state.liquid_density
+        );
+        const double pressure_vapor = model.pressurePa(
+            temperature_k, vapor, state.vapor_density
+        );
+        state.pressure_pa = 0.5 * (pressure_liquid + pressure_vapor);
+        state.liquid_stability = model.minimumStabilityEigenvalue(
+            temperature_k, state.liquid_density * liquid
+        );
+        state.vapor_stability = model.minimumStabilityEigenvalue(
+            temperature_k, state.vapor_density * vapor
+        );
+        const bool finite = std::isfinite(state.pressure_pa)
+            && state.pressure_pa > 0.0 && liquid.isFinite().all()
+            && vapor.isFinite().all();
+        const bool distinct = state.liquid_density > 1.005 * state.vapor_density
+            && (liquid - vapor).matrix().norm() > 1e-7;
+        state.converged = finite && distinct
+            && state.fugacity_residual < 2e-7
+            && state.pressure_residual < 2e-7
+            && state.liquid_stability > 0.0 && state.vapor_stability > 0.0;
+        state.status = state.converged ? PXTeqpEquilibriumConverged
+            : (distinct ? PXTeqpEquilibriumThermodynamicFailure
+                        : PXTeqpEquilibriumNoDistinctPhaseSplit);
+    } catch (...) {
+        state.status = PXTeqpEquilibriumThermodynamicFailure;
+    }
+    return state;
+}
+
+Eigen::VectorXd variables_from_vle_state(
+    const NComponentVLEState &state,
+    PXTeqpEquilibriumSpecification specification
+) {
+    Eigen::VectorXd variables(state.liquid_composition.size() + 1);
+    variables[0] = std::log(state.liquid_density);
+    variables[1] = std::log(state.vapor_density);
+    const Eigen::ArrayXd unknown = specification == PXTeqpEquilibriumBubble
+        ? state.vapor_composition : state.liquid_composition;
+    variables.segment(2, unknown.size() - 1) = log_ratios_from_composition(unknown);
+    return variables;
+}
+
+EnvelopePointState correct_envelope_point(
+    const NComponentMultifluidModel &model,
+    const Eigen::ArrayXd &specified,
+    PXTeqpEquilibriumSpecification specification,
+    const Eigen::VectorXd &predictor,
+    const Eigen::VectorXd &tangent
+) {
+    constexpr double temperature_scale_k = 10.0;
+    EnvelopePointState point;
+    Eigen::VectorXd q = predictor;
+    double lambda = 1e-5;
+    for (int iteration = 0; iteration < 60; ++iteration) {
+        auto residual_for = [&](const Eigen::VectorXd &candidate) {
+            const double temperature_k = candidate[candidate.size() - 1]
+                * temperature_scale_k;
+            Eigen::VectorXd residual(candidate.size());
+            residual.head(candidate.size() - 1) = ncomponent_vle_residual(
+                model, temperature_k, specified, specification,
+                candidate.head(candidate.size() - 1)
+            );
+            residual[residual.size() - 1] = tangent.dot(candidate - predictor);
+            return residual;
+        };
+        Eigen::VectorXd residual;
+        try { residual = residual_for(q); } catch (...) { break; }
+        if (!residual.array().isFinite().all()) { break; }
+        Eigen::MatrixXd jacobian(q.size(), q.size());
+        bool valid_jacobian = true;
+        for (Eigen::Index column = 0; column < q.size(); ++column) {
+            const double h = 2e-5 * std::max(1.0, std::abs(q[column]));
+            Eigen::VectorXd plus = q, minus = q;
+            plus[column] += h;
+            minus[column] -= h;
+            try {
+                jacobian.col(column) = (residual_for(plus) - residual_for(minus))
+                    / (2.0 * h);
+            } catch (...) { valid_jacobian = false; break; }
+        }
+        if (!valid_jacobian || !jacobian.array().isFinite().all()) { break; }
+        Eigen::MatrixXd normal = jacobian.transpose() * jacobian;
+        normal.diagonal().array() += lambda;
+        const Eigen::VectorXd step = normal.ldlt().solve(
+            -jacobian.transpose() * residual
+        );
+        if (!step.array().isFinite().all()) { break; }
+        bool accepted = false;
+        for (int line = 0; line < 14; ++line) {
+            Eigen::VectorXd candidate = q + std::pow(0.5, line) * step;
+            candidate[0] = std::clamp(candidate[0], std::log(1000.0), std::log(80000.0));
+            candidate[1] = std::clamp(candidate[1], std::log(1.0), std::log(30000.0));
+            try {
+                if (residual_for(candidate).squaredNorm() < residual.squaredNorm()) {
+                    q = candidate;
+                    accepted = true;
+                    break;
+                }
+            } catch (...) {}
+        }
+        lambda = accepted ? std::max(1e-10, lambda * 0.3)
+                          : std::min(1e10, lambda * 10.0);
+        point.temperature_k = q[q.size() - 1] * temperature_scale_k;
+        point.variables = q.head(q.size() - 1);
+        point.state = evaluate_ncomponent_vle_state(
+            model, point.temperature_k, specified, specification,
+            point.variables, iteration + 1
+        );
+        if (point.state.converged
+            && std::abs(tangent.dot(q - predictor)) < 2e-7) {
+            return point;
+        }
+        if (!accepted && lambda >= 1e9) { break; }
+    }
+    point.state.converged = false;
+    return point;
 }
 
 }  // namespace
@@ -4384,7 +4560,7 @@ int px_teqp_calculate_ncomponent_tpd(
         for(size_t i=0;i<component_count;++i){if(!std::isfinite(feed_mole_fractions[i])||feed_mole_fractions[i]<=0){copy_text("TPD composition must be finite and positive.",error_buffer,error_buffer_size);return 4;} feed[i]=feed_mole_fractions[i];sum+=feed[i];}
         if(std::abs(sum-1.0)>1e-10){copy_text("TPD composition must sum to one; no normalization is applied.",error_buffer,error_buffer_size);return 5;}
         NComponentMultifluidModel model(ids); const auto state=solve_tpd(model,temperature_k,pressure_pa,feed);
-        result->status=state.status;result->converged=state.converged?1:0;result->iteration_count=state.iterations;result->density_root_evaluations=state.root_evaluations;result->distinct_minimum_count=state.minimum_count;result->minimum_tpd=state.minimum;result->trial_molar_density_mol_m3=state.trial_density;result->reference_molar_density_mol_m3=state.reference_density;
+        result->status=state.status;result->converged=state.converged?1:0;result->iteration_count=state.iterations;result->density_root_evaluations=state.root_evaluations;result->distinct_minimum_count=state.minimum_count;result->start_count=state.start_count;result->successful_start_count=state.successful_start_count;result->minimum_tpd=state.minimum;result->trial_molar_density_mol_m3=state.trial_density;result->reference_molar_density_mol_m3=state.reference_density;
         if(state.composition.size()==static_cast<Eigen::Index>(component_count)){for(size_t i=0;i<component_count;++i)minimum_composition[i]=state.composition[i];}
         if(!state.converged){copy_text("TPD minimization failed.",error_buffer,error_buffer_size);return 6;} copy_text("",error_buffer,error_buffer_size);return 0;
     }catch(const std::exception&e){copy_text(e.what(),error_buffer,error_buffer_size);return 7;}catch(...){copy_text("TPD failed with unknown native exception.",error_buffer,error_buffer_size);return 8;}
@@ -4407,6 +4583,218 @@ int px_teqp_calculate_ncomponent_tp_flash(
         if(state.liquid.size()==static_cast<Eigen::Index>(component_count)){for(size_t i=0;i<component_count;++i){liquid_mole_fractions[i]=state.liquid[i];vapor_mole_fractions[i]=state.vapor[i];}}
         if(!state.converged){copy_text("TP flash did not converge to a defensible equilibrium state.",error_buffer,error_buffer_size);return 6;}copy_text("",error_buffer,error_buffer_size);return 0;
     }catch(const std::exception&e){copy_text(e.what(),error_buffer,error_buffer_size);return 7;}catch(...){copy_text("TP flash failed with unknown native exception.",error_buffer,error_buffer_size);return 8;}
+}
+
+int px_teqp_trace_ncomponent_phase_envelope(
+    const int *component_ids, const double *specified_mole_fractions,
+    size_t component_count, PXTeqpEquilibriumSpecification specification,
+    double starting_temperature_k, double temperature_direction,
+    double minimum_temperature_k, double maximum_temperature_k,
+    double initial_temperature_step_k, double minimum_arclength_step,
+    double maximum_arclength_step, int maximum_attempts,
+    double *temperatures_k, double *pressures_pa,
+    double *liquid_molar_densities_mol_m3,
+    double *vapor_molar_densities_mol_m3,
+    double *liquid_mole_fractions, size_t liquid_mole_fractions_length,
+    double *vapor_mole_fractions, size_t vapor_mole_fractions_length,
+    size_t point_capacity, PXTeqpNComponentEnvelopeResult *result,
+    char *error_buffer, size_t error_buffer_size
+) {
+    if (!component_ids || !specified_mole_fractions || !temperatures_k
+        || !pressures_pa || !liquid_molar_densities_mol_m3
+        || !vapor_molar_densities_mol_m3 || !liquid_mole_fractions
+        || !vapor_mole_fractions || !result) {
+        copy_text("Phase-envelope continuation received a null pointer.", error_buffer, error_buffer_size);
+        return 1;
+    }
+    *result = {};
+    result->termination = PXTeqpEnvelopeInitialPointFailure;
+    result->minimum_phase_composition_distance = std::numeric_limits<double>::infinity();
+    result->minimum_relative_density_separation = std::numeric_limits<double>::infinity();
+    if (component_count < 2 || component_count > 9 || point_capacity < 2
+        || liquid_mole_fractions_length < point_capacity * component_count
+        || vapor_mole_fractions_length < point_capacity * component_count
+        || (specification != PXTeqpEquilibriumBubble
+            && specification != PXTeqpEquilibriumDew)
+        || !std::isfinite(starting_temperature_k)
+        || !std::isfinite(minimum_temperature_k)
+        || !std::isfinite(maximum_temperature_k)
+        || starting_temperature_k < minimum_temperature_k
+        || starting_temperature_k > maximum_temperature_k
+        || minimum_temperature_k <= 0.0
+        || maximum_temperature_k <= minimum_temperature_k
+        || !std::isfinite(temperature_direction) || temperature_direction == 0.0
+        || !std::isfinite(initial_temperature_step_k) || initial_temperature_step_k <= 0.0
+        || !std::isfinite(minimum_arclength_step) || minimum_arclength_step <= 0.0
+        || !std::isfinite(maximum_arclength_step)
+        || maximum_arclength_step < minimum_arclength_step
+        || maximum_attempts < 1 || maximum_attempts > 10000) {
+        copy_text("Phase-envelope continuation input dimensions or bounds are invalid.", error_buffer, error_buffer_size);
+        return 2;
+    }
+    try {
+        const std::vector<int> ids(component_ids, component_ids + component_count);
+        if (std::set<int>(ids.begin(), ids.end()).size() != component_count) {
+            copy_text("Phase-envelope component identifiers must be unique.", error_buffer, error_buffer_size);
+            return 3;
+        }
+        Eigen::ArrayXd specified(static_cast<Eigen::Index>(component_count));
+        double sum = 0.0;
+        for (size_t i = 0; i < component_count; ++i) {
+            const double value = specified_mole_fractions[i];
+            if (!std::isfinite(value) || value <= 0.0) {
+                copy_text("Phase-envelope composition must be finite and positive.", error_buffer, error_buffer_size);
+                return 4;
+            }
+            specified[static_cast<Eigen::Index>(i)] = value;
+            sum += value;
+        }
+        if (std::abs(sum - 1.0) > 1e-10) {
+            copy_text("Phase-envelope composition must sum to one; no normalization is applied.", error_buffer, error_buffer_size);
+            return 5;
+        }
+        NComponentMultifluidModel model(ids);
+        const NComponentVLEState initial = solve_ncomponent_vle(
+            model, starting_temperature_k, specified, specification
+        );
+        if (!initial.converged) {
+            copy_text("Phase-envelope initial boundary point did not converge.", error_buffer, error_buffer_size);
+            return 6;
+        }
+        auto store_point = [&](size_t index, const EnvelopePointState &point) {
+            temperatures_k[index] = point.temperature_k;
+            pressures_pa[index] = point.state.pressure_pa;
+            liquid_molar_densities_mol_m3[index] = point.state.liquid_density;
+            vapor_molar_densities_mol_m3[index] = point.state.vapor_density;
+            for (size_t component = 0; component < component_count; ++component) {
+                const size_t offset = index * component_count + component;
+                liquid_mole_fractions[offset] = point.state.liquid_composition[component];
+                vapor_mole_fractions[offset] = point.state.vapor_composition[component];
+            }
+        };
+        EnvelopePointState previous;
+        previous.state = initial;
+        previous.variables = variables_from_vle_state(initial, specification);
+        previous.temperature_k = starting_temperature_k;
+        store_point(0, previous);
+        result->converged_point_count = 1;
+        result->total_corrector_iterations = initial.iterations;
+        Eigen::VectorXd previous_q(previous.variables.size() + 1);
+        previous_q.head(previous.variables.size()) = previous.variables;
+        previous_q[previous_q.size() - 1] = starting_temperature_k / 10.0;
+        Eigen::VectorXd older_q;
+        Eigen::VectorXd tangent = Eigen::VectorXd::Zero(previous_q.size());
+        tangent[tangent.size() - 1] = temperature_direction > 0.0 ? 1.0 : -1.0;
+        double step = std::clamp(
+            initial_temperature_step_k / 10.0,
+            minimum_arclength_step, maximum_arclength_step
+        );
+        double previous_temperature_tangent = tangent[tangent.size() - 1];
+        for (int attempt = 0; attempt < maximum_attempts; ++attempt) {
+            if (static_cast<size_t>(result->converged_point_count) >= point_capacity) {
+                result->termination = PXTeqpEnvelopeReachedPointCapacity;
+                break;
+            }
+            ++result->attempted_point_count;
+            const Eigen::VectorXd predictor = previous_q + step * tangent;
+            EnvelopePointState candidate = correct_envelope_point(
+                model, specified, specification, predictor, tangent
+            );
+            const bool inside_temperature_bounds = candidate.state.converged
+                && candidate.temperature_k >= minimum_temperature_k
+                && candidate.temperature_k <= maximum_temperature_k;
+            bool continuous = inside_temperature_bounds;
+            if (continuous) {
+                const double composition_jump = std::max(
+                    (candidate.state.liquid_composition - previous.state.liquid_composition).matrix().norm(),
+                    (candidate.state.vapor_composition - previous.state.vapor_composition).matrix().norm()
+                );
+                const double pressure_jump = std::abs(std::log(
+                    candidate.state.pressure_pa / previous.state.pressure_pa
+                ));
+                continuous = composition_jump < 0.15 && pressure_jump < 0.35;
+            }
+            if (!inside_temperature_bounds
+                && candidate.state.converged
+                && ((temperature_direction > 0.0
+                        && candidate.temperature_k > maximum_temperature_k)
+                    || (temperature_direction < 0.0
+                        && candidate.temperature_k < minimum_temperature_k))) {
+                result->termination = PXTeqpEnvelopeReachedTemperatureLimit;
+                break;
+            }
+            if (!candidate.state.converged || !continuous) {
+                ++result->rejected_step_count;
+                step *= 0.5;
+                if (step < minimum_arclength_step) {
+                    result->termination = continuous
+                        ? PXTeqpEnvelopeStepUnderflow
+                        : PXTeqpEnvelopeBranchContinuityFailure;
+                    break;
+                }
+                continue;
+            }
+            const double composition_distance = (
+                candidate.state.liquid_composition
+                - candidate.state.vapor_composition
+            ).matrix().norm();
+            const double density_separation = (
+                candidate.state.liquid_density - candidate.state.vapor_density
+            ) / candidate.state.liquid_density;
+            result->minimum_phase_composition_distance = std::min(
+                result->minimum_phase_composition_distance, composition_distance
+            );
+            result->minimum_relative_density_separation = std::min(
+                result->minimum_relative_density_separation, density_separation
+            );
+            const size_t index = static_cast<size_t>(result->converged_point_count);
+            store_point(index, candidate);
+            ++result->converged_point_count;
+            result->total_corrector_iterations += candidate.state.iterations;
+            older_q = previous_q;
+            previous_q.head(candidate.variables.size()) = candidate.variables;
+            previous_q[previous_q.size() - 1] = candidate.temperature_k / 10.0;
+            previous = candidate;
+            Eigen::VectorXd new_tangent = previous_q - older_q;
+            if (new_tangent.norm() == 0.0 || !new_tangent.array().isFinite().all()) {
+                result->termination = PXTeqpEnvelopeBranchContinuityFailure;
+                break;
+            }
+            new_tangent.normalize();
+            if (new_tangent.dot(tangent) < 0.0) { new_tangent *= -1.0; }
+            const double temperature_tangent = new_tangent[new_tangent.size() - 1];
+            if (temperature_tangent * previous_temperature_tangent < 0.0) {
+                ++result->turning_point_count;
+            }
+            previous_temperature_tangent = temperature_tangent;
+            tangent = new_tangent;
+            if (composition_distance < 1e-4 || density_separation < 0.01) {
+                result->termination = PXTeqpEnvelopeCriticalLikeEndpoint;
+                break;
+            }
+            step = candidate.state.iterations <= 7
+                ? std::min(maximum_arclength_step, step * 1.35)
+                : (candidate.state.iterations >= 20
+                    ? std::max(minimum_arclength_step, step * 0.7) : step);
+            result->final_step = step;
+        }
+        if (result->attempted_point_count >= maximum_attempts
+            && result->termination == PXTeqpEnvelopeInitialPointFailure) {
+            result->termination = PXTeqpEnvelopeStepUnderflow;
+        }
+        if (result->converged_point_count < 2) {
+            copy_text("Phase-envelope continuation could not accept a continuation point.", error_buffer, error_buffer_size);
+            return 7;
+        }
+        copy_text("", error_buffer, error_buffer_size);
+        return 0;
+    } catch (const std::exception &error) {
+        copy_text(error.what(), error_buffer, error_buffer_size);
+        return 8;
+    } catch (...) {
+        copy_text("Phase-envelope continuation failed with an unknown native exception.", error_buffer, error_buffer_size);
+        return 9;
+    }
 }
 
 int px_teqp_calculate_eoscg_co2_o2_gas_density(

@@ -180,6 +180,8 @@ typedef struct PXTeqpTPDResult {
     int iteration_count;
     int density_root_evaluations;
     int distinct_minimum_count;
+    int start_count;
+    int successful_start_count;
     double minimum_tpd;
     double trial_molar_density_mol_m3;
     double reference_molar_density_mol_m3;
@@ -200,6 +202,27 @@ typedef struct PXTeqpTPFlashResult {
     double vapor_minimum_stability_eigenvalue;
     double postcheck_minimum_tpd;
 } PXTeqpTPFlashResult;
+
+typedef enum PXTeqpEnvelopeTermination {
+    PXTeqpEnvelopeReachedTemperatureLimit = 0,
+    PXTeqpEnvelopeReachedPointCapacity = 1,
+    PXTeqpEnvelopeStepUnderflow = 2,
+    PXTeqpEnvelopeCriticalLikeEndpoint = 3,
+    PXTeqpEnvelopeInitialPointFailure = 4,
+    PXTeqpEnvelopeBranchContinuityFailure = 5
+} PXTeqpEnvelopeTermination;
+
+typedef struct PXTeqpNComponentEnvelopeResult {
+    int converged_point_count;
+    int attempted_point_count;
+    int rejected_step_count;
+    int total_corrector_iterations;
+    int turning_point_count;
+    PXTeqpEnvelopeTermination termination;
+    double final_step;
+    double minimum_phase_composition_distance;
+    double minimum_relative_density_separation;
+} PXTeqpNComponentEnvelopeResult;
 
 typedef struct PXTeqpMixtureThermodynamicResult {
     double density_kg_m3;
@@ -397,6 +420,33 @@ int px_teqp_calculate_ncomponent_tp_flash(
     double *vapor_mole_fractions,
     size_t vapor_mole_fractions_length,
     PXTeqpTPFlashResult *result,
+    char *error_buffer,
+    size_t error_buffer_size
+);
+
+int px_teqp_trace_ncomponent_phase_envelope(
+    const int *component_ids,
+    const double *specified_mole_fractions,
+    size_t component_count,
+    PXTeqpEquilibriumSpecification specification,
+    double starting_temperature_k,
+    double temperature_direction,
+    double minimum_temperature_k,
+    double maximum_temperature_k,
+    double initial_temperature_step_k,
+    double minimum_arclength_step,
+    double maximum_arclength_step,
+    int maximum_attempts,
+    double *temperatures_k,
+    double *pressures_pa,
+    double *liquid_molar_densities_mol_m3,
+    double *vapor_molar_densities_mol_m3,
+    double *liquid_mole_fractions,
+    size_t liquid_mole_fractions_length,
+    double *vapor_mole_fractions,
+    size_t vapor_mole_fractions_length,
+    size_t point_capacity,
+    PXTeqpNComponentEnvelopeResult *result,
     char *error_buffer,
     size_t error_buffer_size
 );
