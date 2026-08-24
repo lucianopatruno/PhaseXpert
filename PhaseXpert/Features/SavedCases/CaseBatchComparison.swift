@@ -362,6 +362,15 @@ struct CaseBatchComparisonWorkflowView: View {
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("batch-case-\(item.id)")
                 }
+                NavigationLink {
+                    MultiCasePropertySweepView(cases: selectedCases, initialModel: controller.selectedModel)
+                } label: {
+                    Label("Property Sweep", systemImage: "waveform.path.ecg")
+                }
+                .disabled(selectedIDs.count < 2 || selectedIDs.count > 10)
+                .accessibilityIdentifier("open-multi-case-sweep")
+                Text("Property sweeps support 2–10 selected cases for chart readability and bounded native runtime.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section {
                 if controller.isCalculating {
@@ -379,7 +388,7 @@ struct CaseBatchComparisonWorkflowView: View {
         }
         .navigationTitle("Compare Cases")
         .navigationDestination(isPresented: $showResults) {
-            BatchComparisonResultsView(controller: controller, selectedCount: selectedIDs.count)
+            BatchComparisonResultsView(controller: controller, selectedInputs: selectedCases)
         }
     }
 
@@ -406,7 +415,7 @@ struct CaseBatchComparisonWorkflowView: View {
 
 struct BatchComparisonResultsView: View {
     @Bindable var controller: CaseBatchComparisonController
-    let selectedCount: Int
+    let selectedInputs: [BatchCaseInput]
     @Environment(AppNavigationState.self) private var navigationState
     @State private var sort: BatchComparisonSort = .selection
     @State private var referenceID: String?
@@ -423,6 +432,16 @@ struct BatchComparisonResultsView: View {
                     Text("None").tag(String?.none)
                     ForEach(controller.results) { Text($0.input.name).tag(String?.some($0.id)) }
                 }
+                NavigationLink {
+                    MultiCasePropertySweepView(
+                        cases: Array(selectedInputs.prefix(10)),
+                        initialModel: controller.resultModel ?? controller.selectedModel
+                    )
+                } label: {
+                    Label("Sweep selected cases", systemImage: "waveform.path.ecg")
+                }
+                .disabled(selectedInputs.count < 2)
+                .accessibilityIdentifier("sweep-comparison-cases")
             }
             Section("Engineering comparison") {
                 ScrollView(.horizontal) { comparisonGrid.fixedSize(horizontal: true, vertical: false) }
@@ -460,9 +479,9 @@ struct BatchComparisonResultsView: View {
         let outside = controller.results.filter { $0.state == .outsideValidatedRange }.count
         let failed = controller.results.filter { $0.state == .failed || $0.state == .unsupported }.count
         return VStack(alignment: .leading) {
-            Text("\(controller.completedCount) of \(selectedCount) completed").font(.headline)
+            Text("\(controller.completedCount) of \(selectedInputs.count) completed").font(.headline)
             Text("\(successes) successful • \(outside) outside validated range • \(failed) failed")
-            if controller.isCalculating { ProgressView(value: Double(controller.completedCount), total: Double(selectedCount)) }
+            if controller.isCalculating { ProgressView(value: Double(controller.completedCount), total: Double(selectedInputs.count)) }
         }
     }
 

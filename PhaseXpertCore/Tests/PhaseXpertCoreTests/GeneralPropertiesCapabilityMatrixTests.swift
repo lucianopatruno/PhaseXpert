@@ -2,6 +2,24 @@ import XCTest
 @testable import PhaseXpertCore
 
 final class GeneralPropertiesCapabilityMatrixTests: XCTestCase {
+    func testScreenedHomogeneousDryMixtureUsesExplicitSinglePhaseRoute() async throws {
+        let provider = CoolPropProvider(engine: MatrixMockCoolPropEngine())
+        let response = try await provider.calculateScreenedHomogeneous(CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 2_000_000,
+            temperatureK: 293.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "tests"
+        ))
+        XCTAssertEqual(response.phase, .gas)
+        XCTAssertTrue(response.solver.method.contains("phase screening"))
+        XCTAssertEqual(response.properties.first?.value, 1)
+    }
+
     func testAuditedComponentListMatchesCurrentGeneralPropertiesProvider() {
         let provider = CoolPropProvider(engine: MatrixMockCoolPropEngine())
 

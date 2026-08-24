@@ -85,6 +85,56 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Pressure"].waitForExistence(timeout: 3))
     }
 
+    func testSavedCasesMultiCaseGeneralSweepChartDataInspectionAndExport() {
+        let app = XCUIApplication()
+        app.launch()
+        app.tabBars.buttons["Saved Cases"].tap()
+        XCTAssertTrue(app.buttons["compare-saved-cases"].waitForExistence(timeout: 3))
+        app.buttons["compare-saved-cases"].tap()
+
+        for name in [
+            "Northern Lights cargo specification example",
+            "Heidelberg Materials – Brevik CCS conditioned export example",
+            "Porthos pipeline specification example"
+        ] {
+            let caseName = app.staticTexts[name]
+            XCTAssertTrue(caseName.waitForExistence(timeout: 3))
+            caseName.tap()
+        }
+        let openSweep = app.buttons["open-multi-case-sweep"]
+        for _ in 0..<8 where !openSweep.exists { app.swipeUp() }
+        XCTAssertTrue(openSweep.waitForExistence(timeout: 3))
+        XCTAssertTrue(openSweep.isEnabled)
+        openSweep.tap()
+
+        XCTAssertTrue(app.segmentedControls.buttons["General Properties"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.segmentedControls.buttons["General Properties"].isSelected)
+        XCTAssertTrue(app.segmentedControls.buttons["Pressure"].isSelected)
+        let run = app.buttons["run-multi-case-sweep"]
+        for _ in 0..<8 where !run.exists { app.swipeUp() }
+        XCTAssertTrue(run.waitForExistence(timeout: 3))
+        run.tap()
+
+        let chart = app.descendants(matching: .any)["multi-case-sweep-chart"]
+        for _ in 0..<20 where !chart.waitForExistence(timeout: 2) { app.swipeUp() }
+        XCTAssertTrue(chart.waitForExistence(timeout: 5))
+        app.segmentedControls.buttons["Data"].tap()
+        let data = app.descendants(matching: .any)["multi-case-sweep-data"]
+        for _ in 0..<8 where !data.exists { app.swipeUp() }
+        XCTAssertTrue(data.waitForExistence(timeout: 3))
+        let firstCase = app.buttons.matching(NSPredicate(format: "label == %@", "Northern Lights cargo specification example")).firstMatch
+        XCTAssertTrue(firstCase.waitForExistence(timeout: 3))
+        firstCase.tap()
+        XCTAssertTrue(app.staticTexts["Status"].waitForExistence(timeout: 3))
+        app.buttons["Close"].tap()
+
+        for _ in 0..<10 where !app.buttons["export-multi-case-sweep"].exists { app.swipeUp() }
+        XCTAssertTrue(app.buttons["export-multi-case-sweep"].waitForExistence(timeout: 3))
+        app.buttons["export-multi-case-sweep"].tap()
+        XCTAssertTrue(app.buttons["Share CSV"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Share PDF"].exists)
+    }
+
     func testNumericKeyboardDoesNotShowCustomOKControl() {
         let app = XCUIApplication()
         app.launch()
