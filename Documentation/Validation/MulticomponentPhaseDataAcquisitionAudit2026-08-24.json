@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "search_date": "2026-08-24",
+  "accepted_exact_row_sources": [
+    {"doi":"10.1016/j.ijggc.2016.11.003","system":"CO2+Ar+N2","rows":63,"observables":["bubble_TP","dew_TP"],"artifact":"KeGeorge2017CO2ArN2PhaseBoundary.json"},
+    {"doi":"10.1021/acs.jced.9b01082","system":"CH4+CO2+H2S","rows":31,"observables":["z","T","P","x","y"],"artifact":"Theveneau2020TernaryInteriorVLE.json"}
+  ],
+  "inspected_not_transcribed": [
+    {"doi":"10.1016/j.ijggc.2015.06.009","system":"CO2+N2+H2","reason":"Synthetic boundary-only source; no measured opposite-phase compositions or phase fraction. Exact new boundary evidence was already acquired from the Ke campaign."},
+    {"doi":"10.3390/en15113936","system":"CO2+H2O+N2","reason":"Wet aqueous system outside the dry multicomponent milestone; existing water validation was explicitly excluded."},
+    {"doi":"10.1016/j.fluid.2017.08.002","system":"CH4+CO2+H2O","reason":"Hydrate/aqueous equilibrium outside the dry CCS transport scope."},
+    {"doi":"10.1016/j.fluid.2019.112444","system":"CO2+N2+CH4","reason":"Previously accepted Ottøy artifact; deliberately not retranscribed or re-gated."},
+    {"title":"Humid Gases and CCS Mixtures (Gernert dissertation)","system":"CO2+N2+O2 and broader CCS mixtures","reason":"Used to trace primary literature; no new exact row-level interior z/T/P/x/y/beta source obtained for this gate."}
+  ],
+  "search_channels":["NIST ThermoML/TRC","journal supplementary pages","institutional repositories","accepted manuscripts","doctoral theses","DataCite/Crossref relations","EOS-CG and GERG validation literature","CCS transport-property projects"],
+  "prohibited_methods_used": {"graph_digitization":false,"eos_as_truth":false,"coolprop_as_truth":false,"parameter_fitting_to_validation_rows":false}
+}

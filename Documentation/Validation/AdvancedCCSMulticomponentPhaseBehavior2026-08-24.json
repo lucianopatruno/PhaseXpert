@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "starting_main_sha": "5154d1c227a9b30b6f706d35c3458e040189c6d5",
+  "teqp": {"version": "0.23.1", "commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"},
+  "new_boundary_validation": {
+    "dataset": "KeGeorge2017CO2ArN2PhaseBoundary.json",
+    "doi": "10.1016/j.ijggc.2016.11.003",
+    "rows": 63,
+    "bubble_rows": 24,
+    "dew_rows": 39,
+    "converged": 40,
+    "convergence_percent": 63.49206349206349,
+    "pressure": {"mae_pa": 50295.67201472757, "aard_percent": 0.7081089943799391, "bias_percent": -0.3162595461978551, "rms_percent": 0.9534322633783945, "worst_percent": -2.701951759467479},
+    "strata": {
+      "M1_bubble": {"rows":11,"converged":8,"mae_pa":82902.86268896912,"aard_percent":0.968047161840256,"bias_percent":-0.968047161840256,"rms_percent":1.0342068324642675,"worst_percent":-1.2241834361779984},
+      "M1_dew": {"rows":20,"converged":15,"mae_pa":38037.364155302224,"aard_percent":0.5950327205874891,"bias_percent":-0.13643476592154355,"rms_percent":0.822330556831069,"worst_percent":-2.245555451124533},
+      "M2_bubble": {"rows":13,"converged":7,"mae_pa":11760.849729634023,"aard_percent":0.1768741730209585,"bias_percent":0.0214078030274133,"rms_percent":0.24213424883166407,"worst_percent":-0.4237177340259606},
+      "M2_dew": {"rows":19,"converged":10,"mae_pa":69571.75686403783,"aard_percent":1.0416372460516483,"bias_percent":-0.30093376855609,"rms_percent":1.3134244144158196,"worst_percent":-2.701951759467479}
+    },
+    "runtime_ms": {"median":244.07005310058594,"mean":325.4002427297925,"worst":1331.138014793396},
+    "phase_composition_metrics": null,
+    "decision": "research_only",
+    "decision_reason": "Only 40/63 independent boundary rows converged, failures interrupt every family/branch, pressure errors exceed the 0.04 MPa expanded pressure uncertainty in aggregate, and the synthetic data do not measure the incipient opposite-phase composition."
+  },
+  "new_interior_flash_validation": {
+    "dataset": "Theveneau2020TernaryInteriorVLE.json",
+    "doi": "10.1021/acs.jced.9b01082",
+    "rows": 31,
+    "converged": 0,
+    "liquid_composition_metrics": null,
+    "vapor_composition_metrics": null,
+    "beta_metrics": null,
+    "runtime_ms": {"median":4302.976012229919,"mean":4060.20523271253,"worst":7480.012059211731},
+    "decision": "research_only",
+    "decision_reason": "No row converged to a globally and locally stable, distinct TP-flash split after the hardened postchecks; no x/y or lever-rule beta accuracy claim is possible."
+  },
+  "critical_evidence": {
+    "measured_source": "Ke et al. report near-critical/maxcondentherm observations for their exact ternary mixtures.",
+    "solver_result": "Continuation records composition/density coalescence as critical-like only and never promotes it as a predicted critical point.",
+    "production_gate": false
+  },
+  "representative_performance_ms": {
+    "boundary_point": {"median":244.07005310058594,"mean":325.4002427297925,"worst":1331.138014793396,"samples":63},
+    "pseudo_arclength_envelope_11_points": {"median":559.2625141143799,"mean":559.2625141143799,"worst":570.3279972076416,"samples":2},
+    "tpd": {"median":1632.6919794082642,"mean":1632.6919794082642,"worst":1632.6919794082642,"samples":1},
+    "tp_flash_demonstrator": {"median":4409.430027008057,"mean":4409.430027008057,"worst":4409.430027008057,"samples":1}
+  },
+  "production_decisions": {
+    "new_gates": [],
+    "bubble_pressure": "research_only",
+    "dew_pressure": "research_only",
+    "boundary_phase_compositions": "research_only",
+    "phase_envelope": "research_only",
+    "phase_classification": "research_only",
+    "liquid_composition": "research_only",
+    "vapor_composition": "research_only",
+    "phase_fraction": "research_only",
+    "capability_matrix_changed": false,
+    "provider_routing_changed": false,
+    "production_ui_changed": false
+  }
+}
