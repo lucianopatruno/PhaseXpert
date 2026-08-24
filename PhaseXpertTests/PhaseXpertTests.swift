@@ -1505,6 +1505,41 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testNormalGeneralCalculatorScreensDryMixtureBeforeHomogeneousCalculation() async throws {
+        let recorder = CalculatorDryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(
+            engine: CalculatorDryMixtureEngine(recorder: recorder)
+        )
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [provider], extraDescriptors: [])
+        )
+
+        viewModel.selectedModelID = "coolprop-heos"
+        viewModel.pressureText = "43.18"
+        viewModel.temperatureText = "-26"
+        viewModel.compositionBasis = .partsPerMillion
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "999831"),
+            .init(component: .oxygen, value: "10"),
+            .init(component: .hydrogen, value: "50"),
+            .init(component: .carbonMonoxide, value: "100"),
+            .init(component: .hydrogenSulfide, value: "9")
+        ]
+        viewModel.validate()
+
+        await viewModel.calculate()
+
+        let record = try XCTUnwrap(viewModel.calculationRecord)
+        XCTAssertNil(viewModel.calculationError)
+        XCTAssertEqual(record.request.modelID, "coolprop-heos")
+        XCTAssertEqual(record.request.pressurePa, 4_318_000, accuracy: 1e-6)
+        XCTAssertEqual(record.request.temperatureK, 247.15, accuracy: 1e-12)
+        XCTAssertEqual(recorder.phaseClassificationCount, 1)
+        XCTAssertEqual(recorder.imposedPhaseHints, [.gas])
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
+    }
+
+    @MainActor
     func testCalculatorExposesNativeTeqpAsSelectableWhenLinked() throws {
         let viewModel = CalculatorViewModel()
         guard NativeTeqpEngine().isAvailable else {
@@ -3924,5 +3959,76 @@ final class PhaseXpertTests: XCTestCase {
         await viewModel.calculate()
         XCTAssertNotNil(viewModel.calculationRecord)
         return viewModel
+    }
+}
+
+private final class CalculatorDryMixtureRoutingRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private(set) var phaseClassificationCount = 0
+    private(set) var imposedPhaseHints: [CoolPropSinglePhaseHint] = []
+    private(set) var unhintedCalculationCount = 0
+
+    func recordPhaseClassification() {
+        lock.withLock { phaseClassificationCount += 1 }
+    }
+
+    func recordImposedCalculation(_ hint: CoolPropSinglePhaseHint) {
+        lock.withLock { imposedPhaseHints.append(hint) }
+    }
+
+    func recordUnhintedCalculation() {
+        lock.withLock { unhintedCalculationCount += 1 }
+    }
+}
+
+private struct CalculatorDryMixtureEngine: CoolPropEngine {
+    let isAvailable = true
+    let libraryVersion = "8.0.0-calculator-routing-test"
+    let recorder: CalculatorDryMixtureRoutingRecorder
+
+    func calculatePureCarbonDioxide(
+        pressurePa: Double,
+        temperatureK: Double
+    ) async throws -> CoolPropEngineResult {
+        throw ProviderError.modelUnavailable("Pure CO₂ is not used by this test engine.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropBinaryEngineResult {
+        recorder.recordUnhintedCalculation()
+        throw ProviderError.malformedResponse("Unscreened PT flash must not be used.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult {
+        recorder.recordImposedCalculation(imposedPhase)
+        return CoolPropBinaryEngineResult(
+            densityKilogramsPerCubicMetre: 431.8,
+            phaseIdentifier: imposedPhase == .gas ? "gas" : "liquid"
+        )
+    }
+
+    func identifyDryCarbonDioxideMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        recorder.recordPhaseClassification()
+        return CoolPropPhaseEngineResult(phaseIdentifier: "gas")
+    }
+
+    func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+        throw ProviderError.modelUnavailable("Pure CO₂ saturation is not used by this test engine.")
+    }
+
+    func pureCarbonDioxideSaturationPressure(temperatureK: Double) async throws -> Double {
+        throw ProviderError.modelUnavailable("Pure CO₂ saturation is not used by this test engine.")
     }
 }

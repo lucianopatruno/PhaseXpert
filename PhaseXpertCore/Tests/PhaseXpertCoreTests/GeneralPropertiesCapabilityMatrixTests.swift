@@ -208,10 +208,27 @@ private struct MatrixMockCoolPropEngine: CoolPropEngine {
         temperatureK: Double,
         composition: [MixtureComponent]
     ) async throws -> CoolPropBinaryEngineResult {
+        throw ProviderError.modelUnavailable("Unscreened dry-mixture PT flash is not used by this test engine.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult {
         CoolPropBinaryEngineResult(
             densityKilogramsPerCubicMetre: 1,
             phaseIdentifier: "gas"
         )
+    }
+
+    func identifyDryCarbonDioxideMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        CoolPropPhaseEngineResult(phaseIdentifier: "gas")
     }
 
     func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {

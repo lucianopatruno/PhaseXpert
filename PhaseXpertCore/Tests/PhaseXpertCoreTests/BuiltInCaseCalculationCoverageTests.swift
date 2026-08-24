@@ -22,6 +22,19 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
             temperatureK: Double,
             composition: [MixtureComponent]
         ) async throws -> CoolPropBinaryEngineResult {
+            XCTFail("General dry mixtures must use the screened imposed-phase route.")
+            return CoolPropBinaryEngineResult(
+                densityKilogramsPerCubicMetre: 0,
+                phaseIdentifier: "unknown"
+            )
+        }
+
+        func calculateDryCarbonDioxideMixture(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent],
+            imposedPhase: CoolPropSinglePhaseHint
+        ) async throws -> CoolPropBinaryEngineResult {
             XCTAssertTrue(composition.contains { $0.component == .carbonDioxide })
             XCTAssertEqual(
                 composition.reduce(0) { $0 + $1.moleFraction },
@@ -32,6 +45,14 @@ final class BuiltInCaseCalculationCoverageTests: XCTestCase {
                 densityKilogramsPerCubicMetre: 850,
                 phaseIdentifier: "liquid"
             )
+        }
+
+        func identifyDryCarbonDioxideMixturePhase(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropPhaseEngineResult {
+            CoolPropPhaseEngineResult(phaseIdentifier: "liquid")
         }
 
         func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
