@@ -1708,6 +1708,80 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertLessThan(abs(state.speedOfSoundMetresPerSecond - 648.0), 1.0)
     }
 
+    func testGenericNComponentCaloricStateIsDeterministicAndConsistent() async throws {
+        let engine = try requireNativeTeqpEngine()
+        let composition = try CanonicalComposition([
+            .init(component: .carbonDioxide, moleFraction: 0.942),
+            .init(component: .nitrogen, moleFraction: 0.023),
+            .init(component: .methane, moleFraction: 0.022),
+            .init(component: .hydrogen, moleFraction: 0.013)
+        ])
+        var timingsMilliseconds: [Double] = []
+        var results: [TeqpMixtureThermodynamicResult] = []
+
+        for _ in 0..<11 {
+            let start = ContinuousClock.now
+            let state = try await engine.calculateNComponentThermodynamicState(
+                pressurePa: 11_001_000,
+                temperatureK: 313.15,
+                composition: composition,
+                rootSelectionHint: .homogeneousGas
+            )
+            let elapsed = start.duration(to: .now).components
+            timingsMilliseconds.append(
+                Double(elapsed.seconds) * 1_000
+                    + Double(elapsed.attoseconds) / 1e15
+            )
+            results.append(state)
+        }
+
+        let reference = try XCTUnwrap(results.first)
+        XCTAssertTrue(reference.converged)
+        XCTAssertGreaterThan(reference.densityKilogramsPerCubicMetre, 0)
+        XCTAssertGreaterThan(reference.molarDensityMolesPerCubicMetre, 0)
+        XCTAssertGreaterThan(reference.minimumStabilityEigenvalue, 0)
+        XCTAssertGreaterThan(
+            reference.isochoricHeatCapacityJoulesPerKilogramKelvin,
+            0
+        )
+        XCTAssertGreaterThan(
+            reference.isobaricHeatCapacityJoulesPerKilogramKelvin,
+            reference.isochoricHeatCapacityJoulesPerKilogramKelvin
+        )
+        XCTAssertEqual(
+            reference.heatCapacityRatio,
+            reference.isobaricHeatCapacityJoulesPerKilogramKelvin
+                / reference.isochoricHeatCapacityJoulesPerKilogramKelvin,
+            accuracy: 1e-12
+        )
+        XCTAssertEqual(
+            reference.speedOfSoundMetresPerSecond
+                * reference.speedOfSoundMetresPerSecond,
+            reference.speedOfSoundSquaredMetresSquaredPerSecondSquared,
+            accuracy: 1e-8
+        )
+        for result in results.dropFirst() {
+            XCTAssertEqual(result, reference)
+        }
+
+        let measured = Array(timingsMilliseconds.dropFirst()).sorted()
+        let performance: [String: Double] = [
+            "medianMilliseconds": measured[measured.count / 2],
+            "meanMilliseconds": measured.reduce(0, +) / Double(measured.count),
+            "worstMilliseconds": try XCTUnwrap(measured.last)
+        ]
+        let attachment = XCTAttachment(
+            data: try JSONSerialization.data(
+                withJSONObject: performance,
+                options: [.prettyPrinted, .sortedKeys]
+            ),
+            uniformTypeIdentifier: "public.json"
+        )
+        attachment.name = "Advanced CCS generic caloric performance"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     private func requireNativeTeqpEngine() throws -> NativeTeqpEngine {
         let engine = NativeTeqpEngine()
         guard engine.isAvailable else {
