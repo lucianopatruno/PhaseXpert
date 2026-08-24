@@ -126,6 +126,39 @@ final class MultiCasePropertySweepTests: XCTestCase {
         XCTAssertEqual(viewModel.selectedModelID, BatchCalculationModel.general.id)
     }
 
+    func testMultiCaseGeneralSweepScreensCoolPropDryMixturePoints() async throws {
+        let recorder = MultiCaseDryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(
+            engine: MultiCaseDryMixtureEngine(recorder: recorder)
+        )
+        let cases = try builtIns([
+            "northern-lights-cargo-specification-example",
+            "brevik-ccs-conditioned-export-example"
+        ])
+        let sweepService = MultiCasePropertySweepService(
+            registry: ProviderRegistry(providers: [provider], extraDescriptors: []),
+            clientVersion: "multi-sweep-coolprop-routing-tests",
+            applicationIdentity: ApplicationIdentity(version: "test", build: "1")
+        )
+
+        let result = try await sweepService.run(
+            cases: cases,
+            model: .general,
+            definition: pressureDefinition(
+                points: 3,
+                start: 4_000_000,
+                end: 4_636_000
+            )
+        )
+
+        XCTAssertEqual(result.totalPointCount, 6)
+        XCTAssertEqual(result.series.flatMap(\.points).filter { $0.state == .generalCalculated }.count, 4)
+        XCTAssertEqual(result.series.flatMap(\.points).filter { $0.state == .failed }.count, 2)
+        XCTAssertEqual(recorder.phaseClassificationCount, 6)
+        XCTAssertEqual(recorder.imposedPhaseCount, 4)
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
+    }
+
     func testCSVContainsEverySuccessfulFailedAndOutsidePointWithStableCompositionColumns() async throws {
         let input = h2Input()
         let definition = MultiCaseSweepDefinition(axis: .temperature, property: .density,
@@ -240,6 +273,79 @@ final class MultiCasePropertySweepTests: XCTestCase {
         XCTAssertEqual(result.totalPointCount, cases.count * 20)
         return ["batch": name, "cases": cases.count, "points": result.totalPointCount,
                 "total_ms": total, "per_point_ms": total / Double(result.totalPointCount)]
+    }
+}
+
+private final class MultiCaseDryMixtureRoutingRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private(set) var phaseClassificationCount = 0
+    private(set) var imposedPhaseCount = 0
+    private(set) var unhintedCalculationCount = 0
+
+    func recordPhaseClassification() {
+        lock.withLock { phaseClassificationCount += 1 }
+    }
+
+    func recordImposedPhase() {
+        lock.withLock { imposedPhaseCount += 1 }
+    }
+
+    func recordUnhintedCalculation() {
+        lock.withLock { unhintedCalculationCount += 1 }
+    }
+}
+
+private struct MultiCaseDryMixtureEngine: CoolPropEngine {
+    let isAvailable = true
+    let libraryVersion = "8.0.0-multi-sweep-routing-test"
+    let recorder: MultiCaseDryMixtureRoutingRecorder
+
+    func calculatePureCarbonDioxide(
+        pressurePa: Double,
+        temperatureK: Double
+    ) async throws -> CoolPropEngineResult {
+        throw ProviderError.modelUnavailable("Pure CO₂ is not used by this test engine.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropBinaryEngineResult {
+        recorder.recordUnhintedCalculation()
+        throw ProviderError.malformedResponse("Unscreened PT flash must not be used.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult {
+        recorder.recordImposedPhase()
+        return CoolPropBinaryEngineResult(
+            densityKilogramsPerCubicMetre: pressurePa / 10_000,
+            phaseIdentifier: imposedPhase == .gas ? "gas" : "liquid"
+        )
+    }
+
+    func identifyDryCarbonDioxideMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        recorder.recordPhaseClassification()
+        return CoolPropPhaseEngineResult(
+            phaseIdentifier: pressurePa == 4_318_000 ? "twophase" : "gas"
+        )
+    }
+
+    func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+        throw ProviderError.modelUnavailable("Pure CO₂ saturation is not used by this test engine.")
+    }
+
+    func pureCarbonDioxideSaturationPressure(temperatureK: Double) async throws -> Double {
+        throw ProviderError.modelUnavailable("Pure CO₂ saturation is not used by this test engine.")
     }
 }
 

@@ -143,6 +143,31 @@ final class CaseBatchComparisonTests: XCTestCase {
         XCTAssertEqual(result.record, record)
     }
 
+    func testRepeatedGeneralBatchUsesScreenedCoolPropDryMixtureRoute() async throws {
+        let recorder = BatchDryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(
+            engine: BatchDryMixtureEngine(recorder: recorder)
+        )
+        let inputs = try Array((builtInGeneralInputs() + builtInGeneralInputs()).prefix(5))
+            .enumerated()
+            .map { index, input in copied(input, suffix: index) }
+        let batchService = CaseBatchCalculationService(
+            registry: ProviderRegistry(providers: [provider], extraDescriptors: []),
+            clientVersion: "batch-coolprop-routing-tests",
+            applicationIdentity: ApplicationIdentity(version: "test", build: "1")
+        )
+
+        let first = await calculate(inputs, service: batchService, model: .general)
+        let second = await calculate(inputs, service: batchService, model: .general)
+
+        XCTAssertEqual(first.count, 5)
+        XCTAssertEqual(second.count, 5)
+        XCTAssertTrue((first + second).allSatisfy(\.isSuccessful))
+        XCTAssertEqual(recorder.phaseClassificationCount, 10)
+        XCTAssertEqual(recorder.imposedPhaseCount, 10)
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
+    }
+
     func testRepresentativeNativeBatchPerformance() async throws {
         let native = CaseBatchCalculationService()
         let presets = BuiltInCaseCatalog.cases.filter(\.hasCalculationPreset).map(BatchCaseInput.builtIn)
@@ -228,12 +253,92 @@ final class CaseBatchComparisonTests: XCTestCase {
         }
     }
 
+    private func builtInGeneralInputs() throws -> [BatchCaseInput] {
+        try [
+            "northern-lights-cargo-specification-example",
+            "brevik-ccs-conditioned-export-example",
+            "porthos-pipeline-specification-example",
+            "aramis-ship-specification-example"
+        ].map { BatchCaseInput.builtIn(try XCTUnwrap(BuiltInCaseCatalog.caseWithID($0))) }
+    }
+
     private func waitUntil(_ condition: @escaping @MainActor () -> Bool) async throws {
         for _ in 0..<100 {
             if condition() { return }
             try await Task.sleep(for: .milliseconds(10))
         }
         XCTFail("Timed out waiting for batch")
+    }
+}
+
+private final class BatchDryMixtureRoutingRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private(set) var phaseClassificationCount = 0
+    private(set) var imposedPhaseCount = 0
+    private(set) var unhintedCalculationCount = 0
+
+    func recordPhaseClassification() {
+        lock.withLock { phaseClassificationCount += 1 }
+    }
+
+    func recordImposedPhase() {
+        lock.withLock { imposedPhaseCount += 1 }
+    }
+
+    func recordUnhintedCalculation() {
+        lock.withLock { unhintedCalculationCount += 1 }
+    }
+}
+
+private struct BatchDryMixtureEngine: CoolPropEngine {
+    let isAvailable = true
+    let libraryVersion = "8.0.0-batch-routing-test"
+    let recorder: BatchDryMixtureRoutingRecorder
+
+    func calculatePureCarbonDioxide(
+        pressurePa: Double,
+        temperatureK: Double
+    ) async throws -> CoolPropEngineResult {
+        throw ProviderError.modelUnavailable("Pure CO₂ is not used by this test engine.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropBinaryEngineResult {
+        recorder.recordUnhintedCalculation()
+        throw ProviderError.malformedResponse("Unscreened PT flash must not be used.")
+    }
+
+    func calculateDryCarbonDioxideMixture(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent],
+        imposedPhase: CoolPropSinglePhaseHint
+    ) async throws -> CoolPropBinaryEngineResult {
+        recorder.recordImposedPhase()
+        return CoolPropBinaryEngineResult(
+            densityKilogramsPerCubicMetre: pressurePa / 10_000,
+            phaseIdentifier: imposedPhase == .gas ? "gas" : "liquid"
+        )
+    }
+
+    func identifyDryCarbonDioxideMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        recorder.recordPhaseClassification()
+        return CoolPropPhaseEngineResult(phaseIdentifier: "gas")
+    }
+
+    func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
+        throw ProviderError.modelUnavailable("Pure CO₂ saturation is not used by this test engine.")
+    }
+
+    func pureCarbonDioxideSaturationPressure(temperatureK: Double) async throws -> Double {
+        throw ProviderError.modelUnavailable("Pure CO₂ saturation is not used by this test engine.")
     }
 }
 

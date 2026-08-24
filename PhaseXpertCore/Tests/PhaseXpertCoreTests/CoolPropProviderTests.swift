@@ -11,10 +11,37 @@ final class CoolPropProviderTests: XCTestCase {
         }
     }
 
+    private final class DryMixtureRoutingRecorder: @unchecked Sendable {
+        private let lock = NSLock()
+        private(set) var unhintedCalculationCount = 0
+        private(set) var phaseClassificationCount = 0
+        private(set) var imposedPhaseHints: [CoolPropSinglePhaseHint] = []
+
+        func recordUnhintedCalculation() {
+            lock.withLock {
+                unhintedCalculationCount += 1
+            }
+        }
+
+        func recordPhaseClassification() {
+            lock.withLock {
+                phaseClassificationCount += 1
+            }
+        }
+
+        func recordImposedCalculation(_ hint: CoolPropSinglePhaseHint) {
+            lock.withLock {
+                imposedPhaseHints.append(hint)
+            }
+        }
+    }
+
     private struct MockEngine: CoolPropEngine {
         let isAvailable = true
         let libraryVersion = "8.0.0-test"
         var envelopeCallRecorder: EnvelopeCallRecorder?
+        var dryMixtureRoutingRecorder: DryMixtureRoutingRecorder?
+        var dryMixturePhaseIdentifier = "supercritical_liquid"
         var result = CoolPropEngineResult(
             densityKilogramsPerCubicMetre: 821.4,
             dynamicViscosityPascalSeconds: 0.000071,
@@ -74,7 +101,27 @@ final class CoolPropProviderTests: XCTestCase {
             temperatureK: Double,
             composition: [MixtureComponent]
         ) async throws -> CoolPropBinaryEngineResult {
-            binaryResult
+            dryMixtureRoutingRecorder?.recordUnhintedCalculation()
+            return binaryResult
+        }
+
+        func calculateDryCarbonDioxideMixture(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent],
+            imposedPhase: CoolPropSinglePhaseHint
+        ) async throws -> CoolPropBinaryEngineResult {
+            dryMixtureRoutingRecorder?.recordImposedCalculation(imposedPhase)
+            return binaryResult
+        }
+
+        func identifyDryCarbonDioxideMixturePhase(
+            pressurePa: Double,
+            temperatureK: Double,
+            composition: [MixtureComponent]
+        ) async throws -> CoolPropPhaseEngineResult {
+            dryMixtureRoutingRecorder?.recordPhaseClassification()
+            return CoolPropPhaseEngineResult(phaseIdentifier: dryMixturePhaseIdentifier)
         }
 
         func calculateCarbonDioxideWaterHomogeneousGas(
@@ -397,6 +444,164 @@ final class CoolPropProviderTests: XCTestCase {
         let encoded = try JSONEncoder().encode(response)
         let decoded = try JSONDecoder().decode(CalculationResponse.self, from: encoded)
         XCTAssertEqual(decoded, response)
+    }
+
+    func testGeneralDryMixtureCalculationUsesScreenedImposedPhaseRoute() async throws {
+        let recorder = DryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(engine: MockEngine(
+            dryMixtureRoutingRecorder: recorder,
+            dryMixturePhaseIdentifier: "gas"
+        ))
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 15_000_000,
+            temperatureK: 293.15,
+            composition: [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ],
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+
+        let response = try await provider.calculate(request)
+
+        XCTAssertEqual(response.phase, .dense)
+        XCTAssertEqual(recorder.phaseClassificationCount, 1)
+        XCTAssertEqual(recorder.imposedPhaseHints, [.gas])
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
+        XCTAssertTrue(response.solver.method.contains("phase screening"))
+        XCTAssertFalse(response.solver.method.contains("PropsSI(P,T)"))
+    }
+
+    func testGeneralDryMixtureRejectsMultiphaseScreeningWithoutUnhintedCalculation() async {
+        let recorder = DryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(engine: MockEngine(
+            dryMixtureRoutingRecorder: recorder,
+            dryMixturePhaseIdentifier: "twophase"
+        ))
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 4_318_000,
+            temperatureK: 247.15,
+            composition: northernLightsComposition(),
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+
+        do {
+            _ = try await provider.calculate(request)
+            XCTFail("Multiphase dry-mixture screening must be reported as an explicit unsupported point.")
+        } catch let error as ProviderError {
+            XCTAssertEqual(
+                error,
+                .invalidRequest(
+                    "The homogeneous dry-mixture property point was skipped after safe phase screening returned Multiphase."
+                )
+            )
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(recorder.phaseClassificationCount, 1)
+        XCTAssertTrue(recorder.imposedPhaseHints.isEmpty)
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
+    }
+
+    func testNorthernLightsReproducedStateRepeatedCallsNeverUseUnscreenedPTFlash() async throws {
+        let recorder = DryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(engine: MockEngine(
+            dryMixtureRoutingRecorder: recorder,
+            dryMixturePhaseIdentifier: "twophase"
+        ))
+        let request = CalculationRequest(
+            modelID: provider.descriptor.id,
+            pressurePa: 4_318_000,
+            temperatureK: 247.15,
+            composition: northernLightsComposition(),
+            requestedProperties: [.density],
+            clientVersion: "test"
+        )
+
+        for _ in 0..<50 {
+            do {
+                _ = try await provider.calculate(request)
+            } catch let error as ProviderError {
+                XCTAssertEqual(
+                    error,
+                    .invalidRequest(
+                        "The homogeneous dry-mixture property point was skipped after safe phase screening returned Multiphase."
+                    )
+                )
+            } catch {
+                XCTFail("Unexpected error: \(error)")
+            }
+        }
+
+        XCTAssertEqual(recorder.phaseClassificationCount, 50)
+        XCTAssertTrue(recorder.imposedPhaseHints.isEmpty)
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
+    }
+
+    func testRepresentativeGeneralDryMixturesAllUseScreenedImposedPhaseRoute() async throws {
+        let recorder = DryMixtureRoutingRecorder()
+        let provider = CoolPropProvider(engine: MockEngine(
+            dryMixtureRoutingRecorder: recorder,
+            dryMixturePhaseIdentifier: "gas"
+        ))
+        let builtIns = try [
+            "northern-lights-cargo-specification-example",
+            "brevik-ccs-conditioned-export-example",
+            "porthos-pipeline-specification-example",
+            "aramis-ship-specification-example"
+        ].map { try XCTUnwrap(BuiltInCaseCatalog.caseWithID($0)) }
+        let binaryAndMulticomponentCases: [[MixtureComponent]] = [
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.95),
+                .init(component: .nitrogen, moleFraction: 0.05)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.96),
+                .init(component: .methane, moleFraction: 0.04)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.995),
+                .init(component: .hydrogen, moleFraction: 0.005)
+            ],
+            [
+                .init(component: .carbonDioxide, moleFraction: 0.97),
+                .init(component: .nitrogen, moleFraction: 0.02),
+                .init(component: .argon, moleFraction: 0.005),
+                .init(component: .methane, moleFraction: 0.005)
+            ]
+        ]
+        let cases = try builtIns.map { builtIn -> (Double, Double, [MixtureComponent]) in
+            (
+                try XCTUnwrap(builtIn.defaultPressurePa),
+                try XCTUnwrap(builtIn.defaultTemperatureK),
+                try XCTUnwrap(builtIn.composition)
+            )
+        } + binaryAndMulticomponentCases.map { (15_000_000, 293.15, $0) }
+
+        for (pressurePa, temperatureK, composition) in cases {
+            let response = try await provider.calculate(
+                CalculationRequest(
+                    modelID: provider.descriptor.id,
+                    pressurePa: pressurePa,
+                    temperatureK: temperatureK,
+                    composition: composition,
+                    requestedProperties: [.density],
+                    clientVersion: "test"
+                )
+            )
+            XCTAssertEqual(
+                response.properties.first { $0.property == .density }?.status,
+                .calculated
+            )
+        }
+
+        XCTAssertEqual(recorder.phaseClassificationCount, cases.count)
+        XCTAssertEqual(recorder.imposedPhaseHints, Array(repeating: .gas, count: cases.count))
+        XCTAssertEqual(recorder.unhintedCalculationCount, 0)
     }
 
     func testApplicabilityReportsNitrogenAboveSpikeCap() {
@@ -967,4 +1172,16 @@ final class CoolPropProviderTests: XCTestCase {
         )
     }
 
+    private func northernLightsComposition() -> [MixtureComponent] {
+        [
+            .init(component: .carbonDioxide, moleFraction: 0.9998309999999999),
+            .init(component: .nitrogen, moleFraction: 0),
+            .init(component: .oxygen, moleFraction: 0.000010000000000000001),
+            .init(component: .argon, moleFraction: 0),
+            .init(component: .methane, moleFraction: 0),
+            .init(component: .hydrogen, moleFraction: 0.000050000000000000002),
+            .init(component: .carbonMonoxide, moleFraction: 0.0001),
+            .init(component: .hydrogenSulfide, moleFraction: 0.000009000000000000002)
+        ]
+    }
 }

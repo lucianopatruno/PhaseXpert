@@ -260,10 +260,8 @@ public extension CoolPropEngine {
         composition: [MixtureComponent],
         imposedPhase: CoolPropSinglePhaseHint
     ) async throws -> CoolPropBinaryEngineResult {
-        try await calculateDryCarbonDioxideMixture(
-            pressurePa: pressurePa,
-            temperatureK: temperatureK,
-            composition: composition
+        throw ProviderError.modelUnavailable(
+            "The CoolProp engine does not expose the phase-imposed dry-mixture bridge."
         )
     }
 
@@ -272,12 +270,9 @@ public extension CoolPropEngine {
         temperatureK: Double,
         composition: [MixtureComponent]
     ) async throws -> CoolPropPhaseEngineResult {
-        let result = try await calculateDryCarbonDioxideMixture(
-            pressurePa: pressurePa,
-            temperatureK: temperatureK,
-            composition: composition
+        throw ProviderError.modelUnavailable(
+            "The CoolProp engine does not expose the dry-mixture phase-classification bridge."
         )
-        return CoolPropPhaseEngineResult(phaseIdentifier: result.phaseIdentifier)
     }
 
     func dryCarbonDioxideMixtureSaturationPressures(
@@ -659,22 +654,15 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     }
 
     public func calculateScreenedHomogeneous(_ request: CalculationRequest) async throws -> CalculationResponse {
-        let classification = try await phaseClassification(
+        let composition = try supportedComposition(request.composition)
+        guard case let .dryMixture(activeComposition) = composition else {
+            return try await calculate(request, dryMixturePhaseHint: nil)
+        }
+        let hint = try await safeDryMixturePhaseHint(
             pressurePa: request.pressurePa,
             temperatureK: request.temperatureK,
-            composition: request.composition
+            activeComposition: activeComposition
         )
-        let hint: CoolPropSinglePhaseHint
-        switch classification.classification {
-        case .gas:
-            hint = .gas
-        case .liquid:
-            hint = .liquid
-        default:
-            throw ProviderError.invalidRequest(
-                "The homogeneous property point was skipped after safe phase screening returned \(classification.displayName)."
-            )
-        }
         return try await calculate(request, dryMixturePhaseHint: hint)
     }
 
@@ -727,29 +715,30 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ]
             )
         case let .dryMixture(activeComposition):
-            let raw = if let dryMixturePhaseHint {
+            let resolvedPhaseHint: CoolPropSinglePhaseHint
+            if let dryMixturePhaseHint {
+                resolvedPhaseHint = dryMixturePhaseHint
+            } else {
+                resolvedPhaseHint = try await safeDryMixturePhaseHint(
+                    pressurePa: request.pressurePa,
+                    temperatureK: request.temperatureK,
+                    activeComposition: activeComposition
+                )
+            }
+            let raw =
                 try await engine.calculateDryCarbonDioxideMixture(
                     pressurePa: request.pressurePa,
                     temperatureK: request.temperatureK,
                     composition: activeComposition,
-                    imposedPhase: dryMixturePhaseHint
+                    imposedPhase: resolvedPhaseHint
                 )
-            } else {
-                try await engine.calculateDryCarbonDioxideMixture(
-                    pressurePa: request.pressurePa,
-                    temperatureK: request.temperatureK,
-                    composition: activeComposition
-                )
-            }
             state = ResolvedState(
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
                 dynamicViscosityPascalSeconds: nil,
                 phaseIdentifier: raw.phaseIdentifier,
                 isPureCarbonDioxide: false,
                 expandedProperties: nil,
-                solverMethod: dryMixturePhaseHint == nil
-                    ? "CoolProp PropsSI(P,T), HEOS dry CO₂-rich mixture; pinned library interaction entries only"
-                    : "CoolProp legacy-stability phase screening plus imposed single-phase HEOS dry-mixture P,T update; pinned library interaction entries only",
+                solverMethod: "CoolProp legacy-stability phase screening plus imposed single-phase HEOS dry-mixture P,T update; pinned library interaction entries only",
                 warnings: [
                     "DRY MIXTURE — PROPERTY-SPECIFIC VALIDATION: density and derived volumetric properties are calculable; the General Properties capability matrix reports whether the current state is limited-production or preliminary.",
                     GeneralPropertiesCapabilityMatrix.capabilitySummary(
@@ -885,6 +874,31 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             composition: activeComposition
         )
         return PhaseMapClassificationAdapter.map(phaseRegion(for: raw.phaseIdentifier))
+    }
+
+    private func safeDryMixturePhaseHint(
+        pressurePa: Double,
+        temperatureK: Double,
+        activeComposition: [MixtureComponent]
+    ) async throws -> CoolPropSinglePhaseHint {
+        let raw = try await engine.identifyDryCarbonDioxideMixturePhase(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: activeComposition
+        )
+        let classification = PhaseMapClassificationAdapter.map(
+            phaseRegion(for: raw.phaseIdentifier)
+        )
+        switch classification.classification {
+        case .gas:
+            return .gas
+        case .liquid, .dense:
+            return .liquid
+        default:
+            throw ProviderError.invalidRequest(
+                "The homogeneous dry-mixture property point was skipped after safe phase screening returned \(classification.displayName)."
+            )
+        }
     }
 
     public func phaseMap(
