@@ -268,6 +268,20 @@ public protocol PhaseMapProvidingModelProvider: ThermodynamicModelProvider {
     ) async throws -> PhaseMapResult
 }
 
+/// Lightweight exact-state screening for clients that must avoid requesting a
+/// homogeneous property from a mixture state identified as multiphase or unknown.
+public protocol PointPhaseScreeningModelProvider: ThermodynamicModelProvider {
+    func phaseClassification(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> PhaseMapClassificationResult
+
+    /// Calculates only after exact-state screening and may use the provider's
+    /// existing single-phase numerical route to avoid an unsafe mixture PT flash.
+    func calculateScreenedHomogeneous(_ request: CalculationRequest) async throws -> CalculationResponse
+}
+
 public enum PhaseMapGridBuilder {
     public static func validationIssues(for request: PhaseMapRequest) -> [PhaseMapValidationIssue] {
         var issues: [PhaseMapValidationIssue] = []

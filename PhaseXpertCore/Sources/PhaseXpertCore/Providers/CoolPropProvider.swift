@@ -352,7 +352,7 @@ private actor PureCarbonDioxideEnvelopeCache {
 ///
 /// Availability does not imply scientific validation. Every successful result
 /// carries an explicit validation-pending warning.
-public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider, PhaseMapProvidingModelProvider {
+public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvider, PhaseMapProvidingModelProvider, PointPhaseScreeningModelProvider {
     private let engine: Engine
     private let envelopeCache: PureCarbonDioxideEnvelopeCache
 
@@ -655,6 +655,33 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
     }
 
     public func calculate(_ request: CalculationRequest) async throws -> CalculationResponse {
+        try await calculate(request, dryMixturePhaseHint: nil)
+    }
+
+    public func calculateScreenedHomogeneous(_ request: CalculationRequest) async throws -> CalculationResponse {
+        let classification = try await phaseClassification(
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            composition: request.composition
+        )
+        let hint: CoolPropSinglePhaseHint
+        switch classification.classification {
+        case .gas:
+            hint = .gas
+        case .liquid:
+            hint = .liquid
+        default:
+            throw ProviderError.invalidRequest(
+                "The homogeneous property point was skipped after safe phase screening returned \(classification.displayName)."
+            )
+        }
+        return try await calculate(request, dryMixturePhaseHint: hint)
+    }
+
+    private func calculate(
+        _ request: CalculationRequest,
+        dryMixturePhaseHint: CoolPropSinglePhaseHint?
+    ) async throws -> CalculationResponse {
         try Task.checkCancellation()
         guard engine.isAvailable else {
             throw ProviderError.modelUnavailable(
@@ -700,18 +727,29 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 ]
             )
         case let .dryMixture(activeComposition):
-            let raw = try await engine.calculateDryCarbonDioxideMixture(
-                pressurePa: request.pressurePa,
-                temperatureK: request.temperatureK,
-                composition: activeComposition
-            )
+            let raw = if let dryMixturePhaseHint {
+                try await engine.calculateDryCarbonDioxideMixture(
+                    pressurePa: request.pressurePa,
+                    temperatureK: request.temperatureK,
+                    composition: activeComposition,
+                    imposedPhase: dryMixturePhaseHint
+                )
+            } else {
+                try await engine.calculateDryCarbonDioxideMixture(
+                    pressurePa: request.pressurePa,
+                    temperatureK: request.temperatureK,
+                    composition: activeComposition
+                )
+            }
             state = ResolvedState(
                 densityKilogramsPerCubicMetre: raw.densityKilogramsPerCubicMetre,
                 dynamicViscosityPascalSeconds: nil,
                 phaseIdentifier: raw.phaseIdentifier,
                 isPureCarbonDioxide: false,
                 expandedProperties: nil,
-                solverMethod: "CoolProp PropsSI(P,T), HEOS dry CO₂-rich mixture; pinned library interaction entries only",
+                solverMethod: dryMixturePhaseHint == nil
+                    ? "CoolProp PropsSI(P,T), HEOS dry CO₂-rich mixture; pinned library interaction entries only"
+                    : "CoolProp legacy-stability phase screening plus imposed single-phase HEOS dry-mixture P,T update; pinned library interaction entries only",
                 warnings: [
                     "DRY MIXTURE — PROPERTY-SPECIFIC VALIDATION: density and derived volumetric properties are calculable; the General Properties capability matrix reports whether the current state is limited-production or preliminary.",
                     GeneralPropertiesCapabilityMatrix.capabilitySummary(
@@ -830,6 +868,23 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             isScientificResult: true,
             waterEquilibrium: waterEquilibrium
         )
+    }
+
+    public func phaseClassification(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> PhaseMapClassificationResult {
+        let supported = try supportedComposition(composition)
+        guard case let .dryMixture(activeComposition) = supported else {
+            throw ProviderError.invalidRequest("Exact-state phase screening is available only for supported dry mixtures.")
+        }
+        let raw = try await engine.identifyDryCarbonDioxideMixturePhase(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: activeComposition
+        )
+        return PhaseMapClassificationAdapter.map(phaseRegion(for: raw.phaseIdentifier))
     }
 
     public func phaseMap(
