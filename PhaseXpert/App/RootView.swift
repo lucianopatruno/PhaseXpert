@@ -18,6 +18,7 @@ final class AppNavigationState {
     var selectedTab: AppTab = .calculator
     var pendingCalculationRecord: CalculationRecord?
     var pendingBuiltInCase: BuiltInCase?
+    var pendingBatchCase: (input: BatchCaseInput, model: BatchCalculationModel)?
     var latestCalculationRecord: CalculationRecord?
 
     func editAndRerun(_ record: CalculationRecord) {
@@ -27,6 +28,11 @@ final class AppNavigationState {
 
     func openBuiltInCaseInCalculator(_ builtInCase: BuiltInCase) {
         pendingBuiltInCase = builtInCase
+        selectedTab = .calculator
+    }
+
+    func openBatchCaseInCalculator(_ input: BatchCaseInput, model: BatchCalculationModel) {
+        pendingBatchCase = (input, model)
         selectedTab = .calculator
     }
 

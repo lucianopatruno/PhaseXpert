@@ -305,6 +305,13 @@ struct SavedCasesView: View {
         }
     }
 
+    private var batchCases: [BatchCaseInput] {
+        BuiltInCaseCatalog.cases.map(BatchCaseInput.builtIn)
+            + savedCases.map {
+                BatchCaseInput.saved(id: $0.id, name: $0.name, record: $0.calculationRecord)
+            }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -360,11 +367,10 @@ struct SavedCasesView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink {
-                        SavedCaseComparisonView(savedCases: savedCases)
+                        CaseBatchComparisonWorkflowView(cases: batchCases)
                     } label: {
                         Label("Compare", systemImage: "arrow.left.arrow.right")
                     }
-                    .disabled(savedCases.count < 2)
                     .accessibilityIdentifier("compare-saved-cases")
                 }
 
