@@ -699,14 +699,7 @@ final class CalculatorViewModel {
     func calculate() async {
         validate()
         let equilibrium = waterEquilibriumPreview
-        if isBinaryCarbonDioxideWaterComposition,
-           !homogeneousWetPropertiesAreInPreliminaryDomain {
-            calculationRecord = nil
-            calculationError = nil
-            standaloneWaterEquilibriumResult = equilibrium
-            return
-        }
-        guard validationReport.canCalculate else {
+        guard canRunCalculation else {
             calculationRecord = nil
             calculationError = nil
             standaloneWaterEquilibriumResult = equilibrium
