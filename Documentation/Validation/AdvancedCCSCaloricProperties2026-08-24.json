@@ -1,0 +1,57 @@
+{
+  "artifactID": "advanced-ccs-caloric-properties-2026-08-24",
+  "engine": {
+    "name": "teqp",
+    "version": "0.23.1",
+    "commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"
+  },
+  "implementation": {
+    "arbitraryN": true,
+    "nativeABI": "px_teqp_calculate_ncomponent_thermodynamic_state",
+    "calculableProperties": [
+      "isobaricHeatCapacity",
+      "isochoricHeatCapacity",
+      "heatCapacityRatio",
+      "speedOfSound"
+    ],
+    "cpOverR": "cvOverR + (1 + ar01 - ar11)^2 / (1 + 2*ar01 + ar02)",
+    "cvOverR": "-(a020 + ar20)",
+    "idealContribution": "teqp IdealHelmholtz generated from each pinned component JSON alpha0 array",
+    "residualContribution": "teqp TDXDerivatives on the pinned multifluid model",
+    "rootSelection": "existing phase-aware N-component density-root selection",
+    "status": "calculable_research_only"
+  },
+  "referenceStateAudit": {
+    "cpCvGamma": "independent of additive Helmholtz reference constants",
+    "absoluteEnthalpyInternalEnergyEntropy": "not exposed by the Advanced native ABI and not traceable to an experimentally matched mixture reference convention",
+    "enthalpyDifferences": "potentially reference-invariant but not implemented or validated in this milestone",
+    "decision": "h_u_s_research_only"
+  },
+  "experimentalValidation": {
+    "cp": {"rows": 0, "converged": 0, "metrics": null},
+    "cv": {"rows": 0, "converged": 0, "metrics": null},
+    "gamma": {"rows": 0, "converged": 0, "metrics": null},
+    "enthalpyOrDeltaH": {"rows": 0, "converged": 0, "metrics": null},
+    "multicomponent": {"rows": 0, "converged": 0, "metrics": null}
+  },
+  "productionDecisions": {
+    "isobaricHeatCapacity": "research_only",
+    "isochoricHeatCapacity": "research_only",
+    "heatCapacityRatio": "research_only",
+    "enthalpy": "unsupported_reference_state_unvalidated",
+    "internalEnergy": "unsupported_reference_state_unvalidated",
+    "entropy": "unsupported_reference_state_unvalidated",
+    "newProductionGates": []
+  },
+  "performance": {
+    "source": "iOS native focused test attachment",
+    "state": {
+      "compositionMoleFraction": {"CO2": 0.942, "N2": 0.023, "CH4": 0.022, "H2": 0.013},
+      "temperatureK": 313.15,
+      "pressurePa": 11001000
+    },
+    "medianMilliseconds": 58.127208,
+    "meanMilliseconds": 58.2476792,
+    "worstMilliseconds": 59.220166
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "artifactID": "advanced-ccs-caloric-data-acquisition-audit-2026-08-24",
+  "searchChannels": [
+    "NIST ThermoML/TRC and REFPROP reference chains",
+    "Crossref, DataCite and OpenAlex metadata",
+    "journal supplementary information and publisher archives",
+    "institutional repositories and accepted manuscripts",
+    "GERG and EOS-CG validation references",
+    "Cornell and University of Michigan repositories"
+  ],
+  "candidates": [
+    {
+      "title": "Experimental heat capacities of carbon dioxide-methane mixtures at elevated pressures",
+      "authors": ["P. R. Bishnoi", "D. B. Robinson"],
+      "year": 1971,
+      "doi": "10.1002/cjce.5450490518",
+      "observable": "isobaric heat capacity",
+      "composition": "x(CH4)=0.1449 and 0.4230",
+      "reportedRows": 249,
+      "uncertainty": "0.5 percent away from maxima; 1 percent near maxima",
+      "disposition": "no_lawfully_accessible_exact_row_table_acquired"
+    },
+    {
+      "title": "Experimental heat capacities of nitrogen-carbon dioxide mixtures at elevated pressures",
+      "authors": ["P. R. Bishnoi", "G. P. Hamaliuk", "D. B. Robinson"],
+      "year": 1972,
+      "doi": "10.1002/cjce.5450500522",
+      "observable": "isobaric heat capacity",
+      "composition": "x(N2)=0.0677 and 0.3170",
+      "uncertainty": "0.5 to 1 percent",
+      "disposition": "no_lawfully_accessible_exact_row_table_acquired"
+    },
+    {
+      "title": "Effect of pressure on the constant-pressure heat capacity of a methane-carbon dioxide mixture",
+      "authors": ["J. R. Boulton", "F. P. Stein"],
+      "year": 1988,
+      "doi": "10.1021/je00052a039",
+      "observable": "isobaric heat-capacity ratio to low pressure",
+      "composition": "x(CH4)=0.492",
+      "disposition": "publisher_metadata_found_but_exact_rows_not_acquired"
+    },
+    {
+      "title": "Measurement of isochoric heat capacity for a methane and carbon dioxide mixture at temperatures from 226 K to 266 K and pressures up to 20 MPa",
+      "authors": ["Liming Pu", "Jiadong Sun", "Yilun Yang", "Limin Qiu", "Bowen Sheng", "Yonghua Huang"],
+      "year": 2025,
+      "doi": "10.1016/j.ijrefrig.2025.01.001",
+      "observable": "isochoric heat capacity",
+      "composition": "x(CH4)=0.126, x(CO2)=0.874",
+      "reportedRows": 22,
+      "uncertainty": "1.2 percent heat capacity; 12 mK temperature; 5 kPa pressure",
+      "disposition": "paywalled_exact_rows_not_acquired"
+    },
+    {
+      "title": "Experimental determination of the enthalpy of mixing of N2 + CO2 under pressure",
+      "authors": ["Arun V. Hejmadi", "Donald L. Katz", "John E. Powers"],
+      "year": 1971,
+      "doi": "10.1016/S0021-9614(71)80030-7",
+      "observable": "excess enthalpy",
+      "composition": "x(N2)=0.22 to 0.73",
+      "conditions": "304.15 K and 313.15 K; 34.02 atm and 64.64 atm",
+      "disposition": "open_repository_record_found_but_exact_table_retrieval_unavailable_during_audit"
+    },
+    {
+      "title": "The Joule-Thomson effect of (CO2 + H2) binary system relevant to gas switching reforming with carbon capture and storage",
+      "year": 2022,
+      "observable": "Joule-Thomson coefficient",
+      "disposition": "indirect_caloric_evidence_not_a_direct_cp_cv_or_reference_state_validation"
+    },
+    {
+      "title": "Isobaric heat capacities of multicomponent gases between 323 and 423 K and at pressures up to 25 MPa",
+      "year": 1997,
+      "doi": "10.1016/S0009-2509(97)00158-9",
+      "observable": "isobaric heat capacity",
+      "composition": "methane-rich natural gases",
+      "disposition": "not_co2_rich_ccs_composition"
+    }
+  ],
+  "exactExperimentalRowsAcquired": 0,
+  "graphDigitizationUsed": false,
+  "modelGeneratedRowsUsedAsTruth": false,
+  "decision": "No production validation dataset can lawfully be encoded from this acquisition pass; do not promote caloric properties."
+}
