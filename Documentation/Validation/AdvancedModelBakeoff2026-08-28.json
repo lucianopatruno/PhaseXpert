@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-08-28",
+  "startingMainSHA": "902f97eddf61be927e9f1bd4abf2042f3169a0cb",
+  "baselineModel": {
+    "candidateID": "phasexpert-eoscg-teqp-0.23.1",
+    "name": "PhaseXpert EOS-CG-2021/custom multifluid baseline",
+    "engine": "teqp 0.23.1",
+    "engineCommit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+    "identityArtifacts": ["EOSCGStaticIdentityAudit.json", "EOSCG2021TargetModelData.json"],
+    "productionUnchanged": true,
+    "densityEvidence": [
+      {"datasetID":"Mazzoccoli2012-CO2-N2","rows":64,"converged":64,"aardPercent":30.298704075264478,"biasPercent":-29.797176107299663,"rmsPercent":39.67216881207806,"worstPercent":-87.06753691250204,"acceptedProductionRows":5},
+      {"datasetID":"Ghafri2016-CO2-CH4","rows":180,"converged":180,"aardPercent":1.3982221406126507,"biasPercent":1.3982221406126507,"rmsPercent":1.6890675538194637,"worstPercent":5.15213572373343,"acceptedProductionRows":71},
+      {"datasetID":"Liu2017-CO2-CH4","rows":271,"converged":271,"aardPercent":0.7838793582781283,"worstPercent":7.675086784634123,"acceptedProductionRows":0},
+      {"datasetID":"Souissi2017-CO2-H2","rows":19,"converged":19,"aardPercent":0.09697082744551007,"biasPercent":0.09307175768321954,"rmsPercent":0.14896831719246356,"worstPercent":0.408391385950891,"acceptedProductionRows":19},
+      {"datasetID":"Razmjoo2026-dry-multicomponent","rows":330,"converged":171,"aardPercent":0.6103034862642397,"biasPercent":-0.10849712607732784,"rmsPercent":0.8441244056028373,"worstPercent":4.372792278312454,"acceptedProductionRows":145}
+    ],
+    "vleEvidence": [
+      {"datasetID":"Ottoy2020-CO2-N2-CH4-bubble","rows":31,"accepted":21,"pressureAARDPercent":0.542199,"pressureMAEMPa":0.0380686227056088,"pressureRMSPercent":0.649702,"worstPercent":-1.2686903362694726},
+      {"datasetID":"Ottoy2020-CO2-N2-CH4-dew","rows":31,"accepted":23,"pressureAARDPercent":1.504217,"pressureMAEMPa":0.11944338979732989,"pressureRMSPercent":2.620868,"worstPercent":-10.279512454287422},
+      {"datasetID":"KeGeorge2017-CO2-Ar-N2","rows":63,"accepted":40,"pressureAARDPercent":0.7081089943799391,"pressureMAEMPa":0.05029567201472757,"pressureRMSPercent":0.9534322633783945,"worstPercent":-2.701951759467479},
+      {"datasetID":"Theveneau2020-CO2-CH4-H2S","rows":31,"accepted":0}
+    ]
+  },
+  "candidateModels": [
+    {
+      "candidateID":"gerg-2008",
+      "name":"GERG-2008",
+      "status":"REJECT",
+      "identity":{"family":"multifluid Helmholtz","publication":"Kunz and Wagner, 2012","doi":"10.1021/je300655b","targetComponents":["CO2","N2","CH4","H2","CO","H2S"],"missingTargetComponents":["O2","Ar"],"parameterSource":"published GERG-2008 tables and model files","teqpCompatibility":"GERG200X factory exists upstream but is disabled in the PhaseXpert iOS build"},
+      "implemented":"Existing PhaseXpert custom multifluid records already use the relevant GERG binary formulations for CO2+N2, CO2+CH4 and CO2+H2S; no scientifically distinct candidate was added.",
+      "independence":"Several baseline pair formulations are inherited from GERG-2008, so comparison would not be independent or a new model for those systems.",
+      "ratings":{"densityAccuracy":"Marginal across the full evidence map","vleAccuracy":"Marginal","stabilityRobustness":"Low for target multicomponent promotion","independentEvidence":"Moderate","implementationRisk":"Low","productionPotential":"None"},
+      "reason":"It is not materially different from the current formulation on key pairs, omits O2 and Ar, and cannot broaden the required target space."
+    },
+    {
+      "candidateID":"eos-lng-2019",
+      "name":"EOS-LNG",
+      "status":"REJECT",
+      "identity":{"family":"multifluid Helmholtz","publication":"Thol et al., 2019","doi":"10.1063/1.5093800","targetComponents":["CO2","N2","CH4"],"missingTargetComponents":["H2","O2","Ar","CO","H2S"],"parameterSource":"published model and supplementary data","teqpCompatibility":"representable as multifluid but not shipped in the pinned iOS model data"},
+      "implemented":"No; its scope and validation are LNG/methane-rich rather than CO2-rich CCS.",
+      "ratings":{"densityAccuracy":"Unavailable on PhaseXpert evidence","vleAccuracy":"Unavailable","stabilityRobustness":"Unavailable","independentEvidence":"Weak for CO2-rich use","implementationRisk":"Medium","productionPotential":"None"},
+      "reason":"Insufficient target-component coverage and CO2-rich independent validation; extrapolating an LNG formulation would not support the mission."
+    },
+    {
+      "candidateID":"zms-co2-ch4-n2-2023",
+      "name":"ZMS EOS for CO2-CH4-N2",
+      "status":"PROMISING — NEEDS MORE DATA",
+      "identity":{"family":"general multifluid Helmholtz","publication":"Xu, Mao and Zheng, 2023","doi":"10.3390/app13063659","license":"CC BY 4.0 article","targetComponents":["CO2","N2","CH4"],"missingTargetComponents":["H2","O2","Ar","CO","H2S"],"parameterSource":"article plus Fortran code stated available from corresponding author","teqpCompatibility":"likely multifluid-compatible; exact code/term identity not verified"},
+      "implemented":"No; the complete referenced Fortran/model package was not publicly retrievable from the article metadata routes, and coefficients were not transcribed or inferred.",
+      "independence":"The paper reports fitting/reproducing the available binary PVTx/VLE corpus; overlap with PhaseXpert discovery rows must be audited before an independent score.",
+      "reportedPerformance":{"ternaryPVTxAARDPercent":0.40,"source":"author abstract; not a PhaseXpert independent benchmark"},
+      "ratings":{"densityAccuracy":"Promising but unconfirmed","vleAccuracy":"Promising but unconfirmed","stabilityRobustness":"Unavailable","independentEvidence":"Weak","implementationRisk":"Medium","productionPotential":"Medium"},
+      "reason":"Best targeted ternary lead, but exact implementation identity, holdout independence, row-level scoring, stability and iOS performance remain unproved."
+    },
+    {
+      "candidateID":"xmz-co2-n2-o2-ar-2023",
+      "name":"Xu-Mao-Zheng general Helmholtz CO2-N2-O2-Ar EOS",
+      "status":"PROMISING — NEEDS MORE DATA",
+      "identity":{"family":"general multifluid Helmholtz","publication":"Xu, Mao and Zheng, 2023","doi":"10.1016/j.fluid.2022.113703","targetComponents":["CO2","N2","O2","Ar"],"missingTargetComponents":["CH4","H2","CO","H2S"],"parameterSource":"four binary mixing parameters and generalized Lemmon-Jacobsen departure functions in inaccessible primary tables","teqpCompatibility":"structurally plausible but exact representability unverified"},
+      "implemented":"No; lawful acquisition routes yielded metadata but not the complete coefficient tables.",
+      "ratings":{"densityAccuracy":"Promising but unconfirmed","vleAccuracy":"Promising but unconfirmed","stabilityRobustness":"Unavailable","independentEvidence":"Weak","implementationRisk":"Medium","productionPotential":"Medium"},
+      "reason":"Directly relevant oxyfuel formulation, but missing lawful model data prevents identity-safe implementation or benchmarking."
+    },
+    {
+      "candidateID":"xmz-h2-hydrocarbon-2026",
+      "name":"Xu-Mao H2-CH4-C2H6-C3H8-CO2-N2 Helmholtz EOS",
+      "status":"PROMISING — NEEDS MORE DATA",
+      "identity":{"family":"general multifluid Helmholtz","publication":"Xu and Mao, 2026","doi":"10.1016/j.fluid.2026.114851","targetComponents":["CO2","N2","CH4","H2"],"missingTargetComponents":["O2","Ar","CO","H2S"],"parameterSource":"new closed-access primary article; complete coefficients not lawfully accessible in this audit","teqpCompatibility":"not verified"},
+      "implemented":"No; publication metadata were available but exact parameters and code were not.",
+      "ratings":{"densityAccuracy":"Unavailable","vleAccuracy":"Unavailable","stabilityRobustness":"Unavailable","independentEvidence":"Weak","implementationRisk":"High","productionPotential":"Medium"},
+      "reason":"Most relevant newly published H2-containing lead, but too new and insufficiently accessible for an identity-safe independent bake-off."
+    },
+    {
+      "candidateID":"coolprop-heos-8.0.0",
+      "name":"CoolProp 8.0.0 HEOS shipped multifluid database",
+      "status":"REJECT",
+      "identity":{"family":"heterogeneous multifluid Helmholtz database","softwareVersion":"8.0.0","gitRevision":"ae81610e7d23efc57f9d051c8e70a4d66e87537f","license":"MIT","targetComponents":["CO2","N2","CH4","H2","O2","Ar","CO","H2S"],"representation":"existing PhaseXpert General Properties native XCFramework"},
+      "implemented":"Already diagnostic/production-limited in General Properties; it was not treated as experimental truth or exposed as a new Advanced model.",
+      "densityEvidence":[
+        {"datasetID":"Mazzoccoli2012-CO2-N2","rows":64,"converged":64,"aardPercent":22.422514779542848,"biasPercent":10.418083086700134,"rmsPercent":130.11287442793676,"worstPercent":1032.5542482151127},
+        {"datasetID":"Ghafri2016-CO2-CH4","rows":180,"converged":180,"aardPercent":1.4000130651805751,"biasPercent":1.4000130651805751,"rmsPercent":1.6909185578105859,"worstPercent":5.155628775484732},
+        {"datasetID":"Souissi2017-CO2-H2","rows":19,"converged":19,"aardPercent":0.09734887037383133,"biasPercent":0.09371724053518077,"rmsPercent":0.14940923557966806,"worstPercent":0.4091369501146593},
+        {"datasetID":"Lozano2020-CO2-O2","rows":92,"converged":92,"aardPercent":4.674755768165352,"biasPercent":4.538885906763445,"rmsPercent":43.76337005830028,"worstPercent":419.7590491382754},
+        {"datasetID":"Mazzoccoli2012-CO2-Ar","rows":122,"converged":122,"aardPercent":4.104151420906121,"biasPercent":-3.87143646144688,"rmsPercent":11.683013118986182,"worstPercent":-51.419472961034366}
+      ],
+      "vleEvidence":"No same-state independent candidate VLE matrix establishes broader production capability.",
+      "ratings":{"densityAccuracy":"Poor globally; good only on existing narrow CH4/H2/O2 slices","vleAccuracy":"Unavailable","stabilityRobustness":"Low in adverse dense/root regions","independentEvidence":"Strong for the scored density rows","implementationRisk":"Low","productionPotential":"None beyond existing General gates"},
+      "reason":"It does not materially outperform EOS-CG, has catastrophic local root/phase errors, and is a database implementation rather than one traceable alternative formulation across all target pairs."
+    },
+    {
+      "candidateID":"umr-pru",
+      "name":"UMR-PRU",
+      "status":"REJECT",
+      "identity":{"family":"Peng-Robinson plus UNIFAC-derived universal mixing rule","publication":"Voutsas et al., 2004","doi":"10.1021/ie049580p","targetComponents":["CO2","N2","CH4"],"parameterSource":"group-contribution and fitted interaction records"},
+      "implemented":"No.",
+      "independence":"The Petropoulou CO2/CH4 implementation reported in the experimental paper was fitted to those isotherms, making that evidence circular for this bake-off.",
+      "ratings":{"densityAccuracy":"Unavailable","vleAccuracy":"Good only on fitted evidence","stabilityRobustness":"Unavailable","independentEvidence":"Weak","implementationRisk":"High","productionPotential":"None"},
+      "reason":"No complete untuned target-pair parameter matrix or independent broad CCS holdout was established."
+    },
+    {
+      "candidateID":"pc-saft-cpa-saftvrmie",
+      "name":"PC-SAFT / CPA / SAFT-VR Mie families",
+      "status":"REJECT",
+      "identity":{"family":"advanced cubic/association/SAFT families","primaryReferences":[{"model":"PC-SAFT","doi":"10.1021/ie0003887"},{"model":"SAFT-gamma Mie","doi":"10.1063/1.4819786"}],"targetComponents":["CO2","N2","CH4","H2","O2","Ar","CO","H2S"],"parameterSource":"model-specific pure and binary/group parameter sets"},
+      "implemented":"No; teqp factories are excluded from the current iOS build and no single published untuned parameter set covering all target pairs was found.",
+      "ratings":{"densityAccuracy":"Unavailable on a common untuned matrix","vleAccuracy":"Unavailable on a common untuned matrix","stabilityRobustness":"Unavailable","independentEvidence":"Weak","implementationRisk":"High","productionPotential":"None"},
+      "reason":"Published applications rely on fitted binary/group parameters; assembling or zeroing missing interactions would violate the no-fitting/no-invention rules."
+    }
+  ],
+  "datasetIndex": [
+    {"id":"Mazzoccoli2012","doi":"10.1021/je300590v","property":"density","systems":["CO2+N2","CO2+O2","CO2+Ar"]},
+    {"id":"Ghafri2016","doi":"10.1016/j.fluid.2015.08.029","property":"density","rows":180},
+    {"id":"Liu2017","doi":"10.1016/j.jct.2016.11.009","property":"density","rows":271},
+    {"id":"Souissi2017","doi":"10.1021/acs.jced.7b00213","property":"density","rows":19},
+    {"id":"Owuna2025","doi":"10.1021/acs.jced.4c00666","property":"density","rows":27,"use":"candidate discrimination only; no alternative implemented"},
+    {"id":"Razmjoo2026","doi":"10.1016/j.fuel.2026.139184","repository":"10.5281/zenodo.15846367","property":"density","rows":330},
+    {"id":"Ottoy2020","doi":"10.1016/j.fluid.2019.112444","property":"bubble/dew VLE","rows":62},
+    {"id":"KeGeorge2017","doi":"10.1016/j.ijggc.2016.11.003","property":"boundary VLE","rows":63},
+    {"id":"Theveneau2020","doi":"10.1021/acs.jced.9b01082","property":"interior VLE","rows":31}
+  ],
+  "runtime": {
+    "baselineDensity":"existing provider tests remain interactive; no new candidate density binary was added",
+    "baselineVLEms":{"ottoyMedian":470.6519842147827,"ottoyWorst":1283.629059791565,"keMedian":241.15991592407227,"keWorst":1312.520980834961,"tpdRepresentative":1632.692,"flashRepresentative":4409.430027008057},
+    "coolPropCandidate":"already shipped; no new binary, construction cache, allocation, or XCFramework size impact",
+    "unimplementedCandidates":"runtime cannot be honestly benchmarked without exact model implementations"
+  },
+  "productionDecision": {
+    "status":"RETAIN CURRENT FORMULATION",
+    "materialWinner":null,
+    "promotedCandidates":[],
+    "acceptedDomains":[],
+    "rejectedDomains":["all proposed continuous binary density domains","all dry multicomponent density neighborhoods","all multicomponent bubble/dew/classification/flash/envelope domains"],
+    "multiModelRoutingImplemented":false,
+    "capabilityMatrixChanged":false,
+    "providerRoutingChanged":false,
+    "uiChanged":false,
+    "builtInImpact":{"NorthernLights":"unchanged","Brevik":"unchanged","Porthos":"unchanged","Aramis":"unchanged"},
+    "reason":"No identity-complete, untuned, independently benchmarkable, iOS-feasible alternative materially beats EOS-CG over a broader connected evidence domain. ZMS/Xu-Mao formulations are the strongest research leads but require lawful exact model packages and independent holdout audits."
+  },
+  "nativeImpact":{"abiChanged":false,"nativeSourceChanged":false,"teqpXCFrameworkRebuilt":false,"coolPropChanged":false,"binarySizeChangeBytes":0},
+  "scientificIntegrity":{"coefficientsInvented":false,"coefficientsFitted":false,"bipsInvented":false,"bipsFitted":false,"validationPointsInvented":false,"digitizedPlotsPromoted":false,"softwareComparisonUsedAsExperimentalEvidence":false,"invalidCompositionSilentlyNormalized":false,"unsupportedComponentsDropped":false,"unstableStatesAccepted":false,"negativeResultsPreserved":true}
+}
