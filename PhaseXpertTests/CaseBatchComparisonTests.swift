@@ -118,7 +118,7 @@ final class CaseBatchComparisonTests: XCTestCase {
         inputs.forEach { XCTAssertTrue(text.contains($0.name)) }
         XCTAssertTrue(text.contains(BatchCalculationModel.advanced.id))
         XCTAssertTrue(text.contains("property-specific"))
-        XCTAssertTrue(text.contains("No provider fallback"))
+        XCTAssertTrue(text.contains("input snapshot and selected model"))
     }
 
     func testSavedCaseSnapshotDoesNotChangeWhenSourceRecordChanges() async throws {

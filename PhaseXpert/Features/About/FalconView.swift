@@ -41,7 +41,7 @@ struct FalconView: View {
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
                     Text("FALCON CO₂ flow loop")
                         .font(.title2.weight(.semibold))
-                    Text("FALCON is IFE's CO₂ flow-assurance research infrastructure for transport by pipeline and well injection. It supports pure CO₂ and mixtures, phase-transition and multiphase-flow studies, instrumentation development, and validation of predictive models.")
+                    Text("IFE's experimental facility for CO₂ transport and flow research.")
                 }
 
                 IFECard {
@@ -53,9 +53,6 @@ struct FalconView: View {
                         Label("CO₂ mixtures can include N₂, CH₄, H₂O and O₂", systemImage: "circle.grid.2x2")
                     }
                 }
-
-                Text("FALCON contributes to ECCSEL's European research-infrastructure network for carbon capture, utilisation and storage.")
-                    .foregroundStyle(.secondary)
 
                 Link(destination: officialPage) {
                     Label("Open the official FALCON website", systemImage: "safari")

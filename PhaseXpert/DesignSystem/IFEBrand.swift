@@ -106,8 +106,8 @@ struct IFEStatusBadge: View {
 
 struct IFESectionHeader: View {
     let step: Int?
-    let title: String
-    var subtitle: String?
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey?
 
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.xSmall) {

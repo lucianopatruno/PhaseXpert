@@ -149,7 +149,7 @@ struct PDFCalculationExportRenderer: CalculationExportRendering {
         )
         if let model = response.model {
             drawLine(
-                "Model: pure CO₂ saturation • Model \(model.modelVersion) • Implementation \(model.providerVersion)",
+                "Model: pure CO₂ saturation • Version \(model.modelVersion) • Provider \(model.providerVersion)",
                 font: PDFReportFonts.small,
                 color: PDFReportPalette.secondaryText,
                 position: CGPoint(x: PDFReportLayout.margin, y: 158),

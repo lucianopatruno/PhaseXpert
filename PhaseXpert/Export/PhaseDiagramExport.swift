@@ -497,7 +497,7 @@ private struct PhaseDiagramExportCanvas: View {
             }
             .font(.system(size: 18, weight: .medium))
 
-            Text("Model: \(modelName) • Model \(response.model?.modelVersion ?? record.response.model.modelVersion) • Implementation \(response.model?.providerVersion ?? record.response.model.providerVersion)")
+            Text("Model: \(modelName) • Version \(response.model?.modelVersion ?? record.response.model.modelVersion) • Provider \(response.model?.providerVersion ?? record.response.model.providerVersion)")
                 .font(.system(size: 16))
                 .foregroundStyle(.secondary)
             Text("Calculation ID: \(record.response.calculationID.uuidString) • Envelope request ID: \(response.requestID.uuidString)")

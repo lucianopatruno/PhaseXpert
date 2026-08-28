@@ -1306,7 +1306,7 @@ private struct PhaseBoundaryChart: View {
                         if let model = response.model {
                             LabeledContent("Model", value: traceabilityModelName)
                             LabeledContent("Model version", value: model.modelVersion)
-                            LabeledContent("Implementation version", value: model.providerVersion)
+                            LabeledContent("Provider version", value: model.providerVersion)
                         }
                         if let generatedAt = response.generatedAt {
                             LabeledContent("Generated at") {
