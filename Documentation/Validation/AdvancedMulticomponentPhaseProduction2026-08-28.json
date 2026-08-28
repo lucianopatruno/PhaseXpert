@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-08-28",
+  "startingMainSHA": "d15f415e23ea57a4050fbab438f4d49cc93331f8",
+  "model": {
+    "engine": "teqp",
+    "version": "0.23.1",
+    "commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+    "parametersFitted": false,
+    "binaryInteractionParametersChanged": false,
+    "nativeABIChanged": false,
+    "xcframeworkRebuilt": false
+  },
+  "nativeAudit": {
+    "swiftProvider": ["NativeTeqpEngine.calculateNComponentVLE", "NativeTeqpEngine.calculateGlobalStability", "NativeTeqpEngine.calculateTPFlash", "NativeTeqpEngine.traceNComponentPhaseEnvelope"],
+    "cABI": ["px_teqp_calculate_ncomponent_vle", "px_teqp_calculate_ncomponent_tpd", "px_teqp_calculate_ncomponent_tp_flash", "px_teqp_trace_ncomponent_phase_envelope"],
+    "cppSolvers": ["solve_ncomponent_vle", "solve_tpd", "solve_tp_flash", "trace_ncomponent_phase_envelope"],
+    "equilibriumResidualTolerance": 2e-7,
+    "materialBalanceTolerance": 2e-8,
+    "compositionClosureTolerance": 1e-10,
+    "tpdUnstableThreshold": -2e-6,
+    "tpdStableThreshold": -1e-9,
+    "threadSafety": "NativeTeqpEngine actor serializes Swift access; each C++ call constructs local model and solver state and has no shared continuation cache.",
+    "decision": "The existing hardened algorithms and structured failure handling are retained. No tolerance, seed, branch, stability, or fallback change produced a scientifically justified promotion target."
+  },
+  "datasets": [
+    {
+      "sourceID": "Ottoy2020",
+      "system": "CO2+N2+CH4",
+      "doi": "10.1016/j.fluid.2019.112444",
+      "tier": 1,
+      "license": "CC BY 4.0",
+      "rows": 62,
+      "bubbleRows": 31,
+      "dewRows": 31,
+      "oppositePhaseCompositionMeasured": true,
+      "role": "independent boundary validation"
+    },
+    {
+      "sourceID": "KeGeorge2017",
+      "system": "CO2+Ar+N2",
+      "doi": "10.1016/j.ijggc.2016.11.003",
+      "tier": 2,
+      "rows": 63,
+      "bubbleRows": 24,
+      "dewRows": 39,
+      "pressureExpandedUncertaintyMPa": 0.04,
+      "oppositePhaseCompositionMeasured": false,
+      "role": "independent synthetic-boundary validation"
+    },
+    {
+      "sourceID": "Theveneau2020",
+      "system": "CO2+CH4+H2S",
+      "doi": "10.1021/acs.jced.9b01082",
+      "tier": 1,
+      "rows": 31,
+      "role": "independent interior TP-flash validation"
+    },
+    {
+      "sourceID": "Tenorio2015",
+      "system": "CO2+N2+H2",
+      "doi": "10.1016/j.ijggc.2015.06.009",
+      "tier": 2,
+      "rowsEncoded": 0,
+      "rejectionReason": "Relevant synthetic boundary evidence, but no additional exact reusable row artifact was encoded after the Ke boundary and Theveneau interior campaigns; it does not validate the priority four- or five-component systems."
+    },
+    {
+      "sourceID": "Razmjoo2026",
+      "system": "CO2-rich four/five-component dry mixtures",
+      "doi": "10.1016/j.fuel.2026.139184",
+      "repositoryDOI": "10.5281/zenodo.15846367",
+      "rows": 330,
+      "role": "homogeneous-density robustness diagnostics only; not phase-boundary evidence"
+    }
+  ],
+  "validation": {
+    "ottoyBubble": {
+      "attempted": 31,
+      "thermodynamicallyAccepted": 21,
+      "failureRatePercent": 32.25806451612903,
+      "pressureMAEMPa": 0.0380686227056088,
+      "pressureAARDPercent": 0.542199,
+      "pressureBiasPercent": -0.446304,
+      "pressureRMSPercent": 0.649702,
+      "worstAbsolutePressureMPa": 0.11113667156069912,
+      "worstRelativePercent": -1.2686903362694726,
+      "oppositePhaseCompositionMAE": {"co2": 0.003419, "n2": 0.002377, "ch4": 0.001830},
+      "oppositePhaseCompositionRMS": {"co2": 0.004287, "n2": 0.002976, "ch4": 0.002542}
+    },
+    "ottoyDew": {
+      "attempted": 31,
+      "thermodynamicallyAccepted": 23,
+      "failureRatePercent": 25.806451612903224,
+      "pressureMAEMPa": 0.11944338979732989,
+      "pressureAARDPercent": 1.504217,
+      "pressureBiasPercent": -1.177069,
+      "pressureRMSPercent": 2.620868,
+      "worstAbsolutePressureMPa": 0.956775901195256,
+      "worstRelativePercent": -10.279512454287422,
+      "oppositePhaseCompositionMAE": {"co2": 0.005410, "n2": 0.003053, "ch4": 0.002523},
+      "oppositePhaseCompositionRMS": {"co2": 0.010531, "n2": 0.006048, "ch4": 0.004609}
+    },
+    "keGeorge": {
+      "attempted": 63,
+      "thermodynamicallyAccepted": 40,
+      "failureRatePercent": 36.507936507936506,
+      "pressureMAEMPa": 0.05029567201472757,
+      "pressureAARDPercent": 0.7081089943799391,
+      "pressureBiasPercent": -0.3162595461978551,
+      "pressureRMSPercent": 0.9534322633783945,
+      "worstRelativePercent": -2.701951759467479,
+      "uncertaintyAssessment": "Aggregate MAE exceeds the reported 0.04 MPa expanded pressure uncertainty; failures interrupt every mixture/branch family.",
+      "failureClassification": "No stable accepted solution. Synthetic boundary data contain no measured incipient-phase composition, preventing a composition-equilibrium accuracy check."
+    },
+    "theveneauFlash": {
+      "attempted": 31,
+      "thermodynamicallyAccepted": 0,
+      "failureRatePercent": 100.0,
+      "failureClassification": "All candidates fail the hardened global/local stability, distinct-phase, material-balance, pressure, or fugacity postchecks; no phase-fraction or composition metric is claimed."
+    }
+  },
+  "performanceMilliseconds": {
+    "ottoyBoundaryPoint": {"median": 470.6519842147827, "mean": 458.7322858072096, "worst": 1283.629059791565, "samples": 62},
+    "keBoundaryPoint": {"median": 241.15991592407227, "mean": 297.0956772092789, "worst": 1312.520980834961, "samples": 63},
+    "ternaryTPD": {"representative": 1632.6919794082642},
+    "ternaryTPFlash": {"representative": 4409.430027008057},
+    "theveneauValidationFlash": {"median": 4072.83091545105, "mean": 3853.771859599698, "worst": 7494.539022445679, "samples": 31},
+    "elevenPointEnvelope": {"median": 559.2625141143799, "worst": 570.3279972076416, "samples": 2}
+  },
+  "systemDecisions": [
+    {"system": "CO2+N2+CH4", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "Only 21/31 bubble and 23/31 dew rows pass; failures are stability/model-state failures, compositions vary row-by-row, and dew worst error is 10.28%. No connected production domain is supported."},
+    {"system": "CO2+N2+O2+Ar", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "No independent four-component VLE boundary dataset was acquired. Ke validates CO2+Ar+N2 only, while Razmjoo is density evidence only."},
+    {"system": "CO2+N2+CH4+H2", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "No independent boundary or interior VLE rows were acquired for this exact component set."},
+    {"system": "CO2+N2+Ar+CH4+H2", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "Razmjoo validates selected homogeneous densities, not VLE, classification, or envelope behavior."},
+    {"system": "CO2+CH4+H2S", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "Zero of 31 Theveneau interior flash rows pass hardened postchecks."},
+    {"system": "CO2+Ar+N2", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "Only 40/63 Ke boundary rows pass; every branch has gaps and aggregate pressure MAE exceeds expanded uncertainty."},
+    {"system": "CO2+N2", "decisions": ["KEEP EXISTING BINARY CAPABILITY", "NO NEW MULTICOMPONENT PROMOTION", "NO PROMOTION"], "reason": "Binary control evidence does not validate a multicomponent gate."},
+    {"system": "CO2+CO and CO2+H2S secondary phase behavior", "decisions": ["KEEP RESEARCH-ONLY", "NO PROMOTION"], "reason": "No new independent multicomponent boundary evidence supports promotion."}
+  ],
+  "productionChanges": {
+    "promotedDomains": [],
+    "capabilityMatrixChanged": false,
+    "providerRoutingChanged": false,
+    "phaseClassificationChanged": false,
+    "phaseEnvelopeChanged": false,
+    "phaseDiagramChanged": false,
+    "uiChanged": false
+  }
+}
