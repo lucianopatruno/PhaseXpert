@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-08-28",
+  "publication": {
+    "authors": ["Jia Zhang", "Shide Mao", "Zeming Shi"],
+    "title": "A Helmholtz Free Energy Equation of State of CO2-CH4-N2 Fluid Mixtures (ZMS EOS) and Its Applications",
+    "journal": "Applied Sciences",
+    "volume": 13,
+    "article": 3659,
+    "year": 2023,
+    "doi": "10.3390/app13063659",
+    "license": "CC BY 4.0",
+    "licenseURL": "https://creativecommons.org/licenses/by/4.0/",
+    "authorshipCorrection": "The primary article is by Zhang, Mao and Shi, not Xu, Mao and Zheng."
+  },
+  "acquisition": {
+    "primaryArticle": "Lawfully acquired from the CC BY 4.0 MDPI special-issue reprint.",
+    "primaryReprintPDFSHA256": "eb86bd80535a6dae5e4dbd5c4baa813a27fe3a091ca3aa7f5f1bfd3af86f2057",
+    "publicationPDFCommitted": false,
+    "routesChecked": [
+      "MDPI article HTML, PDF, XML, notes and supplementary routes",
+      "MDPI open-access special-issue reprint",
+      "Crossref metadata and relations",
+      "OpenAlex locations",
+      "DOAJ metadata",
+      "GitHub, GitLab and Bitbucket searches by DOI, title, authors and correspondence email",
+      "Zenodo, Figshare and OSF searches",
+      "author and institutional repository searches",
+      "general web searches for Fortran, source code, coefficients and Origin projects"
+    ],
+    "sourcePackageFound": false,
+    "sourcePackageStatement": "The article says the Fortran codes and Origin projects can be obtained freely from the corresponding author; it does not attach them or give a public repository.",
+    "sourceCodeLicense": "unknown; the article license does not establish a license for an unavailable source package"
+  },
+  "publishedFormulation": {
+    "family": "generalized pairwise multifluid Helmholtz EOS",
+    "componentsInPublishedOrder": ["CH4", "CO2", "N2"],
+    "idealPart": "sum_i x_i [alpha_i^0 + ln(x_i)]",
+    "residualPart": "sum_i x_i alpha_i^r(delta,tau) + alpha^E(delta,tau,x)",
+    "densityReducingFunction": "rho_c = [sum_i x_i/rho_ci + sum_(i<j) x_i*x_j*zeta_ij]^-1",
+    "temperatureReducingFunction": "T_c = sum_i x_i*T_ci + sum_(i<j) x_i^beta_ij*x_j*varsigma_ij",
+    "departureFunction": "sum_(i<j) x_i*x_j*F_ij*sum_(k=1..10) N_k*delta^d_k*tau^t_k",
+    "ternarySpecificTerms": 0,
+    "publishedPairCoefficientCount": 12,
+    "referencedUniversalDepartureTermCount": 10,
+    "referencedUniversalDepartureCoefficientCount": 30
+  },
+  "pureFluidEOS": [
+    {"component": "CO2", "identity": "Span and Wagner 1996", "doi": "10.1063/1.555991"},
+    {"component": "CH4", "identity": "Setzmann and Wagner 1991", "doi": "10.1063/1.555898"},
+    {"component": "N2", "identity": "Span et al. 2000", "doi": "10.1063/1.1349047"}
+  ],
+  "binaryParameters": [
+    {"first": "CH4", "second": "CO2", "F": 1.2844025, "zetaDm3PerMol": 0.0035751245, "varsigmaK": -43.720344, "beta": 1.0358865, "source": "Mao et al. 2016"},
+    {"first": "CO2", "second": "N2", "F": 1.6671494, "zetaDm3PerMol": 0.0058411078, "varsigmaK": -22.952094, "beta": 1.6878787, "source": "Zhang, Mao and Peng 2020"},
+    {"first": "CH4", "second": "N2", "F": 0.63739997, "zetaDm3PerMol": 0.003812517, "varsigmaK": -17.790001, "beta": 1.009001, "source": "Zhang, Mao and Shi 2023"}
+  ],
+  "publishedCriticalTable": [
+    {"component": "CH4", "printedTciK": 90.6941, "rhoCiMolPerDm3": 10.139},
+    {"component": "CO2", "printedTciK": 216.592, "rhoCiMolPerDm3": 10.625},
+    {"component": "N2", "printedTciK": 63.151, "rhoCiMolPerDm3": 11.184}
+  ],
+  "identityBlockers": [
+    "The values printed as critical temperatures are the recognized triple-point temperatures, not the critical temperatures required by the stated reducing equation.",
+    "The article references but does not print the 10 universal Lemmon-Jacobsen departure terms (30 N/d/t values), so their exact version and transcription cannot be checked against author code.",
+    "The mapping of each pure-fluid residual Helmholtz function to the mixture reduced variables is not specified sufficiently to prove equivalence with a teqp multifluid construction.",
+    "The unavailable Fortran package is required to resolve article/code discrepancies and provide published numerical reference states.",
+    "The source package license is unknown and no public package hash can be established."
+  ],
+  "identityComplete": false,
+  "implementationAllowed": false,
+  "verifiedNumericalCoefficientCount": 12,
+  "missingOrAmbiguousNumericalCoefficientCount": 30,
+  "decision": "NO IDENTITY-SAFE IMPLEMENTATION"
+}

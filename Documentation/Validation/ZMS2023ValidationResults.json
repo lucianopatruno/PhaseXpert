@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-08-28",
+  "candidateID": "zms-co2-ch4-n2-2023",
+  "identityArtifact": "ZMS2023ModelIdentity.json",
+  "decision": "RESEARCH-ONLY — EXACT FORMULATION NOT RECONSTRUCTABLE FROM PUBLIC MATERIAL",
+  "implementation": {
+    "created": false,
+    "reason": "Exact identity is incomplete; implementing would require choosing unverified departure coefficients and resolving a published critical-temperature contradiction by assumption.",
+    "iosNativeChanges": false,
+    "xcframeworkRebuilt": false,
+    "multiModelRoutingImplemented": false
+  },
+  "fittingDataAudit": {
+    "ch4N2": {
+      "pvtxSelectedRows": 433,
+      "vleSelectedRows": 270,
+      "datasets": [
+        {"dataset": "Da Ponte et al. 1978", "property": "PVTx", "totalRows": 182, "fittingRows": 50},
+        {"dataset": "Haynes and McCarty 1983", "property": "PVTx", "totalRows": 85, "fittingRows": 85},
+        {"dataset": "Seitz et al.", "property": "PVTx", "totalRows": 190, "fittingRows": 90},
+        {"dataset": "Ababio et al. 2001", "property": "PVTx", "totalRows": 83, "fittingRows": 83},
+        {"dataset": "Chamorro et al.", "property": "PVTx", "totalRows": 242, "fittingRows": 56},
+        {"dataset": "Li et al.", "property": "PVTx", "totalRows": 27, "fittingRows": 27},
+        {"dataset": "Gomez-Osorio et al. 2016", "property": "PVTx", "totalRows": 142, "fittingRows": 42},
+        {"dataset": "Pan et al.", "property": "VLE", "totalRows": 60, "fittingRows": 60},
+        {"dataset": "Kidnay et al.", "property": "VLE", "totalRows": 83, "fittingRows": 83},
+        {"dataset": "McClure et al.", "property": "VLE", "totalRows": 8, "fittingRows": 8},
+        {"dataset": "Jin et al.", "property": "VLE", "totalRows": 10, "fittingRows": 10},
+        {"dataset": "Parrish and Hiza", "property": "VLE", "totalRows": 48, "fittingRows": 43},
+        {"dataset": "Janisch et al.", "property": "VLE", "totalRows": 16, "fittingRows": 6},
+        {"dataset": "Han et al. 2012", "property": "VLE", "totalRows": 77, "fittingRows": 60}
+      ]
+    },
+    "co2CH4": {"role": "fitted in Mao et al. 2016", "exactFittingRowsResolved": false},
+    "co2N2": {"role": "fitted in Zhang, Mao and Peng 2020", "exactFittingRowsResolved": false},
+    "ternary": {"fittedRows": 0, "note": "The published ternary model contains no fitted ternary-specific coefficient; five ternary PVTx datasets totaling 839 rows were used by the authors for evaluation."}
+  },
+  "authorTernaryEvaluationInventory": [
+    {"dataset": "McElroy et al.", "rows": 242, "reportedAARDPercent": 0.45},
+    {"dataset": "Seitz et al. high-pressure set", "rows": 42, "reportedAARDPercent": 0.28},
+    {"dataset": "Seitz et al. temperature series", "rows": 271, "reportedAARDPercent": 0.28},
+    {"dataset": "Zhang et al. 2022", "rows": 200, "reportedAARDPercent": 0.52},
+    {"dataset": "Le et al. 2020", "rows": 84, "reportedAARDPercent": 0.82}
+  ],
+  "independentHoldouts": [
+    {"dataset": "Ottøy et al. 2020 CO2/N2/CH4 VLE", "rows": 62, "role": "external independent candidate", "used": false, "reason": "No identity-complete ZMS implementation"},
+    {"dataset": "Ghafri et al. 2016 CO2/CH4 density", "rows": 180, "role": "independence unresolved against Mao et al. fitting corpus", "used": false},
+    {"dataset": "Liu et al. 2017 CO2/CH4 density", "rows": 271, "role": "postdates the pair model but pair-parameter provenance remains incomplete", "used": false},
+    {"dataset": "Mazzoccoli et al. 2012 CO2/N2 density", "rows": 64, "role": "independence unresolved against Zhang et al. fitting corpus", "used": false},
+    {"dataset": "Zhang et al. 2022 CO2/N2/CH4 density", "reportedRows": 200, "encodedRows": 0, "role": "author-evaluation evidence; exact lawful rows unavailable"}
+  ],
+  "zmsMetrics": {"density": null, "vle": null, "stability": null, "runtime": null},
+  "eoscgSameRowMetrics": {"density": null, "vle": null, "stability": null, "runtime": null},
+  "baselineUnchanged": true,
+  "productionPromotion": false,
+  "builtInCases": {
+    "Northern Lights": "unchanged",
+    "Brevik": "unchanged",
+    "Porthos": "unchanged; additional components preclude ZMS support",
+    "Aramis": "unchanged"
+  },
+  "scientificIntegrity": {
+    "coefficientsInvented": false,
+    "coefficientsFitted": false,
+    "bipsInvented": false,
+    "bipsFitted": false,
+    "missingTermsGuessed": false,
+    "validationValuesInvented": false,
+    "figureDigitizationUsed": false,
+    "softwareOutputUsedAsExperiment": false,
+    "compositionNormalized": false,
+    "componentsDropped": false,
+    "unstableStatesAccepted": false,
+    "negativeResultsPreserved": true
+  }
+}
