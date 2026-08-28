@@ -80,7 +80,7 @@ private struct MoreView: View {
                     NavigationLink {
                         SettingsView()
                     } label: {
-                        Label("Appearance", systemImage: "circle.lefthalf.filled")
+                        Label("Language & Appearance", systemImage: "gearshape")
                     }
                     .accessibilityIdentifier("more-appearance")
                 }
@@ -144,9 +144,20 @@ private struct MoreView: View {
 
 private struct SettingsView: View {
     @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.english.rawValue
 
     var body: some View {
         Form {
+            Section("Language") {
+                Picker("Language", selection: $appLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.label).tag(language.rawValue)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+                .accessibilityIdentifier("settings-language")
+            }
             Section {
                 Toggle(isOn: $prefersDarkAppearance) {
                     Label("Dark mode", systemImage: "moon.fill")
@@ -155,8 +166,6 @@ private struct SettingsView: View {
                 .accessibilityIdentifier("appearance-dark-mode")
             } header: {
                 Text("Appearance")
-            } footer: {
-                Text("Uses the existing PhaseXpert appearance preference for this app.")
             }
         }
         .scrollContentBackground(.hidden)

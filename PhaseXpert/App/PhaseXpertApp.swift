@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct PhaseXpertApp: App {
     @AppStorage("prefersDarkAppearance") private var prefersDarkAppearance = false
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.english.rawValue
     private let modelContainer: ModelContainer
 
     init() {
@@ -31,7 +32,22 @@ struct PhaseXpertApp: App {
             RootView()
                 .tint(.ifePrimary)
                 .preferredColorScheme(prefersDarkAppearance ? .dark : .light)
+                .environment(\.locale, Locale(identifier: appLanguage))
         }
         .modelContainer(modelContainer)
+    }
+}
+
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case english = "en"
+    case norwegian = "nb"
+
+    var id: String { rawValue }
+
+    var label: LocalizedStringKey {
+        switch self {
+        case .english: "English"
+        case .norwegian: "Norsk"
+        }
     }
 }

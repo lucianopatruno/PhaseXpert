@@ -1,0 +1,4516 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%1$@ %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%1$@ (%2$@)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "%1$@ (%2$lld)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$lld)"
+          }
+        }
+      }
+    },
+    "%1$@ bar(a) · %2$@ °C": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ bar(a) · %2$@ °C"
+          }
+        }
+      }
+    },
+    "%1$@ to %2$@ %3$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ til %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%1$@ vs %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ vs %2$@"
+          }
+        }
+      }
+    },
+    "%1$@ — %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ — %2$@"
+          }
+        }
+      }
+    },
+    "%1$@ • %2$@ • %3$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ • %2$@ • %3$@"
+          }
+        }
+      }
+    },
+    "%1$@%2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "%1$@, %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%1$@, %2$@, open reference": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@, åpen referanse"
+          }
+        }
+      }
+    },
+    "%1$@, opens %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, åpner %2$@"
+          }
+        }
+      }
+    },
+    "%1$@: %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%1$@–%2$@ bar(a)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@–%2$@ bar(a)"
+          }
+        }
+      }
+    },
+    "%1$@–%2$@ °C": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@–%2$@ °C"
+          }
+        }
+      }
+    },
+    "%1$lld cases • %2$lld total evaluations": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld tilfeller • %2$lld totale evalueringer"
+          }
+        }
+      }
+    },
+    "%1$lld of %2$lld completed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld av %2$lld fullført"
+          }
+        }
+      }
+    },
+    "%1$lld of %2$lld flash points evaluated": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld av %2$lld tilstandspunkter evaluert"
+          }
+        }
+      }
+    },
+    "%1$lld of %2$lld points": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld av %2$lld punkter"
+          }
+        }
+      }
+    },
+    "%1$lld successful • %2$lld outside validated range • %3$lld failed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld vellykket • %2$lld utenfor validert område • %3$lld mislyktes"
+          }
+        }
+      }
+    },
+    "%1$lld/%2$lld successful • %3$lld validated • %4$lld outside • %5$lld failed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld/%2$lld vellykket • %3$lld validert • %4$lld utenfor • %5$lld mislyktes"
+          }
+        }
+      }
+    },
+    "%1$lld×%2$lld": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld×%2$lld"
+          }
+        }
+      }
+    },
+    "%@ impurity menu": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ urenhetsmeny"
+          }
+        }
+      }
+    },
+    "%@ sweep limit": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sveipegrense"
+          }
+        }
+      }
+    },
+    "%@ unit": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ enhet"
+          }
+        }
+      }
+    },
+    "%@ value": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ verdi"
+          }
+        }
+      }
+    },
+    "%@, validated for current state": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, validert for gjeldende tilstand"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
+          }
+        }
+      }
+    },
+    "%lld calculated points": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld beregnede punkter"
+          }
+        }
+      }
+    },
+    "%lld of 6 streams": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld av 6 strømmer"
+          }
+        }
+      }
+    },
+    "%lld/6": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/6"
+          }
+        }
+      }
+    },
+    "44 mm internal diameter; 13 m test section": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "44 mm innvendig diameter; 13 m prøvestrekning"
+          }
+        }
+      }
+    },
+    "A numerical difference is shown only when both results are finite, calculated values expressed in the same display unit.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En numerisk forskjell vises bare når begge resultatene er endelige, beregnede verdier uttrykt i samme visningsenhet."
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Om PhaseXpert"
+          }
+        }
+      }
+    },
+    "Absolute tolerance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Absolutt toleranse"
+          }
+        }
+      }
+    },
+    "Add impurity": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legg til urenhet"
+          }
+        }
+      }
+    },
+    "Add stream": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legg til strøm"
+          }
+        }
+      }
+    },
+    "Advanced CCS / teqp / EOS-CG": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avansert CCS / teqp / EOS-CG"
+          }
+        }
+      }
+    },
+    "Advanced CCS Properties": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avanserte CCS-egenskaper"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utseende"
+          }
+        }
+      }
+    },
+    "Application": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        }
+      }
+    },
+    "Assumption": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antagelse"
+          }
+        }
+      }
+    },
+    "Available properties": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgjengelige egenskaper"
+          }
+        }
+      }
+    },
+    "Both files preserve compared-minus-reference semantics, immutable calculation identifiers, units, statuses, warnings and provider provenance. They do not assess model accuracy.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begge filene bevarer sammenlignet-minus-referanse-semantikk, uforanderlige beregningsidentifikatorer, enheter, statuser, advarsler og leverandørens opprinnelse. De vurderer ikke modellens nøyaktighet."
+          }
+        }
+      }
+    },
+    "Boundary contains gaps; invalid or discontinuous points are not joined.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grensen inneholder hull; ugyldige eller diskontinuerlige punkter er ikke sammenføyd."
+          }
+        }
+      }
+    },
+    "Boundary points": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grensepunkter"
+          }
+        }
+      }
+    },
+    "Boundary type": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grensetype"
+          }
+        }
+      }
+    },
+    "Broad engineering property calculations for supported mixtures.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bredt utvalg av tekniske egenskapsberegninger for støttede blandinger."
+          }
+        }
+      }
+    },
+    "Built-in Cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innebygde tilfeller"
+          }
+        }
+      }
+    },
+    "Built-in case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innebygd tilfelle"
+          }
+        }
+      }
+    },
+    "Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innebygde tilfeller er uforanderlige forhåndsinnstillinger. Duplikater blir redigerbare Mine saker og er ikke knyttet til senere katalogendringer."
+          }
+        }
+      }
+    },
+    "CO₂ mixtures can include N₂, CH₄, H₂O and O₂": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CO₂-blandinger kan inneholde N₂, CH₄, H₂O og O₂"
+          }
+        }
+      }
+    },
+    "Calculate Phase Map": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregn fasekart"
+          }
+        }
+      }
+    },
+    "Calculate mixture": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregn blanding"
+          }
+        }
+      }
+    },
+    "Calculate selected cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregn utvalgte tilfeller"
+          }
+        }
+      }
+    },
+    "Calculated at": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnet kl"
+          }
+        }
+      }
+    },
+    "Calculated carbon dioxide remainder": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnet karbondioksidrest"
+          }
+        }
+      }
+    },
+    "Calculated phase": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnet fase"
+          }
+        }
+      }
+    },
+    "Calculated points": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnede punkter"
+          }
+        }
+      }
+    },
+    "Calculated points: %lld": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnede poeng: %lld"
+          }
+        }
+      }
+    },
+    "Calculating CO₂ phase diagram…": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregner CO₂-fasediagram..."
+          }
+        }
+      }
+    },
+    "Calculation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregning"
+          }
+        }
+      }
+    },
+    "Calculation ID": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnings-ID"
+          }
+        }
+      }
+    },
+    "Calculation ID: %1$@ • Envelope request ID: %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregnings-ID: %1$@ • Forespørsels-ID for fasekurve: %2$@"
+          }
+        }
+      }
+    },
+    "Calculation error": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregningsfeil"
+          }
+        }
+      }
+    },
+    "Calculation model": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregningsmodell"
+          }
+        }
+      }
+    },
+    "Calculation status": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregningsstatus"
+          }
+        }
+      }
+    },
+    "Calculator": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalkulator"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avbryt"
+          }
+        }
+      }
+    },
+    "Cancel sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avbryt sveip"
+          }
+        }
+      }
+    },
+    "Canonical mass flow": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanonisk massestrøm"
+          }
+        }
+      }
+    },
+    "Canonical molar flow": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanonisk molar flyt"
+          }
+        }
+      }
+    },
+    "Carbon dioxide": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karbondioksid"
+          }
+        }
+      }
+    },
+    "Carbon dioxide methane bubble and dew phase envelope with operating point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karbondioksidmetanboble og duggfasekonvolutt med driftspunkt"
+          }
+        }
+      }
+    },
+    "Case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilfelle"
+          }
+        }
+      }
+    },
+    "Case actions": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Handlinger"
+          }
+        }
+      }
+    },
+    "Case information": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informasjon om tilfelle"
+          }
+        }
+      }
+    },
+    "Case name": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navn på tilfelle"
+          }
+        }
+      }
+    },
+    "Case saved": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilfellet er lagret"
+          }
+        }
+      }
+    },
+    "Cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilfeller"
+          }
+        }
+      }
+    },
+    "Changes composition and operating conditions to a validated state.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endrer sammensetning og driftsforhold til en validert tilstand."
+          }
+        }
+      }
+    },
+    "Changes composition only; pressure and temperature are unchanged.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endrer kun sammensetning; trykk og temperatur er uendret."
+          }
+        }
+      }
+    },
+    "Changes or removes this impurity.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endrer eller fjerner denne urenheten."
+          }
+        }
+      }
+    },
+    "Chart": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagram"
+          }
+        }
+      }
+    },
+    "Choose a validated composition and operating point. Changes composition and operating conditions.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velg en validert sammensetning og driftspunkt. Endrer sammensetning og driftsforhold."
+          }
+        }
+      }
+    },
+    "Choose an exact validated composition. Pressure and temperature are unchanged.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velg en nøyaktig validert sammensetning. Trykk og temperatur er uendret."
+          }
+        }
+      }
+    },
+    "Classification": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klassifikasjon"
+          }
+        }
+      }
+    },
+    "Classified": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klassifisert"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lukk"
+          }
+        }
+      }
+    },
+    "Coefficient set": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koeffisientsett"
+          }
+        }
+      }
+    },
+    "Coefficient/library version": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koeffisient/bibliotekversjon"
+          }
+        }
+      }
+    },
+    "Collapsed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kollapset"
+          }
+        }
+      }
+    },
+    "Common pressure": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felles press"
+          }
+        }
+      }
+    },
+    "Common temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanlig temperatur"
+          }
+        }
+      }
+    },
+    "Comparable properties": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenlignbare egenskaper"
+          }
+        }
+      }
+    },
+    "Compare": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenlign"
+          }
+        }
+      }
+    },
+    "Compare Cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenlign tilfeller"
+          }
+        }
+      }
+    },
+    "Compared": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenlignet"
+          }
+        }
+      }
+    },
+    "Compared case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenlignet tilfelle"
+          }
+        }
+      }
+    },
+    "Comparison Results": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenligningsresultater"
+          }
+        }
+      }
+    },
+    "Comparison Unavailable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammenligning ikke tilgjengelig"
+          }
+        }
+      }
+    },
+    "Completion summary": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oppsummering av ferdigstillelse"
+          }
+        }
+      }
+    },
+    "Composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammensetning"
+          }
+        }
+      }
+    },
+    "Composition basis": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammensetningsgrunnlag"
+          }
+        }
+      }
+    },
+    "Composition match": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Samsvar i sammensetning"
+          }
+        }
+      }
+    },
+    "Composition summary": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammendrag av sammensetning"
+          }
+        }
+      }
+    },
+    "Composition: %@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammensetning: %@"
+          }
+        }
+      }
+    },
+    "Contact": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontakt"
+          }
+        }
+      }
+    },
+    "Continuous calculated segment": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontinuerlig beregnet segment"
+          }
+        }
+      }
+    },
+    "Controls": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontroller"
+          }
+        }
+      }
+    },
+    "Converged": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konvergert"
+          }
+        }
+      }
+    },
+    "Converted composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konvertert sammensetning"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopier"
+          }
+        }
+      }
+    },
+    "Copy %@ value": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopier %@-verdi"
+          }
+        }
+      }
+    },
+    "Copy result summary": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopier resultatsammendrag"
+          }
+        }
+      }
+    },
+    "Curves": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurver"
+          }
+        }
+      }
+    },
+    "Dark mode": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mørk modus"
+          }
+        }
+      }
+    },
+    "Data": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data"
+          }
+        }
+      }
+    },
+    "Data handling": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Databehandling"
+          }
+        }
+      }
+    },
+    "Default inputs": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardinnganger"
+          }
+        }
+      }
+    },
+    "Default inputs are PhaseXpert source-based presets, not measured operating data unless the source says so explicitly.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardinnganger er PhaseXpert-kildebaserte forhåndsinnstillinger, ikke målte driftsdata med mindre kilden sier det eksplisitt."
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slett"
+          }
+        }
+      }
+    },
+    "Delete %@?": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vil du slette %@?"
+          }
+        }
+      }
+    },
+    "Delete saved case?": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vil du slette den lagrede saken?"
+          }
+        }
+      }
+    },
+    "Delta reference": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deltareferanse"
+          }
+        }
+      }
+    },
+    "Description or notes": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beskrivelse eller notater"
+          }
+        }
+      }
+    },
+    "Difference": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forskjell"
+          }
+        }
+      }
+    },
+    "Display basis": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visningsgrunnlag"
+          }
+        }
+      }
+    },
+    "Displayed Phase Map is stale after input changes.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det viste fasekartet er foreldet etter endringer i inndata."
+          }
+        }
+      }
+    },
+    "Displayed result is stale because inputs changed.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det viste resultatet er foreldet fordi inngangene er endret."
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ferdig"
+          }
+        }
+      }
+    },
+    "Duplicate": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dupliser"
+          }
+        }
+      }
+    },
+    "Duplicate stream": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dupliser strøm"
+          }
+        }
+      }
+    },
+    "Duplicate to My Cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dupliser til Mine tilfeller"
+          }
+        }
+      }
+    },
+    "Duration": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varighet"
+          }
+        }
+      }
+    },
+    "Each case keeps its own stored %@.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hvert tilfelle beholder sin lagrede %@."
+          }
+        }
+      }
+    },
+    "Each successful sample retains its complete calculation response, solver metadata, warnings, model descriptor and calculation identifier.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hver vellykket prøve beholder sin fullstendige beregningsrespons, løsermetadata, advarsler, modellbeskrivelse og beregningsidentifikator."
+          }
+        }
+      }
+    },
+    "Edit Saved Case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rediger lagret sak"
+          }
+        }
+      }
+    },
+    "Edit name and notes": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rediger navn og notater"
+          }
+        }
+      }
+    },
+    "Engineering comparison": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teknisk sammenligning"
+          }
+        }
+      }
+    },
+    "Engineering thermodynamic calculations for CO₂ and CO₂-rich mixtures.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termodynamiske ingeniørberegninger for CO₂ og CO₂-rike blandinger."
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "English"
+          }
+        }
+      }
+    },
+    "Entered flow": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inngått flyt"
+          }
+        }
+      }
+    },
+    "Entered pressure": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innlagt trykk"
+          }
+        }
+      }
+    },
+    "Entered temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angitt temperatur"
+          }
+        }
+      }
+    },
+    "Equation or method": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligning eller metode"
+          }
+        }
+      }
+    },
+    "Evaluations": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evalueringer"
+          }
+        }
+      }
+    },
+    "Every case uses the explicitly entered common %@.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hvert tilfelle bruker den eksplisitt angitte felles %@."
+          }
+        }
+      }
+    },
+    "Evidence-gated calculations within independently validated composition and operating ranges.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregninger innenfor uavhengig validerte sammensetnings- og driftsområder."
+          }
+        }
+      }
+    },
+    "Execution": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregning"
+          }
+        }
+      }
+    },
+    "Expanded": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utvidet"
+          }
+        }
+      }
+    },
+    "Explicitly normalized composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksplisitt normalisert komposisjon"
+          }
+        }
+      }
+    },
+    "Explore property sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utforsk egenskapssveip"
+          }
+        }
+      }
+    },
+    "Export": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksport"
+          }
+        }
+      }
+    },
+    "Export Case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksporter tilfelle"
+          }
+        }
+      }
+    },
+    "Export and share": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksporter og del"
+          }
+        }
+      }
+    },
+    "Export case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksporter tilfelle"
+          }
+        }
+      }
+    },
+    "Export comparison": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksportsammenligning"
+          }
+        }
+      }
+    },
+    "Export sweep CSV": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksporter sveip CSV"
+          }
+        }
+      }
+    },
+    "Export sweep PDF report": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksporter feie PDF-rapport"
+          }
+        }
+      }
+    },
+    "Export unavailable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eksport er utilgjengelig"
+          }
+        }
+      }
+    },
+    "FALCON": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALCON"
+          }
+        }
+      }
+    },
+    "FALCON CO₂ flow loop": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALCON CO₂-strømningssløyfe"
+          }
+        }
+      }
+    },
+    "FALCON inclined CO₂ flow-loop test section": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALCON skråstilt CO₂-strømsløyfetestseksjon"
+          }
+        }
+      }
+    },
+    "Failed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mislyktes"
+          }
+        }
+      }
+    },
+    "Failed or unavailable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mislyktes eller utilgjengelig"
+          }
+        }
+      }
+    },
+    "Files are generated locally. PhaseXpert sends nothing automatically; data leaves the device only through the destination you select in the iOS share sheet.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filer genereres lokalt. PhaseXpert sender ingenting automatisk; data forlater enheten bare via destinasjonen du velger i iOS-delingsarket."
+          }
+        }
+      }
+    },
+    "Fixed": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast"
+          }
+        }
+      }
+    },
+    "Fixed composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fast komposisjon"
+          }
+        }
+      }
+    },
+    "Flow basis": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flytgrunnlag"
+          }
+        }
+      }
+    },
+    "Formats": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formater"
+          }
+        }
+      }
+    },
+    "General Properties": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generelle egenskaper"
+          }
+        }
+      }
+    },
+    "Generated at": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generert kl"
+          }
+        }
+      }
+    },
+    "Grid setup": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rutenettoppsett"
+          }
+        }
+      }
+    },
+    "IFE — Institute for Energy Technology": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IFE — Institutt for energiteknikk"
+          }
+        }
+      }
+    },
+    "IFE's experimental facility for CO₂ transport and flow research.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IFEs forsøksanlegg for forskning på CO₂-transport og strømning."
+          }
+        }
+      }
+    },
+    "Identity": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identitet"
+          }
+        }
+      }
+    },
+    "Inclination from −90° to +90°": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helning fra −90° til +90°"
+          }
+        }
+      }
+    },
+    "Independent capability result": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uavhengig kapasitetsresultat"
+          }
+        }
+      }
+    },
+    "Independent variable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uavhengig variabel"
+          }
+        }
+      }
+    },
+    "Input provenance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inndata og sporbarhet"
+          }
+        }
+      }
+    },
+    "Input snapshot": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Øyeblikksbilde av inndata"
+          }
+        }
+      }
+    },
+    "Insert minus sign": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sett inn minustegn"
+          }
+        }
+      }
+    },
+    "Inspect %@ sweep point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inspiser %@ sveipepunktet"
+          }
+        }
+      }
+    },
+    "Internal composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intern sammensetning"
+          }
+        }
+      }
+    },
+    "Iterations": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iterasjoner"
+          }
+        }
+      }
+    },
+    "JSON retains the complete versioned record. CSV provides a long-form data table. The PDF Report is a printable, human-readable calculation record with warnings and scientific provenance.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON beholder den fullstendige versjonerte posten. CSV gir en datatabell i lang format. PDF-rapporten er en utskrivbar, lesbar beregningspost med advarsler og vitenskapelig herkomst."
+          }
+        }
+      }
+    },
+    "Label": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etikett"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Språk"
+          }
+        }
+      }
+    },
+    "Language & Appearance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Språk og utseende"
+          }
+        }
+      }
+    },
+    "Last updated": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sist oppdatert"
+          }
+        }
+      }
+    },
+    "Latest calculation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siste utregning"
+          }
+        }
+      }
+    },
+    "Library/coefficient version": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliotek/koeffisientversjon"
+          }
+        }
+      }
+    },
+    "Limitations": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begrensninger"
+          }
+        }
+      }
+    },
+    "Load built-in case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last inn innebygd tilfelle"
+          }
+        }
+      }
+    },
+    "Markers use both color and shape; gray points are unknown, failed, non-converged or unsupported.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markører bruker både farge og form; gråpunkter er ukjente, mislykkede, ikke-konvergerte eller støttes ikke."
+          }
+        }
+      }
+    },
+    "Mass tolerance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Massetoleranse"
+          }
+        }
+      }
+    },
+    "Mass-flow residual": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest i massestrøm"
+          }
+        }
+      }
+    },
+    "Maximum": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maksimum"
+          }
+        }
+      }
+    },
+    "Maximum of six inlet streams reached.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maksimalt seks innløpsbekker nådd."
+          }
+        }
+      }
+    },
+    "Method": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metode"
+          }
+        }
+      }
+    },
+    "Min %1$@ • Max %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Min %1$@ • Maks %2$@"
+          }
+        }
+      }
+    },
+    "Minimum": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum"
+          }
+        }
+      }
+    },
+    "Minimum iOS": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimum iOS"
+          }
+        }
+      }
+    },
+    "Minus": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minus"
+          }
+        }
+      }
+    },
+    "Mode": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modus"
+          }
+        }
+      }
+    },
+    "Model": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell"
+          }
+        }
+      }
+    },
+    "Model ID": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell-ID"
+          }
+        }
+      }
+    },
+    "Model Information": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellinformasjon"
+          }
+        }
+      }
+    },
+    "Model and phase": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell og fase"
+          }
+        }
+      }
+    },
+    "Model version": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellversjon"
+          }
+        }
+      }
+    },
+    "Model: %1$@ • Version %2$@ • Provider %3$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell: %1$@ • Versjon %2$@ • Leverandør %3$@"
+          }
+        }
+      }
+    },
+    "Modeling basis": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelleringsgrunnlag"
+          }
+        }
+      }
+    },
+    "Models & Information": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modeller og informasjon"
+          }
+        }
+      }
+    },
+    "Molar tolerance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Molar toleranse"
+          }
+        }
+      }
+    },
+    "Molar-flow residual": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rest i molstrøm"
+          }
+        }
+      }
+    },
+    "Mole fraction": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Molfraksjon"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mer"
+          }
+        }
+      }
+    },
+    "Move down": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flytt ned"
+          }
+        }
+      }
+    },
+    "Move up": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flytt opp"
+          }
+        }
+      }
+    },
+    "Multi-case Sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveip av flere tilfeller"
+          }
+        }
+      }
+    },
+    "Multicomponent Phase Map with operating point highlighted by a red ring": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multikomponent fasekart med driftspunkt uthevet av en rød ring"
+          }
+        }
+      }
+    },
+    "Multicomponent composition at user-selected pressure and temperature ranges.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flerkomponentsammensetning ved brukervalgte trykk- og temperaturområder."
+          }
+        }
+      }
+    },
+    "My Cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mine saker"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navn"
+          }
+        }
+      }
+    },
+    "Next input field": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neste inntastingsfelt"
+          }
+        }
+      }
+    },
+    "Next sweep limit": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neste sveipegrense"
+          }
+        }
+      }
+    },
+    "No Calculation Preset": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen forhåndsinnstilt beregning"
+          }
+        }
+      }
+    },
+    "No calculation has been completed in this calculator session. Model provenance is shown above.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen beregning er fullført i denne kalkulatorøkten. Modellens herkomst er vist ovenfor."
+          }
+        }
+      }
+    },
+    "No calculation preset": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen forhåndsinnstilt beregning"
+          }
+        }
+      }
+    },
+    "No model selected": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen modell valgt"
+          }
+        }
+      }
+    },
+    "No numerical difference available": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen numerisk forskjell tilgjengelig"
+          }
+        }
+      }
+    },
+    "No operating point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen driftspunkt"
+          }
+        }
+      }
+    },
+    "No production calculation properties are declared for this model.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen produksjonsberegningsegenskaper er deklarert for denne modellen."
+          }
+        }
+      }
+    },
+    "No scientific reference is recorded for this provider.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen vitenskapelig referanse er registrert for denne leverandøren."
+          }
+        }
+      }
+    },
+    "No validated capability for current state": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen validert funksjon for gjeldende tilstand"
+          }
+        }
+      }
+    },
+    "Non-converged": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke-konvergert"
+          }
+        }
+      }
+    },
+    "Non-swept condition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke-feid tilstand"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen"
+          }
+        }
+      }
+    },
+    "None declared": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen erklært"
+          }
+        }
+      }
+    },
+    "Normalization": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalisering"
+          }
+        }
+      }
+    },
+    "Normalized composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalisert sammensetning"
+          }
+        }
+      }
+    },
+    "Norsk": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Norsk"
+          }
+        }
+      }
+    },
+    "Not selected": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikke valgt"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notater"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "One model for every case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Én modell for alle tilfeller"
+          }
+        }
+      }
+    },
+    "One or both saved calculation records could not be decoded.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En eller begge lagrede beregningsposter kunne ikke dekodes."
+          }
+        }
+      }
+    },
+    "Open in Calculator": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne i Kalkulator"
+          }
+        }
+      }
+    },
+    "Open point in Calculator": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne punkt i Kalkulator"
+          }
+        }
+      }
+    },
+    "Open the official FALCON website": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpne den offisielle FALCON-nettsiden"
+          }
+        }
+      }
+    },
+    "Opening a case preserves the saved result. Rerunning uses the model currently installed in PhaseXpert and creates a new calculation record.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Å åpne en sak bevarer det lagrede resultatet. Rerunning bruker modellen som er installert i PhaseXpert og oppretter en ny beregningspost."
+          }
+        }
+      }
+    },
+    "Opens IFE's FALCON webpage in Safari.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpner IFEs FALCON-nettside i Safari."
+          }
+        }
+      }
+    },
+    "Opens a new email with the subject PhaseXpert.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpner en ny e-post med emnet PhaseXpert."
+          }
+        }
+      }
+    },
+    "Opens model and latest calculation provenance.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpner modell og siste beregningsopprinnelse."
+          }
+        }
+      }
+    },
+    "Opens this reference in the browser.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åpner denne referansen i nettleseren."
+          }
+        }
+      }
+    },
+    "Operating point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Driftspunkt"
+          }
+        }
+      }
+    },
+    "Operating point: %1$@ bar(a), %2$@ °C": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Driftspunkt: %1$@ bar(a), %2$@ °C"
+          }
+        }
+      }
+    },
+    "Operating pressure": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Driftstrykk"
+          }
+        }
+      }
+    },
+    "Operating temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Driftstemperatur"
+          }
+        }
+      }
+    },
+    "Operating-point flash": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregning ved driftspunkt"
+          }
+        }
+      }
+    },
+    "Origin": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opprinnelse"
+          }
+        }
+      }
+    },
+    "Original composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opprinnelig sammensetning"
+          }
+        }
+      }
+    },
+    "Outlet pressure — SI": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utløpstrykk — SI"
+          }
+        }
+      }
+    },
+    "Outlet pressure — entered": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utløpstrykk — lagt inn"
+          }
+        }
+      }
+    },
+    "Outlet temperature — SI": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utløpstemperatur — SI"
+          }
+        }
+      }
+    },
+    "Outlet temperature — entered": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utløpstemperatur — angitt"
+          }
+        }
+      }
+    },
+    "P bar(a)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "P bar(a)"
+          }
+        }
+      }
+    },
+    "Per-case summary": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sammendrag per tilfelle"
+          }
+        }
+      }
+    },
+    "Phase": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fase"
+          }
+        }
+      }
+    },
+    "Phase Diagram": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fasediagram"
+          }
+        }
+      }
+    },
+    "Phase Map": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fasekart"
+          }
+        }
+      }
+    },
+    "Phase behavior and properties of CO₂ mixtures": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faseoppførsel og egenskaper til CO₂-blandinger"
+          }
+        }
+      }
+    },
+    "Phase diagram in PDF": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fasediagram i PDF"
+          }
+        }
+      }
+    },
+    "Phase diagram limits": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fasediagramgrenser"
+          }
+        }
+      }
+    },
+    "PhaseXpert": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PhaseXpert"
+          }
+        }
+      }
+    },
+    "Photo available on the IFE website": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildet er tilgjengelig på IFEs hjemmeside"
+          }
+        }
+      }
+    },
+    "Photo: IFE official FALCON webpage": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto: IFE offisielle FALCON-nettside"
+          }
+        }
+      }
+    },
+    "Point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punkt"
+          }
+        }
+      }
+    },
+    "Points per case: %lld": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punkter per tilfelle: %lld"
+          }
+        }
+      }
+    },
+    "Prepare CSV and PDF": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forbered CSV og PDF"
+          }
+        }
+      }
+    },
+    "Prepare PDF and CSV": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forbered PDF og CSV"
+          }
+        }
+      }
+    },
+    "Prepare searchable PDF and CSV": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forbered søkbar PDF og CSV"
+          }
+        }
+      }
+    },
+    "Preparing diagram export…": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forbereder diagrameksport …"
+          }
+        }
+      }
+    },
+    "Preparing export files…": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forbereder eksportfiler …"
+          }
+        }
+      }
+    },
+    "Presentation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presentasjon"
+          }
+        }
+      }
+    },
+    "Pressure": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk"
+          }
+        }
+      }
+    },
+    "Pressure (%@)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk (%@)"
+          }
+        }
+      }
+    },
+    "Pressure (bar(a))": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk (bar(a))"
+          }
+        }
+      }
+    },
+    "Pressure SI": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk SI"
+          }
+        }
+      }
+    },
+    "Pressure domain": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykkområde"
+          }
+        }
+      }
+    },
+    "Pressure range": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykkområde"
+          }
+        }
+      }
+    },
+    "Pressure — SI": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk — SI"
+          }
+        }
+      }
+    },
+    "Pressure — entered": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk — angitt"
+          }
+        }
+      }
+    },
+    "Pressure-temperature classification": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klassifisering av trykk-temperatur"
+          }
+        }
+      }
+    },
+    "Pressure–temperature diagram": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk–temperaturdiagram"
+          }
+        }
+      }
+    },
+    "Previous input field": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forrige inndatafelt"
+          }
+        }
+      }
+    },
+    "Previous sweep limit": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidligere sveipegrense"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personvern"
+          }
+        }
+      }
+    },
+    "Project facts": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prosjektfakta"
+          }
+        }
+      }
+    },
+    "Project information only": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kun prosjektinformasjon"
+          }
+        }
+      }
+    },
+    "Property": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egenskap"
+          }
+        }
+      }
+    },
+    "Property Sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egenskapssveip"
+          }
+        }
+      }
+    },
+    "Property sweeps support 2–10 selected cases for chart readability and bounded native runtime.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egenskapssveip støtter 2–10 valgte tilfeller."
+          }
+        }
+      }
+    },
+    "Property-specific gates can be narrower than the broad model domain. Unsupported or out-of-domain values remain explicitly unavailable in the calculation results.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eiendomsspesifikke porter kan være smalere enn det brede modelldomenet. Ustøttede verdier eller verdier utenfor domenet forblir eksplisitt utilgjengelige i beregningsresultatene."
+          }
+        }
+      }
+    },
+    "Provenance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporbarhet"
+          }
+        }
+      }
+    },
+    "Provider": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellkilde"
+          }
+        }
+      }
+    },
+    "Provider metadata does not declare solid, dense or supercritical classification support. Those markers appear only when the active provider explicitly returns the corresponding classification.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leverandørens metadata erklærer ikke solid, tett eller superkritisk klassifiseringsstøtte. Disse markørene vises bare når den aktive leverandøren eksplisitt returnerer den tilsvarende klassifiseringen."
+          }
+        }
+      }
+    },
+    "Provider phase": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leverandørfase"
+          }
+        }
+      }
+    },
+    "Provider version": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellkildeversjon"
+          }
+        }
+      }
+    },
+    "Provider-calculated %@ sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leverandør-kalkulert %@ sveip"
+          }
+        }
+      }
+    },
+    "Public sources did not provide an exact composition and operating state suitable for a thermodynamic input preset.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offentlige kilder ga ikke en nøyaktig sammensetning og driftstilstand egnet for en forhåndsinnstilt termodynamisk inngang."
+          }
+        }
+      }
+    },
+    "Published specifications are limits or design conditions and do not define a continuously fixed project stream.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Publiserte spesifikasjoner er grenser eller designbetingelser og definerer ikke en kontinuerlig fast prosjektstrøm."
+          }
+        }
+      }
+    },
+    "Pure carbon dioxide saturation boundary with critical point and operating point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ren karbondioksidmetningsgrense med kritisk punkt og driftspunkt"
+          }
+        }
+      }
+    },
+    "Recorded limitations": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrerte begrensninger"
+          }
+        }
+      }
+    },
+    "Recorded warnings": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrerte advarsler"
+          }
+        }
+      }
+    },
+    "Reference": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referanse"
+          }
+        }
+      }
+    },
+    "Reference case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referansesak"
+          }
+        }
+      }
+    },
+    "References": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referanser"
+          }
+        }
+      }
+    },
+    "Relative tolerance": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relativ toleranse"
+          }
+        }
+      }
+    },
+    "Remove impurity": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjern urenheter"
+          }
+        }
+      }
+    },
+    "Remove stream": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjern strømmen"
+          }
+        }
+      }
+    },
+    "Request ID": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forespørsels-ID"
+          }
+        }
+      }
+    },
+    "Research Infrastructure": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forskningsanlegg"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestill"
+          }
+        }
+      }
+    },
+    "Reset view": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestill visning"
+          }
+        }
+      }
+    },
+    "Resolution": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oppløsning"
+          }
+        }
+      }
+    },
+    "Restores the clean calculator defaults and clears results.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gjenoppretter de rene kalkulatorens standardinnstillinger og sletter resultatene."
+          }
+        }
+      }
+    },
+    "Result": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resultat"
+          }
+        }
+      }
+    },
+    "Review and apply normalization": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gjennomgå og bruk normalisering"
+          }
+        }
+      }
+    },
+    "Run a calculation, then choose Save case.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjør en beregning, og velg deretter Lagre sak."
+          }
+        }
+      }
+    },
+    "Run a calculation, then open its phase diagram. No estimated curve is displayed.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjør en beregning, og åpne deretter fasediagrammet. Ingen estimert kurve vises."
+          }
+        }
+      }
+    },
+    "Run calculation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beregn"
+          }
+        }
+      }
+    },
+    "Run multi-case sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjør sveip for flere tilfeller"
+          }
+        }
+      }
+    },
+    "Run property sweep": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjør egenskapssveip"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagre"
+          }
+        }
+      }
+    },
+    "Save Calculation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagre beregning"
+          }
+        }
+      }
+    },
+    "Save case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagre sak"
+          }
+        }
+      }
+    },
+    "Saved": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagret"
+          }
+        }
+      }
+    },
+    "Saved Cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagrede tilfeller"
+          }
+        }
+      }
+    },
+    "Saved Result Unavailable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagret resultat utilgjengelig"
+          }
+        }
+      }
+    },
+    "Saved case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagret sak"
+          }
+        }
+      }
+    },
+    "Scientific Traceability": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vitenskapelig sporbarhet"
+          }
+        }
+      }
+    },
+    "Scientific basis": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vitenskapelig grunnlag"
+          }
+        }
+      }
+    },
+    "Scientific references": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vitenskapelige referanser"
+          }
+        }
+      }
+    },
+    "Scientific traceability": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vitenskapelig sporbarhet"
+          }
+        }
+      }
+    },
+    "Search name, notes or model": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Søk etter navn, notater eller modell"
+          }
+        }
+      }
+    },
+    "Segment": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segment"
+          }
+        }
+      }
+    },
+    "Segments connect adjacent successful calculations; failures remain gaps.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segmenter forbinder tilstøtende vellykkede beregninger; feil forblir hull."
+          }
+        }
+      }
+    },
+    "Select 2–20 cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velg 2–20 tilfeller"
+          }
+        }
+      }
+    },
+    "Select a calculation model to inspect its scientific provenance.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velg en beregningsmodell for å inspisere dens vitenskapelige herkomst."
+          }
+        }
+      }
+    },
+    "Selected": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt"
+          }
+        }
+      }
+    },
+    "Selected boundary temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt grensetemperatur"
+          }
+        }
+      }
+    },
+    "Selected flash point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt beregningspunkt"
+          }
+        }
+      }
+    },
+    "Selected model": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt modell"
+          }
+        }
+      }
+    },
+    "Selected point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt punkt"
+          }
+        }
+      }
+    },
+    "Selected saturation pressure": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt metningstrykk"
+          }
+        }
+      }
+    },
+    "Selected temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valgt temperatur"
+          }
+        }
+      }
+    },
+    "Selects this thermodynamic model.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velger denne termodynamiske modellen."
+          }
+        }
+      }
+    },
+    "Series": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serie"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innstillinger"
+          }
+        }
+      }
+    },
+    "Share %@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Del %@"
+          }
+        }
+      }
+    },
+    "Share PDF and CSV": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Del PDF og CSV"
+          }
+        }
+      }
+    },
+    "Share result summary": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Del resultatsammendrag"
+          }
+        }
+      }
+    },
+    "Solid segments connect only adjacent validated points; gaps are observed outside-range or failed evaluations.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solide segmenter forbinder kun tilstøtende validerte punkter; hull er observert utenfor rekkevidde eller mislykkede evalueringer."
+          }
+        }
+      }
+    },
+    "Solver": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Løser"
+          }
+        }
+      }
+    },
+    "Sort": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorter"
+          }
+        }
+      }
+    },
+    "Source calculation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kildeberegning"
+          }
+        }
+      }
+    },
+    "Sources": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilder"
+          }
+        }
+      }
+    },
+    "Stable identifier": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stabil identifikator"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "Step %lld": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trinn %lld"
+          }
+        }
+      }
+    },
+    "Stored record unavailable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lagret post utilgjengelig"
+          }
+        }
+      }
+    },
+    "Straight line segments connect adjacent calculated points for display only. No scientific values are interpolated or estimated.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rettlinjede segmenter forbinder tilstøtende beregnede punkter kun for visning. Ingen vitenskapelige verdier er interpolert eller estimert."
+          }
+        }
+      }
+    },
+    "Straight segments connect adjacent successful provider calculations for visualization only. Gaps represent failed or unavailable points.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rette segmenter kobler tilstøtende vellykkede leverandørberegninger kun for visualisering. Gap representerer mislykkede eller utilgjengelige poeng."
+          }
+        }
+      }
+    },
+    "Stream Mixing": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blanding av strømmer"
+          }
+        }
+      }
+    },
+    "Stream Mixing v1 does not infer outlet pressure or temperature from inlet streams.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stream Mixing v1 utleder ikke utløpstrykk eller temperatur fra innløpsstrømmer."
+          }
+        }
+      }
+    },
+    "Stream actions": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strøm handlinger"
+          }
+        }
+      }
+    },
+    "Stream name": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strømnavn"
+          }
+        }
+      }
+    },
+    "Supported components": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Støttede komponenter"
+          }
+        }
+      }
+    },
+    "Sweep ID": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveip-ID"
+          }
+        }
+      }
+    },
+    "Sweep data": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveip data"
+          }
+        }
+      }
+    },
+    "Sweep definition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveip definisjon"
+          }
+        }
+      }
+    },
+    "Sweep error": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feil ved sveip"
+          }
+        }
+      }
+    },
+    "Sweep point": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveipunkt"
+          }
+        }
+      }
+    },
+    "Sweep result": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveipresultat"
+          }
+        }
+      }
+    },
+    "Sweep selected cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveip valgte tilfeller"
+          }
+        }
+      }
+    },
+    "Sweep variable": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sveipvariabel"
+          }
+        }
+      }
+    },
+    "T °C": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "T °C"
+          }
+        }
+      }
+    },
+    "Temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur"
+          }
+        }
+      }
+    },
+    "Temperature (%@)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur (%@)"
+          }
+        }
+      }
+    },
+    "Temperature (°C)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur (°C)"
+          }
+        }
+      }
+    },
+    "Temperature SI": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur SI"
+          }
+        }
+      }
+    },
+    "Temperature domain": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperaturdomene"
+          }
+        }
+      }
+    },
+    "Temperature range": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperaturområde"
+          }
+        }
+      }
+    },
+    "Temperature — SI": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur — SI"
+          }
+        }
+      }
+    },
+    "Temperature — entered": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur — lagt inn"
+          }
+        }
+      }
+    },
+    "The 5×5 grid includes the operating point as the central point. Even grids evaluate the operating point separately.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5×5 rutenettet inkluderer driftspunktet som sentralt punkt. Selv rutenett vurderer driftspunktet separat."
+          }
+        }
+      }
+    },
+    "The saved inputs, results and provenance will be removed from this device.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De lagrede inndataene, resultatene og herkomsten vil bli fjernet fra denne enheten."
+          }
+        }
+      }
+    },
+    "The selected property is independently validated at this evaluated point.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den valgte egenskapen er uavhengig validert på dette evaluerte punktet."
+          }
+        }
+      }
+    },
+    "The selected property is outside its validated production range at this evaluated point.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den valgte egenskapen er utenfor det validerte produksjonsområdet på dette evaluerte punktet."
+          }
+        }
+      }
+    },
+    "The stored calculation record could not be decoded. It has not been altered.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den lagrede beregningsposten kunne ikke dekodes. Den har ikke blitt endret."
+          }
+        }
+      }
+    },
+    "This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne oppføringen er med vilje ikke lastbar fordi PhaseXpert ikke produserer prosjektstrømsammensetninger eller driftstilstander."
+          }
+        }
+      }
+    },
+    "This model is unavailable and cannot be selected.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne modellen er utilgjengelig og kan ikke velges."
+          }
+        }
+      }
+    },
+    "This permanently removes the saved case from this device.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette fjerner den lagrede saken permanent fra denne enheten."
+          }
+        }
+      }
+    },
+    "Tools": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verktøy"
+          }
+        }
+      }
+    },
+    "Traceability": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporbarhet"
+          }
+        }
+      }
+    },
+    "Unable to export comparison": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke eksportere sammenligning"
+          }
+        }
+      }
+    },
+    "Unable to prepare exports": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke forberede eksport"
+          }
+        }
+      }
+    },
+    "Unable to save case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke lagre saken"
+          }
+        }
+      }
+    },
+    "Unable to update saved case": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke oppdatere lagret sak"
+          }
+        }
+      }
+    },
+    "Unable to update saved cases": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan ikke oppdatere lagrede saker"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukjent"
+          }
+        }
+      }
+    },
+    "Unsupported cases are reported as unavailable.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilfeller som ikke støttes, vises som utilgjengelige."
+          }
+        }
+      }
+    },
+    "Up to 150 bar(a)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opptil 150 bar(a)"
+          }
+        }
+      }
+    },
+    "Use validated composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bruk validert sammensetning"
+          }
+        }
+      }
+    },
+    "Use validated state": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bruk validert tilstand"
+          }
+        }
+      }
+    },
+    "Use validated state. %1$@, %2$@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bruk validert tilstand. %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "V1 does not calculate pressure equalization, heat transfer, phase separation, outlet temperature or thermodynamic properties.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "V1 beregner ikke trykkutjevning, varmeoverføring, faseseparasjon, utløpstemperatur eller termodynamiske egenskaper."
+          }
+        }
+      }
+    },
+    "Validated capability available for current state": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validert kapasitet tilgjengelig for gjeldende tilstand"
+          }
+        }
+      }
+    },
+    "Validated: %@": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validert: %@"
+          }
+        }
+      }
+    },
+    "Validation": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validering"
+          }
+        }
+      }
+    },
+    "Validation details": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valideringsdetaljer"
+          }
+        }
+      }
+    },
+    "Validation is property-specific. Exact ranges are shown with each capability.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valideringen er egenskapsspesifikk. Nøyaktige områder vises for hver egenskap."
+          }
+        }
+      }
+    },
+    "Validity domain": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validitetsdomene"
+          }
+        }
+      }
+    },
+    "Value": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verdi"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versjon"
+          }
+        }
+      }
+    },
+    "View phase diagram": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se fasediagram"
+          }
+        }
+      }
+    },
+    "Warnings recorded": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advarsler registrert"
+          }
+        }
+      }
+    },
+    "Water equilibrium": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vannlikevekt"
+          }
+        }
+      }
+    },
+    "firmapost@ife.no": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "firmapost@ife.no"
+          }
+        }
+      }
+    },
+    "mol%": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mol%"
+          }
+        }
+      }
+    },
+    "ppm": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ppm"
+          }
+        }
+      }
+    },
+    "© %@ Institute for Energy Technology (IFE)": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "© %@ Institutt for energiteknologi (IFE)"
+          }
+        }
+      }
+    },
+    "Δ": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Δ"
+          }
+        }
+      }
+    },
+    "−30 to +50 °C": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−30 til +50 °C"
+          }
+        }
+      }
+    },
+    "Thermodynamic model": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termodynamisk modell"
+          }
+        }
+      }
+    },
+    "Choose the calculation provider.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Velg beregningsmodell."
+          }
+        }
+      }
+    },
+    "Pressure and temperature": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk og temperatur"
+          }
+        }
+      }
+    },
+    "CO₂ is the remainder.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CO₂ utgjør resten."
+          }
+        }
+      }
+    },
+    "Validation status": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valideringsstatus"
+          }
+        }
+      }
+    },
+    "Validation and capability state": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validering og tilgjengelige egenskaper"
+          }
+        }
+      }
+    },
+    "Traceability, save and export": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sporbarhet, lagring og eksport"
+          }
+        }
+      }
+    },
+    "Inlet streams": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innløpsstrømmer"
+          }
+        }
+      }
+    },
+    "Two to six streams. Drag to reorder without changing the result.": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To til seks strømmer. Dra for å endre rekkefølgen."
+          }
+        }
+      }
+    },
+    "Validation and status": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Validering og status"
+          }
+        }
+      }
+    },
+    "Mixed-stream results": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resultater for blandet strøm"
+          }
+        }
+      }
+    },
+    "Mixed composition": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blandet sammensetning"
+          }
+        }
+      }
+    },
+    "Per-stream contributions": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bidrag per strøm"
+          }
+        }
+      }
+    },
+    "Assumptions and traceability": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forutsetninger og sporbarhet"
+          }
+        }
+      }
+    },
+    "Results and phase information": {
+      "localizations": {
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resultater og faseinformasjon"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

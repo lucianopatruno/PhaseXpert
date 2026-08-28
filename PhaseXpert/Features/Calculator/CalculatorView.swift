@@ -1933,7 +1933,7 @@ private struct ModelSelectionRow: View {
         case .preliminary:
             "Operational local model."
         case .unavailable:
-            "Visible for future traceability. It will not fall back to another provider."
+            "Not available for this state."
         }
     }
 

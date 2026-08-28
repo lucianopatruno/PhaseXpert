@@ -333,7 +333,7 @@ struct BatchComparisonPDFExporter {
                 }
             }
             y += 10
-            line("Each row retains its immutable input snapshot and selected provider. No provider fallback or composition substitution is performed.", color: .secondaryLabel)
+            line("Each row retains its input snapshot and selected model.", color: .secondaryLabel)
         }
     }
     private func number(_ value: Double?) -> String { value?.isFinite == true ? String(format: "%.8g", value!) : "—" }
@@ -355,7 +355,7 @@ struct CaseBatchComparisonWorkflowView: View {
                 }
                 .pickerStyle(.segmented)
             } header: { Text("One model for every case") }
-              footer: { Text("PhaseXpert never substitutes another provider when a selected model is unsupported.") }
+              footer: { Text("Unsupported cases are reported as unavailable.") }
             Section("Select 2–20 cases") {
                 ForEach(cases) { item in
                     Button { toggle(item.id) } label: { selectionRow(item) }
