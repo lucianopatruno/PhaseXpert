@@ -2,7 +2,7 @@ import PhaseXpertCore
 import SwiftUI
 
 struct ModelInformationView: View {
-    private let descriptors = ProviderRegistry().descriptors
+    private let descriptors = ProviderRegistry().userFacingDescriptors
     private let wrapsInNavigationStack: Bool
     private let modelID: String?
 

@@ -11,7 +11,7 @@ struct ScientificTraceabilityView: View {
         NavigationStack {
             List {
                 if let descriptor {
-                    Section("Selected model") {
+                    Section("Calculation model") {
                         LabeledContent("Model", value: descriptor.name)
                         LabeledContent("Model ID", value: descriptor.id)
                         LabeledContent("Model version", value: descriptor.modelVersion)

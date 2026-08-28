@@ -584,6 +584,9 @@ final class PhaseXpertTests: XCTestCase {
             registry.provider(id: "coolprop-heos")?.descriptor.availability,
             expectedDefaultCoolPropAvailability
         )
+        XCTAssertEqual(registry.userFacingDescriptors.map(\.id), ["coolprop-heos", "ife-model"])
+        XCTAssertFalse(registry.userFacingDescriptors.contains { $0.id == "teqp-pure-co2-experimental" })
+        XCTAssertEqual(registry.userFacingDescriptors.last?.modelVersion, "Under development")
     }
 
     @MainActor
@@ -991,7 +994,10 @@ final class PhaseXpertTests: XCTestCase {
 
         viewModel.loadInputs(from: record)
 
-        XCTAssertEqual(viewModel.selectedModelID, "teqp-pure-co2-experimental")
+        XCTAssertEqual(viewModel.selectedModelID, "coolprop-heos")
+        XCTAssertEqual(viewModel.pressureText, "150")
+        XCTAssertEqual(viewModel.temperatureText, "20")
+        XCTAssertEqual(viewModel.composition.map(\.component), [.carbonDioxide])
         XCTAssertEqual(record.response.model.id, "teqp-pure-co2-experimental")
     }
 
@@ -1646,17 +1652,17 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
-    func testCalculatorExposesNativeTeqpAsSelectableWhenLinked() throws {
+    func testCalculatorKeepsNativeTeqpInternalWhenLinked() throws {
         let viewModel = CalculatorViewModel()
         guard NativeTeqpEngine().isAvailable else {
             throw XCTSkip("The generated teqp XCFramework is not linked to this build.")
         }
 
-        let descriptor = viewModel.descriptors.first {
+        let descriptor = viewModel.registry.descriptors.first {
             $0.id == "teqp-pure-co2-experimental"
         }
         XCTAssertEqual(descriptor?.availability, .preliminary)
-        XCTAssertTrue(
+        XCTAssertFalse(
             viewModel.selectableDescriptors.contains {
                 $0.id == "teqp-pure-co2-experimental"
             }
@@ -3316,11 +3322,14 @@ final class PhaseXpertTests: XCTestCase {
     @MainActor
     func testUseValidatedCompositionDoesNotChangePressureOrTemperature() throws {
         let viewModel = CalculatorViewModel()
-        viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = "300"
         viewModel.temperatureText = "28"
         viewModel.compositionBasis = .molePercent
-        let option = try XCTUnwrap(viewModel.validatedCompositionOptions.first { option in
+        viewModel.composition = [
+            .init(component: .carbonDioxide, value: "93.48"),
+            .init(component: .oxygen, value: "6.52")
+        ]
+        let option = try XCTUnwrap(AdvancedValidationPresentation.compositionOptions().first { option in
             option.composition.contains {
                 $0.component == .oxygen && abs($0.moleFraction - 0.0652) < 1e-12
             }
@@ -3648,7 +3657,6 @@ final class PhaseXpertTests: XCTestCase {
         viewModel.validate()
 
         XCTAssertNil(viewModel.calculationRecord)
-        XCTAssertNotNil(viewModel.operatingRangeGuidance)
 
         viewModel.selectedModelID = PhaseXpertTests.testDescriptor.id
         XCTAssertNil(viewModel.calculationRecord)
@@ -3863,7 +3871,7 @@ final class PhaseXpertTests: XCTestCase {
 
         XCTAssertEqual(
             AdvancedValidationPresentation.savedCaseStatus(for: record),
-            "Advanced CCS · Validated Speed of sound"
+            "General Properties · Independently validated Speed of sound"
         )
     }
 

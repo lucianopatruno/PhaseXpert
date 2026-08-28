@@ -87,8 +87,10 @@ final class ProviderAndAPITests: XCTestCase {
         let ife = registry.descriptors.first { $0.id == "ife-model" }
         XCTAssertEqual(ife?.name, "IFE Model")
         XCTAssertEqual(ife?.availability, .unavailable)
-        XCTAssertEqual(ife?.limitations, ["This model is not available in this version."])
+        XCTAssertEqual(ife?.limitations, ["Under development"])
         XCTAssertNil(registry.provider(id: "ife-model"))
+        XCTAssertEqual(registry.userFacingDescriptors.map(\.id), ["coolprop-heos", "ife-model"])
+        XCTAssertFalse(registry.userFacingDescriptors.contains { $0.id == "teqp-pure-co2-experimental" })
     }
 
     private var expectedDefaultCoolPropAvailability: ModelAvailability {

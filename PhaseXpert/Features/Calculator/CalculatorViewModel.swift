@@ -137,10 +137,10 @@ final class CalculatorViewModel {
         self.registry = registry
     }
 
-    var descriptors: [ModelDescriptor] { registry.descriptors }
+    var descriptors: [ModelDescriptor] { registry.userFacingDescriptors }
 
     var selectedDescriptor: ModelDescriptor? {
-        descriptors.first { $0.id == selectedModelID }
+        registry.descriptors.first { $0.id == selectedModelID }
     }
 
     var selectableDescriptors: [ModelDescriptor] {
@@ -167,8 +167,23 @@ final class CalculatorViewModel {
         !validatedPropertiesAtCurrentState.isEmpty
     }
 
+    var validationEvidenceAtCurrentState: [PropertyValidationEvidence] {
+        guard ["coolprop-heos", "teqp-pure-co2-experimental"].contains(selectedModelID),
+              let pressurePa = parsedPressurePa,
+              let temperatureK = parsedTemperatureK else { return [] }
+        return ValidationEvidenceEvaluator().evaluate(
+            composition: domainComposition(),
+            pressurePa: pressurePa,
+            temperatureK: temperatureK
+        )
+    }
+
+    var nearbyValidationEvidence: [PropertyValidationEvidence] {
+        validationEvidenceAtCurrentState.filter { $0.status == .nearby }
+    }
+
     var validatedPropertiesAtCurrentState: [PropertyID] {
-        guard selectedModelID == "teqp-pure-co2-experimental",
+        guard ["coolprop-heos", "teqp-pure-co2-experimental"].contains(selectedModelID),
               let pressurePa = parsedPressurePa,
               let temperatureK = parsedTemperatureK else { return [] }
         return AdvancedValidationPresentation.validatedProperties(
@@ -179,7 +194,7 @@ final class CalculatorViewModel {
     }
 
     var validatedCompositionOptions: [ValidatedCompositionOption] {
-        guard selectedModelID == "teqp-pure-co2-experimental" else { return [] }
+        guard ["coolprop-heos", "teqp-pure-co2-experimental"].contains(selectedModelID) else { return [] }
         let activeComponents = activeCompositionComponents
         let options = AdvancedValidationPresentation.compositionOptions().filter { option in
             activeComponents.count <= 1 || Set(option.composition.map(\.component)) == activeComponents
@@ -189,7 +204,7 @@ final class CalculatorViewModel {
     }
 
     var validatedStateOptions: [ValidatedStateOption] {
-        guard selectedModelID == "teqp-pure-co2-experimental" else { return [] }
+        guard ["coolprop-heos", "teqp-pure-co2-experimental"].contains(selectedModelID) else { return [] }
         let options = AdvancedValidationPresentation.stateOptions(
             currentPressurePa: parsedPressurePa,
             currentTemperatureK: parsedTemperatureK
@@ -458,9 +473,9 @@ final class CalculatorViewModel {
             temperatureDisplayUnit.displayValue(from: record.input.temperatureK),
             for: temperatureDisplayUnit
         )
-        if descriptors.contains(where: { $0.id == record.request.modelID }) {
-            selectedModelID = record.request.modelID
-        }
+        // Older Advanced records retain their physical inputs but now reopen in
+        // General; the visible IFE placeholder remains unavailable as recorded.
+        selectedModelID = record.response.model.id == "ife-model" ? "ife-model" : "coolprop-heos"
         if !record.input.originalComposition.isEmpty,
            record.input.originalComposition.allSatisfy({ $0.unit == .partsPerMillion }) {
             compositionBasis = .partsPerMillion
@@ -494,6 +509,7 @@ final class CalculatorViewModel {
         }
         lastValidPressurePa = defaultPressurePa
         lastValidTemperatureK = defaultTemperatureK
+        selectedModelID = "coolprop-heos"
         pressureText = Self.format(
             pressureDisplayUnit.displayValue(from: defaultPressurePa),
             for: pressureDisplayUnit
@@ -529,7 +545,7 @@ final class CalculatorViewModel {
         lastValidTemperatureK = temperatureK
         pressureText = Self.format(pressureDisplayUnit.displayValue(from: pressurePa), for: pressureDisplayUnit)
         temperatureText = Self.format(temperatureDisplayUnit.displayValue(from: temperatureK), for: temperatureDisplayUnit)
-        selectedModelID = model.id
+        selectedModelID = "coolprop-heos"
         compositionBasis = .molePercent
         composition = batchInput.composition.map {
             CompositionInput(component: $0.component, value: String(format: "%.12g", $0.moleFraction * 100))

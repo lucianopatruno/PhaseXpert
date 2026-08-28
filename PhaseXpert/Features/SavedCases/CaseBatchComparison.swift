@@ -9,6 +9,8 @@ enum BatchCalculationModel: String, CaseIterable, Identifiable, Sendable {
     case general = "coolprop-heos"
     case advanced = "teqp-pure-co2-experimental"
 
+    static var allCases: [BatchCalculationModel] { [.general] }
+
     var id: String { rawValue }
     var displayName: String {
         switch self {
@@ -96,10 +98,9 @@ struct BatchCaseResult: Identifiable, Equatable, Sendable {
     }
 
     func validationLabel(for property: PropertyID) -> String {
-        if model == .general { return "General engineering calculation" }
-        if validatedProperties.contains(property) { return "Validated" }
+        if validatedProperties.contains(property) { return "Independently validated" }
         return self.property(property)?.hasFiniteCalculatedValue == true
-            ? "Not independently validated"
+            ? "No independent validation available"
             : "Unsupported"
     }
 }
@@ -146,11 +147,9 @@ struct CaseBatchCalculationService: Sendable {
             return result(.unsupported, message: "The selected calculation model is unavailable on this device.")
         }
 
-        let validated = model == .advanced
-            ? Set(AdvancedValidationPresentation.validatedProperties(
+        let validated = Set(AdvancedValidationPresentation.validatedProperties(
                 composition: input.composition, pressurePa: pressurePa, temperatureK: temperatureK
             ))
-            : []
         guard model != .advanced || !validated.isEmpty else {
             return result(
                 .outsideValidatedRange,
@@ -317,8 +316,8 @@ struct BatchComparisonPDFExporter {
             context.beginPage()
             line("PhaseXpert — Case batch comparison", font: .boldSystemFont(ofSize: 20), color: .systemBlue)
             line("Generated: \(date.formatted(date: .abbreviated, time: .shortened))")
-            line("Selected model: \(model.displayName) [\(model.id)]", font: .boldSystemFont(ofSize: 11))
-            line(model == .advanced ? "Advanced CCS validation is property-specific; — means unsupported or outside the validated property domain." : "General engineering calculation; Advanced validation shields do not apply.", color: .secondaryLabel)
+            line("Calculation model: General Properties [general]", font: .boldSystemFont(ofSize: 11))
+            line("Independent validation is property-specific and shown for each result where available.", color: .secondaryLabel)
             for result in results {
                 y += 7
                 line(result.input.name, font: .boldSystemFont(ofSize: 13))
@@ -333,7 +332,7 @@ struct BatchComparisonPDFExporter {
                 }
             }
             y += 10
-            line("Each row retains its input snapshot and selected model.", color: .secondaryLabel)
+            line("Each row retains its input snapshot and validation evidence.", color: .secondaryLabel)
         }
     }
     private func number(_ value: Double?) -> String { value?.isFinite == true ? String(format: "%.8g", value!) : "—" }
@@ -350,12 +349,10 @@ struct CaseBatchComparisonWorkflowView: View {
         @Bindable var controller = controller
         List {
             Section {
-                Picker("Calculation model", selection: $controller.selectedModel) {
-                    ForEach(BatchCalculationModel.allCases) { Text($0.displayName).tag($0) }
-                }
-                .pickerStyle(.segmented)
-            } header: { Text("One model for every case") }
-              footer: { Text("Unsupported cases are reported as unavailable.") }
+                LabeledContent("Calculation model", value: "General Properties")
+                Text("Independent validation is evaluated for each property and state.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } header: { Text("Calculation") }
             Section("Select 2–20 cases") {
                 ForEach(cases) { item in
                     Button { toggle(item.id) } label: { selectionRow(item) }
@@ -453,8 +450,8 @@ struct BatchComparisonResultsView: View {
                         VStack(alignment: .leading) {
                             Text(result.input.name).font(.headline)
                             Text(result.state.rawValue).foregroundStyle(result.state == .calculated ? .primary : .secondary)
-                            if result.model == .advanced, !result.validatedProperties.isEmpty {
-                                Text("Validated: \(AdvancedValidationPresentation.propertyList(Array(result.validatedProperties)))").font(.caption)
+                            if !result.validatedProperties.isEmpty {
+                                Text("Independently validated: \(AdvancedValidationPresentation.propertyList(Array(result.validatedProperties)))").font(.caption)
                             }
                         }
                     }
@@ -526,9 +523,7 @@ struct BatchComparisonResultsView: View {
             delta = " (Δ \(String(format: "%+.5g", number - refValue)))"
         } else { delta = "" }
         let badge: String
-        if result.model == .advanced {
-            badge = result.validatedProperties.contains(property) ? " ✓" : " · not validated"
-        } else { badge = "" }
+        badge = result.validatedProperties.contains(property) ? " ✓" : ""
         return "\(String(format: "%.6g", number)) \(value.unit)\(delta)\(badge)"
     }
     private func prepareExports() {

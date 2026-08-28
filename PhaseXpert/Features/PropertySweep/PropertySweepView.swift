@@ -287,7 +287,7 @@ final class PropertySweepViewModel {
 
     init(record: CalculationRecord, registry: ProviderRegistry = ProviderRegistry()) {
         self.record = record
-        provider = registry.provider(id: record.response.model.id)
+        provider = registry.provider(id: "coolprop-heos")
         let calculated = record.response.properties
             .filter { $0.hasFiniteCalculatedValue }
             .map(\.property)
@@ -408,8 +408,17 @@ final class PropertySweepViewModel {
             return
         }
 
+        let generalRequest = CalculationRequest(
+            requestID: record.request.requestID,
+            modelID: "coolprop-heos",
+            pressurePa: record.request.pressurePa,
+            temperatureK: record.request.temperatureK,
+            composition: record.request.composition,
+            requestedProperties: record.request.requestedProperties,
+            clientVersion: record.request.clientVersion
+        )
         let request = PropertySweepRequest(
-            baseRequest: record.request,
+            baseRequest: generalRequest,
             axis: axis,
             startValueSI: axis == .pressure ? start * 100_000 : start + 273.15,
             endValueSI: axis == .pressure ? end * 100_000 : end + 273.15,

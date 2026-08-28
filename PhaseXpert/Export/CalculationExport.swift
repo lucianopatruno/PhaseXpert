@@ -420,6 +420,24 @@ private struct CSVCalculationExportRenderer: CalculationExportRendering {
             append("warning", "message", index: index, message: warning)
         }
 
+        let validationEvidence = ValidationEvidenceEvaluator().evaluate(
+            composition: request.composition,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            properties: Set(response.properties.map(\.property))
+        )
+        for (index, evidence) in validationEvidence.enumerated() {
+            append(
+                "validation",
+                "property_evidence",
+                index: index,
+                identifier: evidence.property.rawValue,
+                value: evidence.status.rawValue,
+                status: evidence.formulationID ?? "",
+                message: evidence.validationSummary ?? ""
+            )
+        }
+
         append("model", "id", value: model.id)
         append("model", "name", value: model.name)
         append("model", "model_version", value: model.modelVersion)

@@ -244,9 +244,7 @@ struct MultiCasePropertySweepService: Sendable {
         sample: PropertySweepSample, input: BatchCaseInput,
         model: BatchCalculationModel, property: PropertyID
     ) -> MultiCaseSweepPoint {
-        let validated = model == .advanced
-            ? validatedProperties(input.composition, pressurePa: sample.pressurePa, temperatureK: sample.temperatureK)
-            : []
+        let validated = validatedProperties(input.composition, pressurePa: sample.pressurePa, temperatureK: sample.temperatureK)
         let hasValue = sample.value(for: property)?.hasFiniteCalculatedValue == true
         let state: MultiCaseSweepPointState
         if model == .general { state = hasValue ? .generalCalculated : .failed }
@@ -265,9 +263,7 @@ struct MultiCasePropertySweepService: Sendable {
         _ generated: GeneratedPoint, input: BatchCaseInput,
         model: BatchCalculationModel, property: PropertyID, error: Error
     ) -> MultiCaseSweepPoint {
-        let validated = model == .advanced
-            ? validatedProperties(input.composition, pressurePa: generated.pressurePa, temperatureK: generated.temperatureK)
-            : []
+        let validated = validatedProperties(input.composition, pressurePa: generated.pressurePa, temperatureK: generated.temperatureK)
         return MultiCaseSweepPoint(
             index: generated.index, pressurePa: generated.pressurePa,
             temperatureK: generated.temperatureK, response: nil,
@@ -561,6 +557,7 @@ struct MultiCasePropertySweepView: View {
         let operating = pressures.first ?? 5_000_000
         let start = max(100_000, (pressures.min() ?? operating) * 0.8)
         let end = max(start + 100_000, (pressures.max() ?? operating) * 1.2)
+        let initialModel = BatchCalculationModel.general
         let properties = Self.availableProperties(cases: usable, model: initialModel)
         let definition = MultiCaseSweepDefinition(
             axis: .pressure, property: properties.contains(.density) ? .density : properties.first ?? .density,
@@ -579,16 +576,13 @@ struct MultiCasePropertySweepView: View {
         Form {
             Section {
                 ScientificStatusBanner(
-                    title: controller.model == .advanced ? "Pointwise Advanced validation" : "General engineering sweep",
-                    message: controller.model == .advanced
-                        ? "Every point is checked independently for the selected property. Outside-range points remain gaps and General Properties is never substituted."
-                        : "Every plotted point is a General Properties calculation. Failures remain gaps."
+                    title: "General engineering sweep",
+                    message: "Every plotted point is a General Properties calculation. Independent validation is annotated where available; failures remain gaps."
                 ).listRowInsets(EdgeInsets()).listRowBackground(Color.clear)
             }
             Section("Sweep definition") {
-                Picker("Calculation model", selection: modelBinding) {
-                    ForEach(BatchCalculationModel.allCases) { Text($0.displayName).tag($0) }
-                }.pickerStyle(.segmented).accessibilityIdentifier("multi-sweep-model")
+                LabeledContent("Calculation model", value: "General Properties")
+                    .accessibilityIdentifier("multi-sweep-model")
                 Picker("Sweep variable", selection: axisBinding) {
                     Text("Pressure").tag(PropertySweepAxis.pressure)
                     Text("Temperature").tag(PropertySweepAxis.temperature)

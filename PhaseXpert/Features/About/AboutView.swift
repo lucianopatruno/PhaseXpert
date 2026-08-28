@@ -33,15 +33,20 @@ struct AboutView: View {
             }
 
             Section("General Properties") {
-                Text("Broad engineering property calculations for supported mixtures.")
-            }
-
-            Section("Advanced CCS Properties") {
-                Text("Evidence-gated calculations within independently validated composition and operating ranges.")
+                Text("Engineering property calculations for CO₂ and supported CO₂-rich mixtures.")
             }
 
             Section("Validation") {
-                Text("Validation is property-specific. Exact ranges are shown with each capability.")
+                Text("PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may apply only to defined compositions and temperature/pressure ranges.")
+            }
+
+            Section("IFE Model") {
+                LabeledContent("Status", value: "Under development")
+                NavigationLink {
+                    IFEModelAboutView()
+                } label: {
+                    Label("About the IFE Model", systemImage: "atom")
+                }
             }
 
             Section("References") {
@@ -100,6 +105,28 @@ struct AboutView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+private struct IFEModelAboutView: View {
+    var body: some View {
+        List {
+            Section("IFE Model") {
+                Text("The IFE Flow Technology department is developing a proprietary thermodynamic model for CO₂ and CO₂-rich systems. Model development is supported by experimental validation, including measurements performed in IFE's FALCON CO₂ facility.")
+                LabeledContent("Status", value: "Under development")
+            }
+            Section("FALCON") {
+                NavigationLink {
+                    FalconView()
+                } label: {
+                    Label("FALCON CO₂ flow loop", systemImage: "point.3.connected.trianglepath.dotted")
+                }
+            }
+        }
+        .navigationTitle("IFE Model")
+        .navigationBarTitleDisplayMode(.inline)
+        .scrollContentBackground(.hidden)
+        .ifeDottedBackground()
     }
 }
 

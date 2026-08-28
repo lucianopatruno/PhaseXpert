@@ -5,6 +5,10 @@ import XCTest
 
 @MainActor
 final class CaseBatchComparisonTests: XCTestCase {
+    func testNormalBatchWorkflowOffersGeneralOnly() {
+        XCTAssertEqual(BatchCalculationModel.allCases, [.general])
+    }
+
     func testGeneralBatchKeepsProviderAndOneFailureDoesNotStopOtherBuiltIns() async throws {
         let provider = BatchTestProvider(id: BatchCalculationModel.general.id, failingNames: ["request-2"])
         let service = service(provider)
@@ -111,14 +115,15 @@ final class CaseBatchComparisonTests: XCTestCase {
 
     func testPDFContainsEveryCaseModelProvenanceAndValidationLegend() async throws {
         let inputs = try advancedInputsForDistinctComponentSets(count: 3)
-        let results = await calculate(inputs, service: service(BatchTestProvider(id: BatchCalculationModel.advanced.id)), model: .advanced)
-        let data = BatchComparisonPDFExporter().data(results: results, model: .advanced, date: Date(timeIntervalSince1970: 0))
+        let results = await calculate(inputs, service: service(BatchTestProvider(id: BatchCalculationModel.general.id)), model: .general)
+        let data = BatchComparisonPDFExporter().data(results: results, model: .general, date: Date(timeIntervalSince1970: 0))
         let document = try XCTUnwrap(PDFDocument(data: data))
         let text = (0..<document.pageCount).compactMap { document.page(at: $0)?.string }.joined(separator: "\n")
         inputs.forEach { XCTAssertTrue(text.contains($0.name)) }
-        XCTAssertTrue(text.contains(BatchCalculationModel.advanced.id))
+        XCTAssertTrue(text.contains("Calculation model: General Properties"))
+        XCTAssertFalse(text.contains("Selected model: Advanced CCS"))
         XCTAssertTrue(text.contains("property-specific"))
-        XCTAssertTrue(text.contains("input snapshot and selected model"))
+        XCTAssertTrue(text.contains("input snapshot and validation evidence"))
     }
 
     func testSavedCaseSnapshotDoesNotChangeWhenSourceRecordChanges() async throws {
