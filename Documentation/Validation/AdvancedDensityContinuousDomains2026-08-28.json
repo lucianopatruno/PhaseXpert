@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-08-28",
+  "model": {
+    "engine": "teqp",
+    "version": "0.23.1",
+    "commit": "a68eb9cabf47af2c4aba0d272ac10fbca4c10eca",
+    "formulation": "the production EOS-CG/custom multifluid formulations pinned by PhaseXpert",
+    "parametersFittedInThisAudit": false,
+    "nativeABIChanged": false
+  },
+  "errorMapIndex": {
+    "co2N2": "AdvancedCCSTeqpIndependentValidation2026-08-20.json (CO2/N2 dataset, 64 row results)",
+    "co2CH4": [
+      "AdvancedCCSTeqpIndependentValidation2026-08-20.json (Ghafri 2016, 180 row results)",
+      "MethaneFullDensityValidationResults.csv (Ghafri 2016 row map)",
+      "Liu2017MethaneDensityExpansionBakeoff.json (271 row results at six other compositions)"
+    ],
+    "co2H2": [
+      "AdvancedCCSTeqpIndependentValidation2026-08-20.json (Souissi 2017, 19 row results)",
+      "Cheng2019HydrogenDensityExpansionBakeoff.json (diagnostic H2-rich rows)"
+    ],
+    "dryMulticomponent": "Razmjoo2026MulticomponentDensity.json (330 row results, including explicit non-convergence/root classifications)"
+  },
+  "systems": [
+    {
+      "system": "CO2+N2",
+      "status": "KEEP EXISTING EXACT/DISCRETE GATE",
+      "acceptedProperties": ["density", "molarMass", "specificVolume", "compressibilityFactor"],
+      "compositionDomain": {"type": "exact", "moleFractions": {"carbonDioxide": 0.9873, "nitrogen": 0.0127}},
+      "temperatureDomainK": {"type": "nominal", "values": [283.15]},
+      "pressureDomainPa": {"type": "closedInterval", "minimum": 1000000, "maximum": 4500000},
+      "phaseDomain": "homogeneousGas",
+      "sources": [
+        {"sourceID": "Mazzoccoli2012ThermoML", "doi": "10.1021/je300590v", "role": "production evidence", "exactRows": 64},
+        {"sourceID": "Mantovani2012", "doi": "10.1016/j.supflu.2011.09.001", "role": "diagnostic/adverse evidence", "exactRowsEncodedForThisFixedModel": 0},
+        {"sourceID": "Brugge1997", "doi": "10.1016/S0378-3812(97)00133-0", "role": "candidate historical evidence", "exactRowsEncodedForThisFixedModel": 0}
+      ],
+      "statistics": {"attempted": 64, "converged": 64, "acceptedProductionRows": 5, "aardPercent": 30.298704075264478, "signedBiasPercent": -29.797176107299663, "rmsRelativeDeviationPercent": 39.67216881207806, "worstRelativeDeviationPercent": -87.06753691250204},
+      "reason": "Only one CO2-rich N2 composition has row-level predictions in the current independent artifact, and error changes sharply with phase and state. The five-row 283.15 K gas block remains the only defensible production slice; evidence does not span a continuous composition region.",
+      "supersedesPreviousGate": false
+    },
+    {
+      "system": "CO2+CH4",
+      "status": "KEEP EXISTING EXACT/DISCRETE GATE",
+      "acceptedProperties": ["density", "molarMass", "specificVolume", "compressibilityFactor"],
+      "compositionDomain": {"type": "exact", "moleFractions": {"carbonDioxide": 0.95, "methane": 0.05}},
+      "temperatureDomainK": {"type": "existingPiecewiseSlices", "sourceOfTruth": "TeqpFormulationCatalog.co2MethaneEOSCGDensity"},
+      "pressureDomainPa": {"type": "existingPiecewiseSlices", "sourceOfTruth": "TeqpFormulationCatalog.co2MethaneEOSCGDensity"},
+      "phaseDomain": "existing Ghafri homogeneous gas and high-temperature supercritical slices",
+      "sources": [
+        {"sourceID": "Ghafri2016ThermoML", "doi": "10.1016/j.fluid.2015.08.029", "role": "production and discovery evidence", "exactRows": 180},
+        {"sourceID": "Liu2017ThermoML", "doi": "10.1016/j.jct.2016.11.009", "role": "independent adverse/diagnostic composition evidence", "exactRows": 271}
+      ],
+      "statistics": {"attempted": 451, "converged": 451, "acceptedProductionRows": 71, "ghafriAardPercent": 1.3982221406126507, "ghafriSignedBiasPercent": 1.3982221406126507, "ghafriRmsRelativeDeviationPercent": 1.6890675538194637, "ghafriWorstRelativeDeviationPercent": 5.15213572373343, "liuAardPercent": 0.7838793582781283, "liuWorstRelativeDeviationPercent": 7.675086784634123},
+      "reason": "The only low-impurity CO2-rich composition is xCH4=0.05. The next independent CO2-rich slice is xCH4=0.1012 and contains a 7.675% local deviation; the intervening composition interval is not independently spanned. A continuous composition gate would overstate the evidence.",
+      "supersedesPreviousGate": false
+    },
+    {
+      "system": "CO2+H2",
+      "status": "KEEP EXISTING EXACT/DISCRETE GATE",
+      "acceptedProperties": ["density", "molarMass", "specificVolume", "compressibilityFactor"],
+      "compositionDomain": {"type": "exact", "moleFractions": {"carbonDioxide": 0.94638, "hydrogen": 0.05362}},
+      "temperatureDomainK": {"type": "discrete", "values": [273.15, 293.15, 323.15]},
+      "pressureDomainPa": {"type": "perIsotherm", "ranges": [{"temperatureK": 273.15, "minimum": 513520, "maximum": 3035960}, {"temperatureK": 293.15, "minimum": 503160, "maximum": 4984890}, {"temperatureK": 323.15, "minimum": 549210, "maximum": 5997370}]},
+      "phaseDomain": "homogeneousGas",
+      "sources": [
+        {"sourceID": "Souissi2017ThermoML", "doi": "10.1021/acs.jced.7b00213", "role": "production evidence", "exactRows": 19},
+        {"sourceID": "SanchezVicente2013", "doi": "10.1016/j.ijggc.2012.12.002", "role": "relevant candidate; primary numerical rows not lawfully machine-readable in the audited routes", "reportedRows": 0},
+        {"sourceID": "Owuna2025", "doi": "10.1021/acs.jced.4c00666", "role": "independent dense-liquid candidate", "exactRowsLocated": 27, "usedForPromotion": false},
+        {"sourceID": "Cheng2019ThermoML", "doi": "10.1021/acs.jced.8b01206", "role": "diagnostic; hydrogen-rich and 673 K", "exactRows": 18}
+      ],
+      "statistics": {"attemptedCO2RichGasRows": 19, "convergedCO2RichGasRows": 19, "acceptedProductionRows": 19, "aardPercent": 0.09697082744551007, "signedBiasPercent": 0.09307175768321954, "rmsRelativeDeviationPercent": 0.14896831719246356, "worstRelativeDeviationPercent": 0.408391385950891},
+      "reason": "Souissi supplies only three discrete gas isotherms at one composition. Owuna's newly accessible xH2=0.0623 block is dense liquid at 278-298 K and 11.14-34.58 MPa; it neither confirms the intervening Souissi gas temperatures nor creates a connected phase-safe gas domain. Smooth EOS output between isotherms is not validation.",
+      "supersedesPreviousGate": false
+    },
+    {
+      "system": "dryMulticomponent",
+      "status": "KEEP EXISTING EXACT/DISCRETE GATE",
+      "acceptedProperties": ["density", "molarMass", "specificVolume", "compressibilityFactor"],
+      "compositionDomain": {"type": "four exact named Razmjoo compositions", "sourceOfTruth": "TeqpFormulationCatalog production multicomponent formulations"},
+      "temperatureDomainK": {"type": "existingMeasuredSlices", "sourceOfTruth": "TeqpFormulationCatalog"},
+      "pressureDomainPa": {"type": "existingMeasuredPiecewiseSlices", "sourceOfTruth": "TeqpFormulationCatalog"},
+      "phaseDomain": "only existing single-root homogeneous blocks",
+      "sources": [
+        {"sourceID": "Razmjoo2026", "doi": "10.1016/j.fuel.2026.139184", "repositoryDOI": "10.5281/zenodo.15846367", "role": "production/discovery evidence", "exactRows": 330},
+        {"sourceID": "Zhang2022", "doi": "10.1021/acs.jced.2c00020", "role": "candidate CO2/N2/CH4 evidence; exact rows unavailable through lawful audited routes", "reportedRows": 200},
+        {"sourceID": "Liu2019CO2N2O2", "doi": "10.1016/j.tca.2019.03.032", "role": "candidate ternary evidence; exact rows not encoded", "reportedRows": 0}
+      ],
+      "statistics": {"attempted": 330, "converged": 171, "acceptedProductionRows": 145, "failureRatePercent": 48.18181818181818, "aardPercentForConverged": 0.6103034862642397, "signedBiasPercentForConverged": -0.10849712607732784, "rmsRelativeDeviationPercentForConverged": 0.8441244056028373, "worstRelativeDeviationPercent": 4.372792278312454},
+      "reason": "Five measured compositions do not independently vary components enough to justify a hyperrectangle or hull. Only four exact compositions contain contiguous, single-root accepted blocks; OxyComb II has zero converged rows. Runtime dataset-distance classification would not create scientific evidence.",
+      "supersedesPreviousGate": false
+    }
+  ]
+}
