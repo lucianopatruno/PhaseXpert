@@ -79,6 +79,10 @@ enum AdvancedValidationPresentation {
         }
     }
 
+    static func validatedCaseOptions() -> [ValidatedStateOption] {
+        stateOptions(currentPressurePa: nil, currentTemperatureK: nil)
+    }
+
     static func propertyList(_ properties: [PropertyID]) -> String {
         let labels = orderedProperties(properties).map { property -> String in
             switch property {

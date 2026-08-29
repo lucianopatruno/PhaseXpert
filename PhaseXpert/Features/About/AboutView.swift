@@ -37,13 +37,13 @@ struct AboutView: View {
             }
 
             Section("Validation") {
-                Text("PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may apply only to defined compositions and temperature/pressure ranges.")
+                Text(ValidationInformationView.summary)
             }
 
             Section("IFE Model") {
                 LabeledContent("Status", value: "Under development")
                 NavigationLink {
-                    IFEModelAboutView()
+                    IFEModelInformationView()
                 } label: {
                     Label("About the IFE Model", systemImage: "atom")
                 }
@@ -108,8 +108,57 @@ struct AboutView: View {
     }
 }
 
-private struct IFEModelAboutView: View {
+struct ValidationInformationView: View {
+    static let summary = "PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may only apply to defined compositions and temperature/pressure ranges. Where evidence exists, PhaseXpert shows the relevant formulation, experimental source and applicable range."
+
+    private let wrapsInNavigationStack: Bool
+
+    init(wrapsInNavigationStack: Bool = true) {
+        self.wrapsInNavigationStack = wrapsInNavigationStack
+    }
+
     var body: some View {
+        if wrapsInNavigationStack {
+            NavigationStack { content }
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
+        List {
+            Section("Validation") {
+                Text(Self.summary)
+            }
+
+            Section("Calculation") {
+                Text("General Properties is used for calculations.")
+                Text("Independent validation is evaluated for each property and state.")
+            }
+        }
+        .navigationTitle("Validation")
+        .navigationBarTitleDisplayMode(.inline)
+        .scrollContentBackground(.hidden)
+        .ifeDottedBackground()
+    }
+}
+
+struct IFEModelInformationView: View {
+    private let wrapsInNavigationStack: Bool
+
+    init(wrapsInNavigationStack: Bool = true) {
+        self.wrapsInNavigationStack = wrapsInNavigationStack
+    }
+
+    var body: some View {
+        if wrapsInNavigationStack {
+            NavigationStack { content }
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         List {
             Section("IFE Model") {
                 Text("The IFE Flow Technology department is developing a proprietary thermodynamic model for CO₂ and CO₂-rich systems. Model development is supported by experimental validation, including measurements performed in IFE's FALCON CO₂ facility.")

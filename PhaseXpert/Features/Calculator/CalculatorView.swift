@@ -250,30 +250,6 @@ struct CalculatorView: View {
                         }
                     }
 
-                    if !viewModel.validatedStateOptions.isEmpty {
-                        if viewModel.validatedStateOptions.count == 1,
-                           let option = viewModel.validatedStateOptions.first {
-                            Button("Use validated state", systemImage: "target") {
-                                focusedField = nil
-                                viewModel.useValidatedState(option)
-                            }
-                            .accessibilityLabel("Use validated state. \(option.name), \(option.detail)")
-                            .accessibilityHint("Changes composition and operating conditions to a validated state.")
-                            .accessibilityIdentifier("use-validated-state")
-                        } else {
-                            Menu("Use validated state", systemImage: "target") {
-                                ForEach(viewModel.validatedStateOptions) { option in
-                                    Button("\(option.name) — \(option.detail)") {
-                                        focusedField = nil
-                                        viewModel.useValidatedState(option)
-                                    }
-                                    .accessibilityLabel("\(option.name), \(option.detail)")
-                                }
-                            }
-                            .accessibilityHint("Choose a validated composition and operating point. Changes composition and operating conditions.")
-                            .accessibilityIdentifier("use-validated-state")
-                        }
-                    }
                 } header: {
                     IFESectionHeader(
                         step: 3,
@@ -468,6 +444,9 @@ struct CalculatorView: View {
                 loadPendingInputs()
             }
             .onChange(of: navigationState.pendingBuiltInCase?.id) { _, _ in
+                loadPendingInputs()
+            }
+            .onChange(of: navigationState.pendingValidatedCase?.id) { _, _ in
                 loadPendingInputs()
             }
             .onChange(of: viewModel.selectedModelID) { _, _ in viewModel.validate() }
@@ -798,6 +777,10 @@ struct CalculatorView: View {
         if let builtInCase = navigationState.pendingBuiltInCase {
             viewModel.loadInputs(from: builtInCase)
             navigationState.pendingBuiltInCase = nil
+        }
+        if let validatedCase = navigationState.pendingValidatedCase {
+            viewModel.loadInputs(from: validatedCase)
+            navigationState.pendingValidatedCase = nil
         }
         if let batchCase = navigationState.pendingBatchCase {
             viewModel.loadInputs(from: batchCase.input, model: batchCase.model)
