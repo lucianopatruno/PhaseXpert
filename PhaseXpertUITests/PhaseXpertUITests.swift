@@ -15,6 +15,7 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["bar(a)"].exists)
         XCTAssertTrue(app.staticTexts["Temperature"].exists)
         XCTAssertTrue(app.staticTexts["°C"].exists)
+        XCTAssertFalse(app.buttons["use-validated-state"].exists)
         XCTAssertEqual(app.buttons["pressure-unit-menu"].value as? String, "bar(a)")
         XCTAssertEqual(app.buttons["temperature-unit-menu"].value as? String, "°C")
         XCTAssertFalse(app.staticTexts["Absolute"].exists)
@@ -239,78 +240,59 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["This model is not available in this version."].exists)
     }
 
-    func testAdvancedCCSPropertiesShowsOnlyValidatedImpurities() {
+    func testMoreShowsValidationAndDoesNotShowAdvancedNavigationModel() {
         let app = XCUIApplication()
         app.launch()
 
-        let advanced = app.buttons["model-teqp-pure-co2-experimental"]
-        XCTAssertTrue(advanced.waitForExistence(timeout: 3))
-        XCTAssertTrue(advanced.label.hasPrefix("Advanced CCS Properties"))
-        advanced.tap()
-        XCTAssertEqual(advanced.value as? String, "Selected")
+        app.tabBars.buttons["More"].tap()
+        XCTAssertTrue(app.buttons["General Properties"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Validation"].exists)
+        XCTAssertTrue(app.buttons["IFE Model"].exists)
+        XCTAssertFalse(app.buttons["Advanced CCS / teqp / EOS-CG"].exists)
+        XCTAssertFalse(app.buttons["Advanced CCS Properties"].exists)
 
-        addImpurity(in: app)
-        let initialMenu = app.buttons.matching(
-            NSPredicate(format: "label ENDSWITH %@", "impurity menu")
-        ).element
-        XCTAssertTrue(initialMenu.waitForExistence(timeout: 3))
-        if !app.buttons["CH₄ impurity menu"].exists {
-            initialMenu.tap()
-            XCTAssertTrue(app.buttons["CH₄"].waitForExistence(timeout: 2))
-            app.buttons["CH₄"].tap()
-        }
-        XCTAssertTrue(app.buttons["CH₄ impurity menu"].exists)
-        XCTAssertFalse(app.buttons["N₂ impurity menu"].exists)
-        XCTAssertFalse(app.buttons["O₂ impurity menu"].exists)
-        XCTAssertFalse(app.buttons["Ar impurity menu"].exists)
-
-        openImpurityMenu("CH₄", in: app)
-        XCTAssertTrue(app.buttons["H₂"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["N₂"].exists)
-        XCTAssertTrue(app.buttons["O₂"].exists)
-        XCTAssertTrue(app.buttons["Ar"].exists)
-        app.buttons["H₂"].tap()
-
-        XCTAssertTrue(app.buttons["H₂ impurity menu"].waitForExistence(timeout: 3))
-        XCTAssertFalse(app.buttons["CH₄ impurity menu"].exists)
-        addImpurity(in: app)
-        XCTAssertEqual(
-            app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "impurity menu")).count,
-            2
-        )
+        app.buttons["Validation"].tap()
+        XCTAssertTrue(app.navigationBars["Validation"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["General Properties is used for calculations."].exists)
+        XCTAssertFalse(app.navigationBars["Advanced CCS / teqp / EOS-CG"].exists)
     }
 
-    func testAdvancedCCSPropertiesShowsCompactValidationBeforeCalculation() {
+    func testModelInformationShowsIFEUnderDevelopmentAndOpensIFEPage() {
         let app = XCUIApplication()
         app.launch()
 
-        let advanced = app.buttons["model-teqp-pure-co2-experimental"]
-        XCTAssertTrue(advanced.waitForExistence(timeout: 3))
-        advanced.tap()
-        addImpurity(in: app)
-        let initialMenu = app.buttons.matching(
-            NSPredicate(format: "label ENDSWITH %@", "impurity menu")
-        ).element
-        XCTAssertTrue(initialMenu.waitForExistence(timeout: 3))
-        if !app.buttons["CH₄ impurity menu"].exists {
-            initialMenu.tap()
-            XCTAssertTrue(app.buttons["CH₄"].waitForExistence(timeout: 2))
-            app.buttons["CH₄"].tap()
-        }
-        let methane = app.textFields["CH₄ ppm"]
-        XCTAssertTrue(methane.waitForExistence(timeout: 3))
-        methane.tap()
-        methane.typeText("50000")
-        app.buttons["keyboard-done"].tap()
+        openMoreRow("IFE Model", in: app)
+        XCTAssertTrue(app.navigationBars["IFE Model"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Under development"].exists)
+        XCTAssertTrue(app.staticTexts["FALCON"].exists)
+    }
 
-        let compactStatus = app.descendants(matching: .any)["compact-validation-status"]
-        for _ in 0..<5 where !compactStatus.waitForExistence(timeout: 0.5) {
-            app.swipeUp()
-        }
+    func testValidatedCasesAreReadOnlyAndLoadGeneralProperties() {
+        let app = XCUIApplication()
+        app.launch()
 
-        XCTAssertTrue(compactStatus.waitForExistence(timeout: 3))
-        XCTAssertFalse(app.staticTexts["CH₄ validated composition"].exists)
-        XCTAssertTrue(app.buttons["use-validated-composition"].exists)
+        app.tabBars.buttons["Saved Cases"].tap()
+        XCTAssertTrue(app.segmentedControls["saved-case-category"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.segmentedControls.buttons["My Cases"].exists)
+        XCTAssertTrue(app.segmentedControls.buttons["Validated Cases"].exists)
+
+        app.segmentedControls.buttons["Validated Cases"].tap()
+        XCTAssertTrue(app.staticTexts["Validated Cases"].waitForExistence(timeout: 3))
+        let validatedRow = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "validated-case-")
+        ).firstMatch
+        XCTAssertTrue(validatedRow.waitForExistence(timeout: 3))
+        validatedRow.tap()
+        XCTAssertTrue(app.staticTexts["Validated case"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Use case")).firstMatch.exists)
+        XCTAssertFalse(app.buttons["Delete"].exists)
+        XCTAssertFalse(app.buttons["Duplicate to My Cases"].exists)
+
+        app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Use case")).firstMatch.tap()
+        XCTAssertTrue(app.tabBars.buttons["Calculator"].isSelected)
+        XCTAssertEqual(app.buttons["model-coolprop-heos"].value as? String, "Selected")
+        XCTAssertFalse(app.buttons["model-teqp-pure-co2-experimental"].exists)
+        XCTAssertFalse(app.buttons["use-validated-state"].exists)
     }
 
     func testOperatingPointUnitsAreSeparateAndAdaptive() {

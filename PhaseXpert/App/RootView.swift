@@ -18,6 +18,7 @@ final class AppNavigationState {
     var selectedTab: AppTab = .calculator
     var pendingCalculationRecord: CalculationRecord?
     var pendingBuiltInCase: BuiltInCase?
+    var pendingValidatedCase: ValidatedStateOption?
     var pendingBatchCase: (input: BatchCaseInput, model: BatchCalculationModel)?
     var latestCalculationRecord: CalculationRecord?
 
@@ -28,6 +29,11 @@ final class AppNavigationState {
 
     func openBuiltInCaseInCalculator(_ builtInCase: BuiltInCase) {
         pendingBuiltInCase = builtInCase
+        selectedTab = .calculator
+    }
+
+    func openValidatedCaseInCalculator(_ validatedCase: ValidatedStateOption) {
+        pendingValidatedCase = validatedCase
         selectedTab = .calculator
     }
 
@@ -109,14 +115,18 @@ private struct MoreView: View {
                     .accessibilityIdentifier("more-general-model")
 
                     NavigationLink {
-                        ModelInformationView(
-                            wrapsInNavigationStack: false,
-                            modelID: "teqp-pure-co2-experimental"
-                        )
+                        ValidationInformationView(wrapsInNavigationStack: false)
                     } label: {
-                        Label("Advanced CCS / teqp / EOS-CG", systemImage: "atom")
+                        Label("Validation", systemImage: "checkmark.shield")
                     }
-                    .accessibilityIdentifier("more-advanced-model")
+                    .accessibilityIdentifier("more-validation")
+
+                    NavigationLink {
+                        IFEModelInformationView(wrapsInNavigationStack: false)
+                    } label: {
+                        Label("IFE Model", systemImage: "atom")
+                    }
+                    .accessibilityIdentifier("more-ife-model")
 
                     NavigationLink {
                         AboutView(wrapsInNavigationStack: false)

@@ -24,16 +24,24 @@ struct ModelInformationView: View {
     private var content: some View {
         Group {
             if let modelID, let descriptor = descriptors.first(where: { $0.id == modelID }) {
-                ModelDetailView(descriptor: descriptor)
+                if descriptor.id == "ife-model" {
+                    IFEModelInformationView(wrapsInNavigationStack: false)
+                } else {
+                    ModelDetailView(descriptor: descriptor)
+                }
             } else {
                 List(descriptors) { descriptor in
                     NavigationLink {
-                        ModelDetailView(descriptor: descriptor)
+                        if descriptor.id == "ife-model" {
+                            IFEModelInformationView(wrapsInNavigationStack: false)
+                        } else {
+                            ModelDetailView(descriptor: descriptor)
+                        }
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(descriptor.name)
                                 .font(.headline)
-                            Text(descriptor.availability.rawValue.capitalized)
+                            Text(statusText(for: descriptor))
                                 .font(.subheadline)
                                 .foregroundStyle(statusColor(descriptor.availability))
                         }
@@ -52,6 +60,10 @@ struct ModelInformationView: View {
         case .preliminary: .ifePrimary
         case .unavailable: .secondary
         }
+    }
+
+    private func statusText(for descriptor: ModelDescriptor) -> String {
+        descriptor.id == "ife-model" ? "Under development" : descriptor.availability.rawValue.capitalized
     }
 }
 

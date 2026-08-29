@@ -589,6 +589,59 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(registry.userFacingDescriptors.last?.modelVersion, "Under development")
     }
 
+    func testValidatedCasesComeFromExistingValidationPresentationMetadata() throws {
+        let cases = AdvancedValidationPresentation.validatedCaseOptions()
+
+        XCTAssertFalse(cases.isEmpty)
+        XCTAssertEqual(
+            cases,
+            AdvancedValidationPresentation.stateOptions(
+                currentPressurePa: nil,
+                currentTemperatureK: nil
+            )
+        )
+    }
+
+    @MainActor
+    func testValidatedCaseLoadsExactInputsUsingGeneralProperties() throws {
+        let validatedCase = try XCTUnwrap(AdvancedValidationPresentation.validatedCaseOptions().first)
+        let viewModel = CalculatorViewModel()
+
+        viewModel.selectedModelID = "ife-model"
+        viewModel.loadInputs(from: validatedCase)
+
+        XCTAssertEqual(viewModel.selectedModelID, "coolprop-heos")
+        XCTAssertEqual(viewModel.pressureDisplayUnit, .barAbsolute)
+        XCTAssertEqual(viewModel.temperatureDisplayUnit, .celsius)
+        XCTAssertEqual(Double(viewModel.pressureText), validatedCase.pressurePa / 100_000, accuracy: 1e-9)
+        XCTAssertEqual(Double(viewModel.temperatureText), validatedCase.temperatureK - 273.15, accuracy: 1e-9)
+        XCTAssertEqual(viewModel.compositionBasis, .molePercent)
+        XCTAssertEqual(viewModel.composition.map(\.component), validatedCase.composition.map(\.component))
+        let loadedMolePercents = viewModel.composition.compactMap { Double($0.value) }
+        XCTAssertEqual(loadedMolePercents.count, validatedCase.composition.count)
+        for (actual, expected) in zip(loadedMolePercents, validatedCase.composition.map { $0.moleFraction * 100 }) {
+            XCTAssertEqual(actual, expected, accuracy: 1e-10)
+        }
+    }
+
+    func testValidatedCasesAreRecognizedByValidationEvidenceEvaluator() throws {
+        let evaluator = ValidationEvidenceEvaluator()
+
+        for validatedCase in AdvancedValidationPresentation.validatedCaseOptions() {
+            let evidence = evaluator.evaluate(
+                composition: validatedCase.composition,
+                pressurePa: validatedCase.pressurePa,
+                temperatureK: validatedCase.temperatureK,
+                properties: validatedCase.properties
+            )
+
+            XCTAssertTrue(
+                evidence.contains { $0.status == .independentlyValidated },
+                validatedCase.id
+            )
+        }
+    }
+
     @MainActor
     func testAdvancedCCSPropertiesShowsOnlyValidatedImpurities() throws {
         let viewModel = CalculatorViewModel()

@@ -533,6 +533,35 @@ final class CalculatorViewModel {
         validate()
     }
 
+    func loadInputs(from validatedCase: ValidatedStateOption) {
+        pressureDisplayUnit = .barAbsolute
+        temperatureDisplayUnit = .celsius
+        lastValidPressurePa = validatedCase.pressurePa
+        lastValidTemperatureK = validatedCase.temperatureK
+        selectedModelID = "coolprop-heos"
+        pressureText = Self.format(
+            pressureDisplayUnit.displayValue(from: validatedCase.pressurePa),
+            for: pressureDisplayUnit
+        )
+        temperatureText = Self.format(
+            temperatureDisplayUnit.displayValue(from: validatedCase.temperatureK),
+            for: temperatureDisplayUnit
+        )
+        compositionBasis = .molePercent
+        composition = validatedCase.composition.map {
+            CompositionInput(
+                component: $0.component,
+                value: String(format: "%.12g", $0.moleFraction * 100)
+            )
+        }
+        compositionBeforeNormalization = nil
+        lastNormalizedComposition = nil
+        calculationRecord = nil
+        calculationError = nil
+        standaloneWaterEquilibriumResult = nil
+        validate()
+    }
+
     func loadInputs(from batchInput: BatchCaseInput, model: BatchCalculationModel) {
         guard let pressurePa = batchInput.pressurePa,
               let temperatureK = batchInput.temperatureK,

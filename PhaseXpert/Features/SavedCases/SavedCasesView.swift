@@ -133,6 +133,14 @@ enum SavedCaseSort: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+private enum SavedCasesCategory: String, CaseIterable, Identifiable {
+    case myCases = "My Cases"
+    case validatedCases = "Validated Cases"
+    case builtInCases = "Built-in Cases"
+
+    var id: String { rawValue }
+}
+
 struct PropertyComparison: Identifiable, Equatable {
     let id: PropertyID
     let reference: PropertyValue?
@@ -269,6 +277,7 @@ struct SavedCasesView: View {
     private var savedCases: [SavedCalculation]
 
     @State private var searchText = ""
+    @State private var selectedCategory: SavedCasesCategory = .myCases
     @State private var sort: SavedCaseSort = .newest
     @State private var pendingDeletion: SavedCalculation?
     @State private var persistenceError: String?
@@ -305,6 +314,27 @@ struct SavedCasesView: View {
         }
     }
 
+    private var visibleValidatedCases: [ValidatedStateOption] {
+        AdvancedValidationPresentation.validatedCaseOptions().filter { validatedCase in
+            guard !searchText.isEmpty else { return true }
+            return validatedCase.name.localizedCaseInsensitiveContains(searchText)
+                || validatedCase.detail.localizedCaseInsensitiveContains(searchText)
+                || AdvancedValidationPresentation.propertyList(validatedCase.properties)
+                    .localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    private var isVisibleCategoryEmpty: Bool {
+        switch selectedCategory {
+        case .myCases:
+            visibleCases.isEmpty
+        case .validatedCases:
+            visibleValidatedCases.isEmpty
+        case .builtInCases:
+            visibleBuiltInCases.isEmpty
+        }
+    }
+
     private var batchCases: [BatchCaseInput] {
         BuiltInCaseCatalog.cases.map(BatchCaseInput.builtIn)
             + savedCases.map {
@@ -315,47 +345,21 @@ struct SavedCasesView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if visibleCases.isEmpty && visibleBuiltInCases.isEmpty {
+                if isVisibleCategoryEmpty && !searchText.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                 } else {
                     List {
-                        Section("My Cases") {
-                            if visibleCases.isEmpty {
-                                Text("Run a calculation, then choose Save case.")
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ForEach(visibleCases) { savedCase in
-                                    NavigationLink {
-                                        SavedCaseDetailView(savedCase: savedCase)
-                                    } label: {
-                                        SavedCaseRow(savedCase: savedCase)
-                                    }
-                                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                        Button("Duplicate", systemImage: "plus.square.on.square") {
-                                            duplicate(savedCase)
-                                        }
-                                        .tint(.ifePrimary)
-                                    }
-                                    .swipeActions {
-                                        Button("Delete", systemImage: "trash", role: .destructive) {
-                                            pendingDeletion = savedCase
-                                        }
-                                    }
+                        Section {
+                            Picker("Saved case category", selection: $selectedCategory) {
+                                ForEach(SavedCasesCategory.allCases) { category in
+                                    Text(category.rawValue).tag(category)
                                 }
                             }
+                            .pickerStyle(.segmented)
+                            .accessibilityIdentifier("saved-case-category")
                         }
 
-                        Section("Built-in Cases") {
-                            ForEach(visibleBuiltInCases) { builtInCase in
-                                NavigationLink {
-                                    BuiltInCaseDetailView(builtInCase: builtInCase) {
-                                        duplicate(builtInCase)
-                                    }
-                                } label: {
-                                    BuiltInCaseRow(builtInCase: builtInCase)
-                                }
-                            }
-                        }
+                        categoryContent
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
@@ -417,6 +421,76 @@ struct SavedCasesView: View {
         }
     }
 
+    @ViewBuilder
+    private var categoryContent: some View {
+        switch selectedCategory {
+        case .myCases:
+            myCasesSection
+        case .validatedCases:
+            validatedCasesSection
+        case .builtInCases:
+            builtInCasesSection
+        }
+    }
+
+    private var myCasesSection: some View {
+        Section("My Cases") {
+            if visibleCases.isEmpty {
+                Text("Run a calculation, then choose Save case.")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(visibleCases) { savedCase in
+                    NavigationLink {
+                        SavedCaseDetailView(savedCase: savedCase)
+                    } label: {
+                        SavedCaseRow(savedCase: savedCase)
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button("Duplicate", systemImage: "plus.square.on.square") {
+                            duplicate(savedCase)
+                        }
+                        .tint(.ifePrimary)
+                    }
+                    .swipeActions {
+                        Button("Delete", systemImage: "trash", role: .destructive) {
+                            pendingDeletion = savedCase
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var validatedCasesSection: some View {
+        Section {
+            ForEach(visibleValidatedCases) { validatedCase in
+                NavigationLink {
+                    ValidatedCaseDetailView(validatedCase: validatedCase)
+                } label: {
+                    ValidatedCaseRow(validatedCase: validatedCase)
+                }
+            }
+        } header: {
+            Text("Validated Cases")
+        } footer: {
+            Text("Curated reference cases are bundled with PhaseXpert and are not stored as My Cases.")
+        }
+    }
+
+    private var builtInCasesSection: some View {
+        Section("Built-in Cases") {
+            ForEach(visibleBuiltInCases) { builtInCase in
+                NavigationLink {
+                    BuiltInCaseDetailView(builtInCase: builtInCase) {
+                        duplicate(builtInCase)
+                    }
+                } label: {
+                    BuiltInCaseRow(builtInCase: builtInCase)
+                }
+            }
+        }
+    }
+
     private func duplicate(_ savedCase: SavedCalculation) {
         modelContext.insert(savedCase.duplicate())
         saveContext()
@@ -454,6 +528,78 @@ struct SavedCasesView: View {
             modelContext.rollback()
             persistenceError = error.localizedDescription
         }
+    }
+}
+
+private struct ValidatedCaseRow: View {
+    let validatedCase: ValidatedStateOption
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(validatedCase.name)
+                    .font(.headline)
+                    .lineLimit(2)
+                Spacer(minLength: IFESpacing.small)
+                Label("Validated", systemImage: "checkmark.shield")
+                    .font(.caption)
+                    .foregroundStyle(Color.pxSuccess)
+                    .labelStyle(.titleAndIcon)
+            }
+            Text("\(number(validatedCase.pressurePa / 100_000)) bar(a) · \(number(validatedCase.temperatureK - 273.15)) °C")
+                .font(.subheadline.monospacedDigit())
+            Text(compositionLabel(validatedCase.composition))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            Text("Validated: \(AdvancedValidationPresentation.propertyList(validatedCase.properties))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("validated-case-\(validatedCase.id)")
+    }
+}
+
+private struct ValidatedCaseDetailView: View {
+    @Environment(AppNavigationState.self) private var navigationState
+    let validatedCase: ValidatedStateOption
+
+    var body: some View {
+        Form {
+            Section("Validated case") {
+                LabeledContent("Name", value: validatedCase.name)
+                LabeledContent("Status", value: "Validated")
+                Text("Curated reference case from PhaseXpert validation capability metadata.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Inputs") {
+                LabeledContent("Pressure", value: "\(number(validatedCase.pressurePa / 100_000)) bar(a)")
+                LabeledContent("Temperature", value: "\(number(validatedCase.temperatureK - 273.15)) °C")
+                LabeledContent("Composition") {
+                    Text(compositionLabel(validatedCase.composition))
+                        .multilineTextAlignment(.trailing)
+                }
+            }
+
+            Section("Validated properties") {
+                Text(AdvancedValidationPresentation.propertyList(validatedCase.properties))
+            }
+
+            Section {
+                Button("Use case", systemImage: "arrow.trianglehead.2.clockwise") {
+                    navigationState.openValidatedCaseInCalculator(validatedCase)
+                }
+                .accessibilityIdentifier("use-validated-case-\(validatedCase.id)")
+            } footer: {
+                Text("Validated cases are read-only bundled reference cases. Loading a case opens it in Calculator with General Properties as the calculation model.")
+            }
+        }
+        .navigationTitle(validatedCase.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
