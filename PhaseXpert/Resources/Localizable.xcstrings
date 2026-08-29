@@ -4510,6 +4510,54 @@
           }
         }
       }
+    },
+    "IFE Model": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "IFE-modell" } } }
+    },
+    "Under development": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Under utvikling" } } }
+    },
+    "About the IFE Model": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Om IFE-modellen" } } }
+    },
+    "The IFE Flow Technology department is developing a proprietary thermodynamic model for CO₂ and CO₂-rich systems. Model development is supported by experimental validation, including measurements performed in IFE's FALCON CO₂ facility.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "IFEs avdeling for strømningsteknologi utvikler en egen termodynamisk modell for CO₂ og CO₂-rike systemer. Modellutviklingen støttes av eksperimentell validering, blant annet målinger utført i IFEs FALCON-anlegg for CO₂." } } }
+    },
+    "PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may apply only to defined compositions and temperature/pressure ranges.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "PhaseXpert identifiserer egenskaper og driftspunkter som støttes av uavhengige eksperimentelle data. Valideringen er egenskapsspesifikk og kan være begrenset til bestemte sammensetninger og temperatur-/trykkområder." } } }
+    },
+    "Engineering property calculations for CO₂ and supported CO₂-rich mixtures.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Tekniske egenskapsberegninger for CO₂ og støttede CO₂-rike blandinger." } } }
+    },
+    "Independently validated": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Uavhengig validert" } } }
+    },
+    "Nearby validation evidence": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Nærliggende valideringsgrunnlag" } } }
+    },
+    "No independent validation available": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Ingen uavhengig validering tilgjengelig" } } }
+    },
+    "General Properties is used for calculations.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Generelle egenskaper brukes til beregninger." } } }
+    },
+    "Independent validation is evaluated for each property and state.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Uavhengig validering vurderes for hver egenskap og hvert driftspunkt." } } }
+    },
+    "Independent validation available for %@": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Uavhengig validering er tilgjengelig for %@" } } }
+    },
+    "Independently validated: %@": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Uavhengig validert: %@" } } }
+    },
+    "%@: current state is outside the validated domain.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "%@: gjeldende driftspunkt er utenfor det validerte området." } } }
+    },
+    "General engineering sweep": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Generell egenskapsanalyse" } } }
+    },
+    "Every plotted point is a General Properties calculation. Independent validation is annotated where available; failures remain gaps.": {
+      "localizations": { "nb": { "stringUnit": { "state": "translated", "value": "Hvert punkt er beregnet med Generelle egenskaper. Uavhengig validering vises der den er tilgjengelig; mislykkede beregninger vises som tomrom." } } }
     }
   },
   "version": "1.0"

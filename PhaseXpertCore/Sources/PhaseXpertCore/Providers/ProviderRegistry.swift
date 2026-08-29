@@ -16,6 +16,11 @@ public struct ProviderRegistry: Sendable {
         providers.map(\.descriptor) + extraDescriptors
     }
 
+    /// Models intentionally exposed as choices in normal product workflows.
+    public var userFacingDescriptors: [ModelDescriptor] {
+        descriptors.filter { $0.id == "coolprop-heos" || $0.id == "ife-model" }
+    }
+
     public func provider(id: String) -> (any ThermodynamicModelProvider)? {
         providers.first { $0.descriptor.id == id }
     }
@@ -42,16 +47,16 @@ public struct ProviderRegistry: Sendable {
     public static let ifeModelDescriptor = ModelDescriptor(
         id: "ife-model",
         name: "IFE Model",
-        modelVersion: "Unavailable",
-        providerVersion: "Unavailable",
+        modelVersion: "Under development",
+        providerVersion: "Under development",
         availability: .unavailable,
         calculationMode: .hybrid,
         supportedComponents: [],
         supportedProperties: [],
         domain: .initialCO2Transport,
-        scientificBasis: "Provider interface reserved for a validated IFE implementation.",
-        equationOrMethod: "This model is not available in this version.",
-        limitations: ["This model is not available in this version."],
+        scientificBasis: "IFE Flow Technology is developing a proprietary thermodynamic model for CO₂ and CO₂-rich systems, supported by experimental validation including measurements in the FALCON CO₂ facility.",
+        equationOrMethod: "Under development",
+        limitations: ["Under development"],
         references: []
     )
 }

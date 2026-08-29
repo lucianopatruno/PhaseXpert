@@ -529,8 +529,30 @@ private struct PDFReportContent {
             }
         }
 
+        section("Validation", in: document)
+        let evidence = ValidationEvidenceEvaluator().evaluate(
+            composition: request.composition,
+            pressurePa: request.pressurePa,
+            temperatureK: request.temperatureK,
+            properties: Set(response.properties.map(\.property))
+        )
+        let validated = evidence.filter { $0.status == .independentlyValidated }
+        if validated.isEmpty {
+            row("Independent validation", "No independent validation available", in: document)
+        } else {
+            for item in validated {
+                row(propertyName(item.property), "Independently validated", in: document)
+                if let formulation = item.formulationName {
+                    row("Validation formulation", formulation, in: document)
+                }
+                if let source = item.validationSummary {
+                    row("Evidence", source, in: document)
+                }
+            }
+        }
+
         section("Model and provider", in: document)
-        row("Model", model.name, in: document)
+        row("Calculation model", model.name, in: document)
         row("Model ID", model.id, in: document)
         row("Model version", model.modelVersion, in: document)
         row("Provider version", model.providerVersion, in: document)

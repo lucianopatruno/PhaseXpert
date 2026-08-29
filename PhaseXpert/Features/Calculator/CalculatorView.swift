@@ -53,7 +53,7 @@ struct CalculatorView: View {
                     IFESectionHeader(
                         step: 1,
                         title: "Thermodynamic model",
-                        subtitle: "Choose the calculation provider."
+                        subtitle: "General Properties is used for calculations."
                     )
                 }
 
@@ -312,6 +312,13 @@ struct CalculatorView: View {
                     } header: {
                         IFESectionHeader(step: 4, title: "Validation status")
                     }
+                }
+
+                if !viewModel.validatedPropertiesAtCurrentState.isEmpty || !viewModel.nearbyValidationEvidence.isEmpty {
+                    ValidationEvidenceSection(
+                        validatedProperties: viewModel.validatedPropertiesAtCurrentState,
+                        nearbyEvidence: viewModel.nearbyValidationEvidence
+                    )
                 }
 
                 if let notice = viewModel.calculationNotice {
@@ -1883,7 +1890,7 @@ private struct ModelSelectionRow: View {
                     HStack(spacing: IFESpacing.small) {
                         if descriptor.availability == .unavailable {
                             IFEStatusBadge(
-                                text: "Unavailable",
+                                text: descriptor.id == "ife-model" ? "Under development" : "Unavailable",
                                 systemImage: "slash.circle",
                                 color: .pxUnavailable
                             )
@@ -1914,7 +1921,7 @@ private struct ModelSelectionRow: View {
         case "coolprop-heos":
             "General Properties"
         case "ife-model":
-            "IFE Model — Unavailable"
+            "IFE Model"
         default:
             descriptor.name
         }
@@ -1933,10 +1940,53 @@ private struct ModelSelectionRow: View {
         case .preliminary:
             "Operational local model."
         case .unavailable:
-            "Not available for this state."
+            descriptor.id == "ife-model" ? "Under development" : "Not available for this state."
         }
     }
 
+}
+
+private func nearbyDeltaText(_ delta: ValidationEvidenceDelta) -> String {
+    let composition = delta.compositionMoleFraction
+        .filter { $0.value > CalculationValidator.compositionTolerance }
+        .sorted { $0.key.rawValue < $1.key.rawValue }
+        .map { "Δ\($0.key.symbol) \(($0.value * 100).formatted(.number.precision(.fractionLength(0...3)))) mol%" }
+        .joined(separator: " · ")
+    let temperature = delta.temperatureK > 0 ? "ΔT \(delta.temperatureK.formatted(.number.precision(.fractionLength(0...2)))) K" : nil
+    let pressure = delta.pressurePa > 0 ? "ΔP \((delta.pressurePa / 100_000).formatted(.number.precision(.fractionLength(0...2)))) bar" : nil
+    return ([composition.isEmpty ? nil : composition, temperature, pressure].compactMap { $0 }).joined(separator: " · ")
+}
+
+private struct ValidationEvidenceSection: View {
+    let validatedProperties: [PropertyID]
+    let nearbyEvidence: [PropertyValidationEvidence]
+
+    var body: some View {
+        Section {
+            if !validatedProperties.isEmpty {
+                let list = AdvancedValidationPresentation.propertyList(validatedProperties)
+                Label("Independently validated: \(list)", systemImage: "checkmark.shield.fill")
+                    .foregroundStyle(Color.green)
+                    .accessibilityLabel("Independent validation available for \(list)")
+            }
+            ForEach(nearbyEvidence, id: \.property) { evidence in
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Nearby validation evidence", systemImage: "scope")
+                        .font(.subheadline.weight(.semibold))
+                    Text("\(evidence.property.displayName): current state is outside the validated domain.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if let deltas = evidence.deltas {
+                        Text(nearbyDeltaText(deltas))
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        } header: {
+            Text("Validation")
+        }
+    }
 }
 
 private struct UnitAwareNumericField: View {

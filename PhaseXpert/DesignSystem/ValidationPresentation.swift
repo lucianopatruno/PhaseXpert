@@ -38,7 +38,6 @@ enum AdvancedValidationPresentation {
     }
 
     static func validatedProperties(for record: CalculationRecord) -> [PropertyID] {
-        guard record.request.modelID == "teqp-pure-co2-experimental" else { return [] }
         return validatedProperties(
             composition: record.request.composition,
             pressurePa: record.request.pressurePa,
@@ -47,12 +46,9 @@ enum AdvancedValidationPresentation {
     }
 
     static func savedCaseStatus(for record: CalculationRecord) -> String {
-        guard record.request.modelID == "teqp-pure-co2-experimental" else {
-            return "General Properties"
-        }
         let properties = validatedProperties(for: record)
-        guard !properties.isEmpty else { return "Advanced CCS · Outside validated range" }
-        return "Advanced CCS · Validated \(propertyList(properties))"
+        guard !properties.isEmpty else { return "General Properties · No independent validation available" }
+        return "General Properties · Independently validated \(propertyList(properties))"
     }
 
     static func compositionOptions() -> [ValidatedCompositionOption] {
