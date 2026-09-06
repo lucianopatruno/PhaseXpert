@@ -79,8 +79,8 @@ private struct ModelDetailView: View {
             }
 
             Section("Scientific basis") {
-                Text(descriptor.scientificBasis)
-                LabeledContent("Equation or method", value: descriptor.equationOrMethod)
+                Text(scientificBasis)
+                LabeledContent("Equation or method", value: equationOrMethod)
                 LabeledContent(
                     "Coefficient set",
                     value: descriptor.coefficientSetVersion ?? "Not applicable or not supplied"
@@ -109,7 +109,7 @@ private struct ModelDetailView: View {
 
             Section("Limitations") {
                 ForEach(descriptor.limitations, id: \.self) { limitation in
-                    Label(limitation, systemImage: "exclamationmark.triangle")
+                    Label(localizedLimitation(limitation), systemImage: "exclamationmark.triangle")
                 }
             }
 
@@ -134,8 +134,42 @@ private struct ModelDetailView: View {
                 }
             }
         }
-        .navigationTitle(descriptor.name)
+        .navigationTitle(descriptor.id == "coolprop-heos" ? String(localized: "General Properties") : descriptor.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var scientificBasis: String {
+        guard descriptor.id == "coolprop-heos" else { return descriptor.scientificBasis }
+        return String(localized: "CoolProp HEOS pure-fluid CO₂, restricted dry CO₂-rich mixtures, and a preliminary homogeneous CO₂-rich water-vapor route. The General Properties capability matrix separates calculable states from independently validated states.")
+    }
+
+    private var equationOrMethod: String {
+        guard descriptor.id == "coolprop-heos" else { return descriptor.equationOrMethod }
+        return String(localized: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash.")
+    }
+
+    private func localizedLimitation(_ limitation: String) -> String {
+        guard descriptor.id == "coolprop-heos" else { return limitation }
+        return switch limitation {
+        case "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties.":
+            String(localized: "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties.")
+        case "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄, H₂, CO and H₂S with total impurity in (0, 10] mol%; this product guardrail remains calculability scope, not a validated accuracy range.":
+            String(localized: "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄, H₂, CO and H₂S with total impurity in (0, 10] mol%; this product guardrail remains calculability scope, not a validated accuracy range.")
+        case "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.":
+            String(localized: "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable.")
+        case "Preliminary integration; no production accuracy claim.":
+            String(localized: "Preliminary integration; no production accuracy claim.")
+        case "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.":
+            String(localized: "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation.")
+        case "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation.":
+            String(localized: "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation.")
+        case "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa.":
+            String(localized: "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa.")
+        case "Binary pure-water equilibrium is separately limited-production in explicit 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions; brine, wet multicomponent equilibrium and pH are unsupported.":
+            String(localized: "Binary pure-water equilibrium is separately limited-production in explicit 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions; brine, wet multicomponent equilibrium and pH are unsupported.")
+        default:
+            limitation
+        }
     }
 
     @ViewBuilder

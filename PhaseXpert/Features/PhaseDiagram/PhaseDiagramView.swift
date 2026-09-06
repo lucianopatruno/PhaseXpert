@@ -295,6 +295,17 @@ final class PhaseDiagramViewModel {
         isPhaseMapResultStale = false
     }
 
+    func phaseMapResolutionChanged() {
+        phaseMapProgress = PhaseMapProgress(
+            completedCount: 0,
+            totalCount: phaseMapResolution.gridPointCount
+        )
+        phaseMapInputsChanged()
+        if !isPhaseMapLoading && phaseMapResult == nil {
+            phaseMapStatusMessage = "Ready to classify \(phaseMapResolution.gridPointCount) discrete flash points."
+        }
+    }
+
     private func phaseMapInputsChanged() {
         guard phaseMapRecord != nil else { return }
         if isPhaseMapLoading {
@@ -606,6 +617,9 @@ private struct PhaseMapContent: View {
                         }
                         .pickerStyle(.segmented)
                         .accessibilityIdentifier("phase-map-resolution-picker")
+                        .onChange(of: viewModel.phaseMapResolution) { _, _ in
+                            viewModel.phaseMapResolutionChanged()
+                        }
 
                     }
                 }
@@ -675,7 +689,7 @@ private struct PhaseMapRangeEditor<UnitMenu: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.small) {
             HStack {
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Menu(unitLabel) {
@@ -1197,10 +1211,12 @@ private struct PhaseBoundaryChart: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
-                ScientificStatusBanner(
-                    title: bannerTitle,
-                    message: bannerMessage
-                )
+                if isMixtureEnvelope {
+                    ScientificStatusBanner(
+                        title: bannerTitle,
+                        message: bannerMessage
+                    )
+                }
 
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
@@ -1404,6 +1420,13 @@ private struct PhaseBoundaryChart: View {
                             )
                         }
                     }
+                }
+
+                if !isMixtureEnvelope {
+                    ScientificStatusBanner(
+                        title: bannerTitle,
+                        message: bannerMessage
+                    )
                 }
             }
             .padding(IFESpacing.medium)

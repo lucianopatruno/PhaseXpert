@@ -721,22 +721,22 @@
         }
       }
     },
-    "Available properties" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tilgjengelige egenskaper"
-          }
-        }
-      }
-    },
     "Available for local calculations within the recorded provider domain." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tilgjengelig for lokale beregninger innenfor modellens dokumenterte gyldighetsområde."
+          }
+        }
+      }
+    },
+    "Available properties" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tilgjengelige egenskaper"
           }
         }
       }
@@ -1453,56 +1453,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kontakt IFEs strømningsteknologiske avdeling"
-          }
-        }
-      }
-    },
-    "Not available for this state." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ikke tilgjengelig for dette driftspunktet."
-          }
-        }
-      }
-    },
-    "Operational local model." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Operativ lokal modell."
-          }
-        }
-      }
-    },
-    "Local" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lokal"
-          }
-        }
-      }
-    },
-    "Unavailable" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utilgjengelig"
-          }
-        }
-      }
-    },
-    "Validated CCS impurity and mixture ranges" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Validerte områder for CCS-urenheter og blandinger"
           }
         }
       }
@@ -2576,6 +2526,16 @@
         }
       }
     },
+    "Local" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokal"
+          }
+        }
+      }
+    },
     "Low" : {
       "localizations" : {
         "nb" : {
@@ -2587,6 +2547,7 @@
       }
     },
     "luciano.patruno@ife.no" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -3159,6 +3120,16 @@
         }
       }
     },
+    "Not available for this state." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke tilgjengelig for dette driftspunktet."
+          }
+        }
+      }
+    },
     "Not selected" : {
       "localizations" : {
         "nb" : {
@@ -3347,6 +3318,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beregning ved driftspunkt"
+          }
+        }
+      }
+    },
+    "Operational local model." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operativ lokal modell."
           }
         }
       }
@@ -5046,8 +5027,17 @@
         }
       }
     },
+    "Unavailable" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilgjengelig"
+          }
+        }
+      }
+    },
     "Under development" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -5166,6 +5156,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Validerte saker er skrivebeskyttede referansesaker som følger med appen. Når en sak lastes, åpnes den i Kalkulator med Generelle egenskaper som beregningsmodell."
+          }
+        }
+      }
+    },
+    "Validated CCS impurity and mixture ranges" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validerte områder for CCS-urenheter og blandinger"
           }
         }
       }
@@ -5342,6 +5342,36 @@
           }
         }
       }
+    },
+    "CoolProp HEOS pure-fluid CO₂, restricted dry CO₂-rich mixtures, and a preliminary homogeneous CO₂-rich water-vapor route. The General Properties capability matrix separates calculable states from independently validated states." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "CoolProp HEOS for ren CO₂, begrensede tørre CO₂-rike blandinger og en foreløpig homogen rute for CO₂-rik vanndamp. Kapabilitetsmatrisen for Generelle egenskaper skiller mellom beregnbare tilstander og tilstander som er uavhengig validert." } } }
+    },
+    "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "CoolProp HEOS; egenskaper for ren CO₂ bruker én AbstractState(P,T)-oppdatering. Tørre blandinger bruker medfølgende interaksjonsdata via HEOS-/multifluid-ruten. Foreløpig gasstetthet for CO₂/H₂O bruker det medfølgende Gernert-paret CO₂/vann med påtvunget gassfase, aldri det usikre overordnede PT-flashet for blandinger." } } }
+    },
+    "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Ren CO₂ støtter tetthet, viskositet, kaloriske egenskaper, varmekapasiteter, lydhastighet, varmeledningsevne, Joule–Thomson-koeffisient og eksplisitt avledede tekniske egenskaper." } } }
+    },
+    "Dry CO₂-rich mixtures may contain N₂, O₂, Ar, CH₄, H₂, CO and H₂S with total impurity in (0, 10] mol%; this product guardrail remains calculability scope, not a validated accuracy range." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Tørre CO₂-rike blandinger kan inneholde N₂, O₂, Ar, CH₄, H₂, CO og H₂S med total urenhet i området (0, 10] mol %. Denne produktgrensen angir beregningsområdet, ikke et validert nøyaktighetsområde." } } }
+    },
+    "Mixtures remain restricted to density, phase and three explicitly derived engineering properties; expanded pure-fluid properties are unavailable." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Blandinger er fortsatt begrenset til tetthet, fase og tre eksplisitt avledede tekniske egenskaper; utvidede egenskaper for rene fluider er utilgjengelige." } } }
+    },
+    "Preliminary integration; no production accuracy claim." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Foreløpig integrasjon; det gis ingen påstand om nøyaktighet for produksjonsbruk." } } }
+    },
+    "Mixture viscosity, caloric, acoustic, conductivity and derivative properties are unavailable pending separate validation." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Viskositet, kaloriske og akustiske egenskaper, varmeledningsevne og deriverte egenskaper for blandinger er utilgjengelige i påvente av separat validering." } } }
+    },
+    "Production phase diagrams are scoped to pure CO₂; multicomponent compositions are not routed to phase-envelope generation." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Fasediagrammer for produksjonsbruk er avgrenset til ren CO₂; flerkomponentsammensetninger sendes ikke til generering av fasekurver." } } }
+    },
+    "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Homogene H₂O-egenskaper er fortsatt foreløpige for binær CO₂/H₂O ved xH₂O = 1–1000 ppm, 350–423,15 K og 0,5–5 MPa." } } }
+    },
+    "Binary pure-water equilibrium is separately limited-production in explicit 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions; brine, wet multicomponent equilibrium and pH are unsupported." : {
+      "localizations" : { "nb" : { "stringUnit" : { "state" : "translated", "value" : "Binær likevekt med rent vann har separat, begrenset produksjonsstøtte i de eksplisitte områdene 30–80 °C / 0,4999–5,0055 MPa og 100 °C / 4,70–15,09 MPa; saltlake, våt flerkomponentlikevekt og pH støttes ikke." } } }
     },
     "Δ" : {
       "localizations" : {

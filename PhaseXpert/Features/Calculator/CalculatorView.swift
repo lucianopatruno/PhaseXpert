@@ -2014,7 +2014,7 @@ private struct UnitAwareNumericField: View {
 
     private var titleView: some View {
         VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.body.weight(.medium))
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)

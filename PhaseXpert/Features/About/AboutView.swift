@@ -57,7 +57,9 @@ struct AboutView: View {
             }
 
             Section("IFE Model") {
-                LabeledContent("Status", value: "Under development")
+                LabeledContent("Status") {
+                    Text("Under development")
+                }
                 NavigationLink {
                     IFEModelInformationView()
                 } label: {
@@ -94,7 +96,9 @@ struct AboutView: View {
             Section("Application") {
                 LabeledContent("Version", value: Bundle.main.releaseVersion)
                 LabeledContent("Minimum iOS", value: "18.0")
-                LabeledContent("Data handling", value: "On-device")
+                LabeledContent("Data handling") {
+                    Text("On-device")
+                }
             }
 
             Section {
@@ -125,7 +129,7 @@ struct AboutView: View {
 }
 
 struct ValidationInformationView: View {
-    static let summary = "PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may only apply to defined compositions and temperature/pressure ranges. Where evidence exists, PhaseXpert shows the relevant formulation, experimental source and applicable range."
+    static let summary: LocalizedStringKey = "PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may only apply to defined compositions and temperature/pressure ranges. Where evidence exists, PhaseXpert shows the relevant formulation, experimental source and applicable range."
 
     private let wrapsInNavigationStack: Bool
 
@@ -178,7 +182,9 @@ struct IFEModelInformationView: View {
         List {
             Section("IFE Model") {
                 Text("The IFE Flow Technology department is developing a proprietary thermodynamic model for CO₂ and CO₂-rich systems. Model development is supported by experimental validation, including measurements performed in IFE's FALCON CO₂ facility.")
-                LabeledContent("Status", value: "Under development")
+                LabeledContent("Status") {
+                    Text("Under development")
+                }
             }
             Section("FALCON") {
                 NavigationLink {
