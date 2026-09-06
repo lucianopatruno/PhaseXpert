@@ -45,6 +45,8 @@ struct AboutView: View {
                         .accessibilityLabel("ENCASE")
                     Text("European Network of Research Infrastructures for CO₂ Transport and Injection (ENCASE). ENCASE has received funding from the European Union’s Horizon Europe Research and Innovation programme under grant agreement No 101094664.")
                         .font(.subheadline)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.vertical, IFESpacing.small)
                 .listRowBackground(Color.white)
@@ -84,7 +86,7 @@ struct AboutView: View {
 
             Section("Contact") {
                 Link(destination: contactURL) {
-                    Label("luciano.patruno@ife.no", systemImage: "envelope")
+                    Label("Contact IFE Flow Department", systemImage: "envelope")
                 }
                 .accessibilityHint("Opens a new email with the subject PhaseXpert.")
             }

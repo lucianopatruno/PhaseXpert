@@ -1878,13 +1878,15 @@ private struct ModelSelectionRow: View {
                     HStack(spacing: IFESpacing.small) {
                         if descriptor.availability == .unavailable {
                             IFEStatusBadge(
-                                text: descriptor.id == "ife-model" ? "Under development" : "Unavailable",
+                                text: descriptor.id == "ife-model"
+                                    ? String(localized: "Under development")
+                                    : String(localized: "Unavailable"),
                                 systemImage: "slash.circle",
                                 color: .pxUnavailable
                             )
                         }
                         IFEStatusBadge(
-                            text: "Local",
+                            text: String(localized: "Local"),
                             systemImage: "iphone",
                             color: .secondary
                         )
@@ -1907,9 +1909,9 @@ private struct ModelSelectionRow: View {
     private var displayName: String {
         switch descriptor.id {
         case "coolprop-heos":
-            "General Properties"
+            String(localized: "General Properties")
         case "ife-model":
-            "IFE Model"
+            String(localized: "IFE Model")
         default:
             descriptor.name
         }
@@ -1917,18 +1919,20 @@ private struct ModelSelectionRow: View {
 
     private var statusDescription: String {
         if descriptor.id == "coolprop-heos" {
-            return "Broad engineering property coverage"
+            return String(localized: "Broad engineering property coverage")
         }
         if descriptor.id == "teqp-pure-co2-experimental" {
-            return "Validated CCS impurity and mixture ranges"
+            return String(localized: "Validated CCS impurity and mixture ranges")
         }
         return switch descriptor.availability {
         case .available:
-            "Available for local calculations within the recorded provider domain."
+            String(localized: "Available for local calculations within the recorded provider domain.")
         case .preliminary:
-            "Operational local model."
+            String(localized: "Operational local model.")
         case .unavailable:
-            descriptor.id == "ife-model" ? "Under development" : "Not available for this state."
+            descriptor.id == "ife-model"
+                ? String(localized: "Under development")
+                : String(localized: "Not available for this state.")
         }
     }
 
