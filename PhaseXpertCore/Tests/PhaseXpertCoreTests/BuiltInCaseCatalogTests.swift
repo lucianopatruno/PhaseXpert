@@ -7,6 +7,7 @@ final class BuiltInCaseCatalogTests: XCTestCase {
             "northern-lights-cargo-specification-example",
             "brevik-ccs-conditioned-export-example",
             "hafslund-celsio-oslo-ccs-project-information",
+            "ravenna-ccs-phase-1-project-information",
             "porthos-pipeline-specification-example",
             "aramis-ship-specification-example"
         ])
@@ -55,6 +56,17 @@ final class BuiltInCaseCatalogTests: XCTestCase {
         XCTAssertTrue(celsio.modelingBasis.contains("No public authoritative exact CO₂ composition"))
         XCTAssertTrue(celsio.projectFacts.contains { $0.contains("350,000 tonnes") })
         XCTAssertTrue(celsio.projectFacts.contains { $0.contains("four days") })
+
+        let ravenna = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("ravenna-ccs-phase-1-project-information"))
+        XCTAssertEqual(ravenna.name, "Ravenna CCS – Phase 1")
+        XCTAssertEqual(ravenna.label, "Project information")
+        XCTAssertFalse(ravenna.hasCalculationPreset)
+        XCTAssertNil(ravenna.defaultPressurePa)
+        XCTAssertNil(ravenna.defaultTemperatureK)
+        XCTAssertNil(ravenna.composition)
+        XCTAssertTrue(ravenna.projectFacts.contains { $0.contains("25,000 tonnes") })
+        XCTAssertTrue(ravenna.projectFacts.contains { $0.contains("3,000 m") })
+        XCTAssertTrue(ravenna.modelingBasis.contains("do not publish an exact conditioned CO₂ composition"))
 
         let porthos = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("porthos-pipeline-specification-example"))
         XCTAssertEqual(porthos.name, "Porthos pipeline specification example")

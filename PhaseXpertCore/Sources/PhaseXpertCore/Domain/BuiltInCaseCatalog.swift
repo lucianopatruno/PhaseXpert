@@ -183,6 +183,43 @@ public enum BuiltInCaseCatalog {
             ]
         ),
         BuiltInCase(
+            id: "ravenna-ccs-phase-1-project-information",
+            name: "Ravenna CCS – Phase 1",
+            shortDescription: "Project information for Italy's first offshore CO₂ storage project; no public exact conditioned-stream composition or operating P/T preset is encoded.",
+            defaultPressurePa: nil,
+            defaultTemperatureK: nil,
+            composition: nil,
+            sources: [
+                source(
+                    "Eni and Snam launch Ravenna CCS",
+                    "https://www.eni.com/content/dam/enicom/documents/press-release/migrated/2024-en/09/pr-eni-snam-launch-first-carbon-capture-and-storage-project.pdf",
+                    "2024-09-03"
+                ),
+                source(
+                    "Ravenna CCS project overview",
+                    "https://ravennaccs.com/en-IT/project",
+                    nil
+                )
+            ],
+            projectFacts: [
+                "Phase 1 began CO₂ injection in September 2024.",
+                "The initial capture capacity is approximately 25,000 tonnes CO₂/year from Eni's Casalborsetti natural-gas treatment plant.",
+                "The reported capture efficiency exceeds 90%, with peaks up to 96%.",
+                "The source gas contains less than 3% CO₂ at close to atmospheric pressure; this describes the capture inlet, not the conditioned transport stream.",
+                "Captured CO₂ is transported through converted gas pipelines to the offshore Porto Corsini Mare Ovest field.",
+                "CO₂ is injected into a depleted gas reservoir at approximately 3,000 m depth."
+            ],
+            modelingBasis: "Information-only project entry. The authoritative public sources reviewed do not publish an exact conditioned CO₂ composition or representative transport/injection pressure and temperature suitable for a PhaseXpert thermodynamic preset.",
+            assumptions: [
+                "Capture-inlet concentration and pressure are not treated as transport-stream operating conditions.",
+                "PhaseXpert does not infer a Ravenna stream from other CCS project specifications.",
+                "Project facts are separate from thermodynamic validation status."
+            ],
+            limitations: [
+                "No calculation preset is provided because exact public conditioned-stream composition and operating state were not identified."
+            ]
+        ),
+        BuiltInCase(
             id: "porthos-pipeline-specification-example",
             name: "Porthos pipeline specification example",
             shortDescription: "Constructed limit-compliant representative pipeline case within the published delivery envelope.",

@@ -345,8 +345,129 @@ struct PhaseDiagramTemporaryExportStore {
 
     private func isOwnedArtifact(_ url: URL) -> Bool {
         let name = url.lastPathComponent
-        return name.hasPrefix("PhaseXpert-Phase-Diagram-")
+        return (name.hasPrefix("PhaseXpert-Phase-Diagram-")
+                || name.hasPrefix("PhaseXpert-Phase-Map-"))
             && ["pdf", "csv", "png"].contains(url.pathExtension.lowercased())
+    }
+}
+
+@MainActor
+struct PhaseMapPDFExporter {
+    func writeTemporaryPDF(
+        result: PhaseMapResult,
+        pressureUnit: PressureDisplayUnit,
+        temperatureUnit: TemperatureDisplayUnit
+    ) throws -> PhaseDiagramExportArtifacts {
+        guard !result.evaluations.isEmpty else {
+            throw PhaseDiagramExportError.unavailable("Calculate a Phase Map before preparing the PDF.")
+        }
+
+        let canvas = PhaseMapExportCanvas(
+            result: result,
+            pressureUnit: pressureUnit,
+            temperatureUnit: temperatureUnit
+        )
+        .frame(width: 1_200, height: 900)
+        let renderer = ImageRenderer(content: canvas)
+        renderer.scale = 1
+        guard let image = renderer.uiImage else {
+            throw PhaseDiagramExportError.renderingFailed
+        }
+
+        let store = PhaseDiagramTemporaryExportStore()
+        try store.cleanStaleArtifacts()
+        try FileManager.default.createDirectory(
+            at: store.directory,
+            withIntermediateDirectories: true
+        )
+        let url = store.directory.appendingPathComponent(
+            "PhaseXpert-Phase-Map-\(result.request.requestID.uuidString.prefix(8)).pdf"
+        )
+        let page = CGRect(x: 0, y: 0, width: 1_200, height: 900)
+        let data = UIGraphicsPDFRenderer(bounds: page).pdfData { context in
+            context.beginPage()
+            UIColor.white.setFill()
+            context.cgContext.fill(page)
+            image.draw(in: page)
+        }
+        try data.write(to: url, options: .atomic)
+        return PhaseDiagramExportArtifacts(files: [url])
+    }
+}
+
+private struct PhaseMapExportCanvas: View {
+    let result: PhaseMapResult
+    let pressureUnit: PressureDisplayUnit
+    let temperatureUnit: TemperatureDisplayUnit
+
+    private var xDomain: ClosedRange<Double> {
+        domain(result.evaluations.map { temperatureUnit.displayValue(from: $0.point.temperatureK) })
+    }
+
+    private var yDomain: ClosedRange<Double> {
+        domain(result.evaluations.map { pressureUnit.displayValue(from: $0.point.pressurePa) })
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Image("IFELogoEnglish")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 210, height: 70, alignment: .leading)
+                Spacer()
+                Text("Phase Map")
+                    .font(.largeTitle.bold())
+            }
+            Text("Preliminary multicomponent pressure–temperature classification")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+            Chart {
+                ForEach(result.evaluations) { evaluation in
+                    PointMark(
+                        x: .value("Temperature (\(temperatureUnit.rawValue))", temperatureUnit.displayValue(from: evaluation.point.temperatureK)),
+                        y: .value("Pressure (\(pressureUnit.rawValue))", pressureUnit.displayValue(from: evaluation.point.pressurePa))
+                    )
+                    .foregroundStyle(PhaseMapMarkerStyle.style(for: evaluation).color)
+                    .symbol(PhaseMapMarkerStyle.style(for: evaluation).chartSymbol)
+                    .symbolSize(evaluation.point.isOperatingPoint ? 110 : 70)
+                }
+                if let operatingPoint = result.operatingPoint {
+                    PointMark(
+                        x: .value("Temperature (\(temperatureUnit.rawValue))", temperatureUnit.displayValue(from: operatingPoint.point.temperatureK)),
+                        y: .value("Pressure (\(pressureUnit.rawValue))", pressureUnit.displayValue(from: operatingPoint.point.pressurePa))
+                    )
+                    .foregroundStyle(Color.red)
+                    .symbolSize(220)
+                    .symbol {
+                        Circle().stroke(Color.red, lineWidth: 2.5).frame(width: 20, height: 20)
+                    }
+                }
+            }
+            .chartXScale(domain: xDomain)
+            .chartYScale(domain: yDomain)
+            .chartXAxisLabel("Temperature (\(temperatureUnit.rawValue))")
+            .chartYAxisLabel("Pressure (\(pressureUnit.rawValue))")
+            .frame(maxHeight: .infinity)
+            HStack {
+                Text("\(result.evaluations.count) evaluations")
+                Spacer()
+                Text("\(result.classifiedCount) classified • \(result.unknownCount) unknown • \(result.failedCount) failed")
+            }
+            .font(.subheadline)
+            Text("Discrete provider flash points; not a thermodynamic phase envelope. Request ID: \(result.request.requestID.uuidString)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(44)
+        .background(Color.white)
+    }
+
+    private func domain(_ values: [Double]) -> ClosedRange<Double> {
+        let finite = values.filter(\.isFinite)
+        guard let minimum = finite.min(), let maximum = finite.max() else { return 0...1 }
+        let padding = max(maximum - minimum, 1) * 0.08
+        return (minimum - padding)...(maximum + padding)
     }
 }
 

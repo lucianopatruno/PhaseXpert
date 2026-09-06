@@ -268,6 +268,17 @@ struct CalculatorView: View {
                     }
                 }
 
+                if !viewModel.validationReport.issues.isEmpty {
+                    validationIssuesSection(viewModel: viewModel)
+                }
+
+                if let error = viewModel.calculationError {
+                    Section("Calculation error") {
+                        Text(error)
+                            .foregroundStyle(.red)
+                    }
+                }
+
                 if let guidance = viewModel.operatingRangeGuidance, !guidance.isEmpty {
                     Section {
                         CompactValidationStatusView(
@@ -314,39 +325,6 @@ struct CalculatorView: View {
                             .foregroundStyle(Color.ifePrimary)
                     } header: {
                         Text("Water equilibrium")
-                    }
-                }
-
-                if !viewModel.validationReport.issues.isEmpty {
-                    Section {
-                        ForEach(viewModel.validationReport.issues) { issue in
-                            let isNonfatalHomogeneousIssue =
-                                issue.severity == .error
-                                && viewModel.homogeneousPropertiesUnavailableWhileEquilibriumAvailable
-                            Label(
-                                issue.message,
-                                systemImage: issue.severity == .error && !isNonfatalHomogeneousIssue
-                                    ? "xmark.octagon.fill"
-                                    : "exclamationmark.triangle.fill"
-                            )
-                            .foregroundStyle(
-                                issue.severity == .error && !isNonfatalHomogeneousIssue
-                                    ? .red
-                                    : Color.ifePrimary
-                            )
-                        }
-
-                        if viewModel.canNormalize {
-                            Button("Review and apply normalization") {
-                                viewModel.normalizeComposition()
-                            }
-                        }
-                    } header: {
-                        IFESectionHeader(step: nil, title: "Validation and capability state")
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                focusedField = nil
-                            }
                     }
                 }
 
@@ -419,12 +397,6 @@ struct CalculatorView: View {
                     }
                 }
 
-                if let error = viewModel.calculationError {
-                    Section("Calculation error") {
-                        Text(error)
-                            .foregroundStyle(.red)
-                    }
-                }
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
@@ -538,7 +510,8 @@ struct CalculatorView: View {
             .sheet(isPresented: $showsScientificTraceability) {
                 ScientificTraceabilityView(
                     descriptor: viewModel.selectedDescriptor,
-                    record: viewModel.calculationRecord
+                    record: viewModel.calculationRecord,
+                    isValidationShieldActive: viewModel.scientificShieldIsActive
                 )
             }
             .sheet(item: $recordToSave) { record in
@@ -563,6 +536,38 @@ struct CalculatorView: View {
                 Text(saveError ?? "")
             }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func validationIssuesSection(viewModel: CalculatorViewModel) -> some View {
+        Section {
+            ForEach(viewModel.validationReport.issues) { issue in
+                let isNonfatalHomogeneousIssue =
+                    issue.severity == .error
+                    && viewModel.homogeneousPropertiesUnavailableWhileEquilibriumAvailable
+                Label(
+                    issue.message,
+                    systemImage: issue.severity == .error && !isNonfatalHomogeneousIssue
+                        ? "xmark.octagon.fill"
+                        : "exclamationmark.triangle.fill"
+                )
+                .foregroundStyle(
+                    issue.severity == .error && !isNonfatalHomogeneousIssue
+                        ? .red
+                        : Color.ifePrimary
+                )
+            }
+
+            if viewModel.canNormalize {
+                Button("Review and apply normalization") {
+                    viewModel.normalizeComposition()
+                }
+            }
+        } header: {
+            IFESectionHeader(step: nil, title: "Validation and capability state")
+                .contentShape(Rectangle())
+                .onTapGesture { focusedField = nil }
         }
     }
 

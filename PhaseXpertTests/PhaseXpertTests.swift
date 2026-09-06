@@ -9,9 +9,9 @@ final class PhaseXpertTests: XCTestCase {
         let url = IFEContactMailLink.url
 
         XCTAssertEqual(url.scheme, "mailto")
-        XCTAssertEqual(url.absoluteString, "mailto:firmapost@ife.no?subject=PhaseXpert")
+        XCTAssertEqual(url.absoluteString, "mailto:luciano.patruno@ife.no?subject=PhaseXpert")
         let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
-        XCTAssertEqual(components.path, "firmapost@ife.no")
+        XCTAssertEqual(components.path, "luciano.patruno@ife.no")
         XCTAssertEqual(
             components.queryItems?.first(where: { $0.name == "subject" })?.value,
             "PhaseXpert"
@@ -589,6 +589,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(registry.userFacingDescriptors.last?.modelVersion, "Under development")
     }
 
+    @MainActor
     func testValidatedCasesComeFromExistingValidationPresentationMetadata() throws {
         let cases = AdvancedValidationPresentation.validatedCaseOptions()
 
@@ -613,8 +614,8 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(viewModel.selectedModelID, "coolprop-heos")
         XCTAssertEqual(viewModel.pressureDisplayUnit, .barAbsolute)
         XCTAssertEqual(viewModel.temperatureDisplayUnit, .celsius)
-        XCTAssertEqual(Double(viewModel.pressureText), validatedCase.pressurePa / 100_000, accuracy: 1e-9)
-        XCTAssertEqual(Double(viewModel.temperatureText), validatedCase.temperatureK - 273.15, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(Double(viewModel.pressureText)), validatedCase.pressurePa / 100_000, accuracy: 1e-9)
+        XCTAssertEqual(try XCTUnwrap(Double(viewModel.temperatureText)), validatedCase.temperatureK - 273.15, accuracy: 1e-9)
         XCTAssertEqual(viewModel.compositionBasis, .molePercent)
         XCTAssertEqual(viewModel.composition.map(\.component), validatedCase.composition.map(\.component))
         let loadedMolePercents = viewModel.composition.compactMap { Double($0.value) }
@@ -624,6 +625,7 @@ final class PhaseXpertTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testValidatedCasesAreRecognizedByValidationEvidenceEvaluator() throws {
         let evaluator = ValidationEvidenceEvaluator()
 
@@ -632,7 +634,7 @@ final class PhaseXpertTests: XCTestCase {
                 composition: validatedCase.composition,
                 pressurePa: validatedCase.pressurePa,
                 temperatureK: validatedCase.temperatureK,
-                properties: validatedCase.properties
+                properties: Set(validatedCase.properties)
             )
 
             XCTAssertTrue(
@@ -2334,7 +2336,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(fetched[0].name, "Aramis ship specification example — Copy")
         XCTAssertEqual(fetched[0].pressureBarAbsolute, 16)
         XCTAssertEqual(fetched[0].temperatureCelsius, -25, accuracy: 1e-12)
-        XCTAssertEqual(BuiltInCaseCatalog.cases.count, 5)
+        XCTAssertEqual(BuiltInCaseCatalog.cases.count, 6)
     }
 
     @MainActor

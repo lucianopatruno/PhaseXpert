@@ -36,6 +36,20 @@ struct AboutView: View {
                 Text("Engineering property calculations for CO₂ and supported CO₂-rich mixtures.")
             }
 
+            Section("ENCASE") {
+                VStack(alignment: .leading, spacing: IFESpacing.regular) {
+                    Image("ENCASELogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 190)
+                        .accessibilityLabel("ENCASE")
+                    Text("European Network of Research Infrastructures for CO₂ Transport and Injection (ENCASE). ENCASE has received funding from the European Union’s Horizon Europe Research and Innovation programme under grant agreement No 101094664.")
+                        .font(.subheadline)
+                }
+                .padding(.vertical, IFESpacing.small)
+                .listRowBackground(Color.white)
+            }
+
             Section("Validation") {
                 Text(ValidationInformationView.summary)
             }
@@ -70,7 +84,7 @@ struct AboutView: View {
 
             Section("Contact") {
                 Link(destination: contactURL) {
-                    Label("firmapost@ife.no", systemImage: "envelope")
+                    Label("luciano.patruno@ife.no", systemImage: "envelope")
                 }
                 .accessibilityHint("Opens a new email with the subject PhaseXpert.")
             }
@@ -180,7 +194,7 @@ struct IFEModelInformationView: View {
 }
 
 enum IFEContactMailLink {
-    static let recipient = "firmapost@ife.no"
+    static let recipient = "luciano.patruno@ife.no"
     static let subject = "PhaseXpert"
 
     static var url: URL {

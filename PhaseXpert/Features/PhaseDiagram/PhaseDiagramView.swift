@@ -524,6 +524,7 @@ private struct PhaseMapContent: View {
     let viewModel: PhaseDiagramViewModel
 
     @State private var selectedPointID: String?
+    @State private var gridSetupExpanded = false
 
     private var result: PhaseMapResult? {
         viewModel.phaseMapResult
@@ -543,11 +544,6 @@ private struct PhaseMapContent: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
-                ScientificStatusBanner(
-                    title: "Preliminary multicomponent Phase Map",
-                    message: "Classifies discrete provider flash points. This is not a thermodynamic phase envelope, does not trace bubble or dew boundaries, and narrow phase regions can be missed."
-                )
-
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
                         Text("Phase Map")
@@ -566,49 +562,51 @@ private struct PhaseMapContent: View {
 
                 IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.regular) {
-                        Text("Grid setup")
-                            .font(.headline)
+                        DisclosureGroup("Grid setup", isExpanded: $gridSetupExpanded) {
+                            PhaseMapRangeEditor(
+                                title: "Pressure range",
+                                minimumText: $viewModel.pressureMinimumText,
+                                maximumText: $viewModel.pressureMaximumText,
+                                unitLabel: viewModel.phaseMapPressureUnit.rawValue,
+                                unitMenu: {
+                                    ForEach(PressureDisplayUnit.allCases) { unit in
+                                        Button(unit.rawValue) {
+                                            viewModel.changePhaseMapPressureUnit(to: unit)
+                                        }
+                                    }
+                                }
+                            )
+
+                            PhaseMapRangeEditor(
+                                title: "Temperature range",
+                                minimumText: $viewModel.temperatureMinimumText,
+                                maximumText: $viewModel.temperatureMaximumText,
+                                unitLabel: viewModel.phaseMapTemperatureUnit.rawValue,
+                                unitMenu: {
+                                    ForEach(TemperatureDisplayUnit.allCases) { unit in
+                                        Button(unit.rawValue) {
+                                            viewModel.changePhaseMapTemperatureUnit(to: unit)
+                                        }
+                                    }
+                                }
+                            )
+
+                            Text("The 5×5 grid includes the operating point as the central point. Even grids evaluate the operating point separately.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.headline)
+                        .accessibilityIdentifier("phase-map-grid-setup")
 
                         Picker("Resolution", selection: $viewModel.phaseMapResolution) {
                             ForEach(PhaseMapResolution.allCases) { resolution in
-                                Text("\(resolution.rawValue)×\(resolution.rawValue)")
+                                Text(resolution.displayName)
                                     .tag(resolution)
                             }
                         }
                         .pickerStyle(.segmented)
                         .accessibilityIdentifier("phase-map-resolution-picker")
 
-                        PhaseMapRangeEditor(
-                            title: "Pressure range",
-                            minimumText: $viewModel.pressureMinimumText,
-                            maximumText: $viewModel.pressureMaximumText,
-                            unitLabel: viewModel.phaseMapPressureUnit.rawValue,
-                            unitMenu: {
-                                ForEach(PressureDisplayUnit.allCases) { unit in
-                                    Button(unit.rawValue) {
-                                        viewModel.changePhaseMapPressureUnit(to: unit)
-                                    }
-                                }
-                            }
-                        )
-
-                        PhaseMapRangeEditor(
-                            title: "Temperature range",
-                            minimumText: $viewModel.temperatureMinimumText,
-                            maximumText: $viewModel.temperatureMaximumText,
-                            unitLabel: viewModel.phaseMapTemperatureUnit.rawValue,
-                            unitMenu: {
-                                ForEach(TemperatureDisplayUnit.allCases) { unit in
-                                    Button(unit.rawValue) {
-                                        viewModel.changePhaseMapTemperatureUnit(to: unit)
-                                    }
-                                }
-                            }
-                        )
-
-                        Text("The 5×5 grid includes the operating point as the central point. Even grids evaluate the operating point separately.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -635,6 +633,11 @@ private struct PhaseMapContent: View {
                         isStale: viewModel.isPhaseMapResultStale
                     )
                 }
+
+                ScientificStatusBanner(
+                    title: "Preliminary multicomponent Phase Map",
+                    message: "Classifies discrete provider flash points. This is not a thermodynamic phase envelope, does not trace bubble or dew boundaries, and narrow phase regions can be missed."
+                )
             }
             .padding(IFESpacing.medium)
         }
@@ -649,6 +652,16 @@ private struct PhaseMapContent: View {
             .filter { $0.moleFraction > 0 }
             .map { "\($0.component.symbol) \(number($0.moleFraction * 100)) mol%" }
             .joined(separator: ", ")
+    }
+}
+
+private extension PhaseMapResolution {
+    var displayName: String {
+        switch self {
+        case .five: String(localized: "Low")
+        case .ten: String(localized: "Medium")
+        case .twenty: String(localized: "High")
+        }
     }
 }
 
@@ -725,6 +738,10 @@ private struct PhaseMapResultsSection: View {
     @Binding var selectedPointID: String?
     let selectedEvaluation: PhaseMapEvaluation?
     let isStale: Bool
+    @State private var exportLifecycle = PhaseDiagramExportLifecycle()
+    @State private var exportErrorMessage: String?
+    @State private var isPreparingExport = false
+    @State private var showsShareSheet = false
 
     private var xDomain: ClosedRange<Double> {
         paddedDomain(values: result.evaluations.map { temperatureUnit.displayValue(from: $0.point.temperatureK) })
@@ -736,19 +753,6 @@ private struct PhaseMapResultsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.medium) {
-            IFECard {
-                VStack(alignment: .leading, spacing: IFESpacing.small) {
-                    Text("Completion summary")
-                        .font(.headline)
-                    LabeledContent("Resolution", value: "\(result.request.resolution.rawValue)×\(result.request.resolution.rawValue)")
-                    LabeledContent("Evaluations", value: "\(result.evaluations.count)")
-                    LabeledContent("Classified", value: "\(result.classifiedCount)")
-                    LabeledContent("Unknown", value: "\(result.unknownCount)")
-                    LabeledContent("Failed", value: "\(result.failedCount)")
-                    LabeledContent("Non-converged", value: "\(result.nonConvergedCount)")
-                }
-            }
-
             IFECard {
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
                     Text("Pressure-temperature classification")
@@ -828,6 +832,49 @@ private struct PhaseMapResultsSection: View {
             }
 
             IFECard {
+                if exportLifecycle.artifacts != nil {
+                    Button {
+                        exportLifecycle.beginSharing()
+                        showsShareSheet = true
+                    } label: {
+                        Label("Share Phase Map PDF", systemImage: "square.and.arrow.up")
+                    }
+                    .accessibilityIdentifier("share-phase-map-pdf")
+                } else if isPreparingExport {
+                    HStack {
+                        ProgressView()
+                        Text("Preparing Phase Map PDF…")
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: IFESpacing.small) {
+                        if let exportErrorMessage {
+                            Label(exportErrorMessage, systemImage: "exclamationmark.triangle")
+                                .foregroundStyle(.secondary)
+                        }
+                        Button("Prepare Phase Map PDF", systemImage: "doc.badge.arrow.up") {
+                            preparePhaseMapExport()
+                        }
+                        .disabled(isStale || result.evaluations.isEmpty)
+                        .accessibilityIdentifier("prepare-phase-map-pdf")
+                    }
+                }
+            }
+
+            IFECard {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    Text("Completion summary")
+                        .font(.headline)
+                    LabeledContent("Resolution", value: "\(result.request.resolution.displayName) (\(result.request.resolution.rawValue)×\(result.request.resolution.rawValue))")
+                    LabeledContent("Evaluations", value: "\(result.evaluations.count)")
+                    LabeledContent("Classified", value: "\(result.classifiedCount)")
+                    LabeledContent("Unknown", value: "\(result.unknownCount)")
+                    LabeledContent("Failed", value: "\(result.failedCount)")
+                    LabeledContent("Non-converged", value: "\(result.nonConvergedCount)")
+                }
+            }
+
+            IFECard {
                 IFEExpandableRow("Phase Map assumptions and traceability") {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
                         ForEach(result.warnings, id: \.self) { warning in
@@ -859,6 +906,34 @@ private struct PhaseMapResultsSection: View {
         }
         .opacity(isStale ? 0.72 : 1)
         .accessibilityIdentifier("phase-map-results")
+        .onDisappear { exportLifecycle.cleanupIfIdle() }
+        .sheet(isPresented: $showsShareSheet) {
+            PhaseDiagramShareSheet(items: exportLifecycle.artifacts?.files ?? []) {
+                showsShareSheet = false
+                exportLifecycle.completeSharing()
+            }
+        }
+    }
+
+    private func preparePhaseMapExport() {
+        guard !isPreparingExport else { return }
+        isPreparingExport = true
+        exportErrorMessage = nil
+        Task { @MainActor in
+            await Task.yield()
+            do {
+                try exportLifecycle.prepareReplacement {
+                    try PhaseMapPDFExporter().writeTemporaryPDF(
+                        result: result,
+                        pressureUnit: pressureUnit,
+                        temperatureUnit: temperatureUnit
+                    )
+                }
+            } catch {
+                exportErrorMessage = error.localizedDescription
+            }
+            isPreparingExport = false
+        }
     }
 
     private func pointLabel(_ evaluation: PhaseMapEvaluation) -> String {
@@ -1128,40 +1203,6 @@ private struct PhaseBoundaryChart: View {
                 )
 
                 IFECard {
-                    if exportLifecycle.artifacts != nil {
-                        Button {
-                            exportLifecycle.beginSharing()
-                            showsShareSheet = true
-                        } label: {
-                            Label("Share PDF and CSV", systemImage: "square.and.arrow.up")
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .accessibilityIdentifier("share-phase-diagram-artifacts")
-                    } else if isPreparingExport {
-                        HStack {
-                            ProgressView()
-                            Text("Preparing diagram export…")
-                                .foregroundStyle(.secondary)
-                        }
-                    } else {
-                        VStack(alignment: .leading, spacing: IFESpacing.small) {
-                            if let exportErrorMessage {
-                                Label(
-                                    exportErrorMessage,
-                                    systemImage: "exclamationmark.triangle"
-                                )
-                                .foregroundStyle(.secondary)
-                            }
-                            Button("Prepare PDF and CSV", systemImage: "doc.badge.arrow.up") {
-                                prepareDiagramExport()
-                            }
-                            .disabled(!canExportCompleteDiagram)
-                            .accessibilityIdentifier("prepare-phase-diagram-export")
-                        }
-                    }
-                }
-
-                IFECard {
                     VStack(alignment: .leading, spacing: IFESpacing.small) {
                         Text(modelTitle)
                             .font(.headline)
@@ -1276,6 +1317,37 @@ private struct PhaseBoundaryChart: View {
                             }
                             .buttonStyle(.borderless)
                             .accessibilityIdentifier("reset-phase-diagram-view")
+                        }
+                    }
+                }
+
+                IFECard {
+                    if exportLifecycle.artifacts != nil {
+                        Button {
+                            exportLifecycle.beginSharing()
+                            showsShareSheet = true
+                        } label: {
+                            Label("Share PDF and CSV", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .accessibilityIdentifier("share-phase-diagram-artifacts")
+                    } else if isPreparingExport {
+                        HStack {
+                            ProgressView()
+                            Text("Preparing diagram export…")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: IFESpacing.small) {
+                            if let exportErrorMessage {
+                                Label(exportErrorMessage, systemImage: "exclamationmark.triangle")
+                                    .foregroundStyle(.secondary)
+                            }
+                            Button("Prepare PDF and CSV", systemImage: "doc.badge.arrow.up") {
+                                prepareDiagramExport()
+                            }
+                            .disabled(!canExportCompleteDiagram)
+                            .accessibilityIdentifier("prepare-phase-diagram-export")
                         }
                     }
                 }

@@ -6,10 +6,24 @@ struct ScientificTraceabilityView: View {
 
     let descriptor: ModelDescriptor?
     let record: CalculationRecord?
+    let isValidationShieldActive: Bool
 
     var body: some View {
         NavigationStack {
             List {
+                Section("Validation shield") {
+                    Label(
+                        isValidationShieldActive ? "Validation is active" : "Validation is not active",
+                        systemImage: isValidationShieldActive ? "checkmark.shield.fill" : "checkmark.shield"
+                    )
+                    .foregroundStyle(isValidationShieldActive ? Color.ifePrimary : .secondary)
+                    Text(
+                        isValidationShieldActive
+                            ? "The filled shield means that at least one calculated property at the current composition, pressure and temperature is supported by independent experimental validation. Validation is property-specific; it does not mean that every result is validated."
+                            : "The outline shield means that no independently validated calculation capability is available for the current composition, pressure and temperature."
+                    )
+                }
+
                 if let descriptor {
                     Section("Calculation model") {
                         LabeledContent("Model", value: descriptor.name)
