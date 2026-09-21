@@ -204,8 +204,13 @@ struct IFEModelInformationView: View {
 enum IFEContactMailLink {
     static let recipient = "luciano.patruno@ife.no"
     static let subject = "PhaseXpert"
+    static let validationQuoteSubject = "PhaseXpert: Request for case validation"
 
     static var url: URL {
+        url(subject: subject)
+    }
+
+    static func url(subject: String) -> URL {
         guard
             let encodedSubject = subject.addingPercentEncoding(
                 withAllowedCharacters: mailtoQueryAllowedCharacters
