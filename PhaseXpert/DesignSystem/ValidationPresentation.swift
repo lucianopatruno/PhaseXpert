@@ -51,6 +51,27 @@ enum AdvancedValidationPresentation {
         return "General Properties · Independently validated \(propertyList(properties))"
     }
 
+    static func scientificReferences(for record: CalculationRecord) -> [SourceReference] {
+        let formulationIDs = Set(
+            ValidationEvidenceEvaluator().evaluate(
+                composition: record.request.composition,
+                pressurePa: record.request.pressurePa,
+                temperatureK: record.request.temperatureK
+            ).compactMap { evidence in
+                evidence.status == .independentlyValidated ? evidence.formulationID : nil
+            }
+        )
+
+        var seen = Set<String>()
+        return TeqpFormulationCatalog.productionFormulations
+            .filter { formulationIDs.contains($0.id) }
+            .flatMap(\.references)
+            .filter { reference in
+                let key = reference.doiOrURL?.lowercased() ?? "\(reference.title.lowercased())|\(reference.year)"
+                return seen.insert(key).inserted
+            }
+    }
+
     static func compositionOptions() -> [ValidatedCompositionOption] {
         exactCompositionOptions().sorted {
             $0.name.localizedStandardCompare($1.name) == .orderedAscending

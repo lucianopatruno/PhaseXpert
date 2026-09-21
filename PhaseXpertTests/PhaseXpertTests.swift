@@ -3939,6 +3939,27 @@ final class PhaseXpertTests: XCTestCase {
             AdvancedValidationPresentation.savedCaseStatus(for: record),
             "General Properties · Independently validated Speed of sound"
         )
+        XCTAssertEqual(
+            AdvancedValidationPresentation.scientificReferences(for: record),
+            TeqpFormulationCatalog.co2OxygenEOSCGDenseSpeedOfSound.references
+        )
+    }
+
+    @MainActor
+    func testValidationQuoteMailLinkUsesRequestedSubject() throws {
+        let recipient = IFEContactMailLink.recipient
+        let components = try XCTUnwrap(
+            URLComponents(
+                url: IFEContactMailLink.url(subject: IFEContactMailLink.validationQuoteSubject),
+                resolvingAgainstBaseURL: false
+            )
+        )
+        XCTAssertEqual(components.scheme, "mailto")
+        XCTAssertEqual(components.path, recipient)
+        XCTAssertEqual(
+            components.queryItems?.first { $0.name == "subject" }?.value,
+            "PhaseXpert: Request for case validation"
+        )
     }
 
     @MainActor

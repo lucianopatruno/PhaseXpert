@@ -2380,11 +2380,12 @@ struct CalculationResultSections: View {
             value: "\(record.application.version) (\(record.application.build))"
         )
 
-        if !record.response.model.references.isEmpty {
+        let scientificReferences = AdvancedValidationPresentation.scientificReferences(for: record)
+        if !scientificReferences.isEmpty {
             Text("Scientific references")
                 .font(.subheadline.weight(.semibold))
 
-            ForEach(Array(record.response.model.references.enumerated()), id: \.offset) { index, reference in
+            ForEach(Array(scientificReferences.enumerated()), id: \.offset) { index, reference in
                 if let url = ReferenceLinkResolver.url(for: reference.doiOrURL) {
                     Link(destination: url) {
                         scientificReferenceLabel(reference, address: reference.doiOrURL)

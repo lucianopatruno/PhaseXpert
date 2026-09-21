@@ -1295,6 +1295,23 @@ private struct SavedCaseDetailView: View {
                     Text("Opening a case preserves the saved result. Rerunning uses the model currently installed in PhaseXpert and creates a new calculation record.")
                 }
 
+                if AdvancedValidationPresentation.validatedProperties(for: record).isEmpty {
+                    Section {
+                        Link(
+                            destination: IFEContactMailLink.url(
+                                subject: IFEContactMailLink.validationQuoteSubject
+                            )
+                        ) {
+                            Label("Contact IFE for a validation quote", systemImage: "envelope")
+                        }
+                        .accessibilityIdentifier("request-saved-case-validation-quote")
+                    } header: {
+                        Text("Physical validation")
+                    } footer: {
+                        Text("Request a quote to physically validate this saved pressure, temperature and composition in IFE's laboratories.")
+                    }
+                }
+
                 CalculationResultSections(record: record)
             } else {
                 Section {

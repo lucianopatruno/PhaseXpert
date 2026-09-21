@@ -1467,6 +1467,16 @@
         }
       }
     },
+    "Contact IFE for a validation quote" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontakt IFE for et tilbud på validering"
+          }
+        }
+      }
+    },
     "Continuous calculated segment" : {
       "localizations" : {
         "nb" : {
@@ -3625,6 +3635,16 @@
         }
       }
     },
+    "Physical validation" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fysisk validering"
+          }
+        }
+      }
+    },
     "Point" : {
       "localizations" : {
         "nb" : {
@@ -4153,6 +4173,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Forespørsels-ID"
+          }
+        }
+      }
+    },
+    "Request a quote to physically validate this saved pressure, temperature and composition in IFE's laboratories." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Be om et tilbud for fysisk validering av dette lagrede trykket, denne temperaturen og sammensetningen i IFEs laboratorier."
           }
         }
       }
