@@ -1527,7 +1527,7 @@
         }
       }
     },
-    "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash." : {
+    "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use documented interaction parameters through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the documented Gernert CO₂/Water pair with an imposed gas phase, avoiding an unconstrained mixture PT flash." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -1774,7 +1774,7 @@
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tørre CO₂-rike blandinger kan inneholde N₂, O₂, Ar, CH₄, H₂, CO og H₂S med total urenhet i området (0, 10] mol %. Denne produktgrensen angir beregningsområdet, ikke et validert nøyaktighetsområde."
+            "value" : "Tørre CO₂-rike blandinger kan inneholde N₂, O₂, Ar, CH₄, H₂, CO og H₂S med total urenhet i området (0, 10] mol%. Denne produktgrensen angir beregningsområdet, ikke et validert nøyaktighetsområde."
           }
         }
       }

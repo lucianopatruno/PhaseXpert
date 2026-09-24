@@ -145,7 +145,7 @@ private struct ModelDetailView: View {
 
     private var equationOrMethod: String {
         guard descriptor.id == "coolprop-heos" else { return descriptor.equationOrMethod }
-        return String(localized: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash.")
+        return String(localized: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use documented interaction parameters through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the documented Gernert CO₂/Water pair with an imposed gas phase, avoiding an unconstrained mixture PT flash.")
     }
 
     private func localizedLimitation(_ limitation: String) -> String {

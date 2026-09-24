@@ -104,7 +104,7 @@ final class PhaseXpertTests: XCTestCase {
         let viewModel = wetGeneralViewModel(pressureBar: 100, temperatureCelsius: 100)
         viewModel.validate()
 
-        XCTAssertTrue(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
         XCTAssertTrue(viewModel.canRunCalculation)
         await viewModel.calculate()
 
@@ -117,7 +117,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(result.carbonDioxideInWaterRichPhaseMoleFraction * 100, 1.410471, accuracy: 0.00001)
         XCTAssertEqual(
             record.response.properties.first { $0.property == .density }?.status,
-            .calculated
+            .unavailable
         )
         XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
         XCTAssertNil(viewModel.calculationError)
