@@ -133,12 +133,89 @@ enum SavedCaseSort: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum SavedCaseCollection {
+    case myCases
+    case validatedCases
+    case builtInCases
+
+    var availableSorts: [SavedCaseSort] {
+        switch self {
+        case .myCases:
+            SavedCaseSort.allCases
+        case .validatedCases, .builtInCases:
+            [.name]
+        }
+    }
+}
+
+enum SavedCaseOrdering {
+    static func savedCases(
+        _ cases: [SavedCalculation],
+        sort: SavedCaseSort,
+        locale: Locale
+    ) -> [SavedCalculation] {
+        cases.sorted { lhs, rhs in
+            switch sort {
+            case .newest:
+                if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt > rhs.updatedAt }
+            case .oldest:
+                if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt < rhs.updatedAt }
+            case .name:
+                let comparison = compareNames(lhs.name, rhs.name, locale: locale)
+                if comparison != .orderedSame { return comparison == .orderedAscending }
+            }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
+    }
+
+    static func validatedCases(
+        _ cases: [ValidatedStateOption],
+        locale: Locale
+    ) -> [ValidatedStateOption] {
+        cases.sorted {
+            let comparison = compareNames($0.name, $1.name, locale: locale)
+            return comparison == .orderedSame ? $0.id < $1.id : comparison == .orderedAscending
+        }
+    }
+
+    static func builtInCases(
+        _ cases: [BuiltInCase],
+        locale: Locale
+    ) -> [BuiltInCase] {
+        cases.sorted {
+            let comparison = compareNames($0.name, $1.name, locale: locale)
+            return comparison == .orderedSame ? $0.id < $1.id : comparison == .orderedAscending
+        }
+    }
+
+    private static func compareNames(
+        _ lhs: String,
+        _ rhs: String,
+        locale: Locale
+    ) -> ComparisonResult {
+        lhs.compare(
+            rhs,
+            options: [.caseInsensitive, .diacriticInsensitive, .numeric],
+            range: nil,
+            locale: locale
+        )
+    }
+}
+
 private enum SavedCasesCategory: String, CaseIterable, Identifiable {
     case myCases = "My Cases"
     case validatedCases = "Validated Cases"
     case builtInCases = "Built-in Cases"
 
     var id: String { rawValue }
+
+    var collection: SavedCaseCollection {
+        switch self {
+        case .myCases: .myCases
+        case .validatedCases: .validatedCases
+        case .builtInCases: .builtInCases
+        }
+    }
 }
 
 struct PropertyComparison: Identifiable, Equatable {
@@ -273,12 +350,13 @@ struct CalculationComparison: Equatable {
 
 struct SavedCasesView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
     @Query(sort: \SavedCalculation.updatedAt, order: .reverse)
     private var savedCases: [SavedCalculation]
 
     @State private var searchText = ""
     @State private var selectedCategory: SavedCasesCategory = .myCases
-    @State private var sort: SavedCaseSort = .newest
+    @State private var myCasesSort: SavedCaseSort = .newest
     @State private var pendingDeletion: SavedCalculation?
     @State private var persistenceError: String?
 
@@ -290,20 +368,11 @@ struct SavedCasesView: View {
                 || savedCase.modelName.localizedCaseInsensitiveContains(searchText)
         }
 
-        switch sort {
-        case .newest:
-            return filtered.sorted { $0.updatedAt > $1.updatedAt }
-        case .oldest:
-            return filtered.sorted { $0.updatedAt < $1.updatedAt }
-        case .name:
-            return filtered.sorted {
-                $0.name.localizedStandardCompare($1.name) == .orderedAscending
-            }
-        }
+        return SavedCaseOrdering.savedCases(filtered, sort: myCasesSort, locale: locale)
     }
 
     private var visibleBuiltInCases: [BuiltInCase] {
-        BuiltInCaseCatalog.cases.filter { builtInCase in
+        let filtered = BuiltInCaseCatalog.cases.filter { builtInCase in
             guard !searchText.isEmpty else { return true }
             return builtInCase.name.localizedCaseInsensitiveContains(searchText)
                 || builtInCase.shortDescription.localizedCaseInsensitiveContains(searchText)
@@ -312,16 +381,18 @@ struct SavedCasesView: View {
                     $0.localizedCaseInsensitiveContains(searchText)
                 }
         }
+        return SavedCaseOrdering.builtInCases(filtered, locale: locale)
     }
 
     private var visibleValidatedCases: [ValidatedStateOption] {
-        AdvancedValidationPresentation.validatedCaseOptions().filter { validatedCase in
+        let filtered = AdvancedValidationPresentation.validatedCaseOptions().filter { validatedCase in
             guard !searchText.isEmpty else { return true }
             return validatedCase.name.localizedCaseInsensitiveContains(searchText)
                 || validatedCase.detail.localizedCaseInsensitiveContains(searchText)
                 || AdvancedValidationPresentation.propertyList(validatedCase.properties)
                     .localizedCaseInsensitiveContains(searchText)
         }
+        return SavedCaseOrdering.validatedCases(filtered, locale: locale)
     }
 
     private var isVisibleCategoryEmpty: Bool {
@@ -380,12 +451,17 @@ struct SavedCasesView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu("Sort", systemImage: "arrow.up.arrow.down") {
-                        Picker("Sort", selection: $sort) {
-                            ForEach(SavedCaseSort.allCases) { option in
-                                Text(option.rawValue).tag(option)
+                        if selectedCategory.collection.availableSorts.count > 1 {
+                            Picker("Sort", selection: $myCasesSort) {
+                                ForEach(selectedCategory.collection.availableSorts) { option in
+                                    Text(option.rawValue).tag(option)
+                                }
                             }
+                        } else {
+                            Text("Name")
                         }
                     }
+                    .accessibilityIdentifier("saved-cases-sort")
                 }
             }
             .confirmationDialog(

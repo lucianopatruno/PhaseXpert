@@ -2288,6 +2288,91 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testMyCasesSortingIsDeterministicAndPreservesScientificRecords() async throws {
+        let record = try await makeRecord()
+        let oldest = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            name: "Zulu",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 100)
+        )
+        let middle = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+            name: "Alpha",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 200)
+        )
+        let newest = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+            name: "Echo",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 300)
+        )
+        let cases = [oldest, middle, newest]
+        let snapshots = Dictionary(uniqueKeysWithValues: cases.map { ($0.id, $0.recordData) })
+
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .name, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Alpha", "Echo", "Zulu"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .newest, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Echo", "Alpha", "Zulu"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .oldest, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Zulu", "Alpha", "Echo"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .name, locale: Locale(identifier: "nb"))
+                .map(\.name),
+            ["Alpha", "Echo", "Zulu"]
+        )
+        XCTAssertEqual(Set(cases.map(\.id)).count, cases.count)
+        XCTAssertTrue(cases.allSatisfy { snapshots[$0.id] == $0.recordData })
+    }
+
+    @MainActor
+    func testGeneratedCaseCollectionsExposeOnlyMeaningfulNameSortAndRemainComplete() {
+        XCTAssertEqual(SavedCaseCollection.myCases.availableSorts, [.newest, .oldest, .name])
+        XCTAssertEqual(SavedCaseCollection.validatedCases.availableSorts, [.name])
+        XCTAssertEqual(SavedCaseCollection.builtInCases.availableSorts, [.name])
+
+        let validated = AdvancedValidationPresentation.validatedCaseOptions()
+        let sortedValidated = SavedCaseOrdering.validatedCases(
+            validated,
+            locale: Locale(identifier: "en")
+        )
+        XCTAssertEqual(sortedValidated.count, validated.count)
+        XCTAssertEqual(Set(sortedValidated.map(\.id)), Set(validated.map(\.id)))
+        XCTAssertEqual(
+            sortedValidated.map(\.name),
+            sortedValidated.map(\.name).sorted {
+                $0.compare($1, options: [.caseInsensitive, .diacriticInsensitive, .numeric],
+                           locale: Locale(identifier: "en")) == .orderedAscending
+            }
+        )
+
+        let builtIn = BuiltInCaseCatalog.cases
+        let sortedBuiltIn = SavedCaseOrdering.builtInCases(
+            builtIn,
+            locale: Locale(identifier: "nb")
+        )
+        XCTAssertEqual(sortedBuiltIn.count, builtIn.count)
+        XCTAssertEqual(Set(sortedBuiltIn.map(\.id)), Set(builtIn.map(\.id)))
+        XCTAssertEqual(
+            sortedBuiltIn.map(\.name),
+            sortedBuiltIn.map(\.name).sorted {
+                $0.compare($1, options: [.caseInsensitive, .diacriticInsensitive, .numeric],
+                           locale: Locale(identifier: "nb")) == .orderedAscending
+            }
+        )
+    }
+
+    @MainActor
     func testBuiltInCasesLoadIntoCalculatorWithDefaultsAndComposition() throws {
         let viewModel = CalculatorViewModel()
         let porthos = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("porthos-pipeline-specification-example"))

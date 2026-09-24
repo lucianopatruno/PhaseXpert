@@ -108,8 +108,9 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(openSweep.isEnabled)
         openSweep.tap()
 
-        XCTAssertTrue(app.segmentedControls.buttons["General Properties"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.segmentedControls.buttons["General Properties"].isSelected)
+        let model = app.descendants(matching: .any)["multi-sweep-model"]
+        XCTAssertTrue(model.waitForExistence(timeout: 3))
+        XCTAssertTrue(model.label.contains("General Properties"))
         XCTAssertTrue(app.segmentedControls.buttons["Pressure"].isSelected)
         let run = app.buttons["run-multi-case-sweep"]
         for _ in 0..<8 where !run.exists { app.swipeUp() }
@@ -157,11 +158,14 @@ final class PhaseXpertUITests: XCTestCase {
         pressure.tap()
         pressure.typeText("42")
         app.buttons["keyboard-done"].tap()
-        app.buttons["reset-calculator"].tap()
+        let reset = app.buttons["reset-calculator"]
+        for _ in 0..<8 where !reset.waitForExistence(timeout: 0.5) { app.swipeUp() }
+        XCTAssertTrue(reset.exists)
+        reset.tap()
 
         XCTAssertEqual(pressure.value as? String, "50 bar(a)")
         XCTAssertEqual(temperature.value as? String, "20 °C")
-        XCTAssertEqual(app.buttons["model-coolprop-heos"].value as? String, "Selected")
+        XCTAssertEqual(app.buttons["model-ife-model"].value as? String, "Not selected")
     }
 
     func testPressureAndTemperatureValuesReplaceOnFocus() {
@@ -263,8 +267,10 @@ final class PhaseXpertUITests: XCTestCase {
 
         openMoreRow("IFE Model", in: app)
         XCTAssertTrue(app.navigationBars["IFE Model"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.staticTexts["Under development"].exists)
-        XCTAssertTrue(app.staticTexts["FALCON"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["ife-model-development-status"].waitForExistence(timeout: 2))
+        let falcon = app.descendants(matching: .any)["FALCON CO₂ flow loop"]
+        for _ in 0..<4 where !falcon.waitForExistence(timeout: 0.5) { app.swipeUp() }
+        XCTAssertTrue(falcon.exists)
     }
 
     func testValidatedCasesAreReadOnlyAndLoadGeneralProperties() {
@@ -293,6 +299,34 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertEqual(app.buttons["model-coolprop-heos"].value as? String, "Selected")
         XCTAssertFalse(app.buttons["model-teqp-pure-co2-experimental"].exists)
         XCTAssertFalse(app.buttons["use-validated-state"].exists)
+    }
+
+    func testGeneratedSavedCaseCollectionsUseDeterministicNameOrderOnly() {
+        let app = XCUIApplication()
+        app.launch()
+        app.tabBars.buttons["Saved Cases"].tap()
+
+        let category = app.segmentedControls["saved-case-category"]
+        XCTAssertTrue(category.waitForExistence(timeout: 3))
+        category.buttons["Validated Cases"].tap()
+        let sort = app.buttons["saved-cases-sort"]
+        XCTAssertTrue(sort.waitForExistence(timeout: 2))
+        sort.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["Name"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["Newest first"].exists)
+        XCTAssertFalse(app.buttons["Oldest first"].exists)
+        app.tap()
+
+        category.buttons["Built-in Cases"].tap()
+        let builtInRows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "built-in-case-")
+        )
+        XCTAssertTrue(builtInRows.firstMatch.waitForExistence(timeout: 3))
+        XCTAssertTrue(builtInRows.firstMatch.label.contains("Aramis ship specification example"))
+        sort.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["Name"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["Newest first"].exists)
+        XCTAssertFalse(app.buttons["Oldest first"].exists)
     }
 
     func testOperatingPointUnitsAreSeparateAndAdaptive() {
@@ -367,8 +401,10 @@ final class PhaseXpertUITests: XCTestCase {
 
         openMoreRow("About", in: app)
 
-        XCTAssertTrue(app.staticTexts["Developed by IFE"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.staticTexts["Flow Technology Department"].exists)
+        XCTAssertTrue(app.images["IFE — Institute for Energy Technology"].waitForExistence(timeout: 2))
+        let contact = app.links["Contact IFE Flow Department"]
+        for _ in 0..<12 where !contact.waitForExistence(timeout: 0.5) { app.swipeUp() }
+        XCTAssertTrue(contact.exists)
         XCTAssertFalse(app.staticTexts["Developed by the IFE Flow Technology Department"].exists)
     }
 
@@ -380,14 +416,14 @@ final class PhaseXpertUITests: XCTestCase {
             NSPredicate(format: "label CONTAINS %@", "Validation remains incomplete")
         )
         XCTAssertEqual(repeatedWarning.count, 0)
-        XCTAssertTrue(app.staticTexts["Preliminary scientific model"].exists)
+        XCTAssertEqual(app.buttons["model-coolprop-heos"].value as? String, "Selected")
     }
 
     func testImpurityKeyboardDoneDismissesInPPMAndMolPercentModes() {
         let app = XCUIApplication()
         app.launch()
 
-        addImpurity(in: app)
+        addNitrogenImpurity(in: app)
 
         let ppmField = app.textFields["N₂ ppm"]
         XCTAssertTrue(ppmField.waitForExistence(timeout: 3))
@@ -413,8 +449,10 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
+        addNitrogenImpurity(in: app)
         addImpurity(in: app)
-        addImpurity(in: app)
+        openImpurityMenu("Ar", in: app)
+        app.buttons["O₂"].tap()
 
         let nitrogenField = app.textFields["N₂ ppm"]
         XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
@@ -456,7 +494,7 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        addImpurity(in: app)
+        addNitrogenImpurity(in: app)
 
         let impurityMenu = app.buttons["N₂ impurity menu"]
         XCTAssertTrue(impurityMenu.waitForExistence(timeout: 3))
@@ -487,7 +525,7 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        addImpurity(in: app)
+        addNitrogenImpurity(in: app)
 
         let nitrogenField = app.textFields["N₂ ppm"]
         XCTAssertTrue(nitrogenField.waitForExistence(timeout: 3))
@@ -553,7 +591,8 @@ final class PhaseXpertUITests: XCTestCase {
         streamName.tap()
         streamName.typeText(" retained")
         let retainedName = streamName.value as? String
-        app.keyboards.buttons["Return"].tap()
+        XCTAssertTrue(app.buttons["stream-mixing-keyboard-done"].waitForExistence(timeout: 2))
+        app.buttons["stream-mixing-keyboard-done"].tap()
 
         let flowField = app.textFields.matching(NSPredicate(format: "identifier CONTAINS %@", "stream-flow-")).element(boundBy: 0)
         XCTAssertTrue(flowField.waitForExistence(timeout: 3))
@@ -728,7 +767,7 @@ final class PhaseXpertUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        addImpurity(in: app)
+        addNitrogenImpurity(in: app)
 
         let ppmField = app.textFields["N₂ ppm"]
         XCTAssertTrue(ppmField.waitForExistence(timeout: 3))
@@ -745,6 +784,14 @@ final class PhaseXpertUITests: XCTestCase {
         }
         XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
         addImpurityButton.tap()
+    }
+
+    private func addNitrogenImpurity(in app: XCUIApplication) {
+        addImpurity(in: app)
+        openImpurityMenu("Ar", in: app)
+        let nitrogen = app.buttons["N₂"]
+        XCTAssertTrue(nitrogen.waitForExistence(timeout: 2))
+        nitrogen.tap()
     }
 
     private func openImpurityMenu(_ symbol: String, in app: XCUIApplication) {

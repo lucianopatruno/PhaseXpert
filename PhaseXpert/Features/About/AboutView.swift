@@ -60,6 +60,7 @@ struct AboutView: View {
                 LabeledContent("Status") {
                     Text("Under development")
                 }
+                .accessibilityIdentifier("ife-model-development-status")
                 NavigationLink {
                     IFEModelInformationView()
                 } label: {
@@ -185,6 +186,7 @@ struct IFEModelInformationView: View {
                 LabeledContent("Status") {
                     Text("Under development")
                 }
+                .accessibilityIdentifier("ife-model-development-status")
             }
             Section("FALCON") {
                 NavigationLink {
