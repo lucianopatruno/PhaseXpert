@@ -126,19 +126,35 @@ enum PhaseXpertMigrationPlan: SchemaMigrationPlan {
 }
 
 enum NameSortDirection: String, CaseIterable, Identifiable {
-    case ascending = "Name A–Z"
-    case descending = "Name Z–A"
+    case ascending
+    case descending
 
     var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .ascending: "Name A–Z"
+        case .descending: "Name Z–A"
+        }
+    }
 }
 
 enum MyCasesSort: String, CaseIterable, Identifiable {
-    case newest = "Newest"
-    case oldest = "Oldest"
-    case nameAscending = "Name A–Z"
-    case nameDescending = "Name Z–A"
+    case newest
+    case oldest
+    case nameAscending
+    case nameDescending
 
     var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .newest: "Newest"
+        case .oldest: "Oldest"
+        case .nameAscending: "Name A–Z"
+        case .nameDescending: "Name Z–A"
+        }
+    }
 }
 
 enum SavedCaseOrdering {
@@ -463,19 +479,19 @@ struct SavedCasesView: View {
                         case .myCases:
                             Picker("Sort", selection: $myCasesSort) {
                                 ForEach(MyCasesSort.allCases) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(option.title).tag(option)
                                 }
                             }
                         case .validatedCases:
                             Picker("Sort", selection: $validatedCasesSort) {
                                 ForEach(NameSortDirection.allCases) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(option.title).tag(option)
                                 }
                             }
                         case .builtInCases:
                             Picker("Sort", selection: $builtInCasesSort) {
                                 ForEach(NameSortDirection.allCases) { option in
-                                    Text(option.rawValue).tag(option)
+                                    Text(option.title).tag(option)
                                 }
                             }
                         }
