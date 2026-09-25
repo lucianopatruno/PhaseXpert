@@ -416,7 +416,7 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                 : [],
             domain: .initialCO2Transport,
             scientificBasis: "CoolProp HEOS pure-fluid CO₂, restricted dry CO₂-rich mixtures, and a preliminary homogeneous CO₂-rich water-vapor route. The General Properties capability matrix separates calculable states from independently validated states.",
-            equationOrMethod: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use shipped interaction entries through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the shipped Gernert CO₂/Water pair with an imposed gas phase, never the unsafe high-level mixture PT flash.",
+            equationOrMethod: "CoolProp HEOS; pure-CO₂ properties use one AbstractState(P,T) update. Dry mixtures use documented interaction parameters through the HEOS/multifluid route. Preliminary CO₂/H₂O gas density uses the documented Gernert CO₂/Water pair with an imposed gas phase, avoiding an unconstrained mixture PT flash.",
             coefficientSetVersion: engine.libraryVersion,
             requiredResources: ["PhaseXpertCoolPropBridge.xcframework"],
             limitations: [

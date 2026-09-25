@@ -125,12 +125,98 @@ enum PhaseXpertMigrationPlan: SchemaMigrationPlan {
     }
 }
 
-enum SavedCaseSort: String, CaseIterable, Identifiable {
-    case newest = "Newest first"
-    case oldest = "Oldest first"
-    case name = "Name"
+enum NameSortDirection: String, CaseIterable, Identifiable {
+    case ascending
+    case descending
 
     var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .ascending: "Name A–Z"
+        case .descending: "Name Z–A"
+        }
+    }
+}
+
+enum MyCasesSort: String, CaseIterable, Identifiable {
+    case newest
+    case oldest
+    case nameAscending
+    case nameDescending
+
+    var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .newest: "Newest"
+        case .oldest: "Oldest"
+        case .nameAscending: "Name A–Z"
+        case .nameDescending: "Name Z–A"
+        }
+    }
+}
+
+enum SavedCaseOrdering {
+    static func savedCases(
+        _ cases: [SavedCalculation],
+        sort: MyCasesSort,
+        locale: Locale
+    ) -> [SavedCalculation] {
+        cases.sorted { lhs, rhs in
+            switch sort {
+            case .newest:
+                if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt > rhs.updatedAt }
+            case .oldest:
+                if lhs.updatedAt != rhs.updatedAt { return lhs.updatedAt < rhs.updatedAt }
+            case .nameAscending:
+                return nameComesBefore(lhs.name, id: lhs.id.uuidString, rhs.name, id: rhs.id.uuidString, direction: .ascending, locale: locale)
+            case .nameDescending:
+                return nameComesBefore(lhs.name, id: lhs.id.uuidString, rhs.name, id: rhs.id.uuidString, direction: .descending, locale: locale)
+            }
+            return lhs.id.uuidString < rhs.id.uuidString
+        }
+    }
+
+    static func validatedCases(
+        _ cases: [ValidatedStateOption],
+        direction: NameSortDirection,
+        locale: Locale
+    ) -> [ValidatedStateOption] {
+        cases.sorted {
+            nameComesBefore($0.name, id: $0.id, $1.name, id: $1.id, direction: direction, locale: locale)
+        }
+    }
+
+    static func builtInCases(
+        _ cases: [BuiltInCase],
+        direction: NameSortDirection,
+        locale: Locale
+    ) -> [BuiltInCase] {
+        cases.sorted {
+            nameComesBefore($0.name, id: $0.id, $1.name, id: $1.id, direction: direction, locale: locale)
+        }
+    }
+
+    private static func nameComesBefore(
+        _ lhsName: String,
+        id lhsID: String,
+        _ rhsName: String,
+        id rhsID: String,
+        direction: NameSortDirection,
+        locale: Locale
+    ) -> Bool {
+        let comparison = lhsName.compare(
+            rhsName,
+            options: [.caseInsensitive, .numeric],
+            range: nil,
+            locale: locale
+        )
+        guard comparison != .orderedSame else { return lhsID < rhsID }
+        return direction == .ascending
+            ? comparison == .orderedAscending
+            : comparison == .orderedDescending
+    }
 }
 
 private enum SavedCasesCategory: String, CaseIterable, Identifiable {
@@ -139,6 +225,7 @@ private enum SavedCasesCategory: String, CaseIterable, Identifiable {
     case builtInCases = "Built-in Cases"
 
     var id: String { rawValue }
+
 }
 
 struct PropertyComparison: Identifiable, Equatable {
@@ -273,12 +360,15 @@ struct CalculationComparison: Equatable {
 
 struct SavedCasesView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
     @Query(sort: \SavedCalculation.updatedAt, order: .reverse)
     private var savedCases: [SavedCalculation]
 
     @State private var searchText = ""
     @State private var selectedCategory: SavedCasesCategory = .myCases
-    @State private var sort: SavedCaseSort = .newest
+    @State private var myCasesSort: MyCasesSort = .newest
+    @State private var validatedCasesSort: NameSortDirection = .ascending
+    @State private var builtInCasesSort: NameSortDirection = .ascending
     @State private var pendingDeletion: SavedCalculation?
     @State private var persistenceError: String?
 
@@ -290,20 +380,11 @@ struct SavedCasesView: View {
                 || savedCase.modelName.localizedCaseInsensitiveContains(searchText)
         }
 
-        switch sort {
-        case .newest:
-            return filtered.sorted { $0.updatedAt > $1.updatedAt }
-        case .oldest:
-            return filtered.sorted { $0.updatedAt < $1.updatedAt }
-        case .name:
-            return filtered.sorted {
-                $0.name.localizedStandardCompare($1.name) == .orderedAscending
-            }
-        }
+        return SavedCaseOrdering.savedCases(filtered, sort: myCasesSort, locale: locale)
     }
 
     private var visibleBuiltInCases: [BuiltInCase] {
-        BuiltInCaseCatalog.cases.filter { builtInCase in
+        let filtered = BuiltInCaseCatalog.cases.filter { builtInCase in
             guard !searchText.isEmpty else { return true }
             return builtInCase.name.localizedCaseInsensitiveContains(searchText)
                 || builtInCase.shortDescription.localizedCaseInsensitiveContains(searchText)
@@ -312,16 +393,18 @@ struct SavedCasesView: View {
                     $0.localizedCaseInsensitiveContains(searchText)
                 }
         }
+        return SavedCaseOrdering.builtInCases(filtered, direction: builtInCasesSort, locale: locale)
     }
 
     private var visibleValidatedCases: [ValidatedStateOption] {
-        AdvancedValidationPresentation.validatedCaseOptions().filter { validatedCase in
+        let filtered = AdvancedValidationPresentation.validatedCaseOptions().filter { validatedCase in
             guard !searchText.isEmpty else { return true }
             return validatedCase.name.localizedCaseInsensitiveContains(searchText)
                 || validatedCase.detail.localizedCaseInsensitiveContains(searchText)
                 || AdvancedValidationPresentation.propertyList(validatedCase.properties)
                     .localizedCaseInsensitiveContains(searchText)
         }
+        return SavedCaseOrdering.validatedCases(filtered, direction: validatedCasesSort, locale: locale)
     }
 
     private var isVisibleCategoryEmpty: Bool {
@@ -340,6 +423,17 @@ struct SavedCasesView: View {
             + savedCases.map {
                 BatchCaseInput.saved(id: $0.id, name: $0.name, record: $0.calculationRecord)
             }
+    }
+
+    private var listOrderingIdentity: String {
+        switch selectedCategory {
+        case .myCases:
+            "my-cases-\(myCasesSort.id)"
+        case .validatedCases:
+            "validated-cases-\(validatedCasesSort.id)"
+        case .builtInCases:
+            "built-in-cases-\(builtInCasesSort.id)"
+        }
     }
 
     var body: some View {
@@ -361,6 +455,7 @@ struct SavedCasesView: View {
 
                         categoryContent
                     }
+                    .id(listOrderingIdentity)
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
                 }
@@ -380,12 +475,28 @@ struct SavedCasesView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu("Sort", systemImage: "arrow.up.arrow.down") {
-                        Picker("Sort", selection: $sort) {
-                            ForEach(SavedCaseSort.allCases) { option in
-                                Text(option.rawValue).tag(option)
+                        switch selectedCategory {
+                        case .myCases:
+                            Picker("Sort", selection: $myCasesSort) {
+                                ForEach(MyCasesSort.allCases) { option in
+                                    Text(option.title).tag(option)
+                                }
+                            }
+                        case .validatedCases:
+                            Picker("Sort", selection: $validatedCasesSort) {
+                                ForEach(NameSortDirection.allCases) { option in
+                                    Text(option.title).tag(option)
+                                }
+                            }
+                        case .builtInCases:
+                            Picker("Sort", selection: $builtInCasesSort) {
+                                ForEach(NameSortDirection.allCases) { option in
+                                    Text(option.title).tag(option)
+                                }
                             }
                         }
                     }
+                    .accessibilityIdentifier("saved-cases-sort")
                 }
             }
             .confirmationDialog(

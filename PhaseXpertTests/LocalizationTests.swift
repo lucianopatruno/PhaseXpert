@@ -37,6 +37,14 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
+    func testSavedCaseSortLabelsHaveBokmalTranslations() throws {
+        let strings = try catalogStrings()
+        XCTAssertEqual(try XCTUnwrap(norwegianTranslation(for: "Newest", in: strings)), "Nyeste")
+        XCTAssertEqual(try XCTUnwrap(norwegianTranslation(for: "Oldest", in: strings)), "Eldste")
+        XCTAssertEqual(try XCTUnwrap(norwegianTranslation(for: "Name A–Z", in: strings)), "Navn A–Å")
+        XCTAssertEqual(try XCTUnwrap(norwegianTranslation(for: "Name Z–A", in: strings)), "Navn Å–A")
+    }
+
     func testUserFacingCatalogExcludesDevelopmentStylePhrases() throws {
         let serialized = try JSONSerialization.data(withJSONObject: try catalogStrings())
         let catalogText = String(decoding: serialized, as: UTF8.self).lowercased()

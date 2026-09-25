@@ -104,7 +104,7 @@ final class PhaseXpertTests: XCTestCase {
         let viewModel = wetGeneralViewModel(pressureBar: 100, temperatureCelsius: 100)
         viewModel.validate()
 
-        XCTAssertTrue(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
+        XCTAssertFalse(viewModel.homogeneousWetPropertiesAreInPreliminaryDomain)
         XCTAssertTrue(viewModel.canRunCalculation)
         await viewModel.calculate()
 
@@ -117,7 +117,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(result.carbonDioxideInWaterRichPhaseMoleFraction * 100, 1.410471, accuracy: 0.00001)
         XCTAssertEqual(
             record.response.properties.first { $0.property == .density }?.status,
-            .calculated
+            .unavailable
         )
         XCTAssertNil(viewModel.standaloneWaterEquilibriumResult)
         XCTAssertNil(viewModel.calculationError)
@@ -2285,6 +2285,125 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(duplicate.name, "Ship tank — Copy")
         XCTAssertEqual(duplicate.calculationID, savedCase.calculationID)
         XCTAssertEqual(duplicate.calculationRecord, record)
+    }
+
+    @MainActor
+    func testMyCasesSortingIsDeterministicAndPreservesScientificRecords() async throws {
+        let record = try await makeRecord()
+        let oldest = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            name: "Zulu",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 100)
+        )
+        let middle = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+            name: "Alpha",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 200)
+        )
+        let newest = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+            name: "Echo",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 300)
+        )
+        let cases = [oldest, middle, newest]
+        let snapshots = Dictionary(uniqueKeysWithValues: cases.map { ($0.id, $0.recordData) })
+
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .nameAscending, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Alpha", "Echo", "Zulu"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .nameDescending, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Zulu", "Echo", "Alpha"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .newest, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Echo", "Alpha", "Zulu"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .oldest, locale: Locale(identifier: "en"))
+                .map(\.name),
+            ["Zulu", "Alpha", "Echo"]
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(cases, sort: .nameAscending, locale: Locale(identifier: "nb"))
+                .map(\.name),
+            ["Alpha", "Echo", "Zulu"]
+        )
+        let equalNameFirst = try SavedCalculation(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
+            name: "Alpha",
+            record: record,
+            createdAt: Date(timeIntervalSince1970: 400)
+        )
+        XCTAssertEqual(
+            SavedCaseOrdering.savedCases(
+                [equalNameFirst, middle],
+                sort: .nameDescending,
+                locale: Locale(identifier: "en")
+            ).map(\.id),
+            [middle.id, equalNameFirst.id]
+        )
+        XCTAssertEqual(Set(cases.map(\.id)).count, cases.count)
+        XCTAssertTrue(cases.allSatisfy { snapshots[$0.id] == $0.recordData })
+    }
+
+    @MainActor
+    func testGeneratedCaseCollectionsSupportBothNameDirectionsAndRemainComplete() {
+        XCTAssertEqual(MyCasesSort.allCases, [.newest, .oldest, .nameAscending, .nameDescending])
+        XCTAssertEqual(NameSortDirection.allCases, [.ascending, .descending])
+
+        let validated = AdvancedValidationPresentation.validatedCaseOptions()
+        let ascendingValidated = SavedCaseOrdering.validatedCases(
+            validated,
+            direction: .ascending,
+            locale: Locale(identifier: "en")
+        )
+        let descendingValidated = SavedCaseOrdering.validatedCases(
+            validated,
+            direction: .descending,
+            locale: Locale(identifier: "en")
+        )
+        XCTAssertEqual(ascendingValidated.count, validated.count)
+        XCTAssertEqual(Set(ascendingValidated.map(\.id)), Set(validated.map(\.id)))
+        XCTAssertEqual(Set(descendingValidated.map(\.id)), Set(validated.map(\.id)))
+        XCTAssertEqual(
+            ascendingValidated.map(\.name).first,
+            descendingValidated.map(\.name).last
+        )
+        XCTAssertEqual(
+            ascendingValidated.map(\.name).last,
+            descendingValidated.map(\.name).first
+        )
+
+        let builtIn = BuiltInCaseCatalog.cases
+        let ascendingBuiltIn = SavedCaseOrdering.builtInCases(
+            builtIn,
+            direction: .ascending,
+            locale: Locale(identifier: "nb")
+        )
+        let descendingBuiltIn = SavedCaseOrdering.builtInCases(
+            builtIn,
+            direction: .descending,
+            locale: Locale(identifier: "nb")
+        )
+        XCTAssertEqual(ascendingBuiltIn.count, builtIn.count)
+        XCTAssertEqual(Set(ascendingBuiltIn.map(\.id)), Set(builtIn.map(\.id)))
+        XCTAssertEqual(Set(descendingBuiltIn.map(\.id)), Set(builtIn.map(\.id)))
+        XCTAssertEqual(
+            ascendingBuiltIn.map(\.name),
+            ["Aramis ship specification example", "Hafslund Celsio – Oslo CCS", "Heidelberg Materials – Brevik CCS conditioned export example", "Northern Lights cargo specification example", "Porthos pipeline specification example", "Ravenna CCS – Phase 1"]
+        )
+        XCTAssertEqual(
+            descendingBuiltIn.map(\.name),
+            Array(ascendingBuiltIn.map(\.name).reversed())
+        )
     }
 
     @MainActor
