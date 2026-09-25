@@ -2989,6 +2989,46 @@
         }
       }
     },
+    "Newest" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyeste"
+          }
+        }
+      }
+    },
+    "Oldest" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eldste"
+          }
+        }
+      }
+    },
+    "Name A–Z" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navn A–Å"
+          }
+        }
+      }
+    },
+    "Name Z–A" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navn Å–A"
+          }
+        }
+      }
+    },
     "Name" : {
       "localizations" : {
         "nb" : {

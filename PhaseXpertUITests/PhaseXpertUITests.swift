@@ -301,7 +301,7 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.buttons["use-validated-state"].exists)
     }
 
-    func testGeneratedSavedCaseCollectionsUseDeterministicNameOrderOnly() {
+    func testGeneratedSavedCaseCollectionsRenderBothNameDirectionsOnly() {
         let app = XCUIApplication()
         app.launch()
         app.tabBars.buttons["Saved Cases"].tap()
@@ -312,10 +312,28 @@ final class PhaseXpertUITests: XCTestCase {
         let sort = app.buttons["saved-cases-sort"]
         XCTAssertTrue(sort.waitForExistence(timeout: 2))
         sort.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["Name"].waitForExistence(timeout: 2))
-        XCTAssertFalse(app.buttons["Newest first"].exists)
-        XCTAssertFalse(app.buttons["Oldest first"].exists)
-        app.tap()
+        XCTAssertTrue(app.buttons["Name A–Z"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Name Z–A"].exists)
+        XCTAssertFalse(app.buttons["Newest"].exists)
+        XCTAssertFalse(app.buttons["Oldest"].exists)
+        app.buttons["Name Z–A"].tap()
+        let validatedRows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "validated-case-")
+        )
+        XCTAssertTrue(validatedRows.firstMatch.waitForExistence(timeout: 3))
+        let descendingValidatedID = validatedRows.firstMatch.identifier
+        sort.tap()
+        app.buttons["Name A–Z"].tap()
+        let ascendingValidatedRows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "validated-case-")
+        )
+        XCTAssertNotEqual(ascendingValidatedRows.firstMatch.identifier, descendingValidatedID)
+        sort.tap()
+        app.buttons["Name Z–A"].tap()
+        let repeatedDescendingRows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "validated-case-")
+        )
+        XCTAssertEqual(repeatedDescendingRows.firstMatch.identifier, descendingValidatedID)
 
         category.buttons["Built-in Cases"].tap()
         let builtInRows = app.descendants(matching: .any).matching(
@@ -324,9 +342,21 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(builtInRows.firstMatch.waitForExistence(timeout: 3))
         XCTAssertTrue(builtInRows.firstMatch.label.contains("Aramis ship specification example"))
         sort.tap()
-        XCTAssertTrue(app.descendants(matching: .any)["Name"].waitForExistence(timeout: 2))
-        XCTAssertFalse(app.buttons["Newest first"].exists)
-        XCTAssertFalse(app.buttons["Oldest first"].exists)
+        XCTAssertTrue(app.buttons["Name A–Z"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Name Z–A"].exists)
+        XCTAssertFalse(app.buttons["Newest"].exists)
+        XCTAssertFalse(app.buttons["Oldest"].exists)
+        app.buttons["Name Z–A"].tap()
+        let descendingBuiltInRows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "built-in-case-")
+        )
+        XCTAssertTrue(descendingBuiltInRows.firstMatch.label.contains("Ravenna CCS – Phase 1"))
+        sort.tap()
+        app.buttons["Name A–Z"].tap()
+        let ascendingBuiltInRows = app.descendants(matching: .any).matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "built-in-case-")
+        )
+        XCTAssertTrue(ascendingBuiltInRows.firstMatch.label.contains("Aramis ship specification example"))
     }
 
     func testOperatingPointUnitsAreSeparateAndAdaptive() {
