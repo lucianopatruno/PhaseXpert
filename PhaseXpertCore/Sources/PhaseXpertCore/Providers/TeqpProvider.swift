@@ -2204,6 +2204,22 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         return 7_000_000
     }
 
+    /// Guidance used when catalog validation metadata is missing. No validated
+    /// value is substituted; every request stays explicitly unsupported.
+    private func incompleteMetadataGuidance(system: String) -> OperatingRangeGuidance {
+        OperatingRangeGuidance(
+            title: "Validated range",
+            summary: [],
+            currentInputIssues: [
+                .init(
+                    severity: .unsupported,
+                    title: "Validation metadata incomplete",
+                    detail: "The validated range for \(system) is unavailable because its validation metadata is incomplete; no values are assumed."
+                )
+            ]
+        )
+    }
+
     private func supportedHydrogenCapability() throws -> TeqpPropertyCapability {
         guard let capability = TeqpFormulationCatalog
             .co2HydrogenEOSCGGasDensity
@@ -2303,11 +2319,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         temperatureK: Double?,
         requestedProperties: Set<PropertyID>
     ) -> OperatingRangeGuidance {
-        let capability = try? supportedHydrogenCapability()
-        let limits = capability?.isothermPressureLimits ?? []
-        let supportedMoleFraction = capability?.compositionLimits
-            .first(where: { $0.component == .hydrogen })?
-            .minimumMoleFraction ?? 0.05362
+        guard let capability = try? supportedHydrogenCapability(),
+              let supportedMoleFraction = capability.compositionLimits
+                .first(where: { $0.component == .hydrogen })?
+                .minimumMoleFraction
+        else {
+            return incompleteMetadataGuidance(system: "CO₂+H₂")
+        }
+        let limits = capability.isothermPressureLimits
         var issues: [OperatingGuidanceLine] = []
         var summary: [OperatingGuidanceLine] = [
             .init(
@@ -2394,11 +2413,14 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         temperatureK: Double?,
         requestedProperties: Set<PropertyID>
     ) -> OperatingRangeGuidance {
-        let capability = try? supportedNitrogenCapability()
-        let limits = capability?.isothermPressureLimits ?? []
-        let supportedMoleFraction = capability?.compositionLimits
-            .first(where: { $0.component == .nitrogen })?
-            .minimumMoleFraction ?? 0.0127
+        guard let capability = try? supportedNitrogenCapability(),
+              let supportedMoleFraction = capability.compositionLimits
+                .first(where: { $0.component == .nitrogen })?
+                .minimumMoleFraction
+        else {
+            return incompleteMetadataGuidance(system: "CO₂+N₂")
+        }
+        let limits = capability.isothermPressureLimits
         var issues: [OperatingGuidanceLine] = []
         let selectedIsotherm = limits.first
         if abs(nitrogenMoleFraction - supportedMoleFraction)
@@ -2469,12 +2491,15 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
         temperatureK: Double?,
         requestedProperties: Set<PropertyID>
     ) -> OperatingRangeGuidance {
-        let density = try? supportedMethaneCapability()
-        let densityLimits = density?.isothermPressureLimits ?? []
+        guard let density = try? supportedMethaneCapability(),
+              let supportedMoleFraction = density.compositionLimits
+                .first(where: { $0.component == .methane })?
+                .minimumMoleFraction
+        else {
+            return incompleteMetadataGuidance(system: "CO₂+CH₄")
+        }
+        let densityLimits = density.isothermPressureLimits
         let vle = TeqpFormulationCatalog.co2MethaneEOSCGVLE
-        let supportedMoleFraction = density?.compositionLimits
-            .first(where: { $0.component == .methane })?
-            .minimumMoleFraction ?? 0.05
         var summary: [OperatingGuidanceLine] = [
             .init(
                 severity: .information,

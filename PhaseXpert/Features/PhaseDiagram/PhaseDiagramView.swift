@@ -177,8 +177,14 @@ final class PhaseDiagramViewModel {
 
         let runID = UUID()
         phaseMapRunID = runID
-        let evaluationCount = (try? PhaseMapGridBuilder.points(for: request).count)
-            ?? request.resolution.gridPointCount
+        let evaluationCount: Int
+        do {
+            evaluationCount = try PhaseMapGridBuilder.points(for: request).count
+        } catch {
+            phaseMapRunID = nil
+            phaseMapStatusMessage = "The Phase Map grid could not be built: \(error.localizedDescription)"
+            return
+        }
         phaseMapProgress = PhaseMapProgress(
             completedCount: 0,
             totalCount: evaluationCount

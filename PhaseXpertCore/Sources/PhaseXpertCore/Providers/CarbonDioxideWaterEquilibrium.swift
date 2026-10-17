@@ -55,6 +55,23 @@ public enum CarbonDioxideWaterEquilibriumError: Error, Equatable, Sendable {
     case noPhysicalRoot
     case dropoutPressureUnavailable
     case dropoutTemperatureUnavailable
+
+    /// Short, user-presentable reason; distinguishes an out-of-domain request
+    /// from invalid input or a solver failure.
+    public var failureDescription: String {
+        switch self {
+        case .outsideValidatedDomain:
+            return "the conditions are outside the validated water-equilibrium domain"
+        case .invalidInput:
+            return "the pressure, temperature or water content is missing, non-finite or out of bounds"
+        case .noPhysicalRoot:
+            return "the equation of state returned no physical root"
+        case .dropoutPressureUnavailable:
+            return "no water-dropout pressure exists in the applicable region"
+        case .dropoutTemperatureUnavailable:
+            return "no water-dropout temperature exists in the applicable region"
+        }
+    }
 }
 
 /// Spycher, Pruess & Ennis-King (2003) binary pure-water model.

@@ -45,8 +45,11 @@ struct BatchCaseInput: Identifiable, Equatable, Sendable {
         let components = composition.map {
             "\($0.component.rawValue)=\(String(format: "%.17g", $0.moleFraction))"
         }.joined(separator: ";")
-        return [id, String(format: "%.17g", pressurePa ?? .nan),
-                String(format: "%.17g", temperatureK ?? .nan), components]
+        func token(_ value: Double?) -> String {
+            guard let value else { return "missing" }
+            return value.isFinite ? String(format: "%.17g", value) : "nonfinite(\(value))"
+        }
+        return [id, token(pressurePa), token(temperatureK), components]
             .joined(separator: "|")
     }
 
