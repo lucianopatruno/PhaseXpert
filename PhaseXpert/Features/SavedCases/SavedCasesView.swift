@@ -3,7 +3,7 @@ import PhaseXpertCore
 import SwiftData
 import SwiftUI
 
-enum SavedRecordIssue: Equatable {
+enum SavedRecordIssue: Error, Equatable {
     case unsupportedVersion(Int)
     case corrupt
 
