@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Moved the Calculator water-equilibrium preview behind a core
+  `CarbonDioxideWaterEquilibriumEvaluating` protocol so the app layer no longer
+  names the concrete model, and replaced eleven duplicated native-engine
+  detached-task blocks with one `runNativeWork` helper that keeps the same
+  cancellation checks before and after the native call.
+
 - Hardened silent-failure paths: Advanced CCS operating-range guidance for
   CO₂+H₂, CO₂+N₂ and CO₂+CH₄ no longer substitutes literal mole-fraction
   fallbacks when validation metadata is missing and instead reports an explicit

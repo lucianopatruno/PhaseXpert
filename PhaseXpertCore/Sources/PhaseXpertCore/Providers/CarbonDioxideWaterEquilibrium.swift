@@ -398,3 +398,25 @@ public struct SpycherPruess2003WaterEquilibrium: Sendable {
         value >= 0 ? pow(value, 1.0 / 3.0) : -pow(-value, 1.0 / 3.0)
     }
 }
+
+/// Binary CO₂ + pure H₂O equilibrium evaluation as seen by the app layer, so
+/// UI code does not name a concrete model implementation.
+public protocol CarbonDioxideWaterEquilibriumEvaluating: Sendable {
+    var validatedRangeSummary: String { get }
+
+    func equilibrium(
+        pressurePa: Double,
+        temperatureK: Double,
+        currentWaterMoleFraction: Double?
+    ) throws -> CarbonDioxideWaterEquilibriumResult
+}
+
+extension SpycherPruess2003WaterEquilibrium: CarbonDioxideWaterEquilibriumEvaluating {
+    public var validatedRangeSummary: String { Self.validatedRangeSummary }
+}
+
+public enum CarbonDioxideWaterEquilibrium {
+    /// The production water-equilibrium model used by the app.
+    public static let standard: any CarbonDioxideWaterEquilibriumEvaluating =
+        SpycherPruess2003WaterEquilibrium()
+}

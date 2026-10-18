@@ -31,8 +31,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         temperatureK: Double
     ) async throws -> TeqpEngineResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXTeqpResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_teqp_calculate_pure_co2(
@@ -59,9 +58,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 densityRootCount: Int(nativeResult.density_root_count),
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -73,8 +70,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         temperatureK: Double
     ) async throws -> TeqpSaturationPoint {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXTeqpSaturationResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_teqp_saturation_pure_co2(
@@ -95,9 +91,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 liquidDensityKilogramsPerCubicMetre: nativeResult.liquid_density_kg_m3,
                 vaporDensityKilogramsPerCubicMetre: nativeResult.vapor_density_kg_m3
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -111,8 +105,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         hydrogenMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXTeqpMixtureDensityResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_teqp_calculate_eoscg_co2_h2_gas_density(
@@ -136,9 +129,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
                 formulationID: TeqpFormulationCatalog.co2HydrogenEOSCGGasDensity.id
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -152,8 +143,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         methaneMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXTeqpMixtureDensityResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_teqp_calculate_eoscg_co2_ch4_gas_density(
@@ -177,9 +167,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
                 formulationID: TeqpFormulationCatalog.co2MethaneEOSCGGasDensity.id
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -194,8 +182,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         initialGuess: TeqpBinaryVLEInitialGuess? = nil
     ) async throws -> TeqpBinaryVLEResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXTeqpGenericBinaryVLEResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let nativeFormulation = nativeFormulation(for: formulation)
@@ -253,9 +240,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 component2ChemicalPotentialResidual:
                     nativeResult.component2_chemical_potential_residual
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -270,8 +255,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         component2MoleFraction: Double
     ) async throws -> TeqpMixtureThermodynamicResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXNativeTeqpMixtureThermodynamicResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_native_teqp_calculate_binary_thermodynamic_state(
@@ -314,9 +298,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 phaseIdentifier: phaseIdentifier(forRawPhase: nativeResult.phase),
                 formulationID: formulation.diagnosticFormulationID
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -329,8 +311,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         component2MoleFraction: Double
     ) async throws -> TeqpBinaryCriticalResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXNativeTeqpBinaryCriticalResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_native_teqp_calculate_binary_critical_point(
@@ -363,9 +344,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 thirdOrderResidual: nativeResult.third_order_residual,
                 formulationID: formulation.diagnosticFormulationID
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
@@ -636,8 +615,7 @@ public struct NativeTeqpEngine: TeqpEngine {
         oxygenMoleFraction: Double
     ) async throws -> TeqpMixtureDensityResult {
         #if os(iOS) && canImport(PhaseXpertTeqpBridge)
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXTeqpMixtureDensityResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_teqp_calculate_eoscg_co2_o2_gas_density(
@@ -661,9 +639,7 @@ public struct NativeTeqpEngine: TeqpEngine {
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase),
                 formulationID: TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
         #else
         throw ProviderError.modelUnavailable(
             "The teqp native XCFramework has not been linked."
