@@ -851,7 +851,7 @@ private struct CalculatorBrandHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
-            HStack(alignment: .center, spacing: IFESpacing.regular) {
+            HStack(alignment: .lastTextBaseline, spacing: IFESpacing.regular) {
                 Text("PhaseXpert")
                     .font(.largeTitle.weight(.semibold))
                     .foregroundStyle(Color.ifeText)
@@ -861,6 +861,8 @@ private struct CalculatorBrandHeader: View {
                 Spacer(minLength: IFESpacing.regular)
                 logo
                     .frame(width: 82, height: 34)
+                    // The artwork has empty space below its last line; sit it on the title's baseline.
+                    .alignmentGuide(.lastTextBaseline) { $0[.bottom] - 7 }
                     .accessibilityLabel("IFE — Institute for Energy Technology")
             }
             Text("Phase behavior and properties of CO₂ mixtures")
