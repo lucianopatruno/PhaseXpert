@@ -5643,6 +5643,28 @@
           }
         }
       }
+    },
+    "Tap a tile to see its details." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trykk på en rute for å se detaljer."
+          }
+        }
+      }
+    },
+    "All points classified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle punkter klassifisert"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
