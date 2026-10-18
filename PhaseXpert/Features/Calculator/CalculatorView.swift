@@ -22,6 +22,7 @@ struct CalculatorView: View {
     @State private var temperatureSelection: TextSelection?
     @State private var compositionSelections: [UUID: TextSelection] = [:]
     @State private var validationDetailsExpanded = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -30,9 +31,11 @@ struct CalculatorView: View {
             ScrollViewReader { scrollProxy in
             Form {
                 Section {
-                    CalculatorBrandHeader()
-                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                        .listRowBackground(Color.clear)
+                    IFEHeroCard(tint: .ifeLavender) {
+                        CalculatorBrandHeader()
+                    }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    .listRowBackground(Color.clear)
                 }
 
                 Section {
@@ -170,8 +173,8 @@ struct CalculatorView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 7)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.secondary.opacity(0.08))
+                                        RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+                                            .fill(Color.ifeMist.opacity(0.55))
                                     )
                                     .foregroundStyle(.secondary)
                                     .accessibilityLabel("Calculated carbon dioxide remainder")
@@ -188,11 +191,11 @@ struct CalculatorView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 7)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.secondary.opacity(0.08))
+                                    RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+                                        .fill(Color.ifeMist.opacity(0.55))
                                 )
                                 .overlay {
-                                    RoundedRectangle(cornerRadius: 8)
+                                    RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
                                         .stroke(
                                             focusedField == .composition(entry.id)
                                                 ? Color.ifePrimary
@@ -275,7 +278,7 @@ struct CalculatorView: View {
                 if let error = viewModel.calculationError {
                     Section("Calculation error") {
                         Text(error)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.pxError)
                     }
                 }
 
@@ -328,39 +331,6 @@ struct CalculatorView: View {
                     }
                 }
 
-                Section {
-                    Button {
-                        focusedField = nil
-                        Task {
-                            await viewModel.calculate()
-                            if let record = viewModel.calculationRecord {
-                                navigationState.latestCalculationRecord = record
-                            }
-                        }
-                    } label: {
-                        if viewModel.isCalculating {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text("Run calculation")
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
-                    .accessibilityIdentifier("run-calculation")
-
-                    Button("Reset", systemImage: "arrow.counterclockwise") {
-                        resetCalculator()
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(viewModel.isCalculating)
-                    .accessibilityIdentifier("reset-calculator")
-                    .accessibilityHint("Restores the clean calculator defaults and clears results.")
-                } header: {
-                    IFESectionHeader(step: 5, title: "Run calculation")
-                }
-
                 if let record = viewModel.calculationRecord {
                     CalculationResultSections(record: record)
                         .id("calculation-results")
@@ -374,7 +344,7 @@ struct CalculatorView: View {
                         NavigationLink {
                             PropertySweepView(record: record)
                         } label: {
-                            Label("Explore property sweep", systemImage: "chart.xyaxis.line")
+                            Label("Explore property sweep", systemImage: "slider.horizontal.3")
                                 .foregroundStyle(Color.accentColor)
                         }
                         .accessibilityIdentifier("open-property-sweep")
@@ -393,18 +363,15 @@ struct CalculatorView: View {
                         }
                         .accessibilityIdentifier("save-calculation")
                     } header: {
-                        IFESectionHeader(step: 7, title: "Traceability, save and export")
+                        IFESectionHeader(step: 6, title: "Traceability, save and export")
                     }
                 }
 
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .safeAreaInset(edge: .bottom) {
-                Color.clear
-                    .frame(height: IFESpacing.extraLarge)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                actionBar
             }
             .ifeDottedBackground()
             .toolbarTitleDisplayMode(.inline)
@@ -539,6 +506,51 @@ struct CalculatorView: View {
         }
     }
 
+    /// Primary actions, pinned above the tab bar so they are always reachable.
+    private var actionBar: some View {
+        let usesVerticalLayout = dynamicTypeSize.isAccessibilitySize
+        let layout = usesVerticalLayout
+            ? AnyLayout(VStackLayout(spacing: IFESpacing.small))
+            : AnyLayout(HStackLayout(spacing: IFESpacing.regular))
+
+        return layout {
+            Button {
+                resetCalculator()
+            } label: {
+                Label("Reset", systemImage: "arrow.counterclockwise")
+            }
+            .buttonStyle(.ifeTonal)
+            .frame(maxWidth: usesVerticalLayout ? .infinity : 150)
+            .disabled(viewModel.isCalculating)
+            .accessibilityIdentifier("reset-calculator")
+            .accessibilityHint("Restores the clean calculator defaults and clears results.")
+
+            Button {
+                focusedField = nil
+                Task {
+                    await viewModel.calculate()
+                    if let record = viewModel.calculationRecord {
+                        navigationState.latestCalculationRecord = record
+                    }
+                }
+            } label: {
+                if viewModel.isCalculating {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text("Run calculation")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.ifeFilled)
+            .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
+            .accessibilityIdentifier("run-calculation")
+        }
+        .padding(.horizontal, IFESpacing.medium)
+        .padding(.vertical, IFESpacing.regular)
+        .background(.bar)
+    }
+
     @ViewBuilder
     private func validationIssuesSection(viewModel: CalculatorViewModel) -> some View {
         Section {
@@ -554,7 +566,7 @@ struct CalculatorView: View {
                 )
                 .foregroundStyle(
                     issue.severity == .error && !isNonfatalHomogeneousIssue
-                        ? .red
+                        ? Color.pxError
                         : Color.ifePrimary
                 )
             }
@@ -2203,6 +2215,72 @@ struct CalculationResultSections: View {
             .sorted { $0.property.displayName < $1.property.displayName }
     }
 
+    private var heroTint: Color {
+        switch record.response.phase {
+        case .gas: .ifeBlue
+        case .liquid: .ifeLavender
+        case .dense, .supercritical: .ifePeach
+        case .twoPhase: .ifeCream
+        case .solid, .unknown, .unavailable: .ifeMist
+        }
+    }
+
+    private var heroStateSummary: String {
+        let composition = SavedCaseNameFormatter.compositionLabel(for: record.request.composition)
+        let pressure = "\(number(record.input.pressureValue)) \(record.input.pressureDisplayUnitLabel)"
+        let temperature = "\(number(record.input.temperatureValue)) \(record.input.temperatureUnit.rawValue)"
+        return [pressure, temperature, composition].joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private var resultHero: some View {
+        let headline = stateProperties.first.map { PropertyResultPresentation(property: $0) }
+
+        IFEHeroCard(tint: heroTint) {
+            VStack(alignment: .leading, spacing: IFESpacing.regular) {
+                IFEStatusBadge(
+                    text: record.response.phase.displayName,
+                    systemImage: "circle.hexagongrid.fill",
+                    color: .ifePrimary
+                )
+                if let headline {
+                    VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+                        Text(headline.title)
+                            .font(IFETypography.eyebrow)
+                            .foregroundStyle(.secondary)
+                        HStack(alignment: .firstTextBaseline, spacing: IFESpacing.small) {
+                            Text(headline.value)
+                                .font(IFETypography.hero)
+                                .foregroundStyle(Color.ifeText)
+                                .minimumScaleFactor(0.6)
+                                .lineLimit(1)
+                            if let unit = headline.unit {
+                                Text(unit)
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                Text(heroStateSummary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, IFESpacing.small)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            [
+                record.response.phase.displayName,
+                headline.map { "\($0.title) \($0.value) \($0.unit ?? "")" },
+                heroStateSummary
+            ]
+            .compactMap { $0 }
+            .joined(separator: ", ")
+        )
+        .accessibilityIdentifier("result-hero")
+    }
+
     private var unavailableProperties: [PropertyValue] {
         record.response.properties
             .filter { $0.status != .calculated }
@@ -2212,6 +2290,10 @@ struct CalculationResultSections: View {
     var body: some View {
         Group {
             Section {
+                resultHero
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+
                 if !record.response.isScientificResult {
                     ScientificStatusBanner(
                         title: "Non-scientific result",
@@ -2247,7 +2329,7 @@ struct CalculationResultSections: View {
                     )
                 }
             } header: {
-                IFESectionHeader(step: 6, title: "Results and phase information")
+                IFESectionHeader(step: 5, title: "Results and phase information")
             }
 
             Section("Composition summary") {
@@ -2621,9 +2703,9 @@ private struct PropertyStatusBadge: View {
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .foregroundStyle(status == .failed ? Color.red : Color.ifePrimary)
+            .foregroundStyle(status == .failed ? Color.pxError : Color.ifePrimary)
             .background(
-                (status == .failed ? Color.red : Color.ifeBlue).opacity(0.12),
+                (status == .failed ? Color.pxError : Color.ifeBlue).opacity(0.12),
                 in: Capsule()
             )
     }

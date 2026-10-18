@@ -87,9 +87,11 @@ private struct MoreView: View {
                         SettingsView()
                     } label: {
                         Label("Language & Appearance", systemImage: "gearshape")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeViolet))
                     }
                     .accessibilityIdentifier("more-appearance")
                 }
+                .ifeCardRow()
 
                 Section("Tools") {
                     NavigationLink {
@@ -99,9 +101,11 @@ private struct MoreView: View {
                         )
                     } label: {
                         Label("Stream Mixing", systemImage: "arrow.triangle.merge")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeCoral))
                     }
                     .accessibilityIdentifier("more-stream-mixing")
                 }
+                .ifeCardRow()
 
                 Section("Models & Information") {
                     NavigationLink {
@@ -111,6 +115,7 @@ private struct MoreView: View {
                         )
                     } label: {
                         Label("General Properties", systemImage: "function")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeViolet))
                     }
                     .accessibilityIdentifier("more-general-model")
 
@@ -118,6 +123,7 @@ private struct MoreView: View {
                         ValidationInformationView(wrapsInNavigationStack: false)
                     } label: {
                         Label("Validation", systemImage: "checkmark.shield")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeGreen))
                     }
                     .accessibilityIdentifier("more-validation")
 
@@ -125,6 +131,7 @@ private struct MoreView: View {
                         IFEModelInformationView(wrapsInNavigationStack: false)
                     } label: {
                         Label("IFE Model", systemImage: "atom")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeCoral))
                     }
                     .accessibilityIdentifier("more-ife-model")
 
@@ -132,18 +139,22 @@ private struct MoreView: View {
                         AboutView(wrapsInNavigationStack: false)
                     } label: {
                         Label("About", systemImage: "info.circle")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeViolet))
                     }
                     .accessibilityIdentifier("more-about")
                 }
+                .ifeCardRow()
 
                 Section("Research Infrastructure") {
                     NavigationLink {
                         FalconView()
                     } label: {
                         Label("FALCON", systemImage: "building.2")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifePrimary))
                     }
                     .accessibilityIdentifier("more-falcon")
                 }
+                .ifeCardRow()
             }
             .scrollContentBackground(.hidden)
             .ifeDottedBackground()
@@ -168,6 +179,7 @@ private struct SettingsView: View {
                 .labelsHidden()
                 .accessibilityIdentifier("settings-language")
             }
+            .ifeCardRow()
             Section {
                 Toggle(isOn: $prefersDarkAppearance) {
                     Label("Dark mode", systemImage: "moon.fill")
@@ -177,6 +189,7 @@ private struct SettingsView: View {
             } header: {
                 Text("Appearance")
             }
+            .ifeCardRow()
         }
         .scrollContentBackground(.hidden)
         .ifeDottedBackground()

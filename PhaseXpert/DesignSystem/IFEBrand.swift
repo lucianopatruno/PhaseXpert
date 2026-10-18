@@ -1,25 +1,39 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Colour
+
 extension Color {
+    // IFE master palette (see "IFE master presentation"). Every colour here is
+    // an asset with a light and a dark variant.
     static let ifePrimary = Color("IFEPrimary")
+    static let ifeOnPrimary = Color("IFEOnPrimary")
     static let ifeText = Color("IFEText")
     static let ifeBackground = Color("IFEBackground")
+    static let ifeCard = Color("IFECard")
     static let ifeSignal = Color("IFESignal")
     static let ifeLavender = Color("IFELavender")
     static let ifeBlue = Color("IFEBlue")
+    static let ifePeach = Color("IFEPeach")
+    static let ifeCream = Color("IFECream")
+    static let ifeMist = Color("IFEMist")
+    static let ifeViolet = Color("IFEViolet")
+    static let ifeCoral = Color("IFECoral")
+    static let ifeGreen = Color("IFEGreen")
 
-    static let pxSurface = Color(.secondarySystemGroupedBackground)
+    static let pxSurface = Color.ifeCard
     static let pxGroupedSurface = Color(.systemGroupedBackground)
     static let pxSeparator = Color(.separator)
-    static let pxSuccess = Color(.systemGreen)
+    static let pxSuccess = Color.ifeGreen
     static let pxWarning = Color(.systemOrange)
     static let pxUnavailable = Color(.systemGray)
-    static let pxError = Color(.systemRed)
+    static let pxError = Color.ifeSignal
     static let pxChartBoundary = Color.ifePrimary
     static let pxChartCritical = Color.ifeSignal
     static let pxChartOperatingPoint = Color.ifeText
 }
+
+// MARK: - Tokens
 
 enum IFESpacing {
     static let xSmall: CGFloat = 4
@@ -31,9 +45,9 @@ enum IFESpacing {
 }
 
 enum IFECornerRadius {
-    static let field: CGFloat = 8
-    static let card: CGFloat = 8
-    static let section: CGFloat = 12
+    static let field: CGFloat = 12
+    static let card: CGFloat = 16
+    static let section: CGFloat = 20
 }
 
 enum IFELine {
@@ -42,17 +56,27 @@ enum IFELine {
 }
 
 enum IFETypography {
-    static let sectionTitle = Font.subheadline.weight(.semibold)
-    static let cardTitle = Font.headline
+    /// Large, confident screen and hero titles.
+    static let screenTitle = Font.largeTitle.weight(.bold)
+    /// Large result value on hero cards.
+    static let hero = Font.system(.largeTitle, design: .default).weight(.semibold).monospacedDigit()
+    static let sectionTitle = Font.headline
+    static let cardTitle = Font.title3.weight(.semibold)
+    static let eyebrow = Font.caption.weight(.semibold)
     static let label = Font.subheadline.weight(.medium)
     static let value = Font.body.monospacedDigit()
     static let metadata = Font.caption
 }
 
+// MARK: - Surfaces
+
+/// A raised, rounded surface on the IFE background.
 struct IFECard<Content: View>: View {
+    private let tint: Color?
     private let content: Content
 
-    init(@ViewBuilder content: () -> Content) {
+    init(tint: Color? = nil, @ViewBuilder content: () -> Content) {
+        self.tint = tint
         self.content = content()
     }
 
@@ -60,21 +84,71 @@ struct IFECard<Content: View>: View {
         content
             .padding(IFESpacing.medium)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.pxSurface)
+            .background(tint ?? Color.ifeCard)
             .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
-                    .stroke(Color.pxSeparator.opacity(0.55), lineWidth: IFELine.hairline)
+                    .stroke(Color.pxSeparator.opacity(0.35), lineWidth: IFELine.hairline)
             }
+            .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 3)
+    }
+}
+
+/// Decorative IFE halftone accent. It renders only when an `IFEBrandAccent`
+/// image asset is present, so the app looks right with or without it.
+struct IFEBrandAccent: View {
+    var opacity: Double = 0.10
+
+    var body: some View {
+        if UIImage(named: "IFEBrandAccent") != nil {
+            Image("IFEBrandAccent")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(Color.ifeViolet)
+                .opacity(opacity)
+                .accessibilityHidden(true)
+                .allowsHitTesting(false)
+        }
+    }
+}
+
+/// Full-width tinted card for a screen's main message, such as a result.
+struct IFEHeroCard<Content: View>: View {
+    private let tint: Color
+    private let content: Content
+
+    init(tint: Color = .ifeLavender, @ViewBuilder content: () -> Content) {
+        self.tint = tint
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .padding(IFESpacing.large)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                ZStack(alignment: .topTrailing) {
+                    tint
+                    IFEBrandAccent(opacity: 0.16)
+                        .frame(width: 220)
+                        .offset(x: 70, y: -40)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.section, style: .continuous))
     }
 }
 
 struct IFEBackground: View {
     var body: some View {
-        Color.ifeBackground
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-            .ignoresSafeArea()
+        ZStack(alignment: .topTrailing) {
+            Color.ifeBackground
+            IFEBrandAccent(opacity: 0.07)
+                .frame(width: 320)
+                .offset(x: 110, y: -70)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .ignoresSafeArea()
     }
 }
 
@@ -82,7 +156,62 @@ extension View {
     func ifeDottedBackground() -> some View {
         background { IFEBackground() }
     }
+
+    /// Card-coloured rows for `Form` and `List` sections.
+    func ifeCardRow() -> some View {
+        listRowBackground(Color.ifeCard)
+    }
 }
+
+// MARK: - Buttons
+
+/// Primary, full-width call to action.
+struct IFEFilledButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .padding(.horizontal, IFESpacing.medium)
+            .foregroundStyle(Color.ifeOnPrimary)
+            .background(
+                isEnabled ? Color.ifePrimary : Color.pxUnavailable.opacity(0.45),
+                in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+            )
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .contentShape(RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous))
+    }
+}
+
+/// Secondary, tinted action.
+struct IFETonalButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .padding(.horizontal, IFESpacing.medium)
+            .foregroundStyle(isEnabled ? Color.ifeText : Color.pxUnavailable)
+            .background(
+                Color.ifeLavender.opacity(isEnabled ? 1 : 0.5),
+                in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+            )
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .contentShape(RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous))
+    }
+}
+
+extension ButtonStyle where Self == IFEFilledButtonStyle {
+    static var ifeFilled: IFEFilledButtonStyle { IFEFilledButtonStyle() }
+}
+
+extension ButtonStyle where Self == IFETonalButtonStyle {
+    static var ifeTonal: IFETonalButtonStyle { IFETonalButtonStyle() }
+}
+
+// MARK: - Components
 
 struct IFEStatusBadge: View {
     let text: String
@@ -93,12 +222,9 @@ struct IFEStatusBadge: View {
         Label(text, systemImage: systemImage)
             .font(.caption.weight(.semibold))
             .labelStyle(.titleAndIcon)
-            .padding(.horizontal, IFESpacing.small)
-            .padding(.vertical, IFESpacing.xSmall)
+            .padding(.horizontal, IFESpacing.regular)
+            .padding(.vertical, IFESpacing.xSmall + 1)
             .background(color.opacity(0.14), in: Capsule())
-            .overlay {
-                Capsule().stroke(color.opacity(0.35), lineWidth: IFELine.hairline)
-            }
             .foregroundStyle(color)
             .accessibilityElement(children: .combine)
     }
@@ -115,23 +241,53 @@ struct IFESectionHeader: View {
                 if let step {
                     Text("\(step)")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 22, height: 22)
+                        .foregroundStyle(Color.ifeOnPrimary)
+                        .frame(width: 24, height: 24)
                         .background(Color.ifePrimary, in: Circle())
                         .accessibilityLabel("Step \(step)")
                 }
                 Text(title)
                     .font(IFETypography.sectionTitle)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.ifeText)
                     .textCase(nil)
             }
             if let subtitle {
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .textCase(nil)
             }
         }
+    }
+}
+
+/// Small stat for result summaries: a label above a prominent value.
+struct IFEMetricTile: View {
+    let title: String
+    let value: String
+    var unit: String?
+    var tint: Color = .ifeLavender
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            Text(title)
+                .font(IFETypography.eyebrow)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.title2.weight(.semibold).monospacedDigit())
+                .foregroundStyle(Color.ifeText)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+            if let unit {
+                Text(unit)
+                    .font(IFETypography.metadata)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(IFESpacing.regular)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(tint, in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -223,7 +379,7 @@ struct ScientificStatusBanner: View {
     var body: some View {
         HStack(alignment: .top, spacing: IFESpacing.small) {
             Image(systemName: isError ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
-                .foregroundStyle(isError ? .red : Color.ifePrimary)
+                .foregroundStyle(isError ? Color.pxError : Color.ifePrimary)
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -235,8 +391,10 @@ struct ScientificStatusBanner: View {
         }
         .padding(IFESpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background((isError ? Color.red : Color.ifeBlue).opacity(isError ? 0.10 : 0.55))
-        .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.section, style: .continuous))
+        .background(
+            isError ? Color.pxError.opacity(0.10) : Color.ifeBlue.opacity(0.55),
+            in: RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
+        )
     }
 }
 
@@ -249,5 +407,26 @@ struct FeaturePlaceholder: View {
         ContentUnavailableView(title, systemImage: systemImage, description: Text(message))
             .navigationTitle(title)
             .background(Color.ifeBackground.ignoresSafeArea())
+    }
+}
+
+// MARK: - Labels
+
+/// Icon in a tinted rounded square, followed by the title. For list rows.
+struct IFEIconLabelStyle: LabelStyle {
+    var tint: Color = .ifeViolet
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: IFESpacing.regular) {
+            configuration.icon
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(tint)
+                .frame(width: 32, height: 32)
+                .background(
+                    tint.opacity(0.14),
+                    in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                )
+            configuration.title
+        }
     }
 }
