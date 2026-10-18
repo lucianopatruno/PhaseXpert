@@ -104,7 +104,6 @@ struct IFEBrandAccent: View {
             Image("IFEBrandAccent")
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(Color.ifeViolet)
                 .opacity(opacity)
                 .accessibilityHidden(true)
                 .allowsHitTesting(false)
@@ -133,11 +132,11 @@ struct IFEHeroCard<Content: View>: View {
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
-                ZStack(alignment: .topTrailing) {
+                ZStack(alignment: .bottomTrailing) {
                     tint
-                    IFEBrandAccent(opacity: 0.16)
-                        .frame(width: 220)
-                        .offset(x: 70, y: -40)
+                    IFEBrandAccent(opacity: 0.6)
+                        .frame(width: 440)
+                        .offset(x: 40, y: 8)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.section, style: .continuous))
@@ -146,11 +145,11 @@ struct IFEHeroCard<Content: View>: View {
 
 struct IFEBackground: View {
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack(alignment: .bottomTrailing) {
             Color.ifeBackground
-            IFEBrandAccent(opacity: 0.07)
-                .frame(width: 320)
-                .offset(x: 110, y: -70)
+            IFEBrandAccent(opacity: 0.2)
+                .frame(width: 620)
+                .offset(x: 60, y: 10)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
