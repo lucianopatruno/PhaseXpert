@@ -666,6 +666,7 @@ private struct PhaseMapContent: View {
             }
             .padding(IFESpacing.medium)
         }
+        .accessibilityIdentifier("phase-map-available")
         .ifeBottomBar {
             Button {
                 viewModel.calculatePhaseMap()
@@ -679,7 +680,6 @@ private struct PhaseMapContent: View {
             .padding(.vertical, IFESpacing.regular)
             .background(.bar)
         }
-        .accessibilityIdentifier("phase-map-available")
         .onDisappear {
             viewModel.cancelPhaseMapCalculation()
         }

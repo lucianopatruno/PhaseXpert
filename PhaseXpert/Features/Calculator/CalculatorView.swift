@@ -1183,12 +1183,12 @@ struct StreamMixingView: View {
         }
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
+        .accessibilityIdentifier("stream-mixing-screen")
         .ifeBottomBar {
             calculateBar
         }
         .ifeDottedBackground()
         .navigationTitle("Stream Mixing")
-        .accessibilityIdentifier("stream-mixing-screen")
         .onAppear { viewModel.validate() }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
