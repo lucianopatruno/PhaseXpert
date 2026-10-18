@@ -476,22 +476,6 @@ struct SavedCasesView: View {
                 } else {
                     List {
                         Section {
-                            IFEPageHeader(
-                                systemImage: "tray.full",
-                                message: "Saved calculations, project cases and validated references.",
-                                tint: .ifePeach
-                            )
-                            .listRowInsets(
-                                EdgeInsets(
-                                    top: IFESpacing.small,
-                                    leading: IFESpacing.medium,
-                                    bottom: IFESpacing.xSmall,
-                                    trailing: IFESpacing.medium
-                                )
-                            )
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-
                             Picker("Saved case category", selection: $selectedCategory) {
                                 ForEach(SavedCasesCategory.allCases) { category in
                                     Text(category.rawValue).tag(category)

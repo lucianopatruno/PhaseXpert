@@ -82,12 +82,6 @@ private struct MoreView: View {
     var body: some View {
         NavigationStack {
             IFEPage {
-                IFEPageHeader(
-                    systemImage: "square.grid.2x2",
-                    message: "Settings, tools and background information.",
-                    tint: .ifeMist
-                )
-
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
                     IFESectionTitle("Settings")
                     IFENavigationRow(

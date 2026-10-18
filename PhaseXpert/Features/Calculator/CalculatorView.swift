@@ -849,21 +849,12 @@ struct CalculatorView: View {
 private struct CalculatorBrandHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
-            HStack(alignment: .center, spacing: IFESpacing.regular) {
-                Text("PhaseXpert")
-                    .font(.largeTitle.weight(.semibold))
-                    .foregroundStyle(Color.ifeText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .allowsTightening(true)
-                Spacer(minLength: IFESpacing.regular)
-                Image("IFELogoEnglish")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 82, height: 34)
-                    .ifeLogoPlate()
-                    .accessibilityLabel("IFE — Institute for Energy Technology")
-            }
+            Text("PhaseXpert")
+                .font(.largeTitle.weight(.semibold))
+                .foregroundStyle(Color.ifeText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .allowsTightening(true)
             Text("Phase behavior and properties of CO₂ mixtures")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
