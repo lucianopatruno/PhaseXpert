@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Redesigned the app in the IFE visual identity (light and dark): new brand
+  palette and card-based layout across Calculator, Phase Diagram, Saved Cases,
+  More, Stream Mixing, sweeps, About and model pages; primary actions (Run
+  calculation, Calculate, Use case) are pinned above the tab bar. No
+  scientific, numerical or saved-data changes. Fixed a crash when removing an
+  impurity while its value field was still being edited.
+
 - Moved the Calculator water-equilibrium preview behind a core
   `CarbonDioxideWaterEquilibriumEvaluating` protocol so the app layer no longer
   names the concrete model, and replaced eleven duplicated native-engine

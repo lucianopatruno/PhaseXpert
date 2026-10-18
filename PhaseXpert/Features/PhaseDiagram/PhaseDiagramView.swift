@@ -415,13 +415,17 @@ struct PhaseDiagramView: View {
                 if let record = navigationState.latestCalculationRecord {
                     diagramContent(for: record)
                 } else {
-                    ContentUnavailableView(
-                        "No operating point",
-                        systemImage: "chart.xyaxis.line",
-                        description: Text(
-                            "Run a calculation, then open its phase diagram. No estimated curve is displayed."
-                        )
-                    )
+                    ContentUnavailableView {
+                        Label("No operating point", systemImage: "chart.xyaxis.line")
+                    } description: {
+                        Text("Run a calculation, then open its phase diagram. No estimated curve is displayed.")
+                    } actions: {
+                        Button("Calculator", systemImage: "function") {
+                            navigationState.selectedTab = .calculator
+                        }
+                        .buttonStyle(.ifeFilled)
+                        .frame(maxWidth: 260)
+                    }
                     .accessibilityIdentifier("phase-diagram-no-calculation")
                 }
             }
@@ -561,19 +565,31 @@ private struct PhaseMapContent: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
-                IFECard {
-                    VStack(alignment: .leading, spacing: IFESpacing.small) {
+                IFEHeroCard(tint: .ifeBlue) {
+                    VStack(alignment: .leading, spacing: IFESpacing.regular) {
                         Text("Phase Map")
-                            .font(.title2.bold())
+                            .font(.title.bold())
+                            .foregroundStyle(Color.ifeText)
                         Text("Multicomponent composition at user-selected pressure and temperature ranges.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                        LabeledContent("Operating pressure", value: "\(number(record.request.pressurePa / 100_000)) bar(a)")
-                        LabeledContent("Operating temperature", value: "\(number(record.request.temperatureK - 273.15)) °C")
-                        LabeledContent("Composition") {
-                            Text(compositionSummary(record.request.composition))
-                                .multilineTextAlignment(.trailing)
+                        HStack(spacing: IFESpacing.regular) {
+                            IFEMetricTile(
+                                title: "Operating pressure",
+                                value: number(record.request.pressurePa / 100_000),
+                                unit: "bar(a)",
+                                tint: .ifeCard
+                            )
+                            IFEMetricTile(
+                                title: "Operating temperature",
+                                value: number(record.request.temperatureK - 273.15),
+                                unit: "°C",
+                                tint: .ifeCard
+                            )
                         }
+                        Text(compositionSummary(record.request.composition))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -630,17 +646,6 @@ private struct PhaseMapContent: View {
                     }
                 }
 
-                Button {
-                    viewModel.calculatePhaseMap()
-                } label: {
-                    Label("Calculate Phase Map", systemImage: "play.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!viewModel.canCalculatePhaseMap)
-                .controlSize(.large)
-                .accessibilityIdentifier("calculate-phase-map")
-
                 PhaseMapStatusSection(viewModel: viewModel)
 
                 if let result {
@@ -662,6 +667,19 @@ private struct PhaseMapContent: View {
             .padding(IFESpacing.medium)
         }
         .accessibilityIdentifier("phase-map-available")
+        .ifeBottomBar {
+            Button {
+                viewModel.calculatePhaseMap()
+            } label: {
+                Label("Calculate Phase Map", systemImage: "play.fill")
+            }
+            .buttonStyle(.ifeFilled)
+            .disabled(!viewModel.canCalculatePhaseMap)
+            .accessibilityIdentifier("calculate-phase-map")
+            .padding(.horizontal, IFESpacing.medium)
+            .padding(.vertical, IFESpacing.regular)
+            .background(.bar)
+        }
         .onDisappear {
             viewModel.cancelPhaseMapCalculation()
         }
@@ -732,8 +750,14 @@ private struct PhaseMapStatusSection: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Text(viewModel.phaseMapStatusMessage)
-                    .font(.subheadline)
+                if let result = viewModel.phaseMapResult, !viewModel.isPhaseMapLoading {
+                    PhaseMapCountSummary(result: result)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(viewModel.phaseMapStatusMessage)
+                } else {
+                    Text(viewModel.phaseMapStatusMessage)
+                        .font(.subheadline)
+                }
                 if viewModel.isPhaseMapResultStale {
                     Label("Displayed Phase Map is stale after input changes.", systemImage: "clock.badge.exclamationmark")
                         .font(.caption)
@@ -751,6 +775,53 @@ private struct PhaseMapStatusSection: View {
     }
 }
 
+private struct PhaseMapCountSummary: View {
+    let result: PhaseMapResult
+
+    var body: some View {
+        HStack(alignment: .center, spacing: IFESpacing.regular) {
+            IFEMetricTile(
+                title: "Classified",
+                value: "\(result.classifiedCount)",
+                unit: "/ \(result.evaluations.count)",
+                tint: .ifeBlue
+            )
+            .frame(maxWidth: 150)
+            VStack(alignment: .leading, spacing: IFESpacing.small) {
+                if result.unknownCount + result.failedCount + result.nonConvergedCount == 0 {
+                    IFEStatusBadge(
+                        text: String(localized: "All points classified"),
+                        systemImage: "checkmark.circle.fill",
+                        color: .pxSuccess
+                    )
+                }
+                if result.unknownCount > 0 {
+                    IFEStatusBadge(
+                        text: "\(String(localized: "Unknown")) \(result.unknownCount)",
+                        systemImage: "questionmark.diamond",
+                        color: .pxUnavailable
+                    )
+                }
+                if result.failedCount > 0 {
+                    IFEStatusBadge(
+                        text: "\(String(localized: "Failed")) \(result.failedCount)",
+                        systemImage: "exclamationmark.triangle.fill",
+                        color: .pxError
+                    )
+                }
+                if result.nonConvergedCount > 0 {
+                    IFEStatusBadge(
+                        text: "\(String(localized: "Non-converged")) \(result.nonConvergedCount)",
+                        systemImage: "exclamationmark.triangle.fill",
+                        color: .pxWarning
+                    )
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
 private struct PhaseMapResultsSection: View {
     let result: PhaseMapResult
     let pressureUnit: PressureDisplayUnit
@@ -763,12 +834,75 @@ private struct PhaseMapResultsSection: View {
     @State private var isPreparingExport = false
     @State private var showsShareSheet = false
 
+    private func displayTemperature(_ evaluation: PhaseMapEvaluation) -> Double {
+        temperatureUnit.displayValue(from: evaluation.point.temperatureK)
+    }
+
+    private func displayPressure(_ evaluation: PhaseMapEvaluation) -> Double {
+        pressureUnit.displayValue(from: evaluation.point.pressurePa)
+    }
+
+    /// Spacing between neighbouring grid values, taken from the computed points only.
+    private func gridStep(_ values: [Double]) -> Double {
+        let sorted = Array(Set(values.filter(\.isFinite).map { ($0 * 1_000_000).rounded() / 1_000_000 })).sorted()
+        let gaps = zip(sorted.dropFirst(), sorted).map { $0 - $1 }.filter { $0 > 0 }
+        return gaps.min() ?? 1
+    }
+
+    private var gridSteps: (temperature: Double, pressure: Double) {
+        let grid = result.evaluations.filter { !$0.point.isOperatingPoint }
+        return (
+            gridStep(grid.map(displayTemperature)),
+            gridStep(grid.map(displayPressure))
+        )
+    }
+
+    /// Every computed grid point is drawn as one tile. The operating point is
+    /// tiled only when it is itself a grid point (odd grids); on even grids it is
+    /// an extra evaluation drawn as a marker on top of the tile it falls in.
+    private var tiledEvaluations: [PhaseMapEvaluation] {
+        let steps = gridSteps
+        let grid = result.evaluations.filter { !$0.point.isOperatingPoint }
+        return result.evaluations.filter { evaluation in
+            guard evaluation.point.isOperatingPoint else { return true }
+            return !grid.contains {
+                abs(displayTemperature($0) - displayTemperature(evaluation)) < steps.temperature / 2
+                    && abs(displayPressure($0) - displayPressure(evaluation)) < steps.pressure / 2
+            }
+        }
+    }
+
     private var xDomain: ClosedRange<Double> {
-        paddedDomain(values: result.evaluations.map { temperatureUnit.displayValue(from: $0.point.temperatureK) })
+        let values = result.evaluations.map(displayTemperature).filter(\.isFinite)
+        guard let low = values.min(), let high = values.max() else { return 0...1 }
+        let half = gridSteps.temperature / 2
+        return (low - half)...(high + half)
     }
 
     private var yDomain: ClosedRange<Double> {
-        paddedDomain(values: result.evaluations.map { pressureUnit.displayValue(from: $0.point.pressurePa) })
+        let values = result.evaluations.map(displayPressure).filter(\.isFinite)
+        guard let low = values.min(), let high = values.max() else { return 0...1 }
+        let half = gridSteps.pressure / 2
+        return (low - half)...(high + half)
+    }
+
+    /// Picks the tapped tile. An off-grid operating point wins only when the tap
+    /// lands close to its own marker.
+    private func selectEvaluation(atTemperature t: Double, pressure p: Double) {
+        let steps = gridSteps
+        func distance(_ evaluation: PhaseMapEvaluation) -> Double {
+            let dt = (displayTemperature(evaluation) - t) / steps.temperature
+            let dp = (displayPressure(evaluation) - p) / steps.pressure
+            return dt * dt + dp * dp
+        }
+        if let operating = result.operatingPoint, distance(operating) < 0.12 {
+            selectedPointID = operating.id
+            return
+        }
+        let candidates = tiledEvaluations
+        guard let nearest = candidates.min(by: { distance($0) < distance($1) }),
+              distance(nearest) < 1.5 else { return }
+        selectedPointID = nearest.id
     }
 
     var body: some View {
@@ -781,33 +915,57 @@ private struct PhaseMapResultsSection: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
+                    PhaseMapLegend(result: result)
+
                     Chart {
-                        ForEach(result.evaluations) { evaluation in
-                            PointMark(
-                                x: .value(
-                                    "Temperature (\(temperatureUnit.rawValue))",
-                                    temperatureUnit.displayValue(from: evaluation.point.temperatureK)
-                                ),
-                                y: .value(
-                                    "Pressure (\(pressureUnit.rawValue))",
-                                    pressureUnit.displayValue(from: evaluation.point.pressurePa)
-                                )
+                        let steps = gridSteps
+                        ForEach(tiledEvaluations) { evaluation in
+                            let style = PhaseMapMarkerStyle.style(for: evaluation)
+                            let t = displayTemperature(evaluation)
+                            let p = displayPressure(evaluation)
+                            RectangleMark(
+                                xStart: .value("Temperature (\(temperatureUnit.rawValue))", t - steps.temperature * 0.5),
+                                xEnd: .value("Temperature (\(temperatureUnit.rawValue))", t + steps.temperature * 0.5),
+                                yStart: .value("Pressure (\(pressureUnit.rawValue))", p - steps.pressure * 0.5),
+                                yEnd: .value("Pressure (\(pressureUnit.rawValue))", p + steps.pressure * 0.5)
                             )
-                            .foregroundStyle(PhaseMapMarkerStyle.style(for: evaluation).color)
-                            .symbol(PhaseMapMarkerStyle.style(for: evaluation).chartSymbol)
-                            .symbolSize(evaluation.point.isOperatingPoint ? 110 : 70)
-                            .accessibilityLabel(PhaseMapMarkerStyle.style(for: evaluation).accessibilityDescription)
+                            .foregroundStyle(style.color)
+                            .accessibilityLabel(style.accessibilityDescription)
+
+                            PointMark(
+                                x: .value("Temperature (\(temperatureUnit.rawValue))", t),
+                                y: .value("Pressure (\(pressureUnit.rawValue))", p)
+                            )
+                            .foregroundStyle(Color.ifeText.opacity(0.28))
+                            .symbol(style.chartSymbol)
+                            .symbolSize(9)
+                        }
+                        if let selectedEvaluation, !selectedEvaluation.point.isOperatingPoint {
+                            PointMark(
+                                x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(selectedEvaluation)),
+                                y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(selectedEvaluation))
+                            )
+                            .symbolSize(300)
+                            .symbol {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .stroke(Color.ifeText, lineWidth: 2.5)
+                                    .frame(width: 18, height: 18)
+                            }
                         }
                         if let operatingPoint = result.operatingPoint {
+                            let style = PhaseMapMarkerStyle.style(for: operatingPoint)
                             PointMark(
-                                x: .value(
-                                    "Temperature (\(temperatureUnit.rawValue))",
-                                    temperatureUnit.displayValue(from: operatingPoint.point.temperatureK)
-                                ),
-                                y: .value(
-                                    "Pressure (\(pressureUnit.rawValue))",
-                                    pressureUnit.displayValue(from: operatingPoint.point.pressurePa)
-                                )
+                                x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
+                                y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
+                            )
+                            .foregroundStyle(style.color)
+                            .symbol(style.chartSymbol)
+                            .symbolSize(90)
+                            .accessibilityLabel(style.accessibilityDescription)
+
+                            PointMark(
+                                x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
+                                y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
                             )
                             .foregroundStyle(Color.red)
                             .symbolSize(220)
@@ -815,6 +973,19 @@ private struct PhaseMapResultsSection: View {
                                 Circle()
                                     .stroke(Color.red, lineWidth: 2.5)
                                     .frame(width: 20, height: 20)
+                                    .background(Circle().stroke(Color.white, lineWidth: 5).frame(width: 20, height: 20))
+                            }
+                            .annotation(
+                                position: .top,
+                                spacing: 4,
+                                overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                            ) {
+                                Text("Operating point")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(Color.ifeText)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.ifeCard.opacity(0.92), in: Capsule())
                             }
                         }
                     }
@@ -822,11 +993,31 @@ private struct PhaseMapResultsSection: View {
                     .chartYScale(domain: yDomain)
                     .chartXAxisLabel("Temperature (\(temperatureUnit.rawValue))")
                     .chartYAxisLabel("Pressure (\(pressureUnit.rawValue))")
+                    .chartOverlay { proxy in
+                        GeometryReader { geometry in
+                            Rectangle()
+                                .fill(Color.clear)
+                                .contentShape(Rectangle())
+                                .gesture(
+                                    SpatialTapGesture().onEnded { tap in
+                                        guard let plotFrame = proxy.plotFrame else { return }
+                                        let origin = geometry[plotFrame].origin
+                                        guard let t: Double = proxy.value(atX: tap.location.x - origin.x),
+                                              let p: Double = proxy.value(atY: tap.location.y - origin.y)
+                                        else { return }
+                                        selectEvaluation(atTemperature: t, pressure: p)
+                                    }
+                                )
+                        }
+                    }
                     .frame(minHeight: 360)
                     .accessibilityIdentifier("phase-map-chart")
                     .accessibilityLabel("Multicomponent Phase Map with operating point highlighted by a red ring")
 
-                    PhaseMapLegend()
+                    Text("Tap a tile to see its details.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
 
                     Picker("Point", selection: Binding(
                         get: { selectedPointID ?? result.operatingPoint?.id ?? result.evaluations.first?.id },
@@ -971,29 +1162,53 @@ private struct PhaseMapResultsSection: View {
 }
 
 private struct PhaseMapLegend: View {
-    private let items: [(String, PhaseMapMarkerStyle)] = [
-        ("Solid", .style(for: .solid)),
-        ("Gas", .style(for: .gas)),
-        ("Liquid", .style(for: .liquid)),
-        ("Multiphase", .style(for: .multiphase)),
-        ("Dense", .style(for: .dense)),
-        ("Supercritical", .style(for: .supercritical)),
-        ("Unknown", .unknown),
-        ("Failed/non-converged/unsupported", .failed)
-    ]
+    let result: PhaseMapResult
+
+    private struct Entry: Identifiable {
+        let id: String
+        let label: String
+        let style: PhaseMapMarkerStyle
+        let count: Int
+    }
+
+    private var entries: [Entry] {
+        let order: [(String, PhaseMapMarkerStyle)] = [
+            ("Solid", .style(for: .solid)),
+            ("Gas", .style(for: .gas)),
+            ("Liquid", .style(for: .liquid)),
+            ("Multiphase", .style(for: .multiphase)),
+            ("Dense", .style(for: .dense)),
+            ("Supercritical", .style(for: .supercritical)),
+            ("Unknown", .unknown),
+            ("Failed/non-converged/unsupported", .failed)
+        ]
+        return order.compactMap { label, style in
+            let count = result.evaluations.filter {
+                PhaseMapMarkerStyle.style(for: $0).accessibilityDescription == style.accessibilityDescription
+            }.count
+            return count > 0 ? Entry(id: label, label: label, style: style, count: count) : nil
+        }
+    }
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), alignment: .leading)], alignment: .leading) {
-            ForEach(items, id: \.0) { item in
+            ForEach(entries) { entry in
                 Label {
-                    Text(item.0)
+                    Text(LocalizedStringKey(entry.label)) + Text(" · \(entry.count)").foregroundStyle(.secondary)
                 } icon: {
-                    Image(systemName: item.1.systemImage)
-                        .foregroundStyle(item.1.color)
+                    Image(systemName: "square.fill")
+                        .foregroundStyle(entry.style.color)
                 }
                 .font(.caption)
-                .accessibilityLabel(item.1.accessibilityDescription)
+                .accessibilityLabel("\(entry.style.accessibilityDescription), \(entry.count)")
             }
+            Label {
+                Text("Operating point")
+            } icon: {
+                Image(systemName: "circle")
+                    .foregroundStyle(Color.red)
+            }
+            .font(.caption)
         }
         .accessibilityIdentifier("phase-map-legend")
     }
@@ -1030,14 +1245,14 @@ struct PhaseMapMarkerStyle {
     static let failed = PhaseMapMarkerStyle(
         chartSymbol: .circle,
         systemImage: "circle.fill",
-        color: .pxUnavailable,
+        color: Color(.systemGray3),
         accessibilityDescription: "Solid gray circle for failed, non-converged or unsupported flash points"
     )
 
     static let unknown = PhaseMapMarkerStyle(
         chartSymbol: .diamond,
         systemImage: "questionmark.diamond",
-        color: .pxUnavailable,
+        color: Color(.systemGray5),
         accessibilityDescription: "Gray diamond for unknown flash points"
     )
 
@@ -1057,43 +1272,43 @@ struct PhaseMapMarkerStyle {
             PhaseMapMarkerStyle(
                 chartSymbol: .cross,
                 systemImage: "xmark",
-                color: .pxSuccess,
+                color: Color(red: 0.55, green: 0.78, blue: 0.62),
                 accessibilityDescription: "Green cross for Solid"
             )
         case .gas:
             PhaseMapMarkerStyle(
                 chartSymbol: .circle,
                 systemImage: "circle.fill",
-                color: .blue,
-                accessibilityDescription: "Blue circle for Gas"
+                color: Color(red: 0.97, green: 0.78, blue: 0.62),
+                accessibilityDescription: "Peach circle for Gas"
             )
         case .liquid:
             PhaseMapMarkerStyle(
                 chartSymbol: .square,
                 systemImage: "square.fill",
-                color: .cyan,
-                accessibilityDescription: "Cyan square for Liquid"
+                color: Color(red: 0.56, green: 0.69, blue: 0.90),
+                accessibilityDescription: "Blue square for Liquid"
             )
         case .multiphase:
             PhaseMapMarkerStyle(
                 chartSymbol: .plus,
                 systemImage: "plus",
-                color: .pink,
-                accessibilityDescription: "Pink plus for Multiphase"
+                color: Color(red: 0.74, green: 0.62, blue: 0.88),
+                accessibilityDescription: "Lavender plus for Multiphase"
             )
         case .dense:
             PhaseMapMarkerStyle(
                 chartSymbol: .diamond,
                 systemImage: "diamond.fill",
-                color: .orange,
-                accessibilityDescription: "Orange diamond for Dense"
+                color: Color(red: 0.93, green: 0.60, blue: 0.52),
+                accessibilityDescription: "Coral diamond for Dense"
             )
         case .supercritical:
             PhaseMapMarkerStyle(
                 chartSymbol: .triangle,
                 systemImage: "triangle.fill",
-                color: .purple,
-                accessibilityDescription: "Purple triangle for Supercritical"
+                color: Color(red: 0.50, green: 0.76, blue: 0.76),
+                accessibilityDescription: "Teal triangle for Supercritical"
             )
         case .unknown:
             unknown

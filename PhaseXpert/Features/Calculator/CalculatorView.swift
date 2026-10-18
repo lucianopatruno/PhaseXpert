@@ -22,6 +22,7 @@ struct CalculatorView: View {
     @State private var temperatureSelection: TextSelection?
     @State private var compositionSelections: [UUID: TextSelection] = [:]
     @State private var validationDetailsExpanded = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -30,9 +31,11 @@ struct CalculatorView: View {
             ScrollViewReader { scrollProxy in
             Form {
                 Section {
-                    CalculatorBrandHeader()
-                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                        .listRowBackground(Color.clear)
+                    IFEHeroCard(tint: .ifeLavender, padding: IFESpacing.medium) {
+                        CalculatorBrandHeader()
+                    }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    .listRowBackground(Color.clear)
                 }
 
                 Section {
@@ -170,15 +173,15 @@ struct CalculatorView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 7)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.secondary.opacity(0.08))
+                                        RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+                                            .fill(Color.ifeMist.opacity(0.55))
                                     )
                                     .foregroundStyle(.secondary)
                                     .accessibilityLabel("Calculated carbon dioxide remainder")
                             } else {
                                 TextField(
                                     "Value",
-                                    text: $entry.value,
+                                    text: compositionValueBinding(for: entry.id),
                                     selection: compositionSelectionBinding(for: entry.id)
                                 )
                                 .keyboardType(.decimalPad)
@@ -188,11 +191,11 @@ struct CalculatorView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 7)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color.secondary.opacity(0.08))
+                                    RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+                                        .fill(Color.ifeMist.opacity(0.55))
                                 )
                                 .overlay {
-                                    RoundedRectangle(cornerRadius: 8)
+                                    RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
                                         .stroke(
                                             focusedField == .composition(entry.id)
                                                 ? Color.ifePrimary
@@ -275,7 +278,7 @@ struct CalculatorView: View {
                 if let error = viewModel.calculationError {
                     Section("Calculation error") {
                         Text(error)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.pxError)
                     }
                 }
 
@@ -328,39 +331,6 @@ struct CalculatorView: View {
                     }
                 }
 
-                Section {
-                    Button {
-                        focusedField = nil
-                        Task {
-                            await viewModel.calculate()
-                            if let record = viewModel.calculationRecord {
-                                navigationState.latestCalculationRecord = record
-                            }
-                        }
-                    } label: {
-                        if viewModel.isCalculating {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text("Run calculation")
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
-                    .accessibilityIdentifier("run-calculation")
-
-                    Button("Reset", systemImage: "arrow.counterclockwise") {
-                        resetCalculator()
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(viewModel.isCalculating)
-                    .accessibilityIdentifier("reset-calculator")
-                    .accessibilityHint("Restores the clean calculator defaults and clears results.")
-                } header: {
-                    IFESectionHeader(step: 5, title: "Run calculation")
-                }
-
                 if let record = viewModel.calculationRecord {
                     CalculationResultSections(record: record)
                         .id("calculation-results")
@@ -374,7 +344,7 @@ struct CalculatorView: View {
                         NavigationLink {
                             PropertySweepView(record: record)
                         } label: {
-                            Label("Explore property sweep", systemImage: "chart.xyaxis.line")
+                            Label("Explore property sweep", systemImage: "slider.horizontal.3")
                                 .foregroundStyle(Color.accentColor)
                         }
                         .accessibilityIdentifier("open-property-sweep")
@@ -393,18 +363,16 @@ struct CalculatorView: View {
                         }
                         .accessibilityIdentifier("save-calculation")
                     } header: {
-                        IFESectionHeader(step: 7, title: "Traceability, save and export")
+                        IFESectionHeader(step: 6, title: "Traceability, save and export")
                     }
                 }
 
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .safeAreaInset(edge: .bottom) {
-                Color.clear
-                    .frame(height: IFESpacing.extraLarge)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
+            .contentMargins(.top, IFESpacing.small, for: .scrollContent)
+            .ifeBottomBar {
+                actionBar
             }
             .ifeDottedBackground()
             .toolbarTitleDisplayMode(.inline)
@@ -539,6 +507,51 @@ struct CalculatorView: View {
         }
     }
 
+    /// Primary actions, pinned above the tab bar so they are always reachable.
+    private var actionBar: some View {
+        let usesVerticalLayout = dynamicTypeSize.isAccessibilitySize
+        let layout = usesVerticalLayout
+            ? AnyLayout(VStackLayout(spacing: IFESpacing.small))
+            : AnyLayout(HStackLayout(spacing: IFESpacing.regular))
+
+        return layout {
+            Button {
+                resetCalculator()
+            } label: {
+                Label("Reset", systemImage: "arrow.counterclockwise")
+            }
+            .buttonStyle(.ifeTonal)
+            .frame(maxWidth: usesVerticalLayout ? .infinity : 150)
+            .disabled(viewModel.isCalculating)
+            .accessibilityIdentifier("reset-calculator")
+            .accessibilityHint("Restores the clean calculator defaults and clears results.")
+
+            Button {
+                focusedField = nil
+                Task {
+                    await viewModel.calculate()
+                    if let record = viewModel.calculationRecord {
+                        navigationState.latestCalculationRecord = record
+                    }
+                }
+            } label: {
+                if viewModel.isCalculating {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                } else {
+                    Text("Run calculation")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.ifeFilled)
+            .disabled(viewModel.isCalculating || !viewModel.canRunCalculation)
+            .accessibilityIdentifier("run-calculation")
+        }
+        .padding(.horizontal, IFESpacing.medium)
+        .padding(.vertical, IFESpacing.small)
+        .background(.bar)
+    }
+
     @ViewBuilder
     private func validationIssuesSection(viewModel: CalculatorViewModel) -> some View {
         Section {
@@ -554,7 +567,7 @@ struct CalculatorView: View {
                 )
                 .foregroundStyle(
                     issue.severity == .error && !isNonfatalHomogeneousIssue
-                        ? .red
+                        ? Color.pxError
                         : Color.ifePrimary
                 )
             }
@@ -569,6 +582,18 @@ struct CalculatorView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { focusedField = nil }
         }
+    }
+
+    /// Looks the entry up by id on every access so a field that ends editing
+    /// after its row was removed cannot read or write a stale array index.
+    private func compositionValueBinding(for id: UUID) -> Binding<String> {
+        Binding(
+            get: { viewModel.composition.first { $0.id == id }?.value ?? "" },
+            set: { newValue in
+                guard let index = viewModel.composition.firstIndex(where: { $0.id == id }) else { return }
+                viewModel.composition[index].value = newValue
+            }
+        )
     }
 
     private func removeImpurity(id: UUID) {
@@ -822,24 +847,46 @@ struct CalculatorView: View {
 }
 
 private struct CalculatorBrandHeader: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        HStack(alignment: .center, spacing: IFESpacing.regular) {
-            VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            HStack(alignment: .lastTextBaseline, spacing: IFESpacing.regular) {
                 Text("PhaseXpert")
                     .font(.largeTitle.weight(.semibold))
                     .foregroundStyle(Color.ifeText)
-                Text("Phase behavior and properties of CO₂ mixtures")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .allowsTightening(true)
+                Spacer(minLength: IFESpacing.regular)
+                logo
+                    .frame(width: 82, height: 34)
+                    // The artwork has empty space below its last line; sit it on the title's baseline.
+                    .alignmentGuide(.lastTextBaseline) { $0[.bottom] - 7 }
+                    .accessibilityLabel("IFE — Institute for Energy Technology")
             }
-            Spacer(minLength: IFESpacing.regular)
+            Text("Phase behavior and properties of CO₂ mixtures")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The logo is a transparent vector in dark brand colours. In dark mode it is
+    /// shown as a single light-coloured mark instead of sitting on a plate.
+    @ViewBuilder
+    private var logo: some View {
+        if colorScheme == .dark {
+            Image("IFELogoEnglish")
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+                .foregroundStyle(Color.ifeText)
+        } else {
             Image("IFELogoEnglish")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 82, height: 34)
-                .accessibilityLabel("IFE — Institute for Energy Technology")
         }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -1123,22 +1170,6 @@ struct StreamMixingView: View {
             }
 
             Section {
-                Button {
-                    focusedField = nil
-                    viewModel.calculate()
-                } label: {
-                    Text("Calculate mixture")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!viewModel.canCalculate)
-                .accessibilityIdentifier("stream-mixing-calculate")
-            } header: {
-                IFESectionHeader(step: 3, title: "Calculate mixture")
-            }
-
-            Section {
                 Label(
                     viewModel.statusMessage,
                     systemImage: viewModel.validationReport.canCalculate
@@ -1170,7 +1201,7 @@ struct StreamMixingView: View {
                     }
                 }
             } header: {
-                IFESectionHeader(step: 4, title: "Validation and status")
+                IFESectionHeader(step: 3, title: "Validation and status")
             }
 
             if let result = viewModel.result {
@@ -1183,9 +1214,12 @@ struct StreamMixingView: View {
         }
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
+        .accessibilityIdentifier("stream-mixing-screen")
+        .ifeBottomBar {
+            calculateBar
+        }
         .ifeDottedBackground()
         .navigationTitle("Stream Mixing")
-        .accessibilityIdentifier("stream-mixing-screen")
         .onAppear { viewModel.validate() }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -1206,6 +1240,23 @@ struct StreamMixingView: View {
                 }
             }
         }
+    }
+
+    /// The main action, pinned above the tab bar so it is always reachable.
+    private var calculateBar: some View {
+        Button {
+            focusedField = nil
+            viewModel.calculate()
+        } label: {
+            Text("Calculate mixture")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.ifeFilled)
+        .disabled(!viewModel.canCalculate)
+        .accessibilityIdentifier("stream-mixing-calculate")
+        .padding(.horizontal, IFESpacing.medium)
+        .padding(.vertical, IFESpacing.regular)
+        .background(.bar)
     }
 
     private func operatingPointRow(
@@ -1643,6 +1694,30 @@ private struct StreamMixingResultSections: View {
 
     var body: some View {
         Section {
+            IFEHeroCard(tint: .ifePeach) {
+                HStack(spacing: IFESpacing.regular) {
+                    IFEMetricTile(
+                        title: "Total molar flow",
+                        value: number(result.totalMolarFlowMolesPerSecond),
+                        unit: "mol/s",
+                        tint: .ifeCard
+                    )
+                    IFEMetricTile(
+                        title: "Total mass flow",
+                        value: number(result.totalMassFlowKilogramsPerSecond),
+                        unit: "kg/s",
+                        tint: .ifeCard
+                    )
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                "\(number(result.totalMolarFlowMolesPerSecond)) mol/s, \(number(result.totalMassFlowKilogramsPerSecond)) kg/s"
+            )
+            .accessibilityIdentifier("stream-mixing-result-hero")
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+
             ScientificStatusBanner(
                 title: isStale ? "Stale stream-mixing result" : "Preliminary V1 aggregation",
                 message: "Composition and flow totals are conserved at user-defined outlet conditions. No thermodynamic outlet state was evaluated."
@@ -1664,7 +1739,7 @@ private struct StreamMixingResultSections: View {
             )
             .accessibilityIdentifier("stream-mixing-total-mass-flow")
         } header: {
-            IFESectionHeader(step: 5, title: "Mixed-stream results")
+            IFESectionHeader(step: 4, title: "Mixed-stream results")
         }
 
         Section {
@@ -1724,7 +1799,7 @@ private struct StreamMixingResultSections: View {
             }
             .accessibilityIdentifier("stream-mixing-traceability")
         } header: {
-            IFESectionHeader(step: 6, title: "Assumptions and traceability")
+            IFESectionHeader(step: 5, title: "Assumptions and traceability")
         }
     }
 
@@ -1875,16 +1950,9 @@ private struct ModelSelectionRow: View {
                     Text(statusDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    HStack(spacing: IFESpacing.small) {
-                        if descriptor.availability == .unavailable {
-                            IFEStatusBadge(
-                                text: descriptor.id == "ife-model"
-                                    ? String(localized: "Under development")
-                                    : String(localized: "Unavailable"),
-                                systemImage: "slash.circle",
-                                color: .pxUnavailable
-                            )
-                        }
+                    // An unavailable model already states its status in the line
+                    // above, so it carries no chips.
+                    if descriptor.availability != .unavailable {
                         IFEStatusBadge(
                             text: String(localized: "Local"),
                             systemImage: "iphone",
@@ -1958,7 +2026,7 @@ private struct ValidationEvidenceSection: View {
             if !validatedProperties.isEmpty {
                 let list = AdvancedValidationPresentation.propertyList(validatedProperties)
                 Label("Independently validated: \(list)", systemImage: "checkmark.shield.fill")
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(Color.pxSuccess)
                     .accessibilityLabel("Independent validation available for \(list)")
             }
             ForEach(nearbyEvidence, id: \.property) { evidence in
@@ -2203,6 +2271,73 @@ struct CalculationResultSections: View {
             .sorted { $0.property.displayName < $1.property.displayName }
     }
 
+    private var heroTint: Color {
+        switch record.response.phase {
+        case .gas: .ifeBlue
+        case .liquid: .ifeLavender
+        case .dense, .supercritical: .ifePeach
+        case .twoPhase: .ifeCream
+        case .solid, .unknown, .unavailable: .ifeMist
+        }
+    }
+
+    private var heroStateSummary: String {
+        let composition = SavedCaseNameFormatter.compositionLabel(for: record.request.composition)
+        let pressure = "\(number(record.input.pressureValue)) \(record.input.pressureDisplayUnitLabel)"
+        let temperature = "\(number(record.input.temperatureValue)) \(record.input.temperatureUnit.rawValue)"
+        return [pressure, temperature, composition].joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private var resultHero: some View {
+        let headline = stateProperties.first.map { PropertyResultPresentation(property: $0) }
+
+        IFEHeroCard(tint: heroTint) {
+            VStack(alignment: .leading, spacing: IFESpacing.regular) {
+                IFEStatusBadge(
+                    text: record.response.phase.displayName,
+                    systemImage: "circle.hexagongrid.fill",
+                    color: .ifePrimary
+                )
+                if let headline {
+                    VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+                        Text(headline.title)
+                            .font(IFETypography.eyebrow)
+                            .foregroundStyle(.secondary)
+                        HStack(alignment: .firstTextBaseline, spacing: IFESpacing.small) {
+                            Text(headline.value)
+                                .font(IFETypography.hero)
+                                .foregroundStyle(Color.ifeText)
+                                .minimumScaleFactor(0.6)
+                                .lineLimit(1)
+                            if let unit = headline.unit {
+                                Text(unit)
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                Text(heroStateSummary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.top, IFESpacing.small)
+        .padding(.bottom, IFESpacing.medium)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            [
+                record.response.phase.displayName,
+                headline.map { "\($0.title) \($0.value) \($0.unit ?? "")" },
+                heroStateSummary
+            ]
+            .compactMap { $0 }
+            .joined(separator: ", ")
+        )
+        .accessibilityIdentifier("result-hero")
+    }
+
     private var unavailableProperties: [PropertyValue] {
         record.response.properties
             .filter { $0.status != .calculated }
@@ -2212,6 +2347,10 @@ struct CalculationResultSections: View {
     var body: some View {
         Group {
             Section {
+                resultHero
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+
                 if !record.response.isScientificResult {
                     ScientificStatusBanner(
                         title: "Non-scientific result",
@@ -2247,7 +2386,7 @@ struct CalculationResultSections: View {
                     )
                 }
             } header: {
-                IFESectionHeader(step: 6, title: "Results and phase information")
+                IFESectionHeader(step: 5, title: "Results and phase information")
             }
 
             Section("Composition summary") {
@@ -2621,9 +2760,9 @@ private struct PropertyStatusBadge: View {
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
-            .foregroundStyle(status == .failed ? Color.red : Color.ifePrimary)
+            .foregroundStyle(status == .failed ? Color.pxError : Color.ifePrimary)
             .background(
-                (status == .failed ? Color.red : Color.ifeBlue).opacity(0.12),
+                (status == .failed ? Color.pxError : Color.ifeBlue).opacity(0.12),
                 in: Capsule()
             )
     }

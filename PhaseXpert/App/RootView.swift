@@ -81,72 +81,95 @@ private struct MoreView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("Settings") {
-                    NavigationLink {
+            IFEPage {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    IFESectionTitle("Settings")
+                    IFENavigationRow(
+                        "Language & Appearance",
+                        subtitle: "Language, light and dark mode",
+                        systemImage: "gearshape",
+                        tint: .ifeViolet
+                    ) {
                         SettingsView()
-                    } label: {
-                        Label("Language & Appearance", systemImage: "gearshape")
                     }
                     .accessibilityIdentifier("more-appearance")
                 }
 
-                Section("Tools") {
-                    NavigationLink {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    IFESectionTitle("Tools")
+                    IFENavigationRow(
+                        "Stream Mixing",
+                        subtitle: "Combine streams and compute the mixed composition",
+                        systemImage: "arrow.triangle.merge",
+                        tint: .ifeCoral
+                    ) {
                         StreamMixingView(
                             viewModel: state.streamMixingViewModel,
                             wrapsInNavigationStack: false
                         )
-                    } label: {
-                        Label("Stream Mixing", systemImage: "arrow.triangle.merge")
                     }
                     .accessibilityIdentifier("more-stream-mixing")
                 }
 
-                Section("Models & Information") {
-                    NavigationLink {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    IFESectionTitle("Models & Information")
+                    IFENavigationRow(
+                        "General Properties",
+                        subtitle: "Property coverage and model details",
+                        systemImage: "function",
+                        tint: .ifeViolet
+                    ) {
                         ModelInformationView(
                             wrapsInNavigationStack: false,
                             modelID: "coolprop-heos"
                         )
-                    } label: {
-                        Label("General Properties", systemImage: "function")
                     }
                     .accessibilityIdentifier("more-general-model")
 
-                    NavigationLink {
+                    IFENavigationRow(
+                        "Validation",
+                        subtitle: "How results are checked against experiments",
+                        systemImage: "checkmark.shield",
+                        tint: .ifeGreen
+                    ) {
                         ValidationInformationView(wrapsInNavigationStack: false)
-                    } label: {
-                        Label("Validation", systemImage: "checkmark.shield")
                     }
                     .accessibilityIdentifier("more-validation")
 
-                    NavigationLink {
+                    IFENavigationRow(
+                        "IFE Model",
+                        subtitle: "IFE's own model, under development",
+                        systemImage: "atom",
+                        tint: .ifeCoral
+                    ) {
                         IFEModelInformationView(wrapsInNavigationStack: false)
-                    } label: {
-                        Label("IFE Model", systemImage: "atom")
                     }
                     .accessibilityIdentifier("more-ife-model")
 
-                    NavigationLink {
+                    IFENavigationRow(
+                        "About",
+                        subtitle: "Credits, references and contact",
+                        systemImage: "info.circle",
+                        tint: .ifeViolet
+                    ) {
                         AboutView(wrapsInNavigationStack: false)
-                    } label: {
-                        Label("About", systemImage: "info.circle")
                     }
                     .accessibilityIdentifier("more-about")
                 }
 
-                Section("Research Infrastructure") {
-                    NavigationLink {
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    IFESectionTitle("Research Infrastructure")
+                    IFENavigationRow(
+                        "FALCON",
+                        subtitle: "IFE's CO₂ flow research facility",
+                        systemImage: "building.2",
+                        tint: .ifePrimary
+                    ) {
                         FalconView()
-                    } label: {
-                        Label("FALCON", systemImage: "building.2")
                     }
                     .accessibilityIdentifier("more-falcon")
                 }
             }
-            .scrollContentBackground(.hidden)
-            .ifeDottedBackground()
             .navigationTitle("More")
         }
     }
@@ -157,29 +180,27 @@ private struct SettingsView: View {
     @AppStorage("appLanguage") private var appLanguage = AppLanguage.english.rawValue
 
     var body: some View {
-        Form {
-            Section("Language") {
+        IFEPage {
+            IFEGroup("Language") {
                 Picker("Language", selection: $appLanguage) {
                     ForEach(AppLanguage.allCases) { language in
                         Text(language.label).tag(language.rawValue)
                     }
                 }
-                .pickerStyle(.inline)
+                .pickerStyle(.segmented)
                 .labelsHidden()
                 .accessibilityIdentifier("settings-language")
             }
-            Section {
+
+            IFEGroup("Appearance") {
                 Toggle(isOn: $prefersDarkAppearance) {
                     Label("Dark mode", systemImage: "moon.fill")
+                        .labelStyle(IFEIconLabelStyle(tint: .ifeViolet))
                 }
                 .tint(.ifePrimary)
                 .accessibilityIdentifier("appearance-dark-mode")
-            } header: {
-                Text("Appearance")
             }
         }
-        .scrollContentBackground(.hidden)
-        .ifeDottedBackground()
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
     }

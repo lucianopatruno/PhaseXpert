@@ -609,19 +609,14 @@ struct MultiCasePropertySweepView: View {
                 Text("\(cases.count) cases • \(cases.count * controller.definition.pointCount) total evaluations")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section {
-                if controller.isRunning {
+            if controller.isRunning {
+                Section {
                     ProgressView(value: Double(controller.completedPoints), total: Double(max(controller.totalPoints, 1)))
                     Text("\(controller.completedPoints) of \(controller.totalPoints) points")
                         .font(.caption).foregroundStyle(.secondary)
-                    Button("Cancel sweep", role: .cancel) { controller.cancel() }
-                } else {
-                    Button("Run multi-case sweep", systemImage: "chart.xyaxis.line") { run() }
-                        .disabled(cases.count < 2 || properties.isEmpty || parsedDefinition == nil)
-                        .accessibilityIdentifier("run-multi-case-sweep")
                 }
             }
-            if let error = controller.errorMessage { Section("Sweep error") { Text(error).foregroundStyle(.red) } }
+            if let error = controller.errorMessage { Section("Sweep error") { Text(error).foregroundStyle(Color.pxError) } }
             if let result = controller.result {
                 Section {
                     Picker("Presentation", selection: $presentation) {
@@ -646,6 +641,22 @@ struct MultiCasePropertySweepView: View {
         .navigationTitle("Multi-case Sweep")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
+        .ifeBottomBar {
+            Group {
+                if controller.isRunning {
+                    Button("Cancel sweep", role: .cancel) { controller.cancel() }
+                        .buttonStyle(.ifeTonal)
+                } else {
+                    Button("Run multi-case sweep", systemImage: "chart.xyaxis.line") { run() }
+                        .buttonStyle(.ifeFilled)
+                        .disabled(cases.count < 2 || properties.isEmpty || parsedDefinition == nil)
+                        .accessibilityIdentifier("run-multi-case-sweep")
+                }
+            }
+            .padding(.horizontal, IFESpacing.medium)
+            .padding(.vertical, IFESpacing.regular)
+            .background(.bar)
+        }
         .ifeDottedBackground()
         .sheet(item: $selectedPoint) { SweepPointDetail(point: $0, result: controller.result!, navigationState: navigationState) }
         .alert("Unable to prepare exports", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
