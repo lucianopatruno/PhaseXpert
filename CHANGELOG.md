@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Hardened silent-failure paths: Advanced CCS operating-range guidance for
+  CO₂+H₂, CO₂+N₂ and CO₂+CH₄ no longer substitutes literal mole-fraction
+  fallbacks when validation metadata is missing and instead reports an explicit
+  unsupported line; failed explicit normalization is reported instead of being
+  ignored or treated as valid-as-entered in stream mixing; water-equilibrium
+  failures carry their reason; saved cases distinguish an unsupported record
+  version from unreadable data; a data-store open failure shows a recovery
+  screen instead of crashing, without touching the stored data.
+
 - Added limited-production Advanced CCS density and density-derived M, v and Z
   for four exact CO₂-rich Razmjoo 2026 dry multicomponent compositions and
   measured T/P blocks, using the existing generic EOS-CG-2021 N-component

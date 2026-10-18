@@ -95,10 +95,14 @@ public struct ValidationEvidenceEvaluator: Sendable {
                     || nearest.pressurePa > 0 else { return nil }
             return evidence(property, .nearby, formulation, capability, nearest)
         }
-        return candidates.min {
-            score($0.deltas!) < score($1.deltas!)
-                || (score($0.deltas!) == score($1.deltas!) && ($0.formulationID ?? "") < ($1.formulationID ?? ""))
+        let scored = candidates.compactMap { candidate -> (evidence: PropertyValidationEvidence, score: Double)? in
+            guard let deltas = candidate.deltas else { return nil }
+            return (candidate, score(deltas))
         }
+        return scored.min {
+            $0.score < $1.score
+                || ($0.score == $1.score && ($0.evidence.formulationID ?? "") < ($1.evidence.formulationID ?? ""))
+        }?.evidence
     }
 
     private func capability(for property: PropertyID, in formulation: TeqpFormulation) -> TeqpPropertyCapability? {

@@ -408,3 +408,29 @@ private struct WaterEquilibriumMockEngine: CoolPropEngine {
 
     func pureCarbonDioxideSaturationPressure(temperatureK: Double) async throws -> Double { 1 }
 }
+
+final class CarbonDioxideWaterEquilibriumErrorDescriptionTests: XCTestCase {
+    func testEveryFailureHasADistinctNonEmptyDescription() {
+        let errors: [CarbonDioxideWaterEquilibriumError] = [
+            .outsideValidatedDomain, .invalidInput, .noPhysicalRoot,
+            .dropoutPressureUnavailable, .dropoutTemperatureUnavailable
+        ]
+        let descriptions = errors.map(\.failureDescription)
+        XCTAssertTrue(descriptions.allSatisfy { !$0.isEmpty })
+        XCTAssertEqual(Set(descriptions).count, errors.count)
+    }
+
+    func testOutOfDomainAndInvalidInputAreDistinguishable() {
+        let model = SpycherPruess2003WaterEquilibrium()
+        XCTAssertThrowsError(
+            try model.equilibrium(pressurePa: .nan, temperatureK: 323.15)
+        ) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .invalidInput)
+        }
+        XCTAssertThrowsError(
+            try model.equilibrium(pressurePa: 100_000_000, temperatureK: 200)
+        ) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .outsideValidatedDomain)
+        }
+    }
+}

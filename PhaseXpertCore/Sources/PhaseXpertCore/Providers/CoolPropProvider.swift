@@ -844,19 +844,28 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
             : "; derived M=ΣxᵢMᵢ, v=1/ρ, Z=pM/(ρRT)"
 
         let waterEquilibrium: CarbonDioxideWaterEquilibriumResult?
+        var waterEquilibriumFailureWarning: String?
         if case .wetCarbonDioxideGas = composition {
             let currentWater = request.composition.first {
                 $0.component == .water
             }?.moleFraction
-            waterEquilibrium = try? SpycherPruess2003WaterEquilibrium().equilibrium(
-                pressurePa: request.pressurePa,
-                temperatureK: request.temperatureK,
-                currentWaterMoleFraction: currentWater
-            )
+            do {
+                waterEquilibrium = try SpycherPruess2003WaterEquilibrium().equilibrium(
+                    pressurePa: request.pressurePa,
+                    temperatureK: request.temperatureK,
+                    currentWaterMoleFraction: currentWater
+                )
+            } catch {
+                waterEquilibrium = nil
+                waterEquilibriumFailureWarning = "WATER EQUILIBRIUM — UNAVAILABLE: "
+                    + ((error as? CarbonDioxideWaterEquilibriumError)?.failureDescription
+                        ?? "the model could not be evaluated")
+                    + "; no water-equilibrium values are reported."
+            }
         } else {
             waterEquilibrium = nil
         }
-        let equilibriumWarnings = waterEquilibrium == nil ? [] : [
+        let equilibriumWarnings = waterEquilibrium == nil ? [waterEquilibriumFailureWarning].compactMap { $0 } : [
             "WATER EQUILIBRIUM — LIMITED PRODUCTION: binary CO₂ + pure H₂O only, independently validated in separate 30–80 °C / 0.4999–5.0055 MPa and 100 °C / 4.70–15.09 MPa regions.",
             "Water-dropout temperature is returned only from the bounded 30–80 °C validation region; dropout pressure is returned only when a root exists inside the applicable region."
         ]

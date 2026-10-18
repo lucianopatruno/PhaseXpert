@@ -1394,7 +1394,19 @@ public struct StreamMixingEngine: Sendable {
         )
         let normalizedProposal: [MixtureComponent]?
         if fractionalDeviation > CalculationValidator.compositionTolerance {
-            normalizedProposal = try? compositionConverter.normalizedMoleFractions(from: original)
+            do {
+                normalizedProposal = try compositionConverter.normalizedMoleFractions(from: original)
+            } catch {
+                return CompositionConversionOutcome(
+                    provenance: nil,
+                    issues: [issue(
+                        .invalidComposition,
+                        field: .composition,
+                        stream: stream,
+                        message: "Composition requires normalization, but an explicit normalization could not be computed from the entered values."
+                    )]
+                )
+            }
         } else {
             normalizedProposal = convertedValidation.normalizedComposition
         }

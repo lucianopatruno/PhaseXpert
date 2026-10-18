@@ -224,6 +224,13 @@ final class CalculatorViewModel {
     /// Independent binary pure-water equilibrium preview. This intentionally
     /// does not depend on, or broaden, the homogeneous CoolProp property gate.
     var waterEquilibriumPreview: CarbonDioxideWaterEquilibriumResult? {
+        if case .success(let result) = waterEquilibriumOutcome { return result }
+        return nil
+    }
+
+    /// `nil` when the water-equilibrium preview does not apply to the inputs;
+    /// otherwise the result or the reason the model could not produce one.
+    private var waterEquilibriumOutcome: Result<CarbonDioxideWaterEquilibriumResult, Error>? {
         guard let pressurePa = parsedPressurePa,
               let temperatureK = parsedTemperatureK else { return nil }
         let active = domainComposition().filter { $0.moleFraction > 0 }
@@ -232,11 +239,13 @@ final class CalculatorViewModel {
               let water = active.first(where: { $0.component == .water }) else {
             return nil
         }
-        return try? SpycherPruess2003WaterEquilibrium().equilibrium(
-            pressurePa: pressurePa,
-            temperatureK: temperatureK,
-            currentWaterMoleFraction: water.moleFraction
-        )
+        return Result {
+            try SpycherPruess2003WaterEquilibrium().equilibrium(
+                pressurePa: pressurePa,
+                temperatureK: temperatureK,
+                currentWaterMoleFraction: water.moleFraction
+            )
+        }
     }
 
     var displayedWaterEquilibrium: CarbonDioxideWaterEquilibriumResult? {
@@ -250,6 +259,11 @@ final class CalculatorViewModel {
               parsedPressurePa != nil,
               parsedTemperatureK != nil else {
             return nil
+        }
+        if case .failure(let error) = waterEquilibriumOutcome,
+           let equilibriumError = error as? CarbonDioxideWaterEquilibriumError,
+           equilibriumError != .outsideValidatedDomain {
+            return "Water calculations could not be completed at this condition: \(equilibriumError.failureDescription)."
         }
         return "Water calculations are unavailable at this condition. Validated water-equilibrium ranges are \(SpycherPruess2003WaterEquilibrium.validatedRangeSummary)"
     }
@@ -1309,10 +1323,23 @@ final class StreamMixingViewModel {
     func applyExplicitNormalization(for streamID: UUID) {
         guard let index = streams.firstIndex(where: { $0.id == streamID }) else { return }
         let snapshots = originalComposition(for: streams[index])
-        guard let normalized = try? compositionConverter.normalizedMoleFractions(from: snapshots) else { return }
+        let normalized: [MixtureComponent]
+        let displayed: [CompositionInput]
+        do {
+            normalized = try compositionConverter.normalizedMoleFractions(from: snapshots)
+            displayed = try displayComposition(from: normalized, basis: streams[index].compositionBasis)
+        } catch {
+            conversionIssue = issueForConversionFailure(
+                stream: streams[index],
+                field: .composition,
+                message: "Composition could not be normalized because it is incomplete, invalid or lacks a reviewed molar mass. The entered composition was left unchanged."
+            )
+            validate()
+            return
+        }
         streams[index].compositionBeforeNormalization = snapshots
         streams[index].normalizedComposition = normalized
-        streams[index].composition = displayComposition(from: normalized, basis: streams[index].compositionBasis)
+        streams[index].composition = displayed
         markInputsChanged()
     }
 
@@ -1617,11 +1644,11 @@ final class StreamMixingViewModel {
     private func displayComposition(
         from composition: [MixtureComponent],
         basis: CompositionUnit
-    ) -> [CompositionInput] {
-        let snapshots = (try? compositionConverter.compositionSnapshots(
+    ) throws -> [CompositionInput] {
+        let snapshots = try compositionConverter.compositionSnapshots(
             from: composition,
             basis: basis
-        )) ?? []
+        )
         return snapshots.map {
             CompositionInput(
                 component: $0.component,

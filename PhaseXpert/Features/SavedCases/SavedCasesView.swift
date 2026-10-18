@@ -3,6 +3,20 @@ import PhaseXpertCore
 import SwiftData
 import SwiftUI
 
+enum SavedRecordIssue: Error, Equatable {
+    case unsupportedVersion(Int)
+    case corrupt
+
+    var message: String {
+        switch self {
+        case .unsupportedVersion(let version):
+            return "Stored record unavailable: unsupported record format version \(version)."
+        case .corrupt:
+            return "Stored record unavailable: the saved data could not be read."
+        }
+    }
+}
+
 @Model
 final class SavedCalculation {
     @Attribute(.unique) var id: UUID
@@ -44,8 +58,25 @@ final class SavedCalculation {
     }
 
     var calculationRecord: CalculationRecord? {
-        guard recordFormatVersion == 1 else { return nil }
-        return try? JSONDecoder().decode(CalculationRecord.self, from: recordData)
+        if case .success(let record) = decodedRecord { return record }
+        return nil
+    }
+
+    /// Why the stored record cannot be shown, or `nil` when it decodes.
+    var recordIssue: SavedRecordIssue? {
+        if case .failure(let issue) = decodedRecord { return issue }
+        return nil
+    }
+
+    private var decodedRecord: Result<CalculationRecord, SavedRecordIssue> {
+        guard recordFormatVersion == 1 else {
+            return .failure(.unsupportedVersion(recordFormatVersion))
+        }
+        do {
+            return .success(try JSONDecoder().decode(CalculationRecord.self, from: recordData))
+        } catch {
+            return .failure(.corrupt)
+        }
     }
 
     func updateMetadata(name: String, notes: String, updatedAt: Date = Date()) {
@@ -1333,7 +1364,7 @@ private struct SavedCaseRow: View {
                     .lineLimit(2)
                     .accessibilityIdentifier("saved-case-validation-status")
             } else {
-                Text("Stored record unavailable")
+                Text(savedCase.recordIssue?.message ?? "Stored record unavailable")
                     .font(.caption)
                     .foregroundStyle(Color.pxUnavailable)
             }
