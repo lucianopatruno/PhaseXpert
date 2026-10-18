@@ -565,19 +565,31 @@ private struct PhaseMapContent: View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: IFESpacing.medium) {
-                IFECard {
-                    VStack(alignment: .leading, spacing: IFESpacing.small) {
+                IFEHeroCard(tint: .ifeBlue) {
+                    VStack(alignment: .leading, spacing: IFESpacing.regular) {
                         Text("Phase Map")
-                            .font(.title2.bold())
+                            .font(.title.bold())
+                            .foregroundStyle(Color.ifeText)
                         Text("Multicomponent composition at user-selected pressure and temperature ranges.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                        LabeledContent("Operating pressure", value: "\(number(record.request.pressurePa / 100_000)) bar(a)")
-                        LabeledContent("Operating temperature", value: "\(number(record.request.temperatureK - 273.15)) °C")
-                        LabeledContent("Composition") {
-                            Text(compositionSummary(record.request.composition))
-                                .multilineTextAlignment(.trailing)
+                        HStack(spacing: IFESpacing.regular) {
+                            IFEMetricTile(
+                                title: "Operating pressure",
+                                value: number(record.request.pressurePa / 100_000),
+                                unit: "bar(a)",
+                                tint: .ifeCard
+                            )
+                            IFEMetricTile(
+                                title: "Operating temperature",
+                                value: number(record.request.temperatureK - 273.15),
+                                unit: "°C",
+                                tint: .ifeCard
+                            )
                         }
+                        Text(compositionSummary(record.request.composition))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -634,17 +646,6 @@ private struct PhaseMapContent: View {
                     }
                 }
 
-                Button {
-                    viewModel.calculatePhaseMap()
-                } label: {
-                    Label("Calculate Phase Map", systemImage: "play.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!viewModel.canCalculatePhaseMap)
-                .controlSize(.large)
-                .accessibilityIdentifier("calculate-phase-map")
-
                 PhaseMapStatusSection(viewModel: viewModel)
 
                 if let result {
@@ -664,6 +665,19 @@ private struct PhaseMapContent: View {
                 )
             }
             .padding(IFESpacing.medium)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Button {
+                viewModel.calculatePhaseMap()
+            } label: {
+                Label("Calculate Phase Map", systemImage: "play.fill")
+            }
+            .buttonStyle(.ifeFilled)
+            .disabled(!viewModel.canCalculatePhaseMap)
+            .accessibilityIdentifier("calculate-phase-map")
+            .padding(.horizontal, IFESpacing.medium)
+            .padding(.vertical, IFESpacing.regular)
+            .background(.bar)
         }
         .accessibilityIdentifier("phase-map-available")
         .onDisappear {

@@ -263,7 +263,7 @@ struct IFESectionHeader: View {
 
 /// Small stat for result summaries: a label above a prominent value.
 struct IFEMetricTile: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     var unit: String?
     var tint: Color = .ifeLavender
@@ -428,5 +428,255 @@ struct IFEIconLabelStyle: LabelStyle {
                 )
             configuration.title
         }
+    }
+}
+
+// MARK: - Pages
+
+extension View {
+    /// Raised IFE card surface: fill, hairline border and soft shadow.
+    func ifeCardSurface(tint: Color? = nil) -> some View {
+        background(
+            tint ?? Color.ifeCard,
+            in: RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
+                .stroke(Color.pxSeparator.opacity(0.35), lineWidth: IFELine.hairline)
+        }
+        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 3)
+    }
+}
+
+/// A scrolling page of cards on the IFE background. Content is width-limited
+/// so it stays readable on iPad.
+struct IFEPage<Content: View>: View {
+    private let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: IFESpacing.large) {
+                content
+            }
+            .padding(.horizontal, IFESpacing.medium)
+            .padding(.vertical, IFESpacing.medium)
+            .frame(maxWidth: 720, alignment: .leading)
+            .frame(maxWidth: .infinity)
+        }
+        .ifeDottedBackground()
+    }
+}
+
+/// Small heading above a group of cards.
+struct IFESectionTitle: View {
+    private let title: LocalizedStringKey
+
+    init(_ title: LocalizedStringKey) {
+        self.title = title
+    }
+
+    var body: some View {
+        Text(title)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, IFESpacing.xSmall)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// A titled card holding related content.
+struct IFEGroup<Content: View>: View {
+    private let title: LocalizedStringKey?
+    private let content: Content
+
+    init(_ title: LocalizedStringKey? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.small) {
+            if let title {
+                IFESectionTitle(title)
+            }
+            VStack(alignment: .leading, spacing: IFESpacing.regular) {
+                content
+            }
+            .padding(IFESpacing.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .ifeCardSurface()
+        }
+    }
+}
+
+/// Tinted introduction at the top of a page: an icon and a short message.
+struct IFEPageHeader: View {
+    let systemImage: String
+    let message: LocalizedStringKey
+    var tint: Color = .ifeLavender
+
+    var body: some View {
+        IFEHeroCard(tint: tint) {
+            HStack(spacing: IFESpacing.medium) {
+                Image(systemName: systemImage)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color.ifePrimary)
+                    .frame(width: 52, height: 52)
+                    .background(
+                        Color.ifeCard.opacity(0.75),
+                        in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+                    )
+                    .accessibilityHidden(true)
+                Text(message)
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(Color.ifeText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// Card-style navigation row: icon tile, title, one-line description, chevron.
+/// The accessibility label is exactly the title, with the description as a hint.
+struct IFENavigationRow<Destination: View>: View {
+    private let title: LocalizedStringKey
+    private let subtitle: LocalizedStringKey?
+    private let systemImage: String
+    private let tint: Color
+    private let destination: Destination
+
+    init(
+        _ title: LocalizedStringKey,
+        subtitle: LocalizedStringKey? = nil,
+        systemImage: String,
+        tint: Color = .ifeViolet,
+        @ViewBuilder destination: () -> Destination
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.systemImage = systemImage
+        self.tint = tint
+        self.destination = destination()
+    }
+
+    var body: some View {
+        NavigationLink {
+            destination
+        } label: {
+            HStack(spacing: IFESpacing.regular) {
+                Image(systemName: systemImage)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 40, height: 40)
+                    .background(
+                        tint.opacity(0.14),
+                        in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+                    )
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(Color.ifeText)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+                Spacer(minLength: IFESpacing.small)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+            .padding(IFESpacing.medium)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .ifeCardSurface()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(subtitle ?? LocalizedStringKey(""))
+    }
+}
+
+/// A label with its value on one line, for use inside an `IFEGroup`.
+struct IFEInfoRow: View {
+    private let title: LocalizedStringKey
+    private let value: Text
+
+    init(_ title: LocalizedStringKey, value: Text) {
+        self.title = title
+        self.value = value
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: IFESpacing.regular) {
+            Text(title)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: IFESpacing.regular)
+            value
+                .multilineTextAlignment(.trailing)
+                .foregroundStyle(Color.ifeText)
+        }
+        .font(.subheadline)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - List rows
+
+/// Icon tile that leads a card row.
+struct IFERowIcon: View {
+    let systemImage: String
+    var tint: Color = .ifeViolet
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(tint)
+            .frame(width: 40, height: 40)
+            .background(
+                tint.opacity(0.14),
+                in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+            )
+            .accessibilityHidden(true)
+    }
+}
+
+extension View {
+    /// Soft capsule behind a short value, such as a pressure and temperature pair.
+    func ifePill() -> some View {
+        padding(.horizontal, IFESpacing.regular)
+            .padding(.vertical, IFESpacing.xSmall)
+            .background(Color.ifeMist.opacity(0.7), in: Capsule())
+    }
+
+    /// Presents a `List` row as a free-standing card.
+    func ifeCardListRow() -> some View {
+        listRowSeparator(.hidden)
+            .listRowInsets(
+                EdgeInsets(
+                    top: IFESpacing.small,
+                    leading: IFESpacing.large,
+                    bottom: IFESpacing.small,
+                    trailing: IFESpacing.large
+                )
+            )
+            .listRowBackground(
+                RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
+                    .fill(Color.ifeCard)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: IFECornerRadius.card, style: .continuous)
+                            .stroke(Color.pxSeparator.opacity(0.35), lineWidth: IFELine.hairline)
+                    }
+                    .padding(.vertical, IFESpacing.xSmall)
+                    .padding(.horizontal, IFESpacing.medium)
+            )
     }
 }

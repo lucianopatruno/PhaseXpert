@@ -5533,6 +5533,116 @@
           }
         }
       }
+    },
+    "Settings, tools and background information." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innstillinger, verktøy og bakgrunnsinformasjon."
+          }
+        }
+      }
+    },
+    "Language, light and dark mode" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Språk, lyst og mørkt tema"
+          }
+        }
+      }
+    },
+    "Combine streams and compute the mixed composition" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bland strømmer og beregn den blandede sammensetningen"
+          }
+        }
+      }
+    },
+    "Property coverage and model details" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egenskapsdekning og modelldetaljer"
+          }
+        }
+      }
+    },
+    "How results are checked against experiments" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hvordan resultater kontrolleres mot eksperimenter"
+          }
+        }
+      }
+    },
+    "IFE's own model, under development" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFEs egen modell, under utvikling"
+          }
+        }
+      }
+    },
+    "Credits, references and contact" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anerkjennelser, referanser og kontakt"
+          }
+        }
+      }
+    },
+    "IFE's CO₂ flow research facility" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFEs forskningsanlegg for CO₂-strømning"
+          }
+        }
+      }
+    },
+    "Results are checked against experimental data wherever evidence exists." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultater kontrolleres mot eksperimentelle data der det finnes belegg."
+          }
+        }
+      }
+    },
+    "IFE is developing its own thermodynamic model for CO₂ systems." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFE utvikler sin egen termodynamiske modell for CO₂-systemer."
+          }
+        }
+      }
+    },
+    "Saved calculations, project cases and validated references." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lagrede beregninger, prosjektcaser og validerte referanser."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

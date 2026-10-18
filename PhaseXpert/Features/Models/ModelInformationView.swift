@@ -56,7 +56,7 @@ struct ModelInformationView: View {
 
     private func statusColor(_ availability: ModelAvailability) -> Color {
         switch availability {
-        case .available: .green
+        case .available: Color.pxSuccess
         case .preliminary: .ifePrimary
         case .unavailable: .secondary
         }
@@ -71,23 +71,27 @@ private struct ModelDetailView: View {
     let descriptor: ModelDescriptor
 
     var body: some View {
-        List {
-            Section("Identity") {
+        IFEPage {
+            IFEGroup("Identity") {
                 LabeledContent("Model version", value: descriptor.modelVersion)
+                Divider()
                 LabeledContent("Provider version", value: descriptor.providerVersion)
+                Divider()
                 LabeledContent("Mode", value: descriptor.calculationMode.rawValue.capitalized)
             }
 
-            Section("Scientific basis") {
+            IFEGroup("Scientific basis") {
                 Text(scientificBasis)
+                Divider()
                 LabeledContent("Equation or method", value: equationOrMethod)
+                Divider()
                 LabeledContent(
                     "Coefficient set",
                     value: descriptor.coefficientSetVersion ?? "Not applicable or not supplied"
                 )
             }
 
-            Section("Supported components") {
+            IFEGroup("Supported components") {
                 if descriptor.supportedComponents.isEmpty {
                     Text("None declared")
                         .foregroundStyle(.secondary)
@@ -96,26 +100,38 @@ private struct ModelDetailView: View {
                 }
             }
 
-            Section("Validity domain") {
+            IFEGroup("Validity domain") {
                 LabeledContent(
                     "Temperature",
                     value: "\((descriptor.domain.minimumTemperatureK - 273.15).formatted())–\((descriptor.domain.maximumTemperatureK - 273.15).formatted()) °C"
                 )
+                Divider()
                 LabeledContent(
                     "Pressure",
                     value: "\((descriptor.domain.minimumPressurePa / 100_000).formatted())–\((descriptor.domain.maximumPressurePa / 100_000).formatted()) bar(a)"
                 )
             }
 
-            Section("Limitations") {
-                ForEach(descriptor.limitations, id: \.self) { limitation in
-                    Label(localizedLimitation(limitation), systemImage: "exclamationmark.triangle")
+            IFEGroup("Limitations") {
+                ForEach(Array(descriptor.limitations.enumerated()), id: \.offset) { index, limitation in
+                    if index > 0 {
+                        Divider()
+                    }
+                    Label {
+                        Text(localizedLimitation(limitation))
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundStyle(Color.pxWarning)
+                    }
                 }
             }
 
             if !descriptor.references.isEmpty {
-                Section("References") {
-                    ForEach(descriptor.references, id: \.title) { reference in
+                IFEGroup("References") {
+                    ForEach(Array(descriptor.references.enumerated()), id: \.offset) { index, reference in
+                        if index > 0 {
+                            Divider()
+                        }
                         if
                             let address = reference.doiOrURL,
                             let url = URL(string: address)

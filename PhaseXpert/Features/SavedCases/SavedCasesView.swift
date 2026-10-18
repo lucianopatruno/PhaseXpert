@@ -476,19 +476,45 @@ struct SavedCasesView: View {
                 } else {
                     List {
                         Section {
+                            IFEPageHeader(
+                                systemImage: "tray.full",
+                                message: "Saved calculations, project cases and validated references.",
+                                tint: .ifePeach
+                            )
+                            .listRowInsets(
+                                EdgeInsets(
+                                    top: IFESpacing.small,
+                                    leading: IFESpacing.medium,
+                                    bottom: IFESpacing.xSmall,
+                                    trailing: IFESpacing.medium
+                                )
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+
                             Picker("Saved case category", selection: $selectedCategory) {
                                 ForEach(SavedCasesCategory.allCases) { category in
                                     Text(category.rawValue).tag(category)
                                 }
                             }
                             .pickerStyle(.segmented)
+                            .listRowInsets(
+                                EdgeInsets(
+                                    top: IFESpacing.small,
+                                    leading: IFESpacing.medium,
+                                    bottom: IFESpacing.small,
+                                    trailing: IFESpacing.medium
+                                )
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                             .accessibilityIdentifier("saved-case-category")
                         }
 
                         categoryContent
                     }
                     .id(listOrderingIdentity)
-                    .listStyle(.insetGrouped)
+                    .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                 }
             }
@@ -612,6 +638,7 @@ struct SavedCasesView: View {
                             pendingDeletion = savedCase
                         }
                     }
+                    .ifeCardListRow()
                 }
             }
         }
@@ -625,6 +652,7 @@ struct SavedCasesView: View {
                 } label: {
                     ValidatedCaseRow(validatedCase: validatedCase)
                 }
+                .ifeCardListRow()
             }
         } header: {
             Text("Validated Cases")
@@ -643,6 +671,7 @@ struct SavedCasesView: View {
                 } label: {
                     BuiltInCaseRow(builtInCase: builtInCase)
                 }
+                .ifeCardListRow()
             }
         }
     }
@@ -691,6 +720,8 @@ private struct ValidatedCaseRow: View {
     let validatedCase: ValidatedStateOption
 
     var body: some View {
+        HStack(alignment: .top, spacing: IFESpacing.regular) {
+        IFERowIcon(systemImage: "checkmark.shield", tint: .ifeGreen)
         VStack(alignment: .leading, spacing: IFESpacing.small) {
             HStack(alignment: .firstTextBaseline) {
                 Text(validatedCase.name)
@@ -704,6 +735,7 @@ private struct ValidatedCaseRow: View {
             }
             Text("\(number(validatedCase.pressurePa / 100_000)) bar(a) · \(number(validatedCase.temperatureK - 273.15)) °C")
                 .font(.subheadline.monospacedDigit())
+                .ifePill()
             Text(compositionLabel(validatedCase.composition))
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -712,6 +744,7 @@ private struct ValidatedCaseRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
+        }
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("validated-case-\(validatedCase.id)")
@@ -763,6 +796,8 @@ private struct BuiltInCaseRow: View {
     let builtInCase: BuiltInCase
 
     var body: some View {
+        HStack(alignment: .top, spacing: IFESpacing.regular) {
+        IFERowIcon(systemImage: "folder", tint: .ifeCoral)
         VStack(alignment: .leading, spacing: IFESpacing.small) {
             HStack(alignment: .firstTextBaseline) {
                 Text(builtInCase.name)
@@ -781,6 +816,7 @@ private struct BuiltInCaseRow: View {
             {
                 Text("\(number(pressurePa / 100_000)) bar(a) · \(number(temperatureK - 273.15)) °C")
                     .font(.subheadline.monospacedDigit())
+                    .ifePill()
                 Text(compositionLabel(composition))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -794,6 +830,7 @@ private struct BuiltInCaseRow: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(3)
+        }
         }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("built-in-case-\(builtInCase.id)")
@@ -1355,6 +1392,8 @@ private struct SavedCaseRow: View {
     let savedCase: SavedCalculation
 
     var body: some View {
+        HStack(alignment: .top, spacing: IFESpacing.regular) {
+        IFERowIcon(systemImage: "tray.full", tint: .ifeViolet)
         VStack(alignment: .leading, spacing: IFESpacing.small) {
             HStack(alignment: .firstTextBaseline) {
                 Text(savedCase.name)
@@ -1367,6 +1406,7 @@ private struct SavedCaseRow: View {
             }
             Text("\(number(savedCase.pressureBarAbsolute)) bar(a) · \(number(savedCase.temperatureCelsius)) °C")
                 .font(.subheadline.monospacedDigit())
+                .ifePill()
             if let record = savedCase.calculationRecord {
                 Text(SavedCaseNameFormatter.compositionLabel(for: record.request.composition))
                     .font(.caption)
@@ -1396,6 +1436,7 @@ private struct SavedCaseRow: View {
                     )
                 }
             }
+        }
         }
         .accessibilityElement(children: .combine)
     }
