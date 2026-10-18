@@ -847,19 +847,44 @@ struct CalculatorView: View {
 }
 
 private struct CalculatorBrandHeader: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
-            Text("PhaseXpert")
-                .font(.largeTitle.weight(.semibold))
-                .foregroundStyle(Color.ifeText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
-                .allowsTightening(true)
+            HStack(alignment: .center, spacing: IFESpacing.regular) {
+                Text("PhaseXpert")
+                    .font(.largeTitle.weight(.semibold))
+                    .foregroundStyle(Color.ifeText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .allowsTightening(true)
+                Spacer(minLength: IFESpacing.regular)
+                logo
+                    .frame(width: 82, height: 34)
+                    .accessibilityLabel("IFE — Institute for Energy Technology")
+            }
             Text("Phase behavior and properties of CO₂ mixtures")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+    }
+
+    /// The logo is a transparent vector in dark brand colours. In dark mode it is
+    /// shown as a single light-coloured mark instead of sitting on a plate.
+    @ViewBuilder
+    private var logo: some View {
+        if colorScheme == .dark {
+            Image("IFELogoEnglish")
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+                .foregroundStyle(Color.ifeText)
+        } else {
+            Image("IFELogoEnglish")
+                .resizable()
+                .scaledToFit()
+        }
     }
 }
 
