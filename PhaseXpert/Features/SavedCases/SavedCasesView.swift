@@ -425,7 +425,9 @@ struct SavedCasesView: View {
                     $0.localizedCaseInsensitiveContains(searchText)
                 }
         }
-        return SavedCaseOrdering.builtInCases(filtered, direction: builtInCasesSort, locale: locale)
+        let sorted = SavedCaseOrdering.builtInCases(filtered, direction: builtInCasesSort, locale: locale)
+        // Information-only entries cannot be loaded, so they follow the usable presets.
+        return sorted.filter(\.hasCalculationPreset) + sorted.filter { !$0.hasCalculationPreset }
     }
 
     private var visibleValidatedCases: [ValidatedStateOption] {

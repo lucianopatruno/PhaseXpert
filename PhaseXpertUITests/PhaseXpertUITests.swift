@@ -351,7 +351,7 @@ final class PhaseXpertUITests: XCTestCase {
         let descendingBuiltInRows = app.descendants(matching: .any).matching(
             NSPredicate(format: "identifier BEGINSWITH %@", "built-in-case-")
         )
-        XCTAssertTrue(descendingBuiltInRows.firstMatch.label.contains("Ravenna CCS – Phase 1"))
+        XCTAssertTrue(descendingBuiltInRows.firstMatch.label.contains("Porthos pipeline specification example"))
         sort.tap()
         app.buttons["Name A–Z"].tap()
         let ascendingBuiltInRows = app.descendants(matching: .any).matching(

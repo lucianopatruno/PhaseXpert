@@ -97,16 +97,29 @@ struct IFECard<Content: View>: View {
 /// Decorative IFE halftone accent. It renders only when an `IFEBrandAccent`
 /// image asset is present, so the app looks right with or without it.
 struct IFEBrandAccent: View {
+    @Environment(\.colorScheme) private var colorScheme
     var opacity: Double = 0.10
 
     var body: some View {
         if UIImage(named: "IFEBrandAccent") != nil {
-            Image("IFEBrandAccent")
-                .resizable()
-                .scaledToFit()
-                .opacity(opacity)
-                .accessibilityHidden(true)
-                .allowsHitTesting(false)
+            Group {
+                if colorScheme == .dark {
+                    // The artwork is dark purple; reverse it to light dots on dark surfaces.
+                    Image("IFEBrandAccent")
+                        .resizable()
+                        .renderingMode(.template)
+                        .scaledToFit()
+                        .foregroundStyle(Color.ifeText)
+                        .opacity(opacity * 0.5)
+                } else {
+                    Image("IFEBrandAccent")
+                        .resizable()
+                        .scaledToFit()
+                        .opacity(opacity)
+                }
+            }
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
         }
     }
 }
@@ -134,9 +147,9 @@ struct IFEHeroCard<Content: View>: View {
             .background {
                 ZStack(alignment: .bottomTrailing) {
                     tint
-                    IFEBrandAccent(opacity: 0.6)
-                        .frame(width: 440)
-                        .offset(x: 40, y: 8)
+                    IFEBrandAccent(opacity: 1.0)
+                        .frame(width: 520)
+                        .offset(x: 60, y: 6)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.section, style: .continuous))
@@ -147,7 +160,7 @@ struct IFEBackground: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             Color.ifeBackground
-            IFEBrandAccent(opacity: 0.2)
+            IFEBrandAccent(opacity: 0.28)
                 .frame(width: 620)
                 .offset(x: 60, y: 10)
         }
