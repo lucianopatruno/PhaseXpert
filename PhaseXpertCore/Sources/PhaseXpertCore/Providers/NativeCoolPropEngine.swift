@@ -20,8 +20,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         pressurePa: Double,
         temperatureK: Double
     ) async throws -> CoolPropEngineResult {
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXCoolPropResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_calculate_pure_co2(
@@ -55,9 +54,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                     jouleThomsonKelvinPerPascal: nativeResult.joule_thomson_k_pa
                 )
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
     }
 
     public func calculateCarbonDioxideNitrogen(
@@ -66,8 +63,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         carbonDioxideMoleFraction: Double,
         nitrogenMoleFraction: Double
     ) async throws -> CoolPropBinaryEngineResult {
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXCoolPropBinaryResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_calculate_co2_n2(
@@ -92,9 +88,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
     }
 
     public func calculateDryCarbonDioxideMixture(
@@ -157,8 +151,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         carbonDioxideMoleFraction: Double,
         waterMoleFraction: Double
     ) async throws -> CoolPropBinaryEngineResult {
-        try Task.checkCancellation()
-        let result = try await Task.detached(priority: .userInitiated) {
+        return try await runNativeWork {
             var nativeResult = PXCoolPropBinaryResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_calculate_co2_h2o_homogeneous_gas(
@@ -183,9 +176,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
-        }.value
-        try Task.checkCancellation()
-        return result
+        }
     }
 
     public func identifyDryCarbonDioxideMixturePhase(

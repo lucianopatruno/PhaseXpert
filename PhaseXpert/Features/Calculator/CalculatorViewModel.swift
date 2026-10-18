@@ -240,7 +240,7 @@ final class CalculatorViewModel {
             return nil
         }
         return Result {
-            try SpycherPruess2003WaterEquilibrium().equilibrium(
+            try CarbonDioxideWaterEquilibrium.standard.equilibrium(
                 pressurePa: pressurePa,
                 temperatureK: temperatureK,
                 currentWaterMoleFraction: water.moleFraction
@@ -265,7 +265,7 @@ final class CalculatorViewModel {
            equilibriumError != .outsideValidatedDomain {
             return "Water calculations could not be completed at this condition: \(equilibriumError.failureDescription)."
         }
-        return "Water calculations are unavailable at this condition. Validated water-equilibrium ranges are \(SpycherPruess2003WaterEquilibrium.validatedRangeSummary)"
+        return "Water calculations are unavailable at this condition. Validated water-equilibrium ranges are \(CarbonDioxideWaterEquilibrium.standard.validatedRangeSummary)"
     }
 
     var canRunCalculation: Bool {

@@ -434,3 +434,39 @@ final class CarbonDioxideWaterEquilibriumErrorDescriptionTests: XCTestCase {
         }
     }
 }
+
+final class CarbonDioxideWaterEquilibriumServiceTests: XCTestCase {
+    func testStandardModelIsTheSpycherPruessModel() throws {
+        let standard = CarbonDioxideWaterEquilibrium.standard
+        XCTAssertEqual(
+            standard.validatedRangeSummary,
+            SpycherPruess2003WaterEquilibrium.validatedRangeSummary
+        )
+
+        let viaProtocol = try standard.equilibrium(
+            pressurePa: 3_000_000,
+            temperatureK: 323.15,
+            currentWaterMoleFraction: nil
+        )
+        let direct = try SpycherPruess2003WaterEquilibrium().equilibrium(
+            pressurePa: 3_000_000,
+            temperatureK: 323.15
+        )
+        XCTAssertEqual(
+            viaProtocol.waterInCarbonDioxideRichPhaseMoleFraction,
+            direct.waterInCarbonDioxideRichPhaseMoleFraction
+        )
+    }
+
+    func testStandardModelStillRejectsOutOfDomainStates() {
+        XCTAssertThrowsError(
+            try CarbonDioxideWaterEquilibrium.standard.equilibrium(
+                pressurePa: 100_000_000,
+                temperatureK: 200,
+                currentWaterMoleFraction: nil
+            )
+        ) { error in
+            XCTAssertEqual(error as? CarbonDioxideWaterEquilibriumError, .outsideValidatedDomain)
+        }
+    }
+}
