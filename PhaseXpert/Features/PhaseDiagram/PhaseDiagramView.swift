@@ -924,12 +924,11 @@ private struct PhaseMapResultsSection: View {
                             let t = displayTemperature(evaluation)
                             let p = displayPressure(evaluation)
                             RectangleMark(
-                                xStart: .value("Temperature (\(temperatureUnit.rawValue))", t - steps.temperature * 0.47),
-                                xEnd: .value("Temperature (\(temperatureUnit.rawValue))", t + steps.temperature * 0.47),
-                                yStart: .value("Pressure (\(pressureUnit.rawValue))", p - steps.pressure * 0.47),
-                                yEnd: .value("Pressure (\(pressureUnit.rawValue))", p + steps.pressure * 0.47)
+                                xStart: .value("Temperature (\(temperatureUnit.rawValue))", t - steps.temperature * 0.5),
+                                xEnd: .value("Temperature (\(temperatureUnit.rawValue))", t + steps.temperature * 0.5),
+                                yStart: .value("Pressure (\(pressureUnit.rawValue))", p - steps.pressure * 0.5),
+                                yEnd: .value("Pressure (\(pressureUnit.rawValue))", p + steps.pressure * 0.5)
                             )
-                            .cornerRadius(2)
                             .foregroundStyle(style.color)
                             .accessibilityLabel(style.accessibilityDescription)
 
@@ -937,9 +936,9 @@ private struct PhaseMapResultsSection: View {
                                 x: .value("Temperature (\(temperatureUnit.rawValue))", t),
                                 y: .value("Pressure (\(pressureUnit.rawValue))", p)
                             )
-                            .foregroundStyle(Color.white.opacity(0.92))
+                            .foregroundStyle(Color.ifeText.opacity(0.28))
                             .symbol(style.chartSymbol)
-                            .symbolSize(14)
+                            .symbolSize(9)
                         }
                         if let selectedEvaluation, !selectedEvaluation.point.isOperatingPoint {
                             PointMark(
@@ -1246,14 +1245,14 @@ struct PhaseMapMarkerStyle {
     static let failed = PhaseMapMarkerStyle(
         chartSymbol: .circle,
         systemImage: "circle.fill",
-        color: .pxUnavailable,
+        color: Color(.systemGray3),
         accessibilityDescription: "Solid gray circle for failed, non-converged or unsupported flash points"
     )
 
     static let unknown = PhaseMapMarkerStyle(
         chartSymbol: .diamond,
         systemImage: "questionmark.diamond",
-        color: .pxUnavailable,
+        color: Color(.systemGray5),
         accessibilityDescription: "Gray diamond for unknown flash points"
     )
 
@@ -1273,42 +1272,42 @@ struct PhaseMapMarkerStyle {
             PhaseMapMarkerStyle(
                 chartSymbol: .cross,
                 systemImage: "xmark",
-                color: .pxSuccess,
+                color: Color(red: 0.55, green: 0.78, blue: 0.62),
                 accessibilityDescription: "Green cross for Solid"
             )
         case .gas:
             PhaseMapMarkerStyle(
                 chartSymbol: .circle,
                 systemImage: "circle.fill",
-                color: Color(red: 0.93, green: 0.58, blue: 0.10),
-                accessibilityDescription: "Amber circle for Gas"
+                color: Color(red: 0.97, green: 0.78, blue: 0.62),
+                accessibilityDescription: "Peach circle for Gas"
             )
         case .liquid:
             PhaseMapMarkerStyle(
                 chartSymbol: .square,
                 systemImage: "square.fill",
-                color: Color(red: 0.17, green: 0.40, blue: 0.85),
+                color: Color(red: 0.56, green: 0.69, blue: 0.90),
                 accessibilityDescription: "Blue square for Liquid"
             )
         case .multiphase:
             PhaseMapMarkerStyle(
                 chartSymbol: .plus,
                 systemImage: "plus",
-                color: Color(red: 0.55, green: 0.25, blue: 0.75),
-                accessibilityDescription: "Purple plus for Multiphase"
+                color: Color(red: 0.74, green: 0.62, blue: 0.88),
+                accessibilityDescription: "Lavender plus for Multiphase"
             )
         case .dense:
             PhaseMapMarkerStyle(
                 chartSymbol: .diamond,
                 systemImage: "diamond.fill",
-                color: Color(red: 0.80, green: 0.33, blue: 0.20),
-                accessibilityDescription: "Rust diamond for Dense"
+                color: Color(red: 0.93, green: 0.60, blue: 0.52),
+                accessibilityDescription: "Coral diamond for Dense"
             )
         case .supercritical:
             PhaseMapMarkerStyle(
                 chartSymbol: .triangle,
                 systemImage: "triangle.fill",
-                color: Color(red: 0.10, green: 0.55, blue: 0.55),
+                color: Color(red: 0.50, green: 0.76, blue: 0.76),
                 accessibilityDescription: "Teal triangle for Supercritical"
             )
         case .unknown:
