@@ -1970,7 +1970,7 @@ private struct ValidationEvidenceSection: View {
             if !validatedProperties.isEmpty {
                 let list = AdvancedValidationPresentation.propertyList(validatedProperties)
                 Label("Independently validated: \(list)", systemImage: "checkmark.shield.fill")
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(Color.pxSuccess)
                     .accessibilityLabel("Independent validation available for \(list)")
             }
             ForEach(nearbyEvidence, id: \.property) { evidence in

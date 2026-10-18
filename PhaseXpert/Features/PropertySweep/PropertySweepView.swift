@@ -98,7 +98,7 @@ struct PropertySweepView: View {
             if let errorMessage = viewModel.errorMessage {
                 Section("Sweep error") {
                     Label(errorMessage, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Color.pxError)
                 }
             }
 

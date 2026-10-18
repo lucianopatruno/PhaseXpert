@@ -392,6 +392,7 @@ struct CalculationComparison: Equatable {
 struct SavedCasesView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
+    @Environment(AppNavigationState.self) private var navigationState
     @Query(sort: \SavedCalculation.updatedAt, order: .reverse)
     private var savedCases: [SavedCalculation]
 
@@ -578,8 +579,21 @@ struct SavedCasesView: View {
     private var myCasesSection: some View {
         Section("My Cases") {
             if visibleCases.isEmpty {
-                Text("Run a calculation, then choose Save case.")
-                    .foregroundStyle(.secondary)
+                VStack(spacing: IFESpacing.regular) {
+                    Image(systemName: "tray")
+                        .font(.largeTitle)
+                        .foregroundStyle(Color.ifeViolet)
+                        .accessibilityHidden(true)
+                    Text("Run a calculation, then choose Save case.")
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                    Button("Calculator", systemImage: "function") {
+                        navigationState.selectedTab = .calculator
+                    }
+                    .buttonStyle(.ifeTonal)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, IFESpacing.large)
             } else {
                 ForEach(visibleCases) { savedCase in
                     NavigationLink {

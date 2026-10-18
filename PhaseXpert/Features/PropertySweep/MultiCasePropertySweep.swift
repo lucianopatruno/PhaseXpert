@@ -621,7 +621,7 @@ struct MultiCasePropertySweepView: View {
                         .accessibilityIdentifier("run-multi-case-sweep")
                 }
             }
-            if let error = controller.errorMessage { Section("Sweep error") { Text(error).foregroundStyle(.red) } }
+            if let error = controller.errorMessage { Section("Sweep error") { Text(error).foregroundStyle(Color.pxError) } }
             if let result = controller.result {
                 Section {
                     Picker("Presentation", selection: $presentation) {

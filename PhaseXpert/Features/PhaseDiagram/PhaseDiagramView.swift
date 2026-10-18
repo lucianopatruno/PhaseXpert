@@ -415,13 +415,17 @@ struct PhaseDiagramView: View {
                 if let record = navigationState.latestCalculationRecord {
                     diagramContent(for: record)
                 } else {
-                    ContentUnavailableView(
-                        "No operating point",
-                        systemImage: "chart.xyaxis.line",
-                        description: Text(
-                            "Run a calculation, then open its phase diagram. No estimated curve is displayed."
-                        )
-                    )
+                    ContentUnavailableView {
+                        Label("No operating point", systemImage: "chart.xyaxis.line")
+                    } description: {
+                        Text("Run a calculation, then open its phase diagram. No estimated curve is displayed.")
+                    } actions: {
+                        Button("Calculator", systemImage: "function") {
+                            navigationState.selectedTab = .calculator
+                        }
+                        .buttonStyle(.ifeFilled)
+                        .frame(maxWidth: 260)
+                    }
                     .accessibilityIdentifier("phase-diagram-no-calculation")
                 }
             }
