@@ -115,16 +115,22 @@ struct IFEBrandAccent: View {
 /// Full-width tinted card for a screen's main message, such as a result.
 struct IFEHeroCard<Content: View>: View {
     private let tint: Color
+    private let padding: CGFloat
     private let content: Content
 
-    init(tint: Color = .ifeLavender, @ViewBuilder content: () -> Content) {
+    init(
+        tint: Color = .ifeLavender,
+        padding: CGFloat = IFESpacing.large,
+        @ViewBuilder content: () -> Content
+    ) {
         self.tint = tint
+        self.padding = padding
         self.content = content()
     }
 
     var body: some View {
         content
-            .padding(IFESpacing.large)
+            .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 ZStack(alignment: .topTrailing) {

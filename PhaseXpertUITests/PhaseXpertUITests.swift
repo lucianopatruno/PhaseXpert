@@ -134,6 +134,7 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.buttons["export-multi-case-sweep"].waitForExistence(timeout: 3))
         app.buttons["export-multi-case-sweep"].tap()
         XCTAssertTrue(app.buttons["Share CSV"].waitForExistence(timeout: 3))
+        for _ in 0..<3 where !app.buttons["Share PDF"].exists { app.swipeUp() }
         XCTAssertTrue(app.buttons["Share PDF"].exists)
     }
 
@@ -760,10 +761,14 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Preliminary V1 aggregation"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.staticTexts["Total molar flow"].exists)
         XCTAssertTrue(app.staticTexts["Total mass flow"].exists)
-        XCTAssertEqual(
-            app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "does not model pressure equalization")).count,
-            1
+        let pressureWarning = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "does not model pressure equalization")
         )
+        // The warning sits in the status section above the result cards; scroll back to it.
+        for _ in 0..<4 where pressureWarning.count == 0 {
+            app.swipeDown()
+        }
+        XCTAssertEqual(pressureWarning.count, 1)
 
         let traceability = app.buttons["Assumptions and traceability"]
         for _ in 0..<8 where !traceability.waitForExistence(timeout: 0.5) {

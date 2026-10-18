@@ -31,7 +31,7 @@ struct CalculatorView: View {
             ScrollViewReader { scrollProxy in
             Form {
                 Section {
-                    IFEHeroCard(tint: .ifeLavender) {
+                    IFEHeroCard(tint: .ifeLavender, padding: IFESpacing.medium) {
                         CalculatorBrandHeader()
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
@@ -181,7 +181,7 @@ struct CalculatorView: View {
                             } else {
                                 TextField(
                                     "Value",
-                                    text: $entry.value,
+                                    text: compositionValueBinding(for: entry.id),
                                     selection: compositionSelectionBinding(for: entry.id)
                                 )
                                 .keyboardType(.decimalPad)
@@ -370,6 +370,7 @@ struct CalculatorView: View {
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
+            .contentMargins(.top, IFESpacing.small, for: .scrollContent)
             .ifeBottomBar {
                 actionBar
             }
@@ -547,7 +548,7 @@ struct CalculatorView: View {
             .accessibilityIdentifier("run-calculation")
         }
         .padding(.horizontal, IFESpacing.medium)
-        .padding(.vertical, IFESpacing.regular)
+        .padding(.vertical, IFESpacing.small)
         .background(.bar)
     }
 
@@ -581,6 +582,18 @@ struct CalculatorView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { focusedField = nil }
         }
+    }
+
+    /// Looks the entry up by id on every access so a field that ends editing
+    /// after its row was removed cannot read or write a stale array index.
+    private func compositionValueBinding(for id: UUID) -> Binding<String> {
+        Binding(
+            get: { viewModel.composition.first { $0.id == id }?.value ?? "" },
+            set: { newValue in
+                guard let index = viewModel.composition.firstIndex(where: { $0.id == id }) else { return }
+                viewModel.composition[index].value = newValue
+            }
+        )
     }
 
     private func removeImpurity(id: UUID) {
@@ -835,25 +848,25 @@ struct CalculatorView: View {
 
 private struct CalculatorBrandHeader: View {
     var body: some View {
-        HStack(alignment: .center, spacing: IFESpacing.regular) {
-            VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            HStack(alignment: .center, spacing: IFESpacing.regular) {
                 Text("PhaseXpert")
                     .font(.largeTitle.weight(.semibold))
                     .foregroundStyle(Color.ifeText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
                     .allowsTightening(true)
-                Text("Phase behavior and properties of CO₂ mixtures")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Spacer(minLength: IFESpacing.regular)
+                Image("IFELogoEnglish")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 82, height: 34)
+                    .ifeLogoPlate()
+                    .accessibilityLabel("IFE — Institute for Energy Technology")
             }
-            Spacer(minLength: IFESpacing.regular)
-            Image("IFELogoEnglish")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 82, height: 34)
-                .ifeLogoPlate()
-                .accessibilityLabel("IFE — Institute for Energy Technology")
+            Text("Phase behavior and properties of CO₂ mixtures")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
     }
@@ -1919,16 +1932,9 @@ private struct ModelSelectionRow: View {
                     Text(statusDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    HStack(spacing: IFESpacing.small) {
-                        if descriptor.availability == .unavailable {
-                            IFEStatusBadge(
-                                text: descriptor.id == "ife-model"
-                                    ? String(localized: "Under development")
-                                    : String(localized: "Unavailable"),
-                                systemImage: "slash.circle",
-                                color: .pxUnavailable
-                            )
-                        }
+                    // An unavailable model already states its status in the line
+                    // above, so it carries no chips.
+                    if descriptor.availability != .unavailable {
                         IFEStatusBadge(
                             text: String(localized: "Local"),
                             systemImage: "iphone",
