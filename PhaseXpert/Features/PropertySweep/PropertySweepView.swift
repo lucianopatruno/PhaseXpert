@@ -152,7 +152,7 @@ struct PropertySweepView: View {
         .navigationTitle("Property Sweep")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .ifeBottomBar {
             sweepActionBar
         }
         .ifeDottedBackground()

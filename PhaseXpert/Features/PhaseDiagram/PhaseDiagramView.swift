@@ -666,7 +666,7 @@ private struct PhaseMapContent: View {
             }
             .padding(IFESpacing.medium)
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .ifeBottomBar {
             Button {
                 viewModel.calculatePhaseMap()
             } label: {

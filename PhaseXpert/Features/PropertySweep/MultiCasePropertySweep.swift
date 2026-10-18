@@ -641,7 +641,7 @@ struct MultiCasePropertySweepView: View {
         .navigationTitle("Multi-case Sweep")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .ifeBottomBar {
             Group {
                 if controller.isRunning {
                     Button("Cancel sweep", role: .cancel) { controller.cancel() }

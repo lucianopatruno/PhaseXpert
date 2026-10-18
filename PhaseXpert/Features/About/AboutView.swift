@@ -23,6 +23,7 @@ struct AboutView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: 240)
+                        .ifeLogoPlate()
                         .accessibilityLabel("IFE — Institute for Energy Technology")
                     Text("PhaseXpert")
                         .font(IFETypography.screenTitle)

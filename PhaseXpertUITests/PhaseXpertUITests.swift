@@ -489,7 +489,7 @@ final class PhaseXpertUITests: XCTestCase {
         nitrogenField.tap()
         XCTAssertTrue(app.keyboards.element.waitForExistence(timeout: 2))
         nitrogenField.typeText("100")
-        app.staticTexts["Validation and capability state"].tap()
+        app.staticTexts["Composition"].tap()
         XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 1))
         XCTAssertEqual(nitrogenField.value as? String, "100")
 

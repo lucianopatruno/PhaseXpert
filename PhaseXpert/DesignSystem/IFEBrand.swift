@@ -226,6 +226,8 @@ struct IFEStatusBadge: View {
             .padding(.vertical, IFESpacing.xSmall + 1)
             .background(color.opacity(0.14), in: Capsule())
             .foregroundStyle(color)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .accessibilityElement(children: .combine)
     }
 }
@@ -321,6 +323,7 @@ struct IFEValueRow: View {
                     Button("Copy", systemImage: "doc.on.doc") {
                         UIPasteboard.general.string = copyValue
                     }
+                    .labelStyle(.iconOnly)
                     .font(.caption.weight(.semibold))
                     .buttonStyle(.borderless)
                     .accessibilityLabel("Copy \(title) value")
@@ -682,6 +685,25 @@ extension View {
 }
 
 extension View {
+    /// Puts a bar beneath the scrolling content, inside the same layout, so the
+    /// bottom of the scroll area ends above the bar and nothing hides under it.
+    func ifeBottomBar<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
+        VStack(spacing: 0) {
+            self
+            bar()
+        }
+    }
+
+    /// White plate behind a dark logo so it stays legible in dark mode.
+    func ifeLogoPlate() -> some View {
+        padding(.horizontal, IFESpacing.small)
+            .padding(.vertical, IFESpacing.xSmall + 2)
+            .background(
+                Color.white,
+                in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
+            )
+    }
+
     /// Lets a button sit in a `Form` or `List` row without the row chrome.
     func ifeActionRow() -> some View {
         listRowBackground(Color.clear)

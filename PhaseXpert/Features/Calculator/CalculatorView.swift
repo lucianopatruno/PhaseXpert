@@ -370,7 +370,7 @@ struct CalculatorView: View {
             }
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+            .ifeBottomBar {
                 actionBar
             }
             .ifeDottedBackground()
@@ -852,6 +852,7 @@ private struct CalculatorBrandHeader: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 82, height: 34)
+                .ifeLogoPlate()
                 .accessibilityLabel("IFE — Institute for Energy Technology")
         }
         .accessibilityElement(children: .combine)
@@ -1182,7 +1183,7 @@ struct StreamMixingView: View {
         }
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .ifeBottomBar {
             calculateBar
         }
         .ifeDottedBackground()
@@ -2298,7 +2299,8 @@ struct CalculationResultSections: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.vertical, IFESpacing.small)
+        .padding(.top, IFESpacing.small)
+        .padding(.bottom, IFESpacing.medium)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             [

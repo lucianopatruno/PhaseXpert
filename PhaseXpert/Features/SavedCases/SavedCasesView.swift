@@ -825,20 +825,23 @@ private struct ValidatedCaseDetailView: View {
                 }
             }
 
-            Section("Validated properties") {
-                Text(AdvancedValidationPresentation.propertyList(validatedCase.properties))
-            }
-
             Section {
-                Button("Use case", systemImage: "arrow.trianglehead.2.clockwise") {
-                    navigationState.openValidatedCaseInCalculator(validatedCase)
-                }
-                .buttonStyle(.ifeFilled)
-                .ifeActionRow()
-                .accessibilityIdentifier("use-validated-case-\(validatedCase.id)")
+                Text(AdvancedValidationPresentation.propertyList(validatedCase.properties))
+            } header: {
+                Text("Validated properties")
             } footer: {
                 Text("Validated cases are read-only bundled reference cases. Loading a case opens it in Calculator with General Properties as the calculation model.")
             }
+        }
+        .ifeBottomBar {
+            Button("Use case", systemImage: "arrow.trianglehead.2.clockwise") {
+                navigationState.openValidatedCaseInCalculator(validatedCase)
+            }
+            .buttonStyle(.ifeFilled)
+            .accessibilityIdentifier("use-validated-case-\(validatedCase.id)")
+            .padding(.horizontal, IFESpacing.medium)
+            .padding(.vertical, IFESpacing.regular)
+            .background(.bar)
         }
         .navigationTitle(validatedCase.name)
         .navigationBarTitleDisplayMode(.inline)
