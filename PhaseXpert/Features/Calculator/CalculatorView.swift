@@ -1138,22 +1138,6 @@ struct StreamMixingView: View {
             }
 
             Section {
-                Button {
-                    focusedField = nil
-                    viewModel.calculate()
-                } label: {
-                    Text("Calculate mixture")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(!viewModel.canCalculate)
-                .accessibilityIdentifier("stream-mixing-calculate")
-            } header: {
-                IFESectionHeader(step: 3, title: "Calculate mixture")
-            }
-
-            Section {
                 Label(
                     viewModel.statusMessage,
                     systemImage: viewModel.validationReport.canCalculate
@@ -1185,7 +1169,7 @@ struct StreamMixingView: View {
                     }
                 }
             } header: {
-                IFESectionHeader(step: 4, title: "Validation and status")
+                IFESectionHeader(step: 3, title: "Validation and status")
             }
 
             if let result = viewModel.result {
@@ -1198,6 +1182,9 @@ struct StreamMixingView: View {
         }
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            calculateBar
+        }
         .ifeDottedBackground()
         .navigationTitle("Stream Mixing")
         .accessibilityIdentifier("stream-mixing-screen")
@@ -1221,6 +1208,23 @@ struct StreamMixingView: View {
                 }
             }
         }
+    }
+
+    /// The main action, pinned above the tab bar so it is always reachable.
+    private var calculateBar: some View {
+        Button {
+            focusedField = nil
+            viewModel.calculate()
+        } label: {
+            Text("Calculate mixture")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.ifeFilled)
+        .disabled(!viewModel.canCalculate)
+        .accessibilityIdentifier("stream-mixing-calculate")
+        .padding(.horizontal, IFESpacing.medium)
+        .padding(.vertical, IFESpacing.regular)
+        .background(.bar)
     }
 
     private func operatingPointRow(
@@ -1658,6 +1662,30 @@ private struct StreamMixingResultSections: View {
 
     var body: some View {
         Section {
+            IFEHeroCard(tint: .ifePeach) {
+                HStack(spacing: IFESpacing.regular) {
+                    IFEMetricTile(
+                        title: "Total molar flow",
+                        value: number(result.totalMolarFlowMolesPerSecond),
+                        unit: "mol/s",
+                        tint: .ifeCard
+                    )
+                    IFEMetricTile(
+                        title: "Total mass flow",
+                        value: number(result.totalMassFlowKilogramsPerSecond),
+                        unit: "kg/s",
+                        tint: .ifeCard
+                    )
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(
+                "\(number(result.totalMolarFlowMolesPerSecond)) mol/s, \(number(result.totalMassFlowKilogramsPerSecond)) kg/s"
+            )
+            .accessibilityIdentifier("stream-mixing-result-hero")
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+
             ScientificStatusBanner(
                 title: isStale ? "Stale stream-mixing result" : "Preliminary V1 aggregation",
                 message: "Composition and flow totals are conserved at user-defined outlet conditions. No thermodynamic outlet state was evaluated."
@@ -1679,7 +1707,7 @@ private struct StreamMixingResultSections: View {
             )
             .accessibilityIdentifier("stream-mixing-total-mass-flow")
         } header: {
-            IFESectionHeader(step: 5, title: "Mixed-stream results")
+            IFESectionHeader(step: 4, title: "Mixed-stream results")
         }
 
         Section {
@@ -1739,7 +1767,7 @@ private struct StreamMixingResultSections: View {
             }
             .accessibilityIdentifier("stream-mixing-traceability")
         } header: {
-            IFESectionHeader(step: 6, title: "Assumptions and traceability")
+            IFESectionHeader(step: 5, title: "Assumptions and traceability")
         }
     }
 

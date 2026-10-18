@@ -751,12 +751,63 @@ private struct ValidatedCaseRow: View {
     }
 }
 
+/// Pressure, temperature and composition of a case as a tinted summary.
+private struct CaseStateHero: View {
+    let pressureBar: Double
+    let temperatureCelsius: Double
+    let composition: String
+    let tint: Color
+
+    var body: some View {
+        IFEHeroCard(tint: tint) {
+            VStack(alignment: .leading, spacing: IFESpacing.regular) {
+                HStack(spacing: IFESpacing.regular) {
+                    IFEMetricTile(
+                        title: "Pressure",
+                        value: format(pressureBar),
+                        unit: "bar(a)",
+                        tint: .ifeCard
+                    )
+                    IFEMetricTile(
+                        title: "Temperature",
+                        value: format(temperatureCelsius),
+                        unit: "°C",
+                        tint: .ifeCard
+                    )
+                }
+                Text(composition)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(
+            "\(format(pressureBar)) bar(a), \(format(temperatureCelsius)) °C, \(composition)"
+        )
+    }
+
+    private func format(_ value: Double) -> String {
+        value.formatted(.number.precision(.significantDigits(1...6)))
+    }
+}
+
 private struct ValidatedCaseDetailView: View {
     @Environment(AppNavigationState.self) private var navigationState
     let validatedCase: ValidatedStateOption
 
     var body: some View {
         Form {
+            Section {
+                CaseStateHero(
+                    pressureBar: validatedCase.pressurePa / 100_000,
+                    temperatureCelsius: validatedCase.temperatureK - 273.15,
+                    composition: compositionLabel(validatedCase.composition),
+                    tint: .ifeBlue
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+
             Section("Validated case") {
                 LabeledContent("Name", value: validatedCase.name)
                 LabeledContent("Status", value: "Validated")
@@ -782,6 +833,8 @@ private struct ValidatedCaseDetailView: View {
                 Button("Use case", systemImage: "arrow.trianglehead.2.clockwise") {
                     navigationState.openValidatedCaseInCalculator(validatedCase)
                 }
+                .buttonStyle(.ifeFilled)
+                .ifeActionRow()
                 .accessibilityIdentifier("use-validated-case-\(validatedCase.id)")
             } footer: {
                 Text("Validated cases are read-only bundled reference cases. Loading a case opens it in Calculator with General Properties as the calculation model.")
@@ -844,6 +897,23 @@ private struct BuiltInCaseDetailView: View {
 
     var body: some View {
         Form {
+            if
+                let pressurePa = builtInCase.defaultPressurePa,
+                let temperatureK = builtInCase.defaultTemperatureK,
+                let composition = builtInCase.composition
+            {
+                Section {
+                    CaseStateHero(
+                        pressureBar: pressurePa / 100_000,
+                        temperatureCelsius: temperatureK - 273.15,
+                        composition: compositionLabel(composition),
+                        tint: .ifePeach
+                    )
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                }
+            }
+
             Section("Built-in case") {
                 LabeledContent("Name", value: builtInCase.name)
                 LabeledContent("Label", value: builtInCase.label)
@@ -858,11 +928,15 @@ private struct BuiltInCaseDetailView: View {
                     Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
                         navigationState.openBuiltInCaseInCalculator(builtInCase)
                     }
+                    .buttonStyle(.ifeFilled)
+                    .ifeActionRow()
                     .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
 
                     Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
                         duplicateAction()
                     }
+                    .buttonStyle(.ifeTonal)
+                    .ifeActionRow()
                     .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
                 } else {
                     Label("Project information only", systemImage: "info.circle")
@@ -1480,13 +1554,19 @@ private struct SavedCaseDetailView: View {
                     Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
                         navigationState.editAndRerun(record)
                     }
+                    .buttonStyle(.ifeFilled)
+                    .ifeActionRow()
                     Button("Duplicate", systemImage: "plus.square.on.square") {
                         modelContext.insert(savedCase.duplicate())
                         saveContext()
                     }
+                    .buttonStyle(.ifeTonal)
+                    .ifeActionRow()
                     Button("Export case", systemImage: "square.and.arrow.up") {
                         isExporting = true
                     }
+                    .buttonStyle(.ifeTonal)
+                    .ifeActionRow()
                     .accessibilityIdentifier("export-saved-case")
                 } footer: {
                     Text("Opening a case preserves the saved result. Rerunning uses the model currently installed in PhaseXpert and creates a new calculation record.")

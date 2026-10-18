@@ -72,26 +72,12 @@ struct PropertySweepView: View {
                 )
             }
 
-            Section {
-                if viewModel.isRunning {
+            if viewModel.isRunning {
+                Section {
                     ProgressView(value: viewModel.progress)
                     Text("\(viewModel.completedPoints) of \(viewModel.pointCount) points")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Button("Cancel sweep", role: .cancel) {
-                        viewModel.cancel()
-                    }
-                } else {
-                    Button {
-                        viewModel.start()
-                    } label: {
-                        Label("Run property sweep", systemImage: "chart.xyaxis.line")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .disabled(viewModel.availableProperties.isEmpty)
-                    .accessibilityIdentifier("run-property-sweep")
                 }
             }
 
@@ -166,6 +152,9 @@ struct PropertySweepView: View {
         .navigationTitle("Property Sweep")
         .navigationBarTitleDisplayMode(.inline)
         .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            sweepActionBar
+        }
         .ifeDottedBackground()
         .onChange(of: focusedLimit) { _, newField in
             guard let newField else { return }
@@ -202,6 +191,30 @@ struct PropertySweepView: View {
             }
         }
         .onDisappear { viewModel.cancel() }
+    }
+
+    /// Run or cancel, pinned above the keyboard and tab bar.
+    private var sweepActionBar: some View {
+        Group {
+            if viewModel.isRunning {
+                Button("Cancel sweep", role: .cancel) {
+                    viewModel.cancel()
+                }
+                .buttonStyle(.ifeTonal)
+            } else {
+                Button {
+                    viewModel.start()
+                } label: {
+                    Label("Run property sweep", systemImage: "chart.xyaxis.line")
+                }
+                .buttonStyle(.ifeFilled)
+                .disabled(viewModel.availableProperties.isEmpty)
+                .accessibilityIdentifier("run-property-sweep")
+            }
+        }
+        .padding(.horizontal, IFESpacing.medium)
+        .padding(.vertical, IFESpacing.regular)
+        .background(.bar)
     }
 
     private func sweepLimitRow(

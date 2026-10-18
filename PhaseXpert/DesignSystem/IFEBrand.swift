@@ -680,3 +680,11 @@ extension View {
             )
     }
 }
+
+extension View {
+    /// Lets a button sit in a `Form` or `List` row without the row chrome.
+    func ifeActionRow() -> some View {
+        listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+    }
+}
