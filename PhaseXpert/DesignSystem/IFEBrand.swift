@@ -94,36 +94,6 @@ struct IFECard<Content: View>: View {
     }
 }
 
-/// Decorative IFE halftone accent. It renders only when an `IFEBrandAccent`
-/// image asset is present, so the app looks right with or without it.
-struct IFEBrandAccent: View {
-    @Environment(\.colorScheme) private var colorScheme
-    var opacity: Double = 0.10
-
-    var body: some View {
-        if UIImage(named: "IFEBrandAccent") != nil {
-            Group {
-                if colorScheme == .dark {
-                    // The artwork is dark purple; reverse it to light dots on dark surfaces.
-                    Image("IFEBrandAccent")
-                        .resizable()
-                        .renderingMode(.template)
-                        .scaledToFit()
-                        .foregroundStyle(Color.ifeText)
-                        .opacity(opacity * 0.5)
-                } else {
-                    Image("IFEBrandAccent")
-                        .resizable()
-                        .scaledToFit()
-                        .opacity(opacity)
-                }
-            }
-            .accessibilityHidden(true)
-            .allowsHitTesting(false)
-        }
-    }
-}
-
 /// Full-width tinted card for a screen's main message, such as a result.
 struct IFEHeroCard<Content: View>: View {
     private let tint: Color
@@ -144,29 +114,17 @@ struct IFEHeroCard<Content: View>: View {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                ZStack(alignment: .bottomTrailing) {
-                    tint
-                    IFEBrandAccent(opacity: 1.0)
-                        .frame(width: 520)
-                        .offset(x: 60, y: 6)
-                }
-            }
+            .background(tint)
             .clipShape(RoundedRectangle(cornerRadius: IFECornerRadius.section, style: .continuous))
     }
 }
 
 struct IFEBackground: View {
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Color.ifeBackground
-            IFEBrandAccent(opacity: 0.28)
-                .frame(width: 620)
-                .offset(x: 60, y: 10)
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-        .ignoresSafeArea()
+        Color.ifeBackground
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .ignoresSafeArea()
     }
 }
 

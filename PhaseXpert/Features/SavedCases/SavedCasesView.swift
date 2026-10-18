@@ -415,8 +415,8 @@ struct SavedCasesView: View {
         return SavedCaseOrdering.savedCases(filtered, sort: myCasesSort, locale: locale)
     }
 
-    private var visibleBuiltInCases: [BuiltInCase] {
-        let filtered = BuiltInCaseCatalog.cases.filter { builtInCase in
+    private var matchingBuiltInCases: [BuiltInCase] {
+        BuiltInCaseCatalog.cases.filter { builtInCase in
             guard !searchText.isEmpty else { return true }
             return builtInCase.name.localizedCaseInsensitiveContains(searchText)
                 || builtInCase.shortDescription.localizedCaseInsensitiveContains(searchText)
@@ -425,9 +425,20 @@ struct SavedCasesView: View {
                     $0.localizedCaseInsensitiveContains(searchText)
                 }
         }
-        let sorted = SavedCaseOrdering.builtInCases(filtered, direction: builtInCasesSort, locale: locale)
-        // Information-only entries cannot be loaded, so they follow the usable presets.
-        return sorted.filter(\.hasCalculationPreset) + sorted.filter { !$0.hasCalculationPreset }
+    }
+
+    /// Loadable presets, ordered by the selected sort.
+    private var visibleBuiltInCases: [BuiltInCase] {
+        SavedCaseOrdering.builtInCases(
+            matchingBuiltInCases.filter(\.hasCalculationPreset),
+            direction: builtInCasesSort,
+            locale: locale
+        )
+    }
+
+    /// Entries with no calculation preset; listed last, in catalog order, outside the sort.
+    private var visibleInformationOnlyCases: [BuiltInCase] {
+        matchingBuiltInCases.filter { !$0.hasCalculationPreset }
     }
 
     private var visibleValidatedCases: [ValidatedStateOption] {
@@ -448,7 +459,7 @@ struct SavedCasesView: View {
         case .validatedCases:
             visibleValidatedCases.isEmpty
         case .builtInCases:
-            visibleBuiltInCases.isEmpty
+            visibleBuiltInCases.isEmpty && visibleInformationOnlyCases.isEmpty
         }
     }
 
@@ -647,19 +658,31 @@ struct SavedCasesView: View {
         }
     }
 
+    @ViewBuilder
     private var builtInCasesSection: some View {
         Section("Built-in Cases") {
             ForEach(visibleBuiltInCases) { builtInCase in
-                NavigationLink {
-                    BuiltInCaseDetailView(builtInCase: builtInCase) {
-                        duplicate(builtInCase)
-                    }
-                } label: {
-                    BuiltInCaseRow(builtInCase: builtInCase)
-                }
-                .ifeCardListRow()
+                builtInCaseLink(builtInCase)
             }
         }
+        if !visibleInformationOnlyCases.isEmpty {
+            Section("Project information only") {
+                ForEach(visibleInformationOnlyCases) { builtInCase in
+                    builtInCaseLink(builtInCase)
+                }
+            }
+        }
+    }
+
+    private func builtInCaseLink(_ builtInCase: BuiltInCase) -> some View {
+        NavigationLink {
+            BuiltInCaseDetailView(builtInCase: builtInCase) {
+                duplicate(builtInCase)
+            }
+        } label: {
+            BuiltInCaseRow(builtInCase: builtInCase)
+        }
+        .ifeCardListRow()
     }
 
     private func duplicate(_ savedCase: SavedCalculation) {
