@@ -389,6 +389,63 @@ struct CalculationComparison: Equatable {
     }
 }
 
+/// Confirms that a built-in, validated or saved case was copied into My Cases.
+private struct DuplicateNotice: Identifiable, Equatable {
+    let id = UUID()
+    let name: String
+}
+
+private extension View {
+    func duplicateNoticeAlert(
+        _ notice: Binding<DuplicateNotice?>,
+        showInMyCases: @escaping () -> Void
+    ) -> some View {
+        alert(
+            "Case duplicated",
+            isPresented: Binding(
+                get: { notice.wrappedValue != nil },
+                set: { if !$0 { notice.wrappedValue = nil } }
+            ),
+            presenting: notice.wrappedValue
+        ) { _ in
+            Button("Show in My Cases") { showInMyCases() }
+            Button("OK", role: .cancel) {}
+        } message: { notice in
+            Text("“\(notice.name)” was added to My Cases.")
+        }
+    }
+}
+
+/// The same three actions on every saved, validated and built-in case.
+private struct CaseActionsSection: View {
+    let footer: LocalizedStringKey
+    let openIdentifier: String
+    let duplicateIdentifier: String
+    let exportIdentifier: String
+    let open: () -> Void
+    let duplicate: () -> Void
+    let export: () -> Void
+
+    var body: some View {
+        Section {
+            Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise", action: open)
+                .buttonStyle(.ifeFilled)
+                .ifeActionRow()
+                .accessibilityIdentifier(openIdentifier)
+            Button("Duplicate", systemImage: "plus.square.on.square", action: duplicate)
+                .buttonStyle(.ifeTonal)
+                .ifeActionRow()
+                .accessibilityIdentifier(duplicateIdentifier)
+            Button("Export case", systemImage: "square.and.arrow.up", action: export)
+                .buttonStyle(.ifeTonal)
+                .ifeActionRow()
+                .accessibilityIdentifier(exportIdentifier)
+        } footer: {
+            Text(footer)
+        }
+    }
+}
+
 struct SavedCasesView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
@@ -403,6 +460,7 @@ struct SavedCasesView: View {
     @State private var builtInCasesSort: NameSortDirection = .ascending
     @State private var pendingDeletion: SavedCalculation?
     @State private var persistenceError: String?
+    @State private var duplicateNotice: DuplicateNotice?
 
     private var visibleCases: [SavedCalculation] {
         let filtered = savedCases.filter { savedCase in
@@ -554,23 +612,26 @@ struct SavedCasesView: View {
                     .accessibilityIdentifier("saved-cases-sort")
                 }
             }
-            .confirmationDialog(
-                "Delete saved case?",
+            .duplicateNoticeAlert($duplicateNotice) {
+                selectedCategory = .myCases
+            }
+            // A centred alert that names the case; a confirmation dialog anchors to the
+            // list instead of the swiped row.
+            .alert(
+                "Delete \(pendingDeletion?.name ?? "")?",
                 isPresented: Binding(
                     get: { pendingDeletion != nil },
                     set: { if !$0 { pendingDeletion = nil } }
                 ),
-                titleVisibility: .visible
-            ) {
+                presenting: pendingDeletion
+            ) { savedCase in
                 Button("Delete", role: .destructive) {
-                    if let pendingDeletion {
-                        delete(pendingDeletion)
-                    }
+                    delete(savedCase)
                 }
                 Button("Cancel", role: .cancel) {
                     pendingDeletion = nil
                 }
-            } message: {
+            } message: { _ in
                 Text("The saved inputs, results and provenance will be removed from this device.")
             }
             .alert(
@@ -626,7 +687,7 @@ struct SavedCasesView: View {
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
                         Button("Duplicate", systemImage: "plus.square.on.square") {
-                            duplicate(savedCase)
+                            noteDuplicate(duplicate(savedCase))
                         }
                         .tint(.ifePrimary)
                     }
@@ -645,9 +706,19 @@ struct SavedCasesView: View {
         Section {
             ForEach(visibleValidatedCases) { validatedCase in
                 NavigationLink {
-                    ValidatedCaseDetailView(validatedCase: validatedCase)
+                    ValidatedCaseDetailView(
+                        validatedCase: validatedCase,
+                        duplicate: { duplicate(validatedCase) },
+                        showInMyCases: { selectedCategory = .myCases }
+                    )
                 } label: {
                     ValidatedCaseRow(validatedCase: validatedCase)
+                }
+                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                    Button("Duplicate", systemImage: "plus.square.on.square") {
+                        noteDuplicate(duplicate(validatedCase))
+                    }
+                    .tint(.ifePrimary)
                 }
                 .ifeCardListRow()
             }
@@ -676,36 +747,65 @@ struct SavedCasesView: View {
 
     private func builtInCaseLink(_ builtInCase: BuiltInCase) -> some View {
         NavigationLink {
-            BuiltInCaseDetailView(builtInCase: builtInCase) {
-                duplicate(builtInCase)
-            }
+            BuiltInCaseDetailView(
+                builtInCase: builtInCase,
+                duplicate: { duplicate(builtInCase) },
+                showInMyCases: { selectedCategory = .myCases }
+            )
         } label: {
             BuiltInCaseRow(builtInCase: builtInCase)
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            if builtInCase.hasCalculationPreset {
+                Button("Duplicate", systemImage: "plus.square.on.square") {
+                    noteDuplicate(duplicate(builtInCase))
+                }
+                .tint(.ifePrimary)
+            }
         }
         .ifeCardListRow()
     }
 
-    private func duplicate(_ savedCase: SavedCalculation) {
-        modelContext.insert(savedCase.duplicate())
-        saveContext()
+    private func noteDuplicate(_ name: String?) {
+        if let name { duplicateNotice = DuplicateNotice(name: name) }
     }
 
-    private func duplicate(_ builtInCase: BuiltInCase) {
+    /// Each `duplicate` returns the new case's name, or nil when nothing was added.
+    private func duplicate(_ savedCase: SavedCalculation) -> String? {
+        let copy = savedCase.duplicate()
+        modelContext.insert(copy)
+        return saveContext() ? copy.name : nil
+    }
+
+    private func duplicate(_ builtInCase: BuiltInCase) -> String? {
         guard builtInCase.hasCalculationPreset else {
             persistenceError = "This built-in project entry does not include a calculation preset."
-            return
+            return nil
         }
+        return insertCopy(
+            name: "\(builtInCase.name) — Copy",
+            notes: builtInCaseDuplicationNotes(for: builtInCase),
+            record: builtInCase.inputSnapshotRecord()
+        )
+    }
+
+    private func duplicate(_ validatedCase: ValidatedStateOption) -> String? {
+        insertCopy(
+            name: "\(validatedCase.name) — Copy",
+            notes: validatedCase.duplicationNotes,
+            record: validatedCase.inputSnapshotRecord()
+        )
+    }
+
+    private func insertCopy(name: String, notes: String, record: CalculationRecord) -> String? {
         do {
-            let savedCase = try SavedCalculation(
-                name: "\(builtInCase.name) — Copy",
-                notes: builtInCaseDuplicationNotes(for: builtInCase),
-                record: builtInCase.inputSnapshotRecord()
-            )
+            let savedCase = try SavedCalculation(name: name, notes: notes, record: record)
             modelContext.insert(savedCase)
-            saveContext()
+            return saveContext() ? savedCase.name : nil
         } catch {
             modelContext.rollback()
             persistenceError = error.localizedDescription
+            return nil
         }
     }
 
@@ -715,12 +815,15 @@ struct SavedCasesView: View {
         saveContext()
     }
 
-    private func saveContext() {
+    @discardableResult
+    private func saveContext() -> Bool {
         do {
             try modelContext.save()
+            return true
         } catch {
             modelContext.rollback()
             persistenceError = error.localizedDescription
+            return false
         }
     }
 }
@@ -801,8 +904,13 @@ private struct CaseStateHero: View {
 }
 
 private struct ValidatedCaseDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(AppNavigationState.self) private var navigationState
     let validatedCase: ValidatedStateOption
+    let duplicate: () -> String?
+    let showInMyCases: () -> Void
+    @State private var duplicateNotice: DuplicateNotice?
+    @State private var isExporting = false
 
     var body: some View {
         Form {
@@ -816,6 +924,16 @@ private struct ValidatedCaseDetailView: View {
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
             }
+
+            CaseActionsSection(
+                footer: "Validated cases are read-only bundled reference cases. Opening a case loads it in Calculator with General Properties as the calculation model. A duplicate becomes an editable My Case.",
+                openIdentifier: "use-validated-case-\(validatedCase.id)",
+                duplicateIdentifier: "duplicate-validated-case-\(validatedCase.id)",
+                exportIdentifier: "export-validated-case-\(validatedCase.id)",
+                open: { navigationState.openValidatedCaseInCalculator(validatedCase) },
+                duplicate: { if let name = duplicate() { duplicateNotice = DuplicateNotice(name: name) } },
+                export: { isExporting = true }
+            )
 
             Section("Validated case") {
                 LabeledContent("Name", value: validatedCase.name)
@@ -834,26 +952,65 @@ private struct ValidatedCaseDetailView: View {
                 }
             }
 
-            Section {
+            Section("Validated properties") {
                 Text(AdvancedValidationPresentation.propertyList(validatedCase.properties))
+            }
+
+            Section {
+                if validatedCase.references.isEmpty {
+                    Label("No source recorded", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(Color.pxWarning)
+                }
+                ForEach(Array(validatedCase.references.enumerated()), id: \.offset) { _, reference in
+                    SourceReferenceRow(reference: reference)
+                }
             } header: {
-                Text("Validated properties")
+                Text("Validation sources")
             } footer: {
-                Text("Validated cases are read-only bundled reference cases. Loading a case opens it in Calculator with General Properties as the calculation model.")
+                Text("Publications behind the formulation that validates this state.")
             }
-        }
-        .ifeBottomBar {
-            Button("Use case", systemImage: "arrow.trianglehead.2.clockwise") {
-                navigationState.openValidatedCaseInCalculator(validatedCase)
-            }
-            .buttonStyle(.ifeFilled)
-            .accessibilityIdentifier("use-validated-case-\(validatedCase.id)")
-            .padding(.horizontal, IFESpacing.medium)
-            .padding(.vertical, IFESpacing.regular)
-            .background(.bar)
         }
         .navigationTitle(validatedCase.name)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isExporting) {
+            SavedCaseExportView(
+                name: validatedCase.name,
+                notes: validatedCase.duplicationNotes,
+                inputSnapshot: validatedCase.inputSnapshotRecord()
+            )
+        }
+        .duplicateNoticeAlert($duplicateNotice) {
+            showInMyCases()
+            dismiss()
+        }
+    }
+}
+
+/// A publication with a link when a DOI or URL is recorded.
+private struct SourceReferenceRow: View {
+    let reference: SourceReference
+
+    var body: some View {
+        if let link = reference.doiOrURL, let url = URL(string: link) {
+            Link(destination: url) { content(link: link) }
+        } else {
+            content(link: nil)
+        }
+    }
+
+    private func content(link: String?) -> some View {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            Text(reference.title)
+                .font(.headline)
+            Text("\(reference.authors) (\(String(reference.year)))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if let link {
+                Text(link)
+                    .font(.caption)
+                    .foregroundStyle(Color.ifePrimary)
+            }
+        }
     }
 }
 
@@ -903,9 +1060,13 @@ private struct BuiltInCaseRow: View {
 }
 
 private struct BuiltInCaseDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(AppNavigationState.self) private var navigationState
     let builtInCase: BuiltInCase
-    let duplicateAction: () -> Void
+    let duplicate: () -> String?
+    let showInMyCases: () -> Void
+    @State private var duplicateNotice: DuplicateNotice?
+    @State private var isExporting = false
 
     var body: some View {
         Form {
@@ -926,6 +1087,25 @@ private struct BuiltInCaseDetailView: View {
                 }
             }
 
+            if builtInCase.hasCalculationPreset {
+                CaseActionsSection(
+                    footer: "Built-in cases are immutable presets. A duplicate becomes an editable My Case and is not linked to later catalog changes.",
+                    openIdentifier: "open-built-in-\(builtInCase.id)-calculator",
+                    duplicateIdentifier: "duplicate-built-in-\(builtInCase.id)",
+                    exportIdentifier: "export-built-in-\(builtInCase.id)",
+                    open: { navigationState.openBuiltInCaseInCalculator(builtInCase) },
+                    duplicate: { if let name = duplicate() { duplicateNotice = DuplicateNotice(name: name) } },
+                    export: { isExporting = true }
+                )
+            } else {
+                Section {
+                    Label("Project information only", systemImage: "info.circle")
+                        .foregroundStyle(.secondary)
+                } footer: {
+                    Text("This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states.")
+                }
+            }
+
             Section("Built-in case") {
                 LabeledContent("Name", value: builtInCase.name)
                 LabeledContent("Label", value: builtInCase.label)
@@ -933,29 +1113,6 @@ private struct BuiltInCaseDetailView: View {
                 Text("Published specifications are limits or design conditions and do not define a continuously fixed project stream.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            }
-
-            Section {
-                if builtInCase.hasCalculationPreset {
-                    Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
-                        navigationState.openBuiltInCaseInCalculator(builtInCase)
-                    }
-                    .buttonStyle(.ifeFilled)
-                    .ifeActionRow()
-                    .accessibilityIdentifier("open-built-in-\(builtInCase.id)-calculator")
-
-                    Button("Duplicate to My Cases", systemImage: "plus.square.on.square") {
-                        duplicateAction()
-                    }
-                    .buttonStyle(.ifeTonal)
-                    .ifeActionRow()
-                    .accessibilityIdentifier("duplicate-built-in-\(builtInCase.id)")
-                } else {
-                    Label("Project information only", systemImage: "info.circle")
-                        .foregroundStyle(.secondary)
-                }
-            } footer: {
-                Text(builtInCase.hasCalculationPreset ? "Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes." : "This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states.")
             }
 
             if !builtInCase.projectFacts.isEmpty {
@@ -1023,6 +1180,19 @@ private struct BuiltInCaseDetailView: View {
         }
         .navigationTitle(builtInCase.name)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isExporting) {
+            if builtInCase.hasCalculationPreset {
+                SavedCaseExportView(
+                    name: builtInCase.name,
+                    notes: builtInCaseDuplicationNotes(for: builtInCase),
+                    inputSnapshot: builtInCase.inputSnapshotRecord()
+                )
+            }
+        }
+        .duplicateNoticeAlert($duplicateNotice) {
+            showInMyCases()
+            dismiss()
+        }
     }
 }
 
@@ -1041,6 +1211,78 @@ private func number(_ value: Double) -> String {
     value.formatted(.number.precision(.significantDigits(1...8)))
 }
 
+/// An input-only record for cases that carry a defined state but no calculation.
+/// It is explicitly not a scientific result: no properties, no solver, no convergence.
+private func makeInputSnapshotRecord(
+    modelID: String,
+    modelName: String,
+    providerVersion: String,
+    scientificBasis: String,
+    limitations: [String],
+    references: [SourceReference],
+    warnings: [String],
+    pressurePa: Double,
+    temperatureK: Double,
+    composition: [MixtureComponent]
+) -> CalculationRecord {
+    let request = CalculationRequest(
+        modelID: modelID,
+        pressurePa: pressurePa,
+        temperatureK: temperatureK,
+        composition: composition,
+        requestedProperties: [],
+        clientVersion: Bundle.main.releaseVersion
+    )
+    let descriptor = ModelDescriptor(
+        id: modelID,
+        name: modelName,
+        modelVersion: "input-only",
+        providerVersion: providerVersion,
+        availability: .unavailable,
+        calculationMode: .local,
+        supportedComponents: Set(ComponentID.allCases),
+        supportedProperties: [],
+        domain: .initialCO2Transport,
+        scientificBasis: scientificBasis,
+        equationOrMethod: "No equation of state evaluated",
+        limitations: limitations,
+        references: references
+    )
+    return CalculationRecord(
+        request: request,
+        input: CalculationInputSnapshot(
+            pressureValue: pressurePa / 100_000,
+            pressureUnit: .bara,
+            pressurePa: pressurePa,
+            temperatureValue: temperatureK - 273.15,
+            temperatureUnit: .celsius,
+            temperatureK: temperatureK,
+            originalComposition: composition.map {
+                CompositionInputSnapshot(
+                    component: $0.component,
+                    value: $0.moleFraction * 100,
+                    unit: .molePercent
+                )
+            },
+            normalizedComposition: nil
+        ),
+        response: CalculationResponse(
+            requestID: request.requestID,
+            model: descriptor,
+            phase: .unknown,
+            properties: [],
+            solver: SolverMetadata(
+                method: "No provider calculation",
+                converged: false,
+                durationMilliseconds: 0
+            ),
+            warnings: warnings,
+            isScientificResult: false
+        ),
+        application: Bundle.main.applicationIdentity
+    )
+}
+
 extension BuiltInCase {
     func inputSnapshotRecord() -> CalculationRecord {
         guard
@@ -1050,26 +1292,11 @@ extension BuiltInCase {
         else {
             preconditionFailure("Information-only built-in cases do not provide calculation records.")
         }
-        let request = CalculationRequest(
+        return makeInputSnapshotRecord(
             modelID: "phase-xpert-built-in-case-input",
-            pressurePa: defaultPressurePa,
-            temperatureK: defaultTemperatureK,
-            composition: composition,
-            requestedProperties: [],
-            clientVersion: Bundle.main.releaseVersion
-        )
-        let descriptor = ModelDescriptor(
-            id: "phase-xpert-built-in-case-input",
-            name: "Built-in source-based input preset",
-            modelVersion: "input-only",
+            modelName: "Built-in source-based input preset",
             providerVersion: "PhaseXpert catalog",
-            availability: .unavailable,
-            calculationMode: .local,
-            supportedComponents: Set(ComponentID.allCases),
-            supportedProperties: [],
-            domain: .initialCO2Transport,
             scientificBasis: "Provider-neutral built-in input preset. It is not a thermodynamic calculation result.",
-            equationOrMethod: "No equation of state evaluated",
             limitations: ["Not a provider calculation.", label],
             references: sources.map {
                 SourceReference(
@@ -1078,40 +1305,41 @@ extension BuiltInCase {
                     year: $0.referenceYear,
                     doiOrURL: $0.url.absoluteString
                 )
-            }
+            },
+            warnings: [label, "This duplicated case is an editable input snapshot, not a validated thermodynamic result."],
+            pressurePa: defaultPressurePa,
+            temperatureK: defaultTemperatureK,
+            composition: composition
         )
-        return CalculationRecord(
-            request: request,
-            input: CalculationInputSnapshot(
-                pressureValue: defaultPressurePa / 100_000,
-                pressureUnit: .bara,
-                pressurePa: defaultPressurePa,
-                temperatureValue: defaultTemperatureK - 273.15,
-                temperatureUnit: .celsius,
-                temperatureK: defaultTemperatureK,
-                originalComposition: composition.map {
-                    CompositionInputSnapshot(
-                        component: $0.component,
-                        value: $0.moleFraction * 100,
-                        unit: .molePercent
-                    )
-                },
-                normalizedComposition: nil
-            ),
-            response: CalculationResponse(
-                requestID: request.requestID,
-                model: descriptor,
-                phase: .unknown,
-                properties: [],
-                solver: SolverMetadata(
-                    method: "No provider calculation",
-                    converged: false,
-                    durationMilliseconds: 0
-                ),
-                warnings: [label, "This duplicated case is an editable input snapshot, not a validated thermodynamic result."],
-                isScientificResult: false
-            ),
-            application: Bundle.main.applicationIdentity
+    }
+}
+
+extension ValidatedStateOption {
+    var duplicationNotes: String {
+        [
+            "Validated reference case: \(AdvancedValidationPresentation.propertyList(properties)).",
+            detail,
+            "This is an editable input snapshot, not a calculation result."
+        ].joined(separator: "\n\n")
+    }
+
+    func inputSnapshotRecord() -> CalculationRecord {
+        makeInputSnapshotRecord(
+            modelID: "phase-xpert-validated-case-input",
+            modelName: "Validated reference input state",
+            providerVersion: "PhaseXpert validation capability metadata",
+            scientificBasis: "Provider-neutral input state taken from PhaseXpert validation capability metadata. It is not a thermodynamic calculation result.",
+            limitations: [
+                "Not a provider calculation.",
+                "Validated for: \(AdvancedValidationPresentation.propertyList(properties))."
+            ],
+            references: references,
+            warnings: [
+                "Validated reference case (\(AdvancedValidationPresentation.propertyList(properties))). This record is an input snapshot, not a calculation result."
+            ],
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: composition
         )
     }
 }
@@ -1542,6 +1770,7 @@ private struct SavedCaseDetailView: View {
     @State private var isExporting = false
     @State private var isConfirmingDeletion = false
     @State private var persistenceError: String?
+    @State private var duplicateNotice: DuplicateNotice?
 
     var body: some View {
         Form {
@@ -1562,27 +1791,22 @@ private struct SavedCaseDetailView: View {
             }
 
             if let record = savedCase.calculationRecord {
-                Section {
-                    Button("Open in Calculator", systemImage: "arrow.trianglehead.2.clockwise") {
-                        navigationState.editAndRerun(record)
-                    }
-                    .buttonStyle(.ifeFilled)
-                    .ifeActionRow()
-                    Button("Duplicate", systemImage: "plus.square.on.square") {
-                        modelContext.insert(savedCase.duplicate())
+                CaseActionsSection(
+                    footer: "Opening a case preserves the saved result. Rerunning uses the model currently installed in PhaseXpert and creates a new calculation record.",
+                    openIdentifier: "open-saved-case",
+                    duplicateIdentifier: "duplicate-saved-case",
+                    exportIdentifier: "export-saved-case",
+                    open: { navigationState.editAndRerun(record) },
+                    duplicate: {
+                        let copy = savedCase.duplicate()
+                        modelContext.insert(copy)
                         saveContext()
-                    }
-                    .buttonStyle(.ifeTonal)
-                    .ifeActionRow()
-                    Button("Export case", systemImage: "square.and.arrow.up") {
-                        isExporting = true
-                    }
-                    .buttonStyle(.ifeTonal)
-                    .ifeActionRow()
-                    .accessibilityIdentifier("export-saved-case")
-                } footer: {
-                    Text("Opening a case preserves the saved result. Rerunning uses the model currently installed in PhaseXpert and creates a new calculation record.")
-                }
+                        if persistenceError == nil {
+                            duplicateNotice = DuplicateNotice(name: copy.name)
+                        }
+                    },
+                    export: { isExporting = true }
+                )
 
                 if AdvancedValidationPresentation.validatedProperties(for: record).isEmpty {
                     Section {
@@ -1634,10 +1858,12 @@ private struct SavedCaseDetailView: View {
         .sheet(isPresented: $isExporting) {
             SavedCaseExportView(savedCase: savedCase)
         }
-        .confirmationDialog(
+        .duplicateNoticeAlert($duplicateNotice) {
+            dismiss()
+        }
+        .alert(
             "Delete \(savedCase.name)?",
-            isPresented: $isConfirmingDeletion,
-            titleVisibility: .visible
+            isPresented: $isConfirmingDeletion
         ) {
             Button("Delete", role: .destructive) {
                 modelContext.delete(savedCase)

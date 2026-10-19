@@ -5665,6 +5665,105 @@
           }
         }
       }
+    },
+    "Case duplicated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saken er duplisert"
+          }
+        }
+      }
+    },
+    "Show in My Cases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis i Mine saker"
+          }
+        }
+      }
+    },
+    "“%@” was added to My Cases." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%@» ble lagt til i Mine saker."
+          }
+        }
+      }
+    },
+    "Validation sources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilder for validering"
+          }
+        }
+      }
+    },
+    "Publications behind the formulation that validates this state." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasjoner bak formuleringen som validerer denne tilstanden."
+          }
+        }
+      }
+    },
+    "No source recorded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen kilde registrert"
+          }
+        }
+      }
+    },
+    "Validated cases are read-only bundled reference cases. Opening a case loads it in Calculator with General Properties as the calculation model. A duplicate becomes an editable My Case." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validerte saker er skrivebeskyttede referansesaker som følger med appen. Når du åpner en sak, lastes den i Kalkulator med General Properties som beregningsmodell. En duplikat blir en redigerbar sak i Mine saker."
+          }
+        }
+      }
+    },
+    "Built-in cases are immutable presets. A duplicate becomes an editable My Case and is not linked to later catalog changes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innebygde saker er uforanderlige forhåndsinnstillinger. En duplikat blir en redigerbar sak i Mine saker og er ikke knyttet til senere endringer i katalogen."
+          }
+        }
+      }
+    },
+    "This case defines inputs and sources only. The export contains no calculated results." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne saken inneholder bare inngangsdata og kilder. Eksporten inneholder ingen beregnede resultater."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

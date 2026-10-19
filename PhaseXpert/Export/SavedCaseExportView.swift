@@ -4,11 +4,54 @@ import SwiftUI
 struct SavedCaseExportView: View {
     @Environment(\.dismiss) private var dismiss
 
-    let savedCase: SavedCalculation
+    private let source: Source
     @State private var artifacts: [CalculationExportArtifact] = []
     @State private var errorMessage: String?
     @State private var isPreparing = true
     @State private var phaseDiagramNote: String?
+
+    /// What gets exported: a stored My Case, or the input snapshot of a built-in or validated case.
+    private struct Source {
+        let id: UUID
+        let name: String
+        let notes: String
+        let createdAt: Date
+        let updatedAt: Date
+        let modelName: String
+        let calculationID: UUID
+        let record: CalculationRecord?
+        let isInputSnapshot: Bool
+    }
+
+    init(savedCase: SavedCalculation) {
+        source = Source(
+            id: savedCase.id,
+            name: savedCase.name,
+            notes: savedCase.notes,
+            createdAt: savedCase.createdAt,
+            updatedAt: savedCase.updatedAt,
+            modelName: savedCase.modelName,
+            calculationID: savedCase.calculationID,
+            record: savedCase.calculationRecord,
+            isInputSnapshot: false
+        )
+    }
+
+    /// Built-in and validated cases define a state but carry no calculation result.
+    init(name: String, notes: String, inputSnapshot record: CalculationRecord) {
+        let now = Date()
+        source = Source(
+            id: UUID(),
+            name: name,
+            notes: notes,
+            createdAt: now,
+            updatedAt: now,
+            modelName: record.response.model.name,
+            calculationID: record.response.calculationID,
+            record: record,
+            isInputSnapshot: true
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,12 +65,19 @@ struct SavedCaseExportView: View {
                     .listRowBackground(Color.clear)
                 }
 
+                if source.isInputSnapshot {
+                    Section {
+                        Text("This case defines inputs and sources only. The export contains no calculated results.")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 Section("Saved case") {
-                    LabeledContent("Name", value: savedCase.name)
-                    LabeledContent("Model", value: savedCase.modelName)
+                    LabeledContent("Name", value: source.name)
+                    LabeledContent("Model", value: source.modelName)
                     LabeledContent(
                         "Calculation ID",
-                        value: savedCase.calculationID.uuidString
+                        value: source.calculationID.uuidString
                     )
                 }
 
@@ -90,7 +140,7 @@ struct SavedCaseExportView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .task(id: savedCase.id) {
+            .task(id: source.id) {
                 await prepareArtifacts()
             }
         }
@@ -102,22 +152,22 @@ struct SavedCaseExportView: View {
         artifacts = []
         phaseDiagramNote = nil
 
-        guard let record = savedCase.calculationRecord else {
+        guard let record = source.record else {
             errorMessage = CalculationExportError.noStoredCalculation.localizedDescription
             isPreparing = false
             return
         }
 
         let snapshot = SavedCaseExportSnapshot(
-            savedCaseID: savedCase.id,
-            name: savedCase.name,
-            notes: savedCase.notes,
-            savedAt: savedCase.createdAt,
-            lastUpdatedAt: savedCase.updatedAt,
+            savedCaseID: source.id,
+            name: source.name,
+            notes: source.notes,
+            savedAt: source.createdAt,
+            lastUpdatedAt: source.updatedAt,
             calculation: record
         )
         do {
-            let diagram = await phaseDiagramAttachment(for: record)
+            let diagram = source.isInputSnapshot ? nil : await phaseDiagramAttachment(for: record)
             artifacts = try CalculationExportFileStore().createArtifacts(
                 for: snapshot,
                 phaseDiagram: diagram
