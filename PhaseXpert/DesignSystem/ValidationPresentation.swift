@@ -17,6 +17,8 @@ struct ValidatedStateOption: Identifiable, Equatable {
     let pressurePa: Double
     let temperatureK: Double
     let phaseDomain: TeqpPhaseDomain?
+    /// Publications behind the formulation that validates this state.
+    let references: [SourceReference]
 }
 
 enum AdvancedValidationPresentation {
@@ -182,7 +184,8 @@ enum AdvancedValidationPresentation {
             properties: presentationProperties(for: capability, formulation: formulation),
             pressurePa: pressurePa,
             temperatureK: temperatureK,
-            phaseDomain: capability.phaseDomain
+            phaseDomain: capability.phaseDomain,
+            references: formulation.references
         )
     }
 

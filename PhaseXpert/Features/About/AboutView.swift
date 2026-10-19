@@ -17,22 +17,7 @@ struct AboutView: View {
 
     private var content: some View {
         IFEPage {
-            IFEHeroCard(tint: .ifeLavender) {
-                VStack(alignment: .leading, spacing: IFESpacing.regular) {
-                    Image("IFELogoEnglish")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 240)
-                        .ifeLogoPlate()
-                        .accessibilityLabel("IFE — Institute for Energy Technology")
-                    Text("PhaseXpert")
-                        .font(IFETypography.screenTitle)
-                        .foregroundStyle(Color.ifeText)
-                    Text("Engineering thermodynamic calculations for CO₂ and CO₂-rich mixtures.")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            IFEBrandHeader(subtitle: "Engineering thermodynamic calculations for CO₂ and CO₂-rich mixtures.")
 
             IFEGroup("General Properties") {
                 Text("Engineering property calculations for CO₂ and supported CO₂-rich mixtures.")

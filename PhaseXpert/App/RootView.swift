@@ -112,6 +112,19 @@ private struct MoreView: View {
                 }
 
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    IFESectionTitle("Research Infrastructure")
+                    IFENavigationRow(
+                        "FALCON",
+                        subtitle: "IFE's CO₂ flow research facility",
+                        systemImage: "building.2",
+                        tint: .ifePrimary
+                    ) {
+                        FalconView()
+                    }
+                    .accessibilityIdentifier("more-falcon")
+                }
+
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
                     IFESectionTitle("Models & Information")
                     IFENavigationRow(
                         "General Properties",
@@ -155,19 +168,6 @@ private struct MoreView: View {
                         AboutView(wrapsInNavigationStack: false)
                     }
                     .accessibilityIdentifier("more-about")
-                }
-
-                VStack(alignment: .leading, spacing: IFESpacing.small) {
-                    IFESectionTitle("Research Infrastructure")
-                    IFENavigationRow(
-                        "FALCON",
-                        subtitle: "IFE's CO₂ flow research facility",
-                        systemImage: "building.2",
-                        tint: .ifePrimary
-                    ) {
-                        FalconView()
-                    }
-                    .accessibilityIdentifier("more-falcon")
                 }
             }
             .navigationTitle("More")

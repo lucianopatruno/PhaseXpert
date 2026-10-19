@@ -94,6 +94,54 @@ struct IFECard<Content: View>: View {
     }
 }
 
+/// App title with the IFE logo sitting on the title's baseline. Used at the top
+/// of the Calculator and About screens, directly on the page without a card.
+struct IFEBrandHeader: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let subtitle: LocalizedStringKey
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: IFESpacing.xSmall) {
+            HStack(alignment: .lastTextBaseline, spacing: IFESpacing.regular) {
+                Text("PhaseXpert")
+                    .font(.largeTitle.weight(.semibold))
+                    .foregroundStyle(Color.ifeText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .allowsTightening(true)
+                Spacer(minLength: IFESpacing.regular)
+                logo
+                    .frame(width: 82, height: 34)
+                    // The artwork has empty space below its last line; sit it on the title's baseline.
+                    .alignmentGuide(.lastTextBaseline) { $0[.bottom] - 7 }
+                    .accessibilityLabel("IFE — Institute for Energy Technology")
+            }
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The logo is a transparent vector in dark brand colours. In dark mode it is
+    /// shown as a single light-coloured mark instead of sitting on a plate.
+    @ViewBuilder
+    private var logo: some View {
+        if colorScheme == .dark {
+            Image("IFELogoEnglish")
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+                .foregroundStyle(Color.ifeText)
+        } else {
+            Image("IFELogoEnglish")
+                .resizable()
+                .scaledToFit()
+        }
+    }
+}
+
 /// Full-width tinted card for a screen's main message, such as a result.
 struct IFEHeroCard<Content: View>: View {
     private let tint: Color
@@ -668,16 +716,6 @@ extension View {
             self
             bar()
         }
-    }
-
-    /// White plate behind a dark logo so it stays legible in dark mode.
-    func ifeLogoPlate() -> some View {
-        padding(.horizontal, IFESpacing.small)
-            .padding(.vertical, IFESpacing.xSmall + 2)
-            .background(
-                Color.white,
-                in: RoundedRectangle(cornerRadius: IFECornerRadius.field, style: .continuous)
-            )
     }
 
     /// Lets a button sit in a `Form` or `List` row without the row chrome.

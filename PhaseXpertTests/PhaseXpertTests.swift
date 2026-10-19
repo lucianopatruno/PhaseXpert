@@ -2407,6 +2407,52 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testEveryValidatedCaseCitesItsValidationSources() {
+        let validated = AdvancedValidationPresentation.validatedCaseOptions()
+        XCTAssertFalse(validated.isEmpty)
+        for validatedCase in validated {
+            XCTAssertFalse(
+                validatedCase.references.isEmpty,
+                "\(validatedCase.id) has no validation source"
+            )
+            for reference in validatedCase.references {
+                XCTAssertFalse(reference.title.isEmpty)
+                XCTAssertFalse(reference.authors.isEmpty)
+                XCTAssertGreaterThan(reference.year, 1900)
+            }
+        }
+    }
+
+    @MainActor
+    func testBuiltInAndValidatedCasesExportInputSnapshotsWithoutResults() throws {
+        var records = AdvancedValidationPresentation.validatedCaseOptions().map {
+            $0.inputSnapshotRecord()
+        }
+        records += BuiltInCaseCatalog.cases
+            .filter(\.hasCalculationPreset)
+            .map { $0.inputSnapshotRecord() }
+        XCTAssertFalse(records.isEmpty)
+
+        for record in records {
+            XCTAssertFalse(record.response.isScientificResult)
+            XCTAssertTrue(record.response.properties.isEmpty)
+            let snapshot = SavedCaseExportSnapshot(
+                savedCaseID: UUID(),
+                name: "Snapshot",
+                notes: "",
+                savedAt: Date(),
+                lastUpdatedAt: Date(),
+                calculation: record
+            )
+            for format in CalculationExportFormat.allCases {
+                let data = try CalculationExporter().data(for: snapshot, format: format)
+                XCTAssertFalse(data.isEmpty, "\(record.request.modelID) \(format)")
+            }
+            XCTAssertNoThrow(try SavedCalculation(name: "Copy", notes: "", record: record))
+        }
+    }
+
+    @MainActor
     func testBuiltInCasesLoadIntoCalculatorWithDefaultsAndComposition() throws {
         let viewModel = CalculatorViewModel()
         let porthos = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("porthos-pipeline-specification-example"))
