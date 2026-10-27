@@ -345,7 +345,7 @@ struct IFEValueRow: View {
                     .accessibilityLabel(accessibilityValueText)
                 if let copyValue {
                     Button("Copy", systemImage: "doc.on.doc") {
-                        UIPasteboard.general.string = copyValue
+                        SecureClipboard.copy(copyValue)
                     }
                     .labelStyle(.iconOnly)
                     .font(.caption.weight(.semibold))

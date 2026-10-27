@@ -2,6 +2,11 @@
 set -euo pipefail
 
 coolprop_version="${COOLPROP_VERSION:-v8.0.0}"
+coolprop_commit="ae81610e7d23efc57f9d051c8e70a4d66e87537f"
+if [[ "${coolprop_version}" != "v8.0.0" ]]; then
+    echo "Unsupported CoolProp version; update and review the pinned commit first." >&2
+    exit 1
+fi
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 work_root="${PROJECT_TEMP_DIR:-${TMPDIR:-/tmp}/phasexpert-coolprop}"
 source_root="${work_root}/CoolProp"
@@ -64,6 +69,16 @@ if [[ ! -d "${source_root}/.git" ]]; then
         "${source_root}"
 fi
 
+actual_commit="$(git -C "${source_root}" rev-parse HEAD)"
+if [[ "${actual_commit}" != "${coolprop_commit}" ]]; then
+    echo "CoolProp checkout does not match the approved commit: ${actual_commit}" >&2
+    exit 1
+fi
+if git -C "${source_root}" submodule status --recursive | grep -q '^[+-U]'; then
+    echo "CoolProp submodules are missing or do not match the pinned revisions." >&2
+    exit 1
+fi
+
 if [[ ! -f "${coolprop_patch_script}" ]]; then
     echo "Missing required CoolProp source patcher: ${coolprop_patch_script}" >&2
     exit 1
@@ -73,7 +88,22 @@ fi
 # The patch changes no equation, coefficient or converged provider point; it
 # only stops CoolProp's otherwise unbounded mixture-envelope continuation after
 # a deterministic number of successfully calculated provider steps.
-git -C "${source_root}" reset --hard HEAD
+# Do not silently discard or compile unreviewed local source changes.
+# Work in a fresh detached checkout: never overwrite a user's source cache.
+clean_source="$(mktemp -d "${work_root}/verified-source.XXXXXX")"
+trap 'rm -rf "${clean_source}"' EXIT
+git -C "${source_root}" archive "${coolprop_commit}" | tar -x -C "${clean_source}"
+# Copy only submodules whose checked-out commits match the parent gitlinks.
+while IFS= read -r submodule; do
+    [[ -z "${submodule}" ]] && continue
+    submodule_path="${submodule#* }"
+    submodule_path="${submodule_path%% *}"
+    mkdir -p "${clean_source}/${submodule_path}"
+    git -C "${source_root}/${submodule_path}" archive HEAD | tar -x -C "${clean_source}/${submodule_path}"
+done < <(git -C "${source_root}" submodule status --recursive)
+source_root="${clean_source}"
+device_build="${clean_source}/build-iphoneos"
+simulator_build="${clean_source}/build-iphonesimulator"
 python3 "${coolprop_patch_script}" \
     "${source_root}/src/Backends/Helmholtz/PhaseEnvelopeRoutines.cpp"
 if ! grep -q "kPhaseXpertMaximumEnvelopeIterations = 256" \
@@ -200,7 +230,7 @@ xcodebuild -create-xcframework \
     -output "${framework_path}"
 
 cp "${source_root}/LICENSE" "${output_root}/COOLPROP-LICENSE.txt"
-git -C "${source_root}" rev-parse HEAD > "${output_root}/COOLPROP-REVISION.txt"
+printf '%s\n' "${coolprop_commit}" > "${output_root}/COOLPROP-REVISION.txt"
 
 echo "Created ${framework_path}"
 echo "Recorded upstream revision in ${output_root}/COOLPROP-REVISION.txt"

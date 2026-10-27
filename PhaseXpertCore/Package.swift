@@ -4,15 +4,10 @@ import PackageDescription
 
 // Binary availability is evaluated when Xcode resolves this local package.
 let coolPropXCFrameworkPath = "../Vendor/CoolProp/PhaseXpertCoolPropBridge.xcframework"
-let teqpXCFrameworkPath = "../Vendor/teqp/PhaseXpertTeqpBridge.xcframework"
 let packageDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
 let coolPropXCFrameworkURL = packageDirectory.appendingPathComponent(coolPropXCFrameworkPath)
-let teqpXCFrameworkURL = packageDirectory.appendingPathComponent(teqpXCFrameworkPath)
 let hasLocalCoolPropXCFramework = FileManager.default.fileExists(
     atPath: coolPropXCFrameworkURL.path
-)
-let hasLocalTeqpXCFramework = FileManager.default.fileExists(
-    atPath: teqpXCFrameworkURL.path
 )
 
 var phaseXpertCoreDependencies: [Target.Dependency] = []
@@ -32,22 +27,6 @@ if hasLocalCoolPropXCFramework {
         .binaryTarget(
             name: "PhaseXpertCoolPropBridge",
             path: coolPropXCFrameworkPath
-        )
-    )
-}
-
-if hasLocalTeqpXCFramework {
-    phaseXpertCoreDependencies.append(
-        .target(
-            name: "PhaseXpertTeqpBridge",
-            condition: .when(platforms: [.iOS])
-        )
-    )
-    requiresCXXRuntimeForIOS = true
-    packageTargets.append(
-        .binaryTarget(
-            name: "PhaseXpertTeqpBridge",
-            path: teqpXCFrameworkPath
         )
     )
 }

@@ -470,7 +470,7 @@ struct MultiCaseSweepCSVExporter {
                 rows.append(row)
             }
         }
-        return Data((rows.map { $0.map(csvEscape).joined(separator: ",") }.joined(separator: "\r\n") + "\r\n").utf8)
+        return Data((rows.map { $0.map(SpreadsheetCSV.escape).joined(separator: ",") }.joined(separator: "\r\n") + "\r\n").utf8)
     }
     private func number(_ value: Double?) -> String { value?.isFinite == true ? String(format: "%.17g", value!) : "" }
     private func csvEscape(_ value: String) -> String {

@@ -184,6 +184,22 @@ struct CalculationExporter: Sendable {
     }
 }
 
+/// Protect formula-looking text when a CSV is opened in spreadsheet software.
+/// Numeric fields must retain their sign and remain usable as numbers.
+enum SpreadsheetCSV {
+    static func escape(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let first = trimmed.first
+        let hasControlPrefix = value.unicodeScalars.first.map {
+            CharacterSet.controlCharacters.contains($0)
+        } ?? false
+        let formulaPrefix = first.map { "=+-@".contains($0) } ?? false
+        let isNumber = !trimmed.isEmpty && Double(trimmed)?.isFinite == true
+        let safe = (hasControlPrefix || (formulaPrefix && !isNumber)) ? "'" + value : value
+        return "\"" + safe.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+    }
+}
+
 struct CalculationExportFileStore {
     private let baseDirectory: URL
     private let fileManager: FileManager
@@ -276,7 +292,7 @@ private struct CSVCalculationExportRenderer: CalculationExportRendering {
         )
 
         let text = rows
-            .map { $0.fields.map(escape).joined(separator: ",") }
+            .map { $0.fields.map(SpreadsheetCSV.escape).joined(separator: ",") }
             .joined(separator: "\r\n") + "\r\n"
         guard let encoded = text.data(using: .utf8) else {
             throw CalculationExportError.textEncodingFailed
@@ -491,10 +507,6 @@ private struct CSVCalculationExportRenderer: CalculationExportRendering {
         return rows
     }
 
-    private func escape(_ value: String) -> String {
-        "\"\(value.replacingOccurrences(of: "\"", with: "\"\""))\""
-    }
-
     private func number(_ value: Double) -> String {
         String(value)
     }
@@ -692,9 +704,8 @@ enum ReportingExportValidator {
     }
 
     static func csvData(_ rows: [[String]]) throws -> Data {
-        let quote = "\u{0022}"
         let text = rows.map { row in
-            row.map { value in quote + value.replacingOccurrences(of: quote, with: quote + quote) + quote }
+            row.map(SpreadsheetCSV.escape)
                 .joined(separator: ",")
         }.joined(separator: "\r\n") + "\r\n"
         guard let encoded = text.data(using: .utf8) else {

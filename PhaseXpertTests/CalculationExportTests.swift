@@ -11,6 +11,15 @@ final class CalculationExportTests: XCTestCase {
     private let caseID = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
     private let calculationID = UUID(uuidString: "12345678-1234-1234-1234-123456789ABC")!
 
+    func testSpreadsheetCellsProtectFormulasAndPreserveNegativeNumbers() {
+        XCTAssertEqual(SpreadsheetCSV.escape("=1+1"), "\"'=1+1\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("  @SUM(A1)"), "\"'  @SUM(A1)\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("-12.5"), "\"-12.5\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("-1+2"), "\"'-1+2\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("\t=1+1"), "\"'\t=1+1\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("a, \"b\""), "\"a, \"\"b\"\"\"")
+    }
+
     func testJSONExportRoundTripsCompleteVersionedSnapshot() throws {
         let snapshot = makeSnapshot()
         let data = try CalculationExporter().data(for: snapshot, format: .json)

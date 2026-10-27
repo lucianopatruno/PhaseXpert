@@ -13,6 +13,7 @@ struct PhaseXpertApp: App {
     @State private var showsLaunchSplash = true
 
     init() {
+        TemporaryExportCleanup.removeOldExports()
         let schema = Schema(versionedSchema: PhaseXpertSchemaV1.self)
         let configuration = ModelConfiguration(
             "PhaseXpert",

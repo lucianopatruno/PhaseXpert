@@ -72,20 +72,9 @@ validation tiers, simulator override and conditional CoolProp rebuild behavior.
   specific volume and Z are
   derived transparently from recorded inputs and calculated density; user-facing
   provider labels are General Properties (CoolProp) and Advanced CCS
-  Properties; an explicit experimental native teqp pure-CO₂ provider
-  for density, Cv, Cp, Cp/Cv, speed of sound and the same derived values, plus
-  a narrowly validation-gated CO₂+H₂ homogeneous gas-density domain at
-  xH₂ = 0.05362 and a CO₂+CH₄ homogeneous gas-density domain at
-  xCH₄ = 0.05 within the Ghafri et al. 2016 gas block plus explicit
-  high-temperature supercritical density slices from 308.15 K through
-  313.15 K when its ignored local XCFramework is built; a generic native
-  binary VLE bridge with limited production CO₂+CH₄ phase classification and a
-  continuous bubble/dew envelope segment at xCH₄ = 0.05 from 293.13 K to
-  298.142 K, calculated with EOS-CG-2021 inside the validated Petropoulou 2018
-  ordinary VLE temperature bounds; diagnostic native mixture Cv/Cp/speed and
-  fixed-composition critical calculations exist below the production gate but
-  remain user-hidden until independently validated; H₂ VLE and H₂ phase
-  envelopes remain unavailable; an
+  Properties; the former experimental teqp provider is not linked or available
+  for new calculations. Existing saved records retain their original model
+  provenance. The application also includes an
   unavailable IFE provider, and a
   non-scientific demo provider
 - immutable results grouped into state, thermodynamic, transport/acoustic and
@@ -171,24 +160,9 @@ See [Known Limitations](Documentation/KnownLimitations.md). In particular:
 - comparison is pairwise and its PDF/CSV exports report numerical differences,
   not model accuracy;
 - saved cases are local-only and do not sync between devices;
-- teqp impurity support is property-specific: H₂ is enabled only for
-  homogeneous gas density at xH₂ = 0.05362 and the encoded Souissi et al. 2017
-  isotherm pressure ranges, and CH₄ is enabled only for homogeneous gas
-  density at xCH₄ = 0.05 inside the encoded Ghafri et al. 2016 301.14 K gas
-  block and 308.15-313.15 K high-temperature supercritical slices. CH₄ phase
-  classification and continuous bubble/dew phase-envelope curves are available
-  only for xCH₄ = 0.05 from 293.13 K to 298.142 K inside the Petropoulou
-  ordinary VLE temperature bounds; two-phase bulk density, critical
-  termination and H₂ phase envelopes remain unavailable. N₂ and O₂ binary
-  density and four exact Razmjoo 2026 multicomponent density compositions are
-  limited to their independent validation gates; arbitrary simultaneous
-  impurities, mixture Cp/Cv/speed, h/u/s and transport remain unavailable for
-  teqp. The native teqp bridge can now calculate diagnostic
-  fixed-composition homogeneous Cv, Cp and speed of sound for CO₂+H₂ and
-  CO₂+CH₄. Generic multicomponent bubble/dew, global-stability and TP-flash
-  infrastructure is research-only and is not exposed as validated calculator
-  output. CH₄ critical-region and 303.15 K VLE calculations remain diagnostic
-  and are not drawn as production critical termination.
+- teqp calculations are unavailable in this build. Historical validation
+  evidence and saved records are retained for traceability; they must not be
+  treated as evidence that teqp calculations are currently available.
 - Advanced CCS guidance is generated from the same capability metadata used by
   provider validation. It does not broaden support, does not snap inputs, and
   does not expose diagnostic-only EOS-computable regions as production domains.
