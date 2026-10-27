@@ -102,6 +102,9 @@ while IFS= read -r submodule; do
     git -C "${source_root}/${submodule_path}" archive HEAD | tar -x -C "${clean_source}/${submodule_path}"
 done < <(git -C "${source_root}" submodule status --recursive)
 source_root="${clean_source}"
+# Archives have no .git directory. Supply CoolProp's supported fallback so the
+# library embeds the verified upstream revision instead of an unknown marker.
+printf '%s\n' "${coolprop_commit}" > "${source_root}/dev/gitrevision.txt"
 device_build="${clean_source}/build-iphoneos"
 simulator_build="${clean_source}/build-iphonesimulator"
 python3 "${coolprop_patch_script}" \

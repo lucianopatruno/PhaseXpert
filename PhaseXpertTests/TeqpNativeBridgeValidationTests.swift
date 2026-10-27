@@ -3,6 +3,7 @@ import XCTest
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)
 import PhaseXpertTeqpBridge
+#endif
 
 private struct PXTestTeqpMixtureThermodynamicResult {
     var density_kg_m3: Double = 0
@@ -62,6 +63,7 @@ private struct PXTestTeqpNComponentDensityResult {
     var phase: Int32 = 0
 }
 
+#if os(iOS) && canImport(PhaseXpertTeqpBridge)
 @_silgen_name("px_teqp_calculate_binary_thermodynamic_state")
 private func px_test_teqp_calculate_binary_thermodynamic_state(
     _ formulation: Int32,
@@ -595,8 +597,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         let artifact = try JSONDecoder().decode(Artifact.self, from: Data(contentsOf: url))
         XCTAssertEqual(artifact.rows.count, 31)
         XCTAssertEqual(Set(artifact.rows.map(\.id)).count, 31)
-        var output: [[String: Any]] = []
-        var runtimes: [Double] = []
+        var output: [[String: Any]] = []        var runtimes: [Double] = []
         func jsonNumber(_ value: Double) -> Any { value.isFinite ? value : NSNull() }
         func jsonArray(_ values: [Double]) -> [Any] { values.map(jsonNumber) }
         for row in artifact.rows {
@@ -1048,27 +1049,18 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertEqual(result.formulationID, TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id)
     }
 
-    func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
-        let engine = try requireNativeTeqpEngine()
-        XCTAssertTrue(engine.isAvailable)
+    func testProductionRegistryExcludesTeqpAndNativeBridgeIsNotLinked() {
+        XCTAssertFalse(NativeTeqpEngine().isAvailable)
+        #if canImport(PhaseXpertTeqpBridge)
+        XCTFail("The production app must not link the teqp bridge.")
+        #endif
 
         let registry = ProviderRegistry()
         XCTAssertEqual(registry.providers.first?.descriptor.id, "coolprop-heos")
-
-        let provider = try XCTUnwrap(
-            registry.provider(id: "teqp-pure-co2-experimental")
-        )
-        XCTAssertEqual(provider.descriptor.id, "teqp-pure-co2-experimental")
-        XCTAssertEqual(provider.descriptor.availability, .preliminary)
-        XCTAssertNotEqual(provider.descriptor.availability, .unavailable)
-
-        let descriptor = try XCTUnwrap(
-            registry.descriptors.first {
-                $0.id == "teqp-pure-co2-experimental"
-            }
-        )
-        XCTAssertEqual(descriptor.availability, .preliminary)
-        XCTAssertTrue(descriptor.availability != .unavailable)
+        XCTAssertNil(registry.provider(id: "teqp-pure-co2-experimental"))
+        XCTAssertFalse(registry.descriptors.contains {
+            $0.id == "teqp-pure-co2-experimental"
+        })
     }
 
     func testNativeTeqpDensityAgainstMantillaExperimentalData() async throws {
@@ -1204,8 +1196,7 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertEqual(result.pressure_pa, 7_040_930, accuracy: 1_000)
         XCTAssertEqual(result.liquid_n2_mole_fraction, 0.03, accuracy: 1e-8)
         XCTAssertEqual(result.vapor_n2_mole_fraction, 0.0909, accuracy: 5e-4)
-        XCTAssertEqual(result.pressure_residual_pa, 0, accuracy: 1e-3)
-        XCTAssertEqual(result.co2_chemical_potential_residual, 0, accuracy: 1e-4)
+        XCTAssertEqual(result.pressure_residual_pa, 0, accuracy: 1e-3)        XCTAssertEqual(result.co2_chemical_potential_residual, 0, accuracy: 1e-4)
         XCTAssertEqual(result.n2_chemical_potential_residual, 0, accuracy: 1e-4)
         XCTAssertGreaterThan(
             result.liquid_molar_density_mol_m3,
@@ -1804,7 +1795,6 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
             Array(rawBuffer.bindMemory(to: Int32.self).prefix(max(0, count)))
         }
     }
-
     private func requireNativeNComponentDensity(
         composition: [(Int32, Double)],
         pressurePa: Double,

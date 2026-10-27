@@ -13,8 +13,12 @@ enum SecureClipboard {
 
 /// Run only at launch so that a share sheet cannot lose a file mid-transfer.
 enum TemporaryExportCleanup {
-    static func removeOldExports(now: Date = Date(), fileManager: FileManager = .default) {
-        let base = fileManager.temporaryDirectory
+    static func removeOldExports(
+        now: Date = Date(),
+        fileManager: FileManager = .default,
+        baseDirectory: URL? = nil
+    ) {
+        let base = baseDirectory ?? fileManager.temporaryDirectory
         let cutoff = now.addingTimeInterval(-24 * 60 * 60)
         let resourceKeys: [URLResourceKey] = [.contentModificationDateKey, .isDirectoryKey]
         let ownedDirectories = ["PhaseXpertExports", "PhaseXpertPhaseDiagrams"]

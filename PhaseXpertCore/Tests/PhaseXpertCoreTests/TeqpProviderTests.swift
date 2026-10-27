@@ -597,8 +597,7 @@ final class TeqpProviderTests: XCTestCase {
                 .init(component: .water, moleFraction: 0.01)
             ]
         )
-        XCTAssertEqual(
-            fullSubset.composition.map(\.component),
+        XCTAssertEqual(            fullSubset.composition.map(\.component),
             [
                 .carbonDioxide,
                 .nitrogen,
@@ -1197,8 +1196,7 @@ final class TeqpProviderTests: XCTestCase {
                 pressurePa: state.pressurePa,
                 temperatureK: state.temperatureK,
                 hydrogenMoleFraction: 0.05362
-            ))
-            XCTAssertEqual(response.phase, .gas)
+            ))            XCTAssertEqual(response.phase, .gas)
             XCTAssertEqual(
                 response.properties.first { $0.property == .density }?.status,
                 .calculated
@@ -1787,17 +1785,17 @@ final class TeqpProviderTests: XCTestCase {
         })
     }
 
-    func testProductionRegistryKeepsCoolPropDefaultAndIncludesTeqpDescriptor() {
+    func testProductionRegistryKeepsCoolPropDefaultAndExcludesTeqpDescriptor() {
         let registry = ProviderRegistry()
 
         XCTAssertEqual(registry.providers.first?.descriptor.id, "coolprop-heos")
-        XCTAssertTrue(registry.descriptors.contains { $0.id == "teqp-pure-co2-experimental" })
+        XCTAssertFalse(registry.descriptors.contains { $0.id == "teqp-pure-co2-experimental" })
+        XCTAssertNil(registry.provider(id: "teqp-pure-co2-experimental"))
         XCTAssertNil(registry.provider(id: "ife-model"))
     }
 
     func testHydrogenGuidanceAdvertisesOnlyAcceptedProductionGate() async throws {
-        let provider = TeqpProvider(engine: MockEngine())
-        let composition = [
+        let provider = TeqpProvider(engine: MockEngine())        let composition = [
             MixtureComponent(component: .carbonDioxide, moleFraction: 0.94638),
             MixtureComponent(component: .hydrogen, moleFraction: 0.05362)
         ]
