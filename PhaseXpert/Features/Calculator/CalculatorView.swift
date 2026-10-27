@@ -348,7 +348,7 @@ struct CalculatorView: View {
                         .accessibilityIdentifier("open-property-sweep")
 
                         Button("Copy result summary", systemImage: "doc.on.doc") {
-                            UIPasteboard.general.string = CalculationSummaryFormatter.text(for: record)
+                            SecureClipboard.copy(CalculationSummaryFormatter.text(for: record))
                         }
                         .accessibilityIdentifier("copy-calculation-summary")
 

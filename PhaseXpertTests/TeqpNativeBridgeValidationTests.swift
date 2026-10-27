@@ -3,6 +3,7 @@ import XCTest
 
 #if os(iOS) && canImport(PhaseXpertTeqpBridge)
 import PhaseXpertTeqpBridge
+#endif
 
 private struct PXTestTeqpMixtureThermodynamicResult {
     var density_kg_m3: Double = 0
@@ -62,6 +63,7 @@ private struct PXTestTeqpNComponentDensityResult {
     var phase: Int32 = 0
 }
 
+#if os(iOS) && canImport(PhaseXpertTeqpBridge)
 @_silgen_name("px_teqp_calculate_binary_thermodynamic_state")
 private func px_test_teqp_calculate_binary_thermodynamic_state(
     _ formulation: Int32,
@@ -1048,27 +1050,18 @@ final class TeqpNativeBridgeValidationTests: XCTestCase {
         XCTAssertEqual(result.formulationID, TeqpFormulationCatalog.co2OxygenEOSCGGasDensity.id)
     }
 
-    func testProductionRegistryMarksNativeTeqpSelectableWhenLinked() throws {
-        let engine = try requireNativeTeqpEngine()
-        XCTAssertTrue(engine.isAvailable)
+    func testProductionRegistryExcludesTeqpAndNativeBridgeIsNotLinked() {
+        XCTAssertFalse(NativeTeqpEngine().isAvailable)
+        #if canImport(PhaseXpertTeqpBridge)
+        XCTFail("The production app must not link the teqp bridge.")
+        #endif
 
         let registry = ProviderRegistry()
         XCTAssertEqual(registry.providers.first?.descriptor.id, "coolprop-heos")
-
-        let provider = try XCTUnwrap(
-            registry.provider(id: "teqp-pure-co2-experimental")
-        )
-        XCTAssertEqual(provider.descriptor.id, "teqp-pure-co2-experimental")
-        XCTAssertEqual(provider.descriptor.availability, .preliminary)
-        XCTAssertNotEqual(provider.descriptor.availability, .unavailable)
-
-        let descriptor = try XCTUnwrap(
-            registry.descriptors.first {
-                $0.id == "teqp-pure-co2-experimental"
-            }
-        )
-        XCTAssertEqual(descriptor.availability, .preliminary)
-        XCTAssertTrue(descriptor.availability != .unavailable)
+        XCTAssertNil(registry.provider(id: "teqp-pure-co2-experimental"))
+        XCTAssertFalse(registry.descriptors.contains {
+            $0.id == "teqp-pure-co2-experimental"
+        })
     }
 
     func testNativeTeqpDensityAgainstMantillaExperimentalData() async throws {

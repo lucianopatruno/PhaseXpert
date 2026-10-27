@@ -74,6 +74,22 @@ final class PhaseXpertUITests: XCTestCase {
         app.buttons["export-batch-comparison"].tap()
         XCTAssertTrue(app.buttons["Share CSV"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["Share PDF"].exists)
+        app.buttons["Share CSV"].tap()
+        let shareSheet = app.otherElements["ActivityListView"]
+        XCTAssertTrue(shareSheet.waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            shareSheet.descendants(matching: .any)["PhaseXpert-Case-Comparison.csv"].exists,
+            app.debugDescription
+        )
+        // The system exposes file-copy actions as cells on this simulator.
+        let copyFile = shareSheet.cells["Copy"]
+        XCTAssertTrue(copyFile.exists, app.debugDescription)
+        copyFile.tap()
+        let dismissed = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"),
+            object: shareSheet
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 5), .completed)
 
         let caseButton = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Northern Lights cargo specification example")).firstMatch
         XCTAssertTrue(caseButton.waitForExistence(timeout: 3))

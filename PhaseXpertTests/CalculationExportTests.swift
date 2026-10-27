@@ -3,13 +3,95 @@ import PDFKit
 import PhaseXpertCore
 import UIKit
 import XCTest
+import Testing
 @testable import PhaseXpert
+
+@Suite(.serialized)
+@MainActor
+struct ExportSecurityTests {
+    @Test func clipboardPreservesPlainTextIncludingNegativeValues() {
+        let text = "Temperature: -20 °C\n=Recorded case\nDensity: 903.5 kg/m³"
+        SecureClipboard.copy(text)
+        #expect(UIPasteboard.general.string == text)
+        UIPasteboard.general.items = []
+    }
+
+    @Test func cleanupRemovesOnlyExpiredOwnedExportsAndKeepsShareFiles() throws {
+        let manager = FileManager.default
+        let root = manager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try manager.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? manager.removeItem(at: root) }
+        let now = Date()
+        let old = now.addingTimeInterval(-90_000)
+        let recent = now.addingTimeInterval(-60)
+        let paths: [(String, Date, Bool)] = [
+            ("PhaseXpertExports/expired/result.csv", old, false),
+            ("PhaseXpertExports/active/result.csv", recent, true),
+            ("PhaseXpertPhaseDiagrams/expired.png", old, false),
+            ("PhaseXpertPhaseDiagrams/active.png", recent, true),
+            ("PhaseXpert-MultiSweep-old.csv", old, false),
+            ("PhaseXpert-Sweep-old.csv", old, false),
+            ("PhaseXpert-Case-Comparison.csv", old, false),
+            ("PhaseXpert-Case-Comparison.pdf", recent, true),
+            ("unrelated.csv", old, true)
+        ]
+        for (path, date, _) in paths {
+            let url = root.appendingPathComponent(path)
+            try manager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data("shareable contents".utf8).write(to: url)
+            try manager.setAttributes([.modificationDate: date], ofItemAtPath: url.path)
+            if path.hasPrefix("PhaseXpertExports/") {
+                try manager.setAttributes([.modificationDate: date], ofItemAtPath: url.deletingLastPathComponent().path)
+            }
+        }
+
+        TemporaryExportCleanup.removeOldExports(now: now, baseDirectory: root)
+        for (path, _, shouldExist) in paths {
+            let url = root.appendingPathComponent(path)
+            #expect(manager.fileExists(atPath: url.path) == shouldExist)
+            if shouldExist {
+                #expect(try String(contentsOf: url, encoding: .utf8) == "shareable contents")
+            }
+        }
+        // A repeated launch is harmless.
+        TemporaryExportCleanup.removeOldExports(now: now, baseDirectory: root)
+    }
+}
 
 @MainActor
 final class CalculationExportTests: XCTestCase {
     private let fixedDate = Date(timeIntervalSince1970: 1_800_000_000.125)
     private let caseID = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
     private let calculationID = UUID(uuidString: "12345678-1234-1234-1234-123456789ABC")!
+
+    func testSpreadsheetCellsProtectFormulasAndPreserveNegativeNumbers() {
+        XCTAssertEqual(SpreadsheetCSV.escape("=1+1"), "\"'=1+1\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("  @SUM(A1)"), "\"'  @SUM(A1)\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("-12.5"), "\"-12.5\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("-1+2"), "\"'-1+2\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("\t=1+1"), "\"'\t=1+1\"")
+        XCTAssertEqual(SpreadsheetCSV.escape("a, \"b\""), "\"a, \"\"b\"\"\"")
+    }
+
+    func testFormulaLikeMetadataIsEscapedWithoutChangingRecordedValues() throws {
+        let snapshot = makeSnapshot(
+            name: "=HYPERLINK(\"https://example.invalid\")",
+            notes: "  +SUM(A1:A2)",
+            temperatureValue: -20,
+            temperatureK: 253.15
+        )
+        let csv = String(decoding: try CalculationExporter().data(for: snapshot, format: .csv), as: UTF8.self)
+        XCTAssertTrue(csv.contains("\"'=HYPERLINK("))
+        XCTAssertTrue(csv.contains("\"'  +SUM(A1:A2)\""))
+        XCTAssertTrue(csv.contains("\"-20.0\",\"°C\""))
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let decoded = try decoder.decode(
+            SavedCaseExportSnapshot.self,
+            from: CalculationExporter().data(for: snapshot, format: .json)
+        )
+        XCTAssertEqual(decoded, snapshot)
+    }
 
     func testJSONExportRoundTripsCompleteVersionedSnapshot() throws {
         let snapshot = makeSnapshot()

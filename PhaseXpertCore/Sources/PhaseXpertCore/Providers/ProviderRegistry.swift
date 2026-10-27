@@ -27,8 +27,7 @@ public struct ProviderRegistry: Sendable {
 
     public static var defaults: [any ThermodynamicModelProvider] {
         [
-            defaultCoolPropProvider,
-            defaultTeqpProvider
+            defaultCoolPropProvider
         ]
     }
 
@@ -38,10 +37,6 @@ public struct ProviderRegistry: Sendable {
         #else
         CoolPropProvider(engine: UnavailableCoolPropEngine())
         #endif
-    }
-
-    private static var defaultTeqpProvider: any ThermodynamicModelProvider {
-        TeqpProvider(engine: NativeTeqpEngine())
     }
 
     public static let ifeModelDescriptor = ModelDescriptor(

@@ -1787,11 +1787,12 @@ final class TeqpProviderTests: XCTestCase {
         })
     }
 
-    func testProductionRegistryKeepsCoolPropDefaultAndIncludesTeqpDescriptor() {
+    func testProductionRegistryKeepsCoolPropDefaultAndExcludesTeqpDescriptor() {
         let registry = ProviderRegistry()
 
         XCTAssertEqual(registry.providers.first?.descriptor.id, "coolprop-heos")
-        XCTAssertTrue(registry.descriptors.contains { $0.id == "teqp-pure-co2-experimental" })
+        XCTAssertFalse(registry.descriptors.contains { $0.id == "teqp-pure-co2-experimental" })
+        XCTAssertNil(registry.provider(id: "teqp-pure-co2-experimental"))
         XCTAssertNil(registry.provider(id: "ife-model"))
     }
 

@@ -246,7 +246,7 @@ final class PhaseXpertTests: XCTestCase {
         temperatureCelsius: Double,
         nitrogenPPM: Double
     ) -> CalculatorViewModel {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]))
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = String(format: "%.12g", pressureBar)
         viewModel.temperatureText = String(format: "%.12g", temperatureCelsius)
@@ -646,7 +646,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testAdvancedCCSPropertiesShowsOnlyValidatedImpurities() throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]))
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         guard viewModel.selectedDescriptor?.availability != .unavailable else {
             throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
@@ -770,7 +770,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testPreliminaryUnsupportedMixtureKeepsNeutralScientificShieldState() {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]))
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = "40"
         viewModel.temperatureText = "10"
@@ -786,7 +786,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testAdvancedCCSPropertiesHydrogenCalculationUsesValidatedDensityDomain() async throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]))
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         guard viewModel.selectedDescriptor?.availability != .unavailable else {
             throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
@@ -822,7 +822,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testAdvancedCCSPropertiesMethaneCalculationUsesValidatedDensityDomain() async throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]))
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         guard viewModel.selectedDescriptor?.availability != .unavailable else {
             throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
@@ -939,7 +939,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testAdvancedCCSPropertiesRejectsOutOfDomainMixtureState() async throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(registry: ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]))
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         guard viewModel.selectedDescriptor?.availability != .unavailable else {
             throw XCTSkip("Native teqp XCFramework is not linked in this test runtime.")
@@ -965,7 +965,7 @@ final class PhaseXpertTests: XCTestCase {
     @MainActor
     func testAdvancedCCSHydrogenMixtureReportsProviderPhaseDiagramUnavailable() async throws {
         let descriptor = try XCTUnwrap(
-            ProviderRegistry().descriptors.first {
+            ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]).descriptors.first {
                 $0.id == "teqp-pure-co2-experimental"
             }
         )
@@ -1036,7 +1036,7 @@ final class PhaseXpertTests: XCTestCase {
     @MainActor
     func testAdvancedProviderIDSavedCaseCompatibility() async throws {
         let descriptor = try XCTUnwrap(
-            ProviderRegistry().descriptors.first {
+            ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]).descriptors.first {
                 $0.id == "teqp-pure-co2-experimental"
             }
         )
@@ -1718,16 +1718,12 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
-    func testCalculatorKeepsNativeTeqpInternalWhenLinked() throws {
+    func testCalculatorExcludesTeqpFromProductionRegistry() {
         let viewModel = CalculatorViewModel()
-        guard NativeTeqpEngine().isAvailable else {
-            throw XCTSkip("The generated teqp XCFramework is not linked to this build.")
-        }
-
         let descriptor = viewModel.registry.descriptors.first {
             $0.id == "teqp-pure-co2-experimental"
         }
-        XCTAssertEqual(descriptor?.availability, .preliminary)
+        XCTAssertNil(descriptor)
         XCTAssertFalse(
             viewModel.selectableDescriptors.contains {
                 $0.id == "teqp-pure-co2-experimental"
@@ -1735,12 +1731,16 @@ final class PhaseXpertTests: XCTestCase {
         )
 
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
-        XCTAssertEqual(viewModel.selectedDescriptor?.availability, .preliminary)
+        viewModel.validate()
+        XCTAssertNil(viewModel.selectedDescriptor)
+        XCTAssertFalse(viewModel.canRunCalculation)
     }
 
     @MainActor
     func testCalculatorCalculatesReportedTeqpCompressedCO2State() async throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [TeqpProvider(engine: NativeTeqpEngine())])
+        )
         guard NativeTeqpEngine().isAvailable else {
             throw XCTSkip("The generated teqp XCFramework is not linked to this build.")
         }
@@ -3469,7 +3469,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testHydrogenTemperatureSuggestionUpdatesGuidanceWithoutChangingPressureInput() throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = advancedViewModel()
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = "150"
         viewModel.temperatureText = "0"
@@ -3579,7 +3579,7 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     func testValidationDetailsAreAvailableForOutOfRangeNitrogenState() throws {
-        let viewModel = CalculatorViewModel()
+        let viewModel = advancedViewModel()
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = "40"
         viewModel.temperatureText = "20"
@@ -3656,7 +3656,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertFalse(validated.contains(.isobaricHeatCapacity))
         XCTAssertFalse(validated.contains(.isochoricHeatCapacity))
 
-        let viewModel = CalculatorViewModel()
+        let viewModel = advancedViewModel()
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = "20"
         viewModel.temperatureText = "-0.6"
@@ -3690,7 +3690,7 @@ final class PhaseXpertTests: XCTestCase {
         XCTAssertEqual(validated, [.speedOfSound])
         XCTAssertFalse(validated.contains(.density))
 
-        let viewModel = CalculatorViewModel()
+        let viewModel = advancedViewModel()
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.pressureText = "300"
         viewModel.temperatureText = "28"
@@ -3856,7 +3856,7 @@ final class PhaseXpertTests: XCTestCase {
         let caseRecord = try await makeRecord(
             modelID: "teqp-pure-co2-experimental",
             modelDescriptor: try XCTUnwrap(
-                ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }
+                ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]).descriptors.first { $0.id == "teqp-pure-co2-experimental" }
             ),
             composition: [
                 .init(component: .carbonDioxide, moleFraction: 0.9873),
@@ -4083,7 +4083,7 @@ final class PhaseXpertTests: XCTestCase {
     @MainActor
     func testSavedCaseValidationStatusUsesCurrentCapabilityDecision() async throws {
         let descriptor = try XCTUnwrap(
-            ProviderRegistry().descriptors.first { $0.id == "teqp-pure-co2-experimental" }
+            ProviderRegistry(providers: [TeqpProvider(engine: UnavailableTeqpEngine())]).descriptors.first { $0.id == "teqp-pure-co2-experimental" }
         )
         let record = try await makeRecord(
             modelID: descriptor.id,
@@ -4129,7 +4129,9 @@ final class PhaseXpertTests: XCTestCase {
 
     @MainActor
     private func advancedViewModel() -> CalculatorViewModel {
-        let viewModel = CalculatorViewModel()
+        let viewModel = CalculatorViewModel(
+            registry: ProviderRegistry(providers: [TeqpProvider(engine: PresentationOnlyTeqpEngine())])
+        )
         viewModel.selectedModelID = "teqp-pure-co2-experimental"
         viewModel.compositionBasis = .molePercent
         return viewModel
@@ -4168,6 +4170,51 @@ final class PhaseXpertTests: XCTestCase {
             }
         viewModel.validate()
         return viewModel
+    }
+
+    /// Exercises historical guidance without linking teqp or fabricating results.
+    private struct PresentationOnlyTeqpEngine: TeqpEngine {
+        let isAvailable = true
+        let libraryVersion = "presentation-test-only"
+        private var unavailable: ProviderError {
+            .modelUnavailable("This presentation-only test engine cannot calculate.")
+        }
+
+        func calculatePureCarbonDioxide(
+            pressurePa: Double, temperatureK: Double
+        ) async throws -> TeqpEngineResult { throw unavailable }
+
+        func pureCarbonDioxideSaturation(
+            temperatureK: Double
+        ) async throws -> TeqpSaturationPoint { throw unavailable }
+
+        func calculateCarbonDioxideHydrogenGasDensity(
+            pressurePa: Double, temperatureK: Double, hydrogenMoleFraction: Double
+        ) async throws -> TeqpMixtureDensityResult { throw unavailable }
+
+        func calculateCarbonDioxideMethaneGasDensity(
+            pressurePa: Double, temperatureK: Double, methaneMoleFraction: Double
+        ) async throws -> TeqpMixtureDensityResult { throw unavailable }
+
+        func calculateBinaryThermodynamicState(
+            formulation: TeqpBinaryFormulationID,
+            pressurePa: Double, temperatureK: Double, component2MoleFraction: Double
+        ) async throws -> TeqpMixtureThermodynamicResult { throw unavailable }
+
+        func calculateBinaryCriticalPoint(
+            formulation: TeqpBinaryFormulationID, component2MoleFraction: Double
+        ) async throws -> TeqpBinaryCriticalResult { throw unavailable }
+
+        func calculateBinaryVLE(
+            formulation: TeqpBinaryFormulationID,
+            temperatureK: Double, liquidComponent2MoleFraction: Double,
+            initialGuess: TeqpBinaryVLEInitialGuess?
+        ) async throws -> TeqpBinaryVLEResult { throw unavailable }
+
+        func calculateNComponentDensity(
+            pressurePa: Double, temperatureK: Double,
+            composition: CanonicalComposition, rootSelectionHint: TeqpDensityRootSelectionHint
+        ) async throws -> TeqpNComponentDensityResult { throw unavailable }
     }
 
     private struct ProductionPresentationState {

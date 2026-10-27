@@ -81,6 +81,7 @@ final class ProviderAndAPITests: XCTestCase {
     func testProductionRegistryExcludesArchitectureDemoAndKeepsIFEUnavailable() {
         let registry = ProviderRegistry()
 
+        XCTAssertNil(registry.provider(id: "teqp-pure-co2-experimental"))
         XCTAssertNil(registry.provider(id: "architecture-demo"))
         XCTAssertFalse(registry.descriptors.contains { $0.id == "architecture-demo" })
 

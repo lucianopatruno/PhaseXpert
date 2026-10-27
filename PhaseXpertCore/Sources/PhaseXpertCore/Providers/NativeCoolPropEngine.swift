@@ -109,7 +109,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let carbonMonoxide = fractions[.carbonMonoxide] ?? 0
         let hydrogenSulfide = fractions[.hydrogenSulfide] ?? 0
 
-        let result = try await Task.detached(priority: .userInitiated) {
+        let result = try await runNativeWork(priority: .userInitiated) {
             var nativeResult = PXCoolPropBinaryResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_calculate_dry_co2_mixture(
@@ -140,7 +140,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
-        }.value
+        }
         try Task.checkCancellation()
         return result
     }
@@ -189,7 +189,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             $0[$1.component, default: 0] += $1.moleFraction
         }
 
-        let result = try await Task.detached(priority: .userInitiated) {
+        let result = try await runNativeWork(priority: .userInitiated) {
             var nativeResult = PXCoolPropPhaseResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
@@ -216,7 +216,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             return CoolPropPhaseEngineResult(
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
-        }.value
+        }
         try Task.checkCancellation()
         return result
     }
@@ -238,7 +238,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             PXCoolPropPhaseHintLiquid
         }
 
-        let result = try await Task.detached(priority: .userInitiated) {
+        let result = try await runNativeWork(priority: .userInitiated) {
             var nativeResult = PXCoolPropBinaryResult()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_calculate_dry_co2_mixture_with_phase_hint(
@@ -270,7 +270,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 gibbsMolarJoulesPerMole: nativeResult.gibbs_molar_j_mol,
                 phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
             )
-        }.value
+        }
         try Task.checkCancellation()
         return result
     }
@@ -284,7 +284,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
             $0[$1.component, default: 0] += $1.moleFraction
         }
 
-        let pressures = try await Task.detached(priority: .utility) {
+        let pressures = try await runNativeWork(priority: .utility) {
             var nativePressures = PXCoolPropMixtureSaturationPressures()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_dry_co2_mixture_saturation_pressures(
@@ -311,14 +311,14 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 bubblePressurePa: nativePressures.bubble_pressure_pa,
                 dewPressurePa: nativePressures.dew_pressure_pa
             )
-        }.value
+        }
         try Task.checkCancellation()
         return pressures
     }
 
     public func pureCarbonDioxideSaturationLimits() async throws -> CoolPropSaturationLimits {
         try Task.checkCancellation()
-        let limits = try await Task.detached(priority: .userInitiated) {
+        let limits = try await runNativeWork(priority: .userInitiated) {
             var nativeLimits = PXCoolPropSaturationLimits()
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_pure_co2_saturation_limits(
@@ -337,7 +337,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 criticalPointTemperatureK: nativeLimits.critical_temperature_k,
                 criticalPointPressurePa: nativeLimits.critical_pressure_pa
             )
-        }.value
+        }
         try Task.checkCancellation()
         return limits
     }
@@ -346,7 +346,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         temperatureK: Double
     ) async throws -> Double {
         try Task.checkCancellation()
-        let pressure = try await Task.detached(priority: .userInitiated) {
+        let pressure = try await runNativeWork(priority: .userInitiated) {
             var pressurePa = 0.0
             var errorBuffer = [CChar](repeating: 0, count: 512)
             let status = px_coolprop_pure_co2_saturation_pressure(
@@ -362,7 +362,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 )
             }
             return pressurePa
-        }.value
+        }
         try Task.checkCancellation()
         return pressure
     }
@@ -374,7 +374,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         let fractions = composition.reduce(into: [ComponentID: Double]()) {
             $0[$1.component, default: 0] += $1.moleFraction
         }
-        let nativeResult = try await Task.detached(priority: .utility) {
+        let nativeResult = try await runNativeWork(priority: .utility) {
             var points = [PXCoolPropEnvelopePoint](repeating: .init(), count: 512)
             var pointCount = 0
             var isComplete: Int32 = 0
@@ -420,7 +420,7 @@ public struct NativeCoolPropEngine: CoolPropEngine {
                 isComplete: isComplete != 0,
                 isClosed: isClosed != 0
             )
-        }.value
+        }
         try Task.checkCancellation()
         return CoolPropMixtureEnvelopeResult(
             points: nativeResult.points,

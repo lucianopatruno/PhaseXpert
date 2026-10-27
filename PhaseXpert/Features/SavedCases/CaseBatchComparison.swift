@@ -293,7 +293,7 @@ struct BatchComparisonCSVExporter {
             }
             rows.append(row)
         }
-        let csv = rows.map { $0.map(escape).joined(separator: ",") }.joined(separator: "\r\n") + "\r\n"
+        let csv = rows.map { $0.map(SpreadsheetCSV.escape).joined(separator: ",") }.joined(separator: "\r\n") + "\r\n"
         return Data(csv.utf8)
     }
 

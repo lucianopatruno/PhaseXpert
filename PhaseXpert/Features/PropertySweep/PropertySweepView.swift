@@ -636,7 +636,7 @@ private struct PropertySweepCSVExporter {
             ])
         }
 
-        let csv = rows.map { $0.map(escape).joined(separator: ",") }
+        let csv = rows.map { $0.map(SpreadsheetCSV.escape).joined(separator: ",") }
             .joined(separator: "\r\n")
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("PhaseXpert-Sweep-\(result.id.uuidString).csv")
