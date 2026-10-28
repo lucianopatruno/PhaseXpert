@@ -725,7 +725,7 @@ public struct TeqpProvider<Engine: TeqpEngine>: ThermodynamicModelProvider {
                     authors: "Ibrahim Al-Siyabi",
                     title: "Effect of impurities on CO2 stream properties",
                     year: 2013,
-                    doiOrURL: "http://hdl.handle.net/10399/2643"
+                    doiOrURL: "https://hdl.handle.net/10399/2643"
                 ),
                 SourceReference(
                     authors: "Mazzoccoli, Bosio and Arato",

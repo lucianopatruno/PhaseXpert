@@ -20,3 +20,7 @@ Vendor/teqp/*.xcframework/
 Vendor/teqp/TEQP-LICENSE.txt
 Vendor/teqp/TEQP-REVISION.txt
 Vendor/teqp/TEQP-SUBMODULES.txt
+
+# Local agent state and generated store assets
+.claude/
+AppStoreScreenshots/
