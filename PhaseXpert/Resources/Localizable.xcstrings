@@ -5765,24 +5765,24 @@
         }
       }
     },
-    "Show photo from the IFE website" : {
+    "Settings & About" : {
       "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vis bilde fra IFEs nettsted"
+            "value" : "Innstillinger og om appen"
           }
         }
       }
     },
-    "The photo is loaded from ife.no when you tap this button." : {
+    "Credits and contact" : {
       "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bildet lastes fra ife.no når du trykker på knappen."
+            "value" : "Anerkjennelser og kontakt"
           }
         }
       }

@@ -3,9 +3,7 @@
 ## Unreleased
 
 - Security polish: the privacy manifest now declares the file-timestamp API used
-  by the export cleanup (reason C617.1); the FALCON photo is downloaded from
-  ife.no only when the user taps to show it, so the app makes no network request
-  on its own; every outbound reference link must be HTTPS (one validated-case
+  by the export cleanup (reason C617.1); every outbound reference link must be HTTPS (one validated-case
   reference now uses the HTTPS form of the same handle); teqp stays in the
   repository but is guarded out of the shipped app by the validation script and
   unit tests, and its build script is blocked until reviewed.
