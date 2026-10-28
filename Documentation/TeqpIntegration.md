@@ -1,5 +1,22 @@
 # teqp native integration
 
+> **Not part of the distributed app.** Since PR #89 teqp is not linked into
+> PhaseXpert, not registered as a provider and not built by the app project. The
+> bridge sources, build script, tests and this documentation stay in the
+> repository for possible future use. `Scripts/validate-phase-xpert.sh` fails if
+> teqp is referenced by the app project or `PhaseXpertCore/Package.swift`, or if
+> a teqp file or `px_teqp_` symbol appears in the built app.
+>
+> To bring it back deliberately:
+> 1. Bring `Scripts/build-teqp-xcframework.sh` to the standard of the CoolProp
+>    script (verified `git archive` of the pinned commit and its submodules, no
+>    reuse of an unverified cache).
+> 2. Build with `PHASEXPERT_TEQP_REVIEWED=1 bash Scripts/build-teqp-xcframework.sh`.
+> 3. Re-add the binary target to `PhaseXpertCore/Package.swift`, register
+>    `TeqpProvider` in `ProviderRegistry.defaults`, and link it in the app project.
+> 4. Update `check_teqp_*` in the validation script and the guard tests in the
+>    same change, then repeat a security review of the native bridge.
+
 ## Status
 
 This is a deliberately narrow experimental native-provider milestone. It adds

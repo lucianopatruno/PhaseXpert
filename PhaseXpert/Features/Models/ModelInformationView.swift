@@ -134,7 +134,7 @@ private struct ModelDetailView: View {
                         }
                         if
                             let address = reference.doiOrURL,
-                            let url = URL(string: address)
+                            let url = ReferenceLinkResolver.url(for: address)
                         {
                             Link(destination: url) {
                                 referenceLabel(reference, address: address)

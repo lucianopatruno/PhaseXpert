@@ -40,44 +40,6 @@ struct AboutView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            IFEGroup("Validation") {
-                Text(ValidationInformationView.summary)
-            }
-
-            IFEGroup("IFE Model") {
-                LabeledContent("Status") {
-                    Text("Under development")
-                }
-                .accessibilityIdentifier("ife-model-development-status")
-            }
-            IFENavigationRow(
-                "About the IFE Model",
-                systemImage: "atom",
-                tint: .ifeCoral
-            ) {
-                IFEModelInformationView()
-            }
-
-            IFEGroup("References") {
-                ForEach(Array(references.enumerated()), id: \.offset) { index, item in
-                    if index > 0 {
-                        Divider()
-                    }
-                    reference(item.title, url: item.url)
-                }
-            }
-
-            IFEGroup("FALCON") {
-                Text("IFE's experimental facility for CO₂ transport and flow research.")
-            }
-            IFENavigationRow(
-                "FALCON CO₂ flow loop",
-                systemImage: "point.3.connected.trianglepath.dotted",
-                tint: .ifePrimary
-            ) {
-                FalconView()
-            }
-
             IFEGroup("Contact") {
                 Link(destination: contactURL) {
                     Label("Contact IFE Flow Department", systemImage: "envelope")
@@ -102,35 +64,8 @@ struct AboutView: View {
         .navigationTitle("About")
     }
 
-    private var references: [(title: String, url: String)] {
-        [
-            ("CoolProp: Open-source thermophysical property library", "https://doi.org/10.1021/ie4033999"),
-            ("Span–Wagner CO₂ equation of state", "https://doi.org/10.1063/1.555991"),
-            ("IAPWS-95 water formulation", "https://doi.org/10.1063/1.1461829"),
-            ("CO₂-rich binary p-ρ-T measurements", "https://doi.org/10.1021/je300590v"),
-            ("CO₂/O₂ density measurements", "https://doi.org/10.1021/acs.jced.0c00484"),
-            ("EOS-CG-2021 CCS mixture model", "https://doi.org/10.1007/s10765-023-03263-6"),
-            ("Spycher–Pruess–Ennis-King CO₂/H₂O model", "https://doi.org/10.1016/S0016-7037(03)00273-4")
-        ]
-    }
-
     private var contactURL: URL {
         IFEContactMailLink.url
-    }
-
-    private func reference(_ title: String, url: String) -> some View {
-        Link(destination: URL(string: url)!) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundStyle(Color.ifeText)
-                    .multilineTextAlignment(.leading)
-                Spacer(minLength: IFESpacing.small)
-                Image(systemName: "arrow.up.right.square")
-                    .foregroundStyle(Color.ifeViolet)
-            }
-            .contentShape(Rectangle())
-        }
     }
 }
 

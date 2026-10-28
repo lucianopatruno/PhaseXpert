@@ -299,8 +299,8 @@ public enum BuiltInCaseCatalog {
         _ url: String,
         _ dateOrVersion: String?
     ) -> BuiltInCaseSource {
-        guard let sourceURL = URL(string: url) else {
-            preconditionFailure("Built-in case source URL is invalid: \(url)")
+        guard let sourceURL = URL(string: url), sourceURL.scheme == "https" else {
+            preconditionFailure("Built-in case source URL must be a valid https URL: \(url)")
         }
         return BuiltInCaseSource(title: title, url: sourceURL, dateOrVersion: dateOrVersion)
     }

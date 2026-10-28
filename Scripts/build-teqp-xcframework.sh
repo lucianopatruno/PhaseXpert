@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# teqp is not part of the distributed app (see Documentation/TeqpIntegration.md).
+# This script is kept for future work. Building it compiles an upstream checkout
+# that is only verified by commit, so it is blocked until it has been reviewed
+# to the standard of Scripts/build-coolprop-xcframework.sh.
+if [[ "${PHASEXPERT_TEQP_REVIEWED:-}" != "1" ]]; then
+    echo "teqp is not part of the distributed app; build blocked." >&2
+    echo "Review this script, then run with PHASEXPERT_TEQP_REVIEWED=1." >&2
+    exit 1
+fi
+
 teqp_version="${TEQP_VERSION:-v0.23.1}"
 teqp_commit="a68eb9cabf47af2c4aba0d272ac10fbca4c10eca"
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

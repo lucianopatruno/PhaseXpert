@@ -5764,6 +5764,28 @@
           }
         }
       }
+    },
+    "Settings & About" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innstillinger og om appen"
+          }
+        }
+      }
+    },
+    "Credits and contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anerkjennelser og kontakt"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

@@ -83,19 +83,6 @@ private struct MoreView: View {
         NavigationStack {
             IFEPage {
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
-                    IFESectionTitle("Settings")
-                    IFENavigationRow(
-                        "Language & Appearance",
-                        subtitle: "Language, light and dark mode",
-                        systemImage: "gearshape",
-                        tint: .ifeViolet
-                    ) {
-                        SettingsView()
-                    }
-                    .accessibilityIdentifier("more-appearance")
-                }
-
-                VStack(alignment: .leading, spacing: IFESpacing.small) {
                     IFESectionTitle("Tools")
                     IFENavigationRow(
                         "Stream Mixing",
@@ -140,16 +127,6 @@ private struct MoreView: View {
                     .accessibilityIdentifier("more-general-model")
 
                     IFENavigationRow(
-                        "Validation",
-                        subtitle: "How results are checked against experiments",
-                        systemImage: "checkmark.shield",
-                        tint: .ifeGreen
-                    ) {
-                        ValidationInformationView(wrapsInNavigationStack: false)
-                    }
-                    .accessibilityIdentifier("more-validation")
-
-                    IFENavigationRow(
                         "IFE Model",
                         subtitle: "IFE's own model, under development",
                         systemImage: "atom",
@@ -160,8 +137,31 @@ private struct MoreView: View {
                     .accessibilityIdentifier("more-ife-model")
 
                     IFENavigationRow(
+                        "Validation",
+                        subtitle: "How results are checked against experiments",
+                        systemImage: "checkmark.shield",
+                        tint: .ifeGreen
+                    ) {
+                        ValidationInformationView(wrapsInNavigationStack: false)
+                    }
+                    .accessibilityIdentifier("more-validation")
+                }
+
+                VStack(alignment: .leading, spacing: IFESpacing.small) {
+                    IFESectionTitle("Settings & About")
+                    IFENavigationRow(
+                        "Language & Appearance",
+                        subtitle: "Language, light and dark mode",
+                        systemImage: "gearshape",
+                        tint: .ifeViolet
+                    ) {
+                        SettingsView()
+                    }
+                    .accessibilityIdentifier("more-appearance")
+
+                    IFENavigationRow(
                         "About",
-                        subtitle: "Credits, references and contact",
+                        subtitle: "Credits and contact",
                         systemImage: "info.circle",
                         tint: .ifeViolet
                     ) {

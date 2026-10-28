@@ -2453,6 +2453,50 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testPrivacyManifestDeclaresTheRequiredReasonAPIsInUse() throws {
+        let url = try XCTUnwrap(
+            Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy")
+        )
+        let data = try Data(contentsOf: url)
+        let plist = try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+        )
+        let entries = try XCTUnwrap(plist["NSPrivacyAccessedAPITypes"] as? [[String: Any]])
+        let categories = Set(entries.compactMap { $0["NSPrivacyAccessedAPIType"] as? String })
+        // UserDefaults: @AppStorage. File timestamps: TemporaryExportCleanup reads
+        // modification dates inside the app container.
+        XCTAssertTrue(categories.contains("NSPrivacyAccessedAPICategoryUserDefaults"))
+        XCTAssertTrue(categories.contains("NSPrivacyAccessedAPICategoryFileTimestamp"))
+        XCTAssertEqual(plist["NSPrivacyTracking"] as? Bool, false)
+    }
+
+    @MainActor
+    func testEveryOutboundReferenceLinkIsHTTPS() {
+        for builtInCase in BuiltInCaseCatalog.cases {
+            for source in builtInCase.sources {
+                XCTAssertEqual(source.url.scheme, "https", "\(builtInCase.id): \(source.url)")
+            }
+        }
+        for validatedCase in AdvancedValidationPresentation.validatedCaseOptions() {
+            for reference in validatedCase.references {
+                guard let address = reference.doiOrURL else { continue }
+                let url = ReferenceLinkResolver.url(for: address)
+                XCTAssertEqual(url?.scheme, "https", "\(validatedCase.id): \(address)")
+            }
+        }
+        for hostile in ["javascript:alert(1)", "http://example.com", "mailto:x@y.z", "file:///etc/passwd"] {
+            XCTAssertNil(ReferenceLinkResolver.url(for: hostile), hostile)
+        }
+    }
+
+    @MainActor
+    func testTeqpIsNotRegisteredInTheShippedApp() {
+        let identifiers = ProviderRegistry.defaults.map { $0.descriptor.id.lowercased() }
+        XCTAssertFalse(identifiers.isEmpty)
+        XCTAssertFalse(identifiers.contains { $0.contains("teqp") }, "\(identifiers)")
+    }
+
+    @MainActor
     func testBuiltInCasesLoadIntoCalculatorWithDefaultsAndComposition() throws {
         let viewModel = CalculatorViewModel()
         let porthos = try XCTUnwrap(BuiltInCaseCatalog.caseWithID("porthos-pipeline-specification-example"))

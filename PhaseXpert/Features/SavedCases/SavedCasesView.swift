@@ -991,7 +991,7 @@ private struct SourceReferenceRow: View {
     let reference: SourceReference
 
     var body: some View {
-        if let link = reference.doiOrURL, let url = URL(string: link) {
+        if let link = reference.doiOrURL, let url = ReferenceLinkResolver.url(for: link) {
             Link(destination: url) { content(link: link) }
         } else {
             content(link: nil)
