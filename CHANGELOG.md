@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a Swift port of the ToCoMo (Total Consumption Model) reaction sequence
+  from Equinor's MIT-licensed repository, pinned to a commit and verified against
+  results from the original Python code. It is not yet visible in the app.
+
 - Security polish: the privacy manifest now declares the file-timestamp API used
   by the export cleanup (reason C617.1); every outbound reference link must be HTTPS (one validated-case
   reference now uses the HTTPS form of the same handle); teqp stays in the

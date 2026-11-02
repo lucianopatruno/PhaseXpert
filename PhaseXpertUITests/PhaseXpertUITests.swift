@@ -608,6 +608,40 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.otherElements["phase-boundary-chart"].exists)
     }
 
+    func testImpurityReactionsPreviewShowsAResultAndRejectsUnreadableInput() {
+        let app = XCUIApplication()
+        app.launch()
+        openMoreRow("Impurity Reactions", in: app)
+
+        XCTAssertTrue(app.navigationBars["Impurity Reactions"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.descendants(matching: .any)["impurity-reactions-preliminary"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["impurity-reactions-empty"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["impurity-reactions-result"].exists)
+
+        // Order of the fields: H2O, O2, H2S, SO2, NO2. The decimal pad has no Return key,
+        // so the keyboard bar offers Next.
+        let water = app.textFields["impurity-reactions-input-H2O"]
+        XCTAssertTrue(water.waitForExistence(timeout: 3))
+        water.tap()
+        water.typeText("40")
+        for (index, text) in ["15", "3", "", "15"].enumerated() {
+            let next = app.buttons["impurity-reactions-keyboard-next"]
+            XCTAssertTrue(next.waitForExistence(timeout: 2), "Next before field \(index + 2)")
+            next.tap()
+            if !text.isEmpty { app.typeText(text) }
+        }
+        app.buttons["impurity-reactions-keyboard-done"].tap()
+
+        XCTAssertTrue(app.descendants(matching: .any)["impurity-reactions-result"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.descendants(matching: .any)["impurity-reactions-empty"].exists)
+
+        let nitrogenDioxide = app.textFields["impurity-reactions-input-NO2"]
+        nitrogenDioxide.tap()
+        nitrogenDioxide.typeText("..")
+        XCTAssertTrue(app.descendants(matching: .any)["impurity-reactions-error"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.descendants(matching: .any)["impurity-reactions-result"].exists)
+    }
+
     func testStreamMixingNavigationAndInitialTwoStreamState() {
         let app = XCUIApplication()
         app.launch()

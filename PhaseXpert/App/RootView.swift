@@ -96,6 +96,16 @@ private struct MoreView: View {
                         )
                     }
                     .accessibilityIdentifier("more-stream-mixing")
+
+                    IFENavigationRow(
+                        "Impurity Reactions",
+                        subtitle: "Preview: what reactive impurities could turn into",
+                        systemImage: "testtube.2",
+                        tint: .ifeGreen
+                    ) {
+                        ImpurityReactionsView(viewModel: state.impurityReactionsViewModel)
+                    }
+                    .accessibilityIdentifier("more-impurity-reactions")
                 }
 
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
@@ -210,9 +220,14 @@ private struct SettingsView: View {
 @Observable
 final class MoreTabState {
     let streamMixingViewModel: StreamMixingViewModel
+    let impurityReactionsViewModel: ImpurityReactionsViewModel
 
-    init(streamMixingViewModel: StreamMixingViewModel = StreamMixingViewModel()) {
+    init(
+        streamMixingViewModel: StreamMixingViewModel = StreamMixingViewModel(),
+        impurityReactionsViewModel: ImpurityReactionsViewModel = ImpurityReactionsViewModel()
+    ) {
         self.streamMixingViewModel = streamMixingViewModel
+        self.impurityReactionsViewModel = impurityReactionsViewModel
     }
 }
 

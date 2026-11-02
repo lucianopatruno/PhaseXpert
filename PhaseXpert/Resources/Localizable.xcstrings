@@ -1,213 +1,19 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@ (%@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ (%2$@)"
-          }
-        }
-      }
+    "" : {
+
     },
-    "%@ (%lld)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ (%2$lld)"
-          }
-        }
-      }
+    " · %lld" : {
+
     },
-    "%@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "%@ • %@ • %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ • %2$@ • %3$@"
-          }
-        }
-      }
-    },
-    "%@ bar(a) · %@ °C" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ bar(a) · %2$@ °C"
-          }
-        }
-      }
-    },
-    "%@ impurity menu" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ urenhetsmeny"
-          }
-        }
-      }
-    },
-    "%@ sweep limit" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ sveipegrense"
-          }
-        }
-      }
-    },
-    "%@ to %@ %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ to %2$@ %3$@"
-          }
-        }
-      }
-    },
-    "%@ unit" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ enhet"
-          }
-        }
-      }
-    },
-    "%@ value" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ verdi"
-          }
-        }
-      }
-    },
-    "%@ vs %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ vs %2$@"
-          }
-        }
-      }
-    },
-    "%@–%@ °C" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@–%2$@ °C"
-          }
-        }
-      }
-    },
-    "%@–%@ bar(a)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@–%2$@ bar(a)"
-          }
-        }
-      }
-    },
-    "%@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@"
-          }
-        }
-      }
-    },
-    "%@, %@, open reference" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, %2$@, open reference"
-          }
-        }
-      }
-    },
-    "%@, opens %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, opens %2$@"
-          }
-        }
-      }
-    },
-    "%@, validated for current state" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@, validert for gjeldende tilstand"
-          }
-        }
-      }
-    },
-    "%@: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@: %2$@"
-          }
-        }
-      }
-    },
-    "%@: current state is outside the validated domain." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@: gjeldende driftspunkt er utenfor det validerte området."
-          }
-        }
-      }
-    },
-    "%@%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@%2$@"
-          }
-        }
-      }
-    },
-    "%1$@ — %2$@" : {
+    "%1$@ %2$@" : {
       "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ — %2$@"
+            "value" : "%1$@ %2$@"
           }
         }
       }
@@ -230,28 +36,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ (%2$lld)"
-          }
-        }
-      }
-    },
-    "%1$@ %2$@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ %2$@"
-          }
-        }
-      }
-    },
-    "%1$@ • %2$@ • %3$@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ • %2$@ • %3$@"
           }
         }
       }
@@ -289,24 +73,35 @@
         }
       }
     },
-    "%1$@–%2$@ °C" : {
+    "%1$@ — %2$@" : {
       "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@–%2$@ °C"
+            "value" : "%1$@ — %2$@"
           }
         }
       }
     },
-    "%1$@–%2$@ bar(a)" : {
+    "%1$@ • %2$@ • %3$@" : {
       "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@–%2$@ bar(a)"
+            "value" : "%1$@ • %2$@ • %3$@"
+          }
+        }
+      }
+    },
+    "%1$@%2$@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@%2$@"
           }
         }
       }
@@ -355,13 +150,24 @@
         }
       }
     },
-    "%1$@%2$@" : {
+    "%1$@–%2$@ bar(a)" : {
       "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@%2$@"
+            "value" : "%1$@–%2$@ bar(a)"
+          }
+        }
+      }
+    },
+    "%1$@–%2$@ °C" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@–%2$@ °C"
           }
         }
       }
@@ -439,6 +245,247 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld×%2$lld"
+          }
+        }
+      }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "%@ (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$lld)"
+          }
+        }
+      }
+    },
+    "%@ bar(a) · %@ °C" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ bar(a) · %2$@ °C"
+          }
+        }
+      }
+    },
+    "%@ bar(a), %@ °C, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ bar(a), %2$@ °C, %3$@"
+          }
+        }
+      }
+    },
+    "%@ impurity menu" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ urenhetsmeny"
+          }
+        }
+      }
+    },
+    "%@ mol/s, %@ kg/s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ mol/s, %2$@ kg/s"
+          }
+        }
+      }
+    },
+    "%@ sweep limit" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sveipegrense"
+          }
+        }
+      }
+    },
+    "%@ to %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@ unit" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ enhet"
+          }
+        }
+      }
+    },
+    "%@ value" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ verdi"
+          }
+        }
+      }
+    },
+    "%@ vs %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ vs %2$@"
+          }
+        }
+      }
+    },
+    "%@ • %@ • %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ • %2$@ • %3$@"
+          }
+        }
+      }
+    },
+    "%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@, %@, open reference" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, open reference"
+          }
+        }
+      }
+    },
+    "%@, %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$lld"
+          }
+        }
+      }
+    },
+    "%@, opens %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, opens %2$@"
+          }
+        }
+      }
+    },
+    "%@, ppm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, ppm"
+          }
+        }
+      }
+    },
+    "%@, validated for current state" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, validert for gjeldende tilstand"
+          }
+        }
+      }
+    },
+    "%@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%@: current state is outside the validated domain." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: gjeldende driftspunkt er utenfor det validerte området."
+          }
+        }
+      }
+    },
+    "%@–%@ bar(a)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@–%2$@ bar(a)"
+          }
+        }
+      }
+    },
+    "%@–%@ °C" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@–%2$@ °C"
           }
         }
       }
@@ -571,6 +618,17 @@
         }
       }
     },
+    "%lld. %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld. %@"
+          }
+        }
+      }
+    },
     "%lld/%lld successful • %lld validated • %lld outside • %lld failed" : {
       "localizations" : {
         "en" : {
@@ -591,25 +649,8 @@
         }
       }
     },
-    "© %@ Institute for Energy Technology (IFE)" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "© %@ Institutt for energiteknologi (IFE)"
-          }
-        }
-      }
-    },
-    "−30 to +50 °C" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "−30 til +50 °C"
-          }
-        }
-      }
+    "0" : {
+
     },
     "44 mm internal diameter; 13 m test section" : {
       "localizations" : {
@@ -631,6 +672,17 @@
         }
       }
     },
+    "A stoichiometric heuristic that assumes the reactions run to completion. It is not a thermodynamic equilibrium calculation and has not been validated by PhaseXpert." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En støkiometrisk tommelfingerregel som forutsetter at reaksjonene går til fullføring. Det er ikke en termodynamisk likevektsberegning, og den er ikke validert av PhaseXpert."
+          }
+        }
+      }
+    },
     "About" : {
       "localizations" : {
         "nb" : {
@@ -642,11 +694,23 @@
       }
     },
     "About the IFE Model" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Om IFE-modellen"
+          }
+        }
+      }
+    },
+    "About this model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Om denne modellen"
           }
         }
       }
@@ -677,6 +741,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Legg til strøm"
+          }
+        }
+      }
+    },
+    "Algorithm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algoritme"
+          }
+        }
+      }
+    },
+    "All points classified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle punkter klassifisert"
           }
         }
       }
@@ -812,16 +898,6 @@
         }
       }
     },
-    "Built-in case" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Innebygd tilfelle"
-          }
-        }
-      }
-    },
     "Built-in Cases" : {
       "localizations" : {
         "nb" : {
@@ -832,12 +908,64 @@
         }
       }
     },
+    "Built-in case" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innebygd tilfelle"
+          }
+        }
+      }
+    },
+    "Built-in cases are immutable presets. A duplicate becomes an editable My Case and is not linked to later catalog changes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innebygde saker er uforanderlige forhåndsinnstillinger. En duplikat blir en redigerbar sak i Mine saker og er ikke knyttet til senere endringer i katalogen."
+          }
+        }
+      }
+    },
     "Built-in cases are immutable presets. Duplicates become editable My Cases and are not linked to later catalog changes." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Innebygde tilfeller er uforanderlige forhåndsinnstillinger. Duplikater blir redigerbare Mine saker og er ikke knyttet til senere katalogendringer."
+          }
+        }
+      }
+    },
+    "CO₂ is the remainder." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CO₂ utgjør resten."
+          }
+        }
+      }
+    },
+    "CO₂ mixtures can include N₂, CH₄, H₂O and O₂" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CO₂-blandinger kan inneholde N₂, CH₄, H₂O og O₂"
+          }
+        }
+      }
+    },
+    "Calculate Phase Map" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beregn fasekart"
           }
         }
       }
@@ -859,16 +987,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beregn blanding"
-          }
-        }
-      }
-    },
-    "Calculate Phase Map" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beregn fasekart"
           }
         }
       }
@@ -953,22 +1071,23 @@
         }
       }
     },
-    "Calculation error" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beregningsfeil"
-          }
-        }
-      }
-    },
     "Calculation ID" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beregnings-ID"
+          }
+        }
+      }
+    },
+    "Calculation ID: %1$@ • Envelope request ID: %2$@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beregnings-ID: %1$@ • Forespørsels-ID for fasekurve: %2$@"
           }
         }
       }
@@ -983,13 +1102,12 @@
         }
       }
     },
-    "Calculation ID: %1$@ • Envelope request ID: %2$@" : {
-      "extractionState" : "stale",
+    "Calculation error" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beregnings-ID: %1$@ • Forespørsels-ID for fasekurve: %2$@"
+            "value" : "Beregningsfeil"
           }
         }
       }
@@ -1104,6 +1222,17 @@
         }
       }
     },
+    "Case duplicated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saken er duplisert"
+          }
+        }
+      }
+    },
     "Case information" : {
       "localizations" : {
         "nb" : {
@@ -1140,6 +1269,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tilfeller"
+          }
+        }
+      }
+    },
+    "Change" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endring"
           }
         }
       }
@@ -1237,32 +1377,23 @@
         }
       }
     },
+    "Clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tøm"
+          }
+        }
+      }
+    },
     "Close" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lukk"
-          }
-        }
-      }
-    },
-    "CO₂ is the remainder." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CO₂ utgjør resten."
-          }
-        }
-      }
-    },
-    "CO₂ mixtures can include N₂, CH₄, H₂O and O₂" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CO₂-blandinger kan inneholde N₂, CH₄, H₂O og O₂"
           }
         }
       }
@@ -1293,6 +1424,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kollapset"
+          }
+        }
+      }
+    },
+    "Combine streams and compute the mixed composition" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bland strømmer og beregn den blandede sammensetningen"
           }
         }
       }
@@ -1447,6 +1588,17 @@
         }
       }
     },
+    "Concentrations are tracked as the reactions are tried in a fixed order: the first reaction that has enough of its reactants is applied, and the list is tried again until nothing can react. It ignores temperature, pressure, reaction rates and any water or acid phase that could separate." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konsentrasjonene følges mens reaksjonene prøves i fast rekkefølge: den første reaksjonen som har nok av stoffene sine brukes, og listen prøves på nytt til ingenting kan reagere. Modellen ser bort fra temperatur, trykk, reaksjonshastigheter og en vann- eller syrefase som kan skille seg ut."
+          }
+        }
+      }
+    },
     "Contact" : {
       "localizations" : {
         "nb" : {
@@ -1567,6 +1719,28 @@
         }
       }
     },
+    "Credits and contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anerkjennelser og kontakt"
+          }
+        }
+      }
+    },
+    "Credits, references and contact" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anerkjennelser, referanser og kontakt"
+          }
+        }
+      }
+    },
     "Curated reference case from PhaseXpert validation capability metadata." : {
       "localizations" : {
         "nb" : {
@@ -1678,6 +1852,7 @@
       }
     },
     "Delete saved case?" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -1800,6 +1975,7 @@
       }
     },
     "Duplicate to My Cases" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -1815,6 +1991,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Varighet"
+          }
+        }
+      }
+    },
+    "ENCASE" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ENCASE"
           }
         }
       }
@@ -1839,16 +2025,6 @@
         }
       }
     },
-    "Edit name and notes" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rediger navn og notater"
-          }
-        }
-      }
-    },
     "Edit Saved Case" : {
       "localizations" : {
         "nb" : {
@@ -1859,12 +2035,23 @@
         }
       }
     },
-    "ENCASE" : {
+    "Edit name and notes" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ENCASE"
+            "value" : "Rediger navn og notater"
+          }
+        }
+      }
+    },
+    "Elemental sulfur" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elementært svovel"
           }
         }
       }
@@ -1905,6 +2092,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "English"
+          }
+        }
+      }
+    },
+    "Enter a number for %@, or leave the field empty for 0 ppm." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv inn et tall for %@, eller la feltet stå tomt for 0 ppm."
+          }
+        }
+      }
+    },
+    "Enter the impurity amounts above to see what they could turn into." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skriv inn mengdene av urenheter ovenfor for å se hva de kan bli til."
           }
         }
       }
@@ -2051,6 +2260,16 @@
         }
       }
     },
+    "Export Case" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksporter tilfelle"
+          }
+        }
+      }
+    },
     "Export and share" : {
       "localizations" : {
         "nb" : {
@@ -2062,16 +2281,6 @@
       }
     },
     "Export case" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eksporter tilfelle"
-          }
-        }
-      }
-    },
-    "Export Case" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -2121,26 +2330,6 @@
         }
       }
     },
-    "Failed" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mislyktes"
-          }
-        }
-      }
-    },
-    "Failed or unavailable" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mislyktes eller utilgjengelig"
-          }
-        }
-      }
-    },
     "FALCON" : {
       "localizations" : {
         "nb" : {
@@ -2171,6 +2360,26 @@
         }
       }
     },
+    "Failed" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mislyktes"
+          }
+        }
+      }
+    },
+    "Failed or unavailable" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mislyktes eller utilgjengelig"
+          }
+        }
+      }
+    },
     "Files are generated locally. PhaseXpert sends nothing automatically; data leaves the device only through the destination you select in the iOS share sheet." : {
       "localizations" : {
         "nb" : {
@@ -2181,13 +2390,13 @@
         }
       }
     },
-    "firmapost@ife.no" : {
-      "extractionState" : "stale",
+    "Final" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "firmapost@ife.no"
+            "value" : "Slutt"
           }
         }
       }
@@ -2232,13 +2441,13 @@
         }
       }
     },
-    "General engineering sweep" : {
-      "extractionState" : "stale",
+    "Formed" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Generell egenskapsanalyse"
+            "value" : "Dannet"
           }
         }
       }
@@ -2263,6 +2472,17 @@
         }
       }
     },
+    "General engineering sweep" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generell egenskapsanalyse"
+          }
+        }
+      }
+    },
     "Generated at" : {
       "localizations" : {
         "nb" : {
@@ -2283,16 +2503,6 @@
         }
       }
     },
-    "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homogene H₂O-egenskaper er fortsatt foreløpige for binær CO₂/H₂O ved xH₂O = 1–1000 ppm, 350–423,15 K og 0,5–5 MPa."
-          }
-        }
-      }
-    },
     "High" : {
       "localizations" : {
         "nb" : {
@@ -2303,22 +2513,33 @@
         }
       }
     },
-    "Identity" : {
+    "How results are checked against experiments" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Identitet"
+            "value" : "Hvordan resultater kontrolleres mot eksperimenter"
           }
         }
       }
     },
-    "IFE — Institute for Energy Technology" : {
+    "Hydrogen sulfide" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IFE — Institutt for energiteknikk"
+            "value" : "Hydrogensulfid"
+          }
+        }
+      }
+    },
+    "H₂O homogeneous properties remain preliminary for binary CO₂/H₂O at xH₂O = 1–1000 ppm, 350–423.15 K and 0.5–5 MPa." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homogene H₂O-egenskaper er fortsatt foreløpige for binær CO₂/H₂O ved xH₂O = 1–1000 ppm, 350–423,15 K og 0,5–5 MPa."
           }
         }
       }
@@ -2333,12 +2554,84 @@
         }
       }
     },
+    "IFE is developing its own thermodynamic model for CO₂ systems." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFE utvikler sin egen termodynamiske modell for CO₂-systemer."
+          }
+        }
+      }
+    },
+    "IFE — Institute for Energy Technology" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFE — Institutt for energiteknikk"
+          }
+        }
+      }
+    },
+    "IFE's CO₂ flow research facility" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFEs forskningsanlegg for CO₂-strømning"
+          }
+        }
+      }
+    },
     "IFE's experimental facility for CO₂ transport and flow research." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "IFEs forsøksanlegg for forskning på CO₂-transport og strømning."
+          }
+        }
+      }
+    },
+    "IFE's own model, under development" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IFEs egen modell, under utvikling"
+          }
+        }
+      }
+    },
+    "Identity" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identitet"
+          }
+        }
+      }
+    },
+    "Impurities in CO₂" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urenheter i CO₂"
+          }
+        }
+      }
+    },
+    "Impurity Reactions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urenhetsreaksjoner"
           }
         }
       }
@@ -2410,6 +2703,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uavhengig validert: %@"
+          }
+        }
+      }
+    },
+    "Initial" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "Initial and final" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start og slutt"
           }
         }
       }
@@ -2536,6 +2851,16 @@
         }
       }
     },
+    "Language, light and dark mode" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Språk, lyst og mørkt tema"
+          }
+        }
+      }
+    },
     "Last updated" : {
       "localizations" : {
         "nb" : {
@@ -2562,6 +2887,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bibliotek/koeffisientversjon"
+          }
+        }
+      }
+    },
+    "Licence" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisens"
           }
         }
       }
@@ -2602,17 +2938,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lav"
-          }
-        }
-      }
-    },
-    "luciano.patruno@ife.no" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "luciano.patruno@ife.no"
           }
         }
       }
@@ -2687,16 +3012,6 @@
         }
       }
     },
-    "Min %@ • Max %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Min %1$@ • Max %2$@"
-          }
-        }
-      }
-    },
     "Min %1$@ • Max %2$@" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2704,6 +3019,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Min %1$@ • Maks %2$@"
+          }
+        }
+      }
+    },
+    "Min %@ • Max %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Min %1$@ • Max %2$@"
           }
         }
       }
@@ -2798,16 +3123,6 @@
         }
       }
     },
-    "Model and phase" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modell og fase"
-          }
-        }
-      }
-    },
     "Model ID" : {
       "localizations" : {
         "nb" : {
@@ -2828,22 +3143,22 @@
         }
       }
     },
+    "Model and phase" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modell og fase"
+          }
+        }
+      }
+    },
     "Model version" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modellversjon"
-          }
-        }
-      }
-    },
-    "Model: %@ • Version %@ • Provider %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Model: %1$@ • Version %2$@ • Provider %3$@"
           }
         }
       }
@@ -2855,6 +3170,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modell: %1$@ • Versjon %2$@ • Leverandør %3$@"
+          }
+        }
+      }
+    },
+    "Model: %@ • Version %@ • Provider %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Model: %1$@ • Version %2$@ • Provider %3$@"
           }
         }
       }
@@ -2875,16 +3200,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modeller og informasjon"
-          }
-        }
-      }
-    },
-    "mol%" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mol%"
           }
         }
       }
@@ -2915,6 +3230,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Molfraksjon"
+          }
+        }
+      }
+    },
+    "Mole ppm (µmol/mol) of the stream. CO₂ is the remainder." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mol-ppm (µmol/mol) av strømmen. CO₂ er resten."
           }
         }
       }
@@ -2959,22 +3285,22 @@
         }
       }
     },
-    "Multicomponent composition at user-selected pressure and temperature ranges." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flerkomponentsammensetning ved brukervalgte trykk- og temperaturområder."
-          }
-        }
-      }
-    },
     "Multicomponent Phase Map with operating point highlighted by a red ring" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Multikomponent fasekart med driftspunkt uthevet av en rød ring"
+          }
+        }
+      }
+    },
+    "Multicomponent composition at user-selected pressure and temperature ranges." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flerkomponentsammensetning ved brukervalgte trykk- og temperaturområder."
           }
         }
       }
@@ -2989,22 +3315,12 @@
         }
       }
     },
-    "Newest" : {
+    "Name" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nyeste"
-          }
-        }
-      }
-    },
-    "Oldest" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eldste"
+            "value" : "Navn"
           }
         }
       }
@@ -3029,22 +3345,33 @@
         }
       }
     },
-    "Name" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navn"
-          }
-        }
-      }
-    },
     "Nearby validation evidence" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nærliggende valideringsgrunnlag"
+          }
+        }
+      }
+    },
+    "Newest" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyeste"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neste"
           }
         }
       }
@@ -3069,6 +3396,60 @@
         }
       }
     },
+    "Nitric acid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salpetersyre"
+          }
+        }
+      }
+    },
+    "Nitric oxide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nitrogenmonoksid"
+          }
+        }
+      }
+    },
+    "Nitrogen dioxide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nitrogendioksid"
+          }
+        }
+      }
+    },
+    "Nitrous acid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salpetersyrling"
+          }
+        }
+      }
+    },
+    "No Calculation Preset" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen forhåndsinnstilt beregning"
+          }
+        }
+      }
+    },
     "No calculation has been completed in this calculator session. Model provenance is shown above." : {
       "localizations" : {
         "nb" : {
@@ -3080,16 +3461,6 @@
       }
     },
     "No calculation preset" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ingen forhåndsinnstilt beregning"
-          }
-        }
-      }
-    },
-    "No Calculation Preset" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -3150,12 +3521,34 @@
         }
       }
     },
+    "No reaction could be applied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen reaksjon kunne brukes"
+          }
+        }
+      }
+    },
     "No scientific reference is recorded for this provider." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ingen vitenskapelig referanse er registrert for denne leverandøren."
+          }
+        }
+      }
+    },
+    "No source recorded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingen kilde registrert"
           }
         }
       }
@@ -3240,6 +3633,17 @@
         }
       }
     },
+    "Not a number" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke et tall"
+          }
+        }
+      }
+    },
     "Not available for this state." : {
       "localizations" : {
         "nb" : {
@@ -3276,6 +3680,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        }
+      }
+    },
+    "Oldest" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eldste"
           }
         }
       }
@@ -3353,22 +3767,22 @@
         }
       }
     },
-    "Opens a new email with the subject PhaseXpert." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Åpner en ny e-post med emnet PhaseXpert."
-          }
-        }
-      }
-    },
     "Opens IFE's FALCON webpage in Safari." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Åpner IFEs FALCON-nettside i Safari."
+          }
+        }
+      }
+    },
+    "Opens a new email with the subject PhaseXpert." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Åpner en ny e-post med emnet PhaseXpert."
           }
         }
       }
@@ -3403,16 +3817,6 @@
         }
       }
     },
-    "Operating point: %@ bar(a), %@ °C" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Operating point: %1$@ bar(a), %2$@ °C"
-          }
-        }
-      }
-    },
     "Operating point: %1$@ bar(a), %2$@ °C" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3420,6 +3824,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Driftspunkt: %1$@ bar(a), %2$@ °C"
+          }
+        }
+      }
+    },
+    "Operating point: %@ bar(a), %@ °C" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Operating point: %1$@ bar(a), %2$@ °C"
           }
         }
       }
@@ -3494,6 +3908,16 @@
         }
       }
     },
+    "Outlet pressure — SI" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utløpstrykk — SI"
+          }
+        }
+      }
+    },
     "Outlet pressure — entered" : {
       "localizations" : {
         "nb" : {
@@ -3504,12 +3928,12 @@
         }
       }
     },
-    "Outlet pressure — SI" : {
+    "Outlet temperature — SI" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Utløpstrykk — SI"
+            "value" : "Utløpstemperatur — SI"
           }
         }
       }
@@ -3524,12 +3948,13 @@
         }
       }
     },
-    "Outlet temperature — SI" : {
+    "Oxygen" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Utløpstemperatur — SI"
+            "value" : "Oksygen"
           }
         }
       }
@@ -3574,22 +3999,32 @@
         }
       }
     },
-    "Phase behavior and properties of CO₂ mixtures" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Faseoppførsel og egenskaper til CO₂-blandinger"
-          }
-        }
-      }
-    },
     "Phase Diagram" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fasediagram"
+          }
+        }
+      }
+    },
+    "Phase Map" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fasekart"
+          }
+        }
+      }
+    },
+    "Phase behavior and properties of CO₂ mixtures" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faseoppførsel og egenskaper til CO₂-blandinger"
           }
         }
       }
@@ -3614,16 +4049,6 @@
         }
       }
     },
-    "Phase Map" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fasekart"
-          }
-        }
-      }
-    },
     "PhaseXpert" : {
       "localizations" : {
         "nb" : {
@@ -3633,6 +4058,20 @@
           }
         }
       }
+    },
+    "PhaseXpert contains its own Swift version of this calculation and has not validated it. It runs on the device and sends nothing anywhere." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PhaseXpert har sin egen Swift-versjon av denne beregningen og har ikke validert den. Den kjører på enheten og sender ingenting noe sted."
+          }
+        }
+      }
+    },
+    "PhaseXpert could not open its data store, so it has not started. Your saved cases have not been changed or deleted. Restart the app; if the problem persists, update PhaseXpert or contact support before reinstalling, because reinstalling removes saved cases." : {
+
     },
     "PhaseXpert identifies properties and operating states supported by independent experimental evidence. Validation is property-specific and may apply only to defined compositions and temperature/pressure ranges." : {
       "extractionState" : "stale",
@@ -3705,12 +4144,13 @@
         }
       }
     },
-    "ppm" : {
+    "Preliminary estimate" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ppm"
+            "value" : "Foreløpig estimat"
           }
         }
       }
@@ -3777,6 +4217,16 @@
         }
       }
     },
+    "Preparing Phase Map PDF…" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klargjør PDF av fasekart …"
+          }
+        }
+      }
+    },
     "Preparing diagram export…" : {
       "localizations" : {
         "nb" : {
@@ -3793,16 +4243,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Forbereder eksportfiler …"
-          }
-        }
-      }
-    },
-    "Preparing Phase Map PDF…" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klargjør PDF av fasekart …"
           }
         }
       }
@@ -3827,26 +4267,6 @@
         }
       }
     },
-    "Pressure — entered" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trykk — angitt"
-          }
-        }
-      }
-    },
-    "Pressure — SI" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trykk — SI"
-          }
-        }
-      }
-    },
     "Pressure (%@)" : {
       "localizations" : {
         "nb" : {
@@ -3863,6 +4283,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trykk (bar(a))"
+          }
+        }
+      }
+    },
+    "Pressure SI" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trykk SI"
           }
         }
       }
@@ -3897,12 +4327,22 @@
         }
       }
     },
-    "Pressure SI" : {
+    "Pressure — SI" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trykk SI"
+            "value" : "Trykk — SI"
+          }
+        }
+      }
+    },
+    "Pressure — entered" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trykk — angitt"
           }
         }
       }
@@ -3923,6 +4363,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trykk–temperaturdiagram"
+          }
+        }
+      }
+    },
+    "Preview: what reactive impurities could turn into" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forhåndsvisning: hva reaktive urenheter kan bli til"
           }
         }
       }
@@ -4003,6 +4454,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Egenskapssveip"
+          }
+        }
+      }
+    },
+    "Property coverage and model details" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egenskapsdekning og modelldetaljer"
           }
         }
       }
@@ -4097,12 +4558,33 @@
         }
       }
     },
+    "Publications behind the formulation that validates this state." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publikasjoner bak formuleringen som validerer denne tilstanden."
+          }
+        }
+      }
+    },
     "Published specifications are limits or design conditions and do not define a continuously fixed project stream." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Publiserte spesifikasjoner er grenser eller designbetingelser og definerer ikke en kontinuerlig fast prosjektstrøm."
+          }
+        }
+      }
+    },
+    "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ren CO₂ støtter tetthet, viskositet, kaloriske egenskaper, varmekapasiteter, lydhastighet, varmeledningsevne, Joule–Thomson-koeffisient og eksplisitt avledede tekniske egenskaper."
           }
         }
       }
@@ -4117,12 +4599,24 @@
         }
       }
     },
-    "Pure CO₂ supports density, viscosity, caloric properties, heat capacities, speed of sound, thermal conductivity, Joule-Thomson coefficient and explicitly derived engineering properties." : {
+    "Reaction %lld × %@" : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ren CO₂ støtter tetthet, viskositet, kaloriske egenskaper, varmekapasiteter, lydhastighet, varmeledningsevne, Joule–Thomson-koeffisient og eksplisitt avledede tekniske egenskaper."
+            "value" : "Reaksjon %lld × %@"
+          }
+        }
+      }
+    },
+    "Reaction steps (%lld)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaksjonstrinn (%lld)"
           }
         }
       }
@@ -4297,6 +4791,16 @@
         }
       }
     },
+    "Results are checked against experimental data wherever evidence exists." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resultater kontrolleres mot eksperimentelle data der det finnes belegg."
+          }
+        }
+      }
+    },
     "Review and apply normalization" : {
       "localizations" : {
         "nb" : {
@@ -4397,6 +4901,37 @@
         }
       }
     },
+    "Saved Cases" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lagrede tilfeller"
+          }
+        }
+      }
+    },
+    "Saved Result Unavailable" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lagret resultat utilgjengelig"
+          }
+        }
+      }
+    },
+    "Saved calculations, project cases and validated references." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lagrede beregninger, prosjektcaser og validerte referanser."
+          }
+        }
+      }
+    },
     "Saved case" : {
       "localizations" : {
         "nb" : {
@@ -4417,22 +4952,15 @@
         }
       }
     },
-    "Saved Cases" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lagrede tilfeller"
-          }
-        }
-      }
+    "Saved cases could not be opened" : {
+
     },
-    "Saved Result Unavailable" : {
+    "Scientific Traceability" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lagret resultat utilgjengelig"
+            "value" : "Vitenskapelig sporbarhet"
           }
         }
       }
@@ -4458,16 +4986,6 @@
       }
     },
     "Scientific traceability" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vitenskapelig sporbarhet"
-          }
-        }
-      }
-    },
-    "Scientific Traceability" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -4628,6 +5146,28 @@
         }
       }
     },
+    "Settings & About" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innstillinger og om appen"
+          }
+        }
+      }
+    },
+    "Settings, tools and background information." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Innstillinger, verktøy og bakgrunnsinformasjon."
+          }
+        }
+      }
+    },
     "Share %@" : {
       "localizations" : {
         "nb" : {
@@ -4664,6 +5204,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Del resultatsammendrag"
+          }
+        }
+      }
+    },
+    "Show in My Cases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vis i Mine saker"
           }
         }
       }
@@ -4718,6 +5269,17 @@
         }
       }
     },
+    "Species" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoff"
+          }
+        }
+      }
+    },
     "Stable identifier" : {
       "localizations" : {
         "nb" : {
@@ -4749,6 +5311,7 @@
       }
     },
     "Stored record unavailable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -4778,16 +5341,6 @@
         }
       }
     },
-    "Stream actions" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strøm handlinger"
-          }
-        }
-      }
-    },
     "Stream Mixing" : {
       "localizations" : {
         "nb" : {
@@ -4808,6 +5361,16 @@
         }
       }
     },
+    "Stream actions" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strøm handlinger"
+          }
+        }
+      }
+    },
     "Stream name" : {
       "localizations" : {
         "nb" : {
@@ -4818,12 +5381,55 @@
         }
       }
     },
+    "Sulfur dioxide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svoveldioksid"
+          }
+        }
+      }
+    },
+    "Sulfuric acid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svovelsyre"
+          }
+        }
+      }
+    },
     "Supported components" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Støttede komponenter"
+          }
+        }
+      }
+    },
+    "Sven Morten Hesjevik and Anne Marie Koren Halvorsen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sven Morten Hesjevik og Anne Marie Koren Halvorsen"
+          }
+        }
+      }
+    },
+    "Sweep ID" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sveip-ID"
           }
         }
       }
@@ -4854,16 +5460,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Feil ved sveip"
-          }
-        }
-      }
-    },
-    "Sweep ID" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sveip-ID"
           }
         }
       }
@@ -4918,32 +5514,23 @@
         }
       }
     },
+    "Tap a tile to see its details." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trykk på en rute for å se detaljer."
+          }
+        }
+      }
+    },
     "Temperature" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temperatur"
-          }
-        }
-      }
-    },
-    "Temperature — entered" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Temperatur — lagt inn"
-          }
-        }
-      }
-    },
-    "Temperature — SI" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Temperatur — SI"
           }
         }
       }
@@ -4968,6 +5555,16 @@
         }
       }
     },
+    "Temperature SI" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur SI"
+          }
+        }
+      }
+    },
     "Temperature domain" : {
       "localizations" : {
         "nb" : {
@@ -4988,12 +5585,22 @@
         }
       }
     },
-    "Temperature SI" : {
+    "Temperature — SI" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Temperatur SI"
+            "value" : "Temperatur — SI"
+          }
+        }
+      }
+    },
+    "Temperature — entered" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur — lagt inn"
           }
         }
       }
@@ -5008,22 +5615,22 @@
         }
       }
     },
-    "The filled shield means that at least one calculated property at the current composition, pressure and temperature is supported by independent experimental validation. Validation is property-specific; it does not mean that every result is validated." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Det fylte skjoldet betyr at minst én beregnet egenskap ved gjeldende sammensetning, trykk og temperatur støttes av uavhengig eksperimentell validering. Valideringen gjelder bestemte egenskaper og betyr ikke at alle resultater er validert."
-          }
-        }
-      }
-    },
     "The IFE Flow Technology department is developing a proprietary thermodynamic model for CO₂ and CO₂-rich systems. Model development is supported by experimental validation, including measurements performed in IFE's FALCON CO₂ facility." : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "IFEs avdeling for strømningsteknologi utvikler en egen termodynamisk modell for CO₂ og CO₂-rike systemer. Modellutviklingen støttes av eksperimentell validering, blant annet målinger utført i IFEs FALCON-anlegg for CO₂."
+          }
+        }
+      }
+    },
+    "The filled shield means that at least one calculated property at the current composition, pressure and temperature is supported by independent experimental validation. Validation is property-specific; it does not mean that every result is validated." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Det fylte skjoldet betyr at minst én beregnet egenskap ved gjeldende sammensetning, trykk og temperatur støttes av uavhengig eksperimentell validering. Valideringen gjelder bestemte egenskaper og betyr ikke at alle resultater er validert."
           }
         }
       }
@@ -5088,6 +5695,28 @@
         }
       }
     },
+    "These values cannot be used" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disse verdiene kan ikke brukes"
+          }
+        }
+      }
+    },
+    "This case defines inputs and sources only. The export contains no calculated results." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne saken inneholder bare inngangsdata og kilder. Eksporten inneholder ingen beregnede resultater."
+          }
+        }
+      }
+    },
     "This entry is intentionally not loadable because PhaseXpert does not fabricate project stream compositions or operating states." : {
       "localizations" : {
         "nb" : {
@@ -5118,6 +5747,17 @@
         }
       }
     },
+    "ToCoMo on GitHub" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ToCoMo på GitHub"
+          }
+        }
+      }
+    },
     "Tools" : {
       "localizations" : {
         "nb" : {
@@ -5127,6 +5767,12 @@
           }
         }
       }
+    },
+    "Total mass flow" : {
+
+    },
+    "Total molar flow" : {
+
     },
     "Traceability" : {
       "localizations" : {
@@ -5209,6 +5855,7 @@
       }
     },
     "Unavailable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -5260,6 +5907,7 @@
       }
     },
     "Use case" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -5301,6 +5949,26 @@
         }
       }
     },
+    "Validated CCS impurity and mixture ranges" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validerte områder for CCS-urenheter og blandinger"
+          }
+        }
+      }
+    },
+    "Validated Cases" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Validerte saker"
+          }
+        }
+      }
+    },
     "Validated capability available for current state" : {
       "localizations" : {
         "nb" : {
@@ -5321,17 +5989,8 @@
         }
       }
     },
-    "Validated Cases" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Validerte saker"
-          }
-        }
-      }
-    },
     "Validated cases are read-only bundled reference cases. Loading a case opens it in Calculator with General Properties as the calculation model." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -5341,12 +6000,13 @@
         }
       }
     },
-    "Validated CCS impurity and mixture ranges" : {
+    "Validated cases are read-only bundled reference cases. Opening a case loads it in Calculator with General Properties as the calculation model. A duplicate becomes an editable My Case." : {
+      "extractionState" : "manual",
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Validerte områder for CCS-urenheter og blandinger"
+            "value" : "Validerte saker er skrivebeskyttede referansesaker som følger med appen. Når du åpner en sak, lastes den i Kalkulator med General Properties som beregningsmodell. En duplikat blir en redigerbar sak i Mine saker."
           }
         }
       }
@@ -5454,6 +6114,17 @@
         }
       }
     },
+    "Validation sources" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilder for validering"
+          }
+        }
+      }
+    },
     "Validation status" : {
       "localizations" : {
         "nb" : {
@@ -5480,6 +6151,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verdi"
+          }
+        }
+      }
+    },
+    "Values in ppm. A small NO₂ and NO residue can remain because the sequence stops once the next step is below 0.001 ppm." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verdier i ppm. En liten rest av NO₂ og NO kan bli igjen fordi sekvensen stopper når neste trinn er under 0,001 ppm."
           }
         }
       }
@@ -5514,6 +6196,17 @@
         }
       }
     },
+    "Water" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vann"
+          }
+        }
+      }
+    },
     "Water equilibrium" : {
       "localizations" : {
         "nb" : {
@@ -5524,166 +6217,75 @@
         }
       }
     },
+    "With these amounts no reaction in the sequence can start, so the stream is unchanged." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Med disse mengdene kan ingen reaksjon i sekvensen starte, så strømmen er uendret."
+          }
+        }
+      }
+    },
+    "firmapost@ife.no" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "firmapost@ife.no"
+          }
+        }
+      }
+    },
+    "luciano.patruno@ife.no" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "luciano.patruno@ife.no"
+          }
+        }
+      }
+    },
+    "mol%" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mol%"
+          }
+        }
+      }
+    },
+    "ppm" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ppm"
+          }
+        }
+      }
+    },
+    "© %@ Institute for Energy Technology (IFE)" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "© %@ Institutt for energiteknologi (IFE)"
+          }
+        }
+      }
+    },
     "Δ" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Δ"
-          }
-        }
-      }
-    },
-    "Settings, tools and background information." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Innstillinger, verktøy og bakgrunnsinformasjon."
-          }
-        }
-      }
-    },
-    "Language, light and dark mode" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Språk, lyst og mørkt tema"
-          }
-        }
-      }
-    },
-    "Combine streams and compute the mixed composition" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bland strømmer og beregn den blandede sammensetningen"
-          }
-        }
-      }
-    },
-    "Property coverage and model details" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egenskapsdekning og modelldetaljer"
-          }
-        }
-      }
-    },
-    "How results are checked against experiments" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hvordan resultater kontrolleres mot eksperimenter"
-          }
-        }
-      }
-    },
-    "IFE's own model, under development" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "IFEs egen modell, under utvikling"
-          }
-        }
-      }
-    },
-    "Credits, references and contact" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anerkjennelser, referanser og kontakt"
-          }
-        }
-      }
-    },
-    "IFE's CO₂ flow research facility" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "IFEs forskningsanlegg for CO₂-strømning"
-          }
-        }
-      }
-    },
-    "Results are checked against experimental data wherever evidence exists." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resultater kontrolleres mot eksperimentelle data der det finnes belegg."
-          }
-        }
-      }
-    },
-    "IFE is developing its own thermodynamic model for CO₂ systems." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "IFE utvikler sin egen termodynamiske modell for CO₂-systemer."
-          }
-        }
-      }
-    },
-    "Saved calculations, project cases and validated references." : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lagrede beregninger, prosjektcaser og validerte referanser."
-          }
-        }
-      }
-    },
-    "Tap a tile to see its details." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trykk på en rute for å se detaljer."
-          }
-        }
-      }
-    },
-    "All points classified" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle punkter klassifisert"
-          }
-        }
-      }
-    },
-    "Case duplicated" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saken er duplisert"
-          }
-        }
-      }
-    },
-    "Show in My Cases" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vis i Mine saker"
           }
         }
       }
@@ -5699,90 +6301,12 @@
         }
       }
     },
-    "Validation sources" : {
-      "extractionState" : "manual",
+    "−30 to +50 °C" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kilder for validering"
-          }
-        }
-      }
-    },
-    "Publications behind the formulation that validates this state." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Publikasjoner bak formuleringen som validerer denne tilstanden."
-          }
-        }
-      }
-    },
-    "No source recorded" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ingen kilde registrert"
-          }
-        }
-      }
-    },
-    "Validated cases are read-only bundled reference cases. Opening a case loads it in Calculator with General Properties as the calculation model. A duplicate becomes an editable My Case." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Validerte saker er skrivebeskyttede referansesaker som følger med appen. Når du åpner en sak, lastes den i Kalkulator med General Properties som beregningsmodell. En duplikat blir en redigerbar sak i Mine saker."
-          }
-        }
-      }
-    },
-    "Built-in cases are immutable presets. A duplicate becomes an editable My Case and is not linked to later catalog changes." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Innebygde saker er uforanderlige forhåndsinnstillinger. En duplikat blir en redigerbar sak i Mine saker og er ikke knyttet til senere endringer i katalogen."
-          }
-        }
-      }
-    },
-    "This case defines inputs and sources only. The export contains no calculated results." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Denne saken inneholder bare inngangsdata og kilder. Eksporten inneholder ingen beregnede resultater."
-          }
-        }
-      }
-    },
-    "Settings & About" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Innstillinger og om appen"
-          }
-        }
-      }
-    },
-    "Credits and contact" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anerkjennelser og kontakt"
+            "value" : "−30 til +50 °C"
           }
         }
       }

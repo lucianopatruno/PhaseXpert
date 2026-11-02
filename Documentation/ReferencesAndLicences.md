@@ -120,3 +120,12 @@ Current teqp impurity validation references under audit:
   [DOI 10.1021/acs.jced.4c00666](https://doi.org/10.1021/acs.jced.4c00666).
 
 These references are validation inputs, not production-accuracy claims.
+
+## ToCoMo
+
+The Impurity Reactions preview contains a Swift port of the ToCoMo reaction
+sequence from <https://github.com/equinor/tocomo> (MIT, Copyright (c) 2025
+Equinor, commit `74e23131bd27d63dcf71b4a62eb81cdb76d981c9`). The repository
+credits the algorithm to Sven Morten Hesjevik and Anne Marie Koren Halvorsen and
+cites no publication. The licence text is in `ThirdParty/ToCoMo/LICENSE`. See
+`Documentation/ImpurityReactions.md`.
