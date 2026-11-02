@@ -642,11 +642,26 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["impurity-reactions-result"].exists)
     }
 
+    func testReactionsAndWaterIsReachableBeforeCalculation() {
+        let app = XCUIApplication()
+        app.launch()
+        let assessment = app.buttons["assess-input-reactions-water"]
+        for _ in 0..<8 {
+            if assessment.exists && assessment.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(assessment.exists)
+        XCTAssertTrue(assessment.isHittable)
+        assessment.tap()
+        XCTAssertTrue(app.navigationBars["Reactions & Water"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.descendants(matching: .any)["screening-results"].exists)
+    }
+
     func testStreamScreeningKeepsBinaryReferenceSeparateAndClearsStaleResults() {
         let app = XCUIApplication()
         app.launch()
-        openMoreRow("CO₂ Stream Screening", in: app)
-        XCTAssertTrue(app.navigationBars["CO₂ Stream Screening"].waitForExistence(timeout: 3))
+        openMoreRow("Reactions & Water", in: app)
+        XCTAssertTrue(app.navigationBars["Reactions & Water"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.descendants(matching: .any)["stream-screening-scope"].exists)
         app.buttons["screening-examples"].tap()
         app.buttons["Reactive mixture example"].tap()

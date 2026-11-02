@@ -11,42 +11,33 @@
         }
       }
     },
-    "CO₂ Stream Screening" : {
+    "Reactions & Water" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CO₂-strømscreening"
+            "value" : "Reaksjoner og vann"
           }
         }
       }
     },
-    "Preview: reactions, water dropout and properties from one input" : {
+    "Reaction estimates, water dropout and thermophysical properties" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Forhåndsvisning: reaksjoner, vannutskilling og egenskaper fra samme inndata"
+            "value" : "Reaksjonsestimater, vannutskilling og termofysiske egenskaper"
           }
         }
       }
     },
-    "Screen this stream" : {
+
+    "Independent assessments • Preview" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vurder denne strømmen"
-          }
-        }
-      }
-    },
-    "Independent screening • Preview" : {
-      "localizations" : {
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uavhengig screening • Forhåndsvisning"
+            "value" : "Uavhengige vurderinger • Forhåndsvisning"
           }
         }
       }
@@ -91,7 +82,7 @@
         }
       }
     },
-    "Screening…" : {
+    "Assessing…" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -101,17 +92,17 @@
         }
       }
     },
-    "Run screening" : {
+    "Run assessments" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kjør screening"
+            "value" : "Kjør vurderinger"
           }
         }
       }
     },
-    "Screening in progress" : {
+    "Assessments in progress" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {
@@ -201,7 +192,7 @@
         }
       }
     },
-    "Screening observations" : {
+    "Reaction and water observations" : {
       "localizations" : {
         "nb" : {
           "stringUnit" : {

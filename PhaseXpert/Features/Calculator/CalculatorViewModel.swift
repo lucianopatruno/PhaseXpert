@@ -268,6 +268,35 @@ final class CalculatorViewModel {
         return "Water calculations are unavailable at this condition. Validated water-equilibrium ranges are \(CarbonDioxideWaterEquilibrium.standard.validatedRangeSummary)"
     }
 
+    /// Copies valid original inputs without depending on the property model's domain.
+    var impurityAssessmentInput: StreamScreeningInput? {
+        guard let pressure = parsedPressurePa, let temperature = parsedTemperatureK else { return nil }
+        var ppm: [StreamScreeningSpecies: Double] = [:]
+        for entry in domainComposition() where entry.component != .carbonDioxide {
+            guard let species = StreamScreeningSpecies.allCases.first(where: { $0.componentID == entry.component }) else { return nil }
+            ppm[species] = entry.moleFraction * 1_000_000
+        }
+        let input = StreamScreeningInput(pressurePa: pressure, temperatureK: temperature, impurityPpm: ppm)
+        guard (try? input.validate()) != nil else { return nil }
+        return input
+    }
+
+    var calculationBlockedReason: String? {
+        guard !canRunCalculation else { return nil }
+        let active = domainComposition().filter { $0.moleFraction.isFinite && $0.moleFraction > 0 }
+        if active.contains(where: { $0.component == .water }),
+           active.contains(where: { $0.component != .water && $0.component != .carbonDioxide }) {
+            let others = active.filter { $0.component != .water && $0.component != .carbonDioxide }
+                .map { $0.component.symbol }.joined(separator: ", ")
+            return "CO₂ + H₂O property calculations support a binary mixture only. Additional components: \(others). Remove them only if you intend to assess a different, binary composition. No component is ignored automatically."
+        }
+        if isBinaryCarbonDioxideWaterComposition,
+           parsedPressurePa != nil, parsedTemperatureK != nil {
+            return "Calculation unavailable at the entered state. Homogeneous CO₂/H₂O properties require 350–423.15 K (76.85–150 °C), 5–50 bar(a), and 1–1000 ppm H₂O. Separate water-equilibrium ranges: \(CarbonDioxideWaterEquilibrium.standard.validatedRangeSummary) Review Validation details; neither model is extrapolated."
+        }
+        return validationReport.issues.first(where: { $0.severity == .error })?.message
+    }
+
     var canRunCalculation: Bool {
         if isBinaryCarbonDioxideWaterComposition {
             return homogeneousWetPropertiesAreInPreliminaryDomain

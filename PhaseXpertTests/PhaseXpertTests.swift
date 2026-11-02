@@ -159,6 +159,40 @@ final class PhaseXpertTests: XCTestCase {
     }
 
     @MainActor
+    func testBlockedWetStateExplainsLimitsAndStillOffersReactionWaterInputs() throws {
+        let model = wetGeneralViewModel(pressureBar: 30, temperatureCelsius: 20, waterPPM: 30)
+        model.validate()
+        XCTAssertFalse(model.canRunCalculation)
+        XCTAssertTrue(try XCTUnwrap(model.calculationBlockedReason).contains("76.85–150 °C"))
+        let input = try XCTUnwrap(model.impurityAssessmentInput)
+        XCTAssertEqual(input.impurityPpm[.water], 30)
+        XCTAssertEqual(input.temperatureK, 293.15, accuracy: 1e-9)
+        let destination = StreamScreeningViewModel(input: input)
+        XCTAssertEqual(try destination.parsedInput(), input)
+        XCTAssertNil(destination.result)
+    }
+
+    @MainActor
+    func testAdditionalImpurityIsNamedAndPreservedInReactionWaterHandoff() throws {
+        let model = wetGeneralViewModel(pressureBar: 30, temperatureCelsius: 40, waterPPM: 30)
+        model.composition.append(CompositionInput(component: .argon, value: "999"))
+        model.validate()
+        XCTAssertFalse(model.canRunCalculation)
+        XCTAssertTrue(try XCTUnwrap(model.calculationBlockedReason).contains("Ar"))
+        let input = try XCTUnwrap(model.impurityAssessmentInput)
+        XCTAssertEqual(input.impurityPpm[.argon], 999)
+        XCTAssertEqual(input.impurityPpm[.water], 30)
+        XCTAssertFalse(input.includeBinaryWaterReference)
+    }
+
+    @MainActor
+    func testMalformedCompositionHasNoReactionWaterHandoff() {
+        let model = wetGeneralViewModel(pressureBar: 30, temperatureCelsius: 40)
+        model.composition.append(CompositionInput(component: .argon, value: "invalid"))
+        XCTAssertNil(model.impurityAssessmentInput)
+    }
+
+    @MainActor
     private func wetGeneralViewModel(
         pressureBar: Double,
         temperatureCelsius: Double,

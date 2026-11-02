@@ -98,8 +98,8 @@ private struct MoreView: View {
                     .accessibilityIdentifier("more-stream-mixing")
 
                     IFENavigationRow(
-                        "CO₂ Stream Screening",
-                        subtitle: "Preview: reactions, water dropout and properties from one input",
+                        "Reactions & Water",
+                        subtitle: "Reaction estimates, water dropout and thermophysical properties",
                         systemImage: "checklist",
                         tint: .ifeViolet
                     ) {

@@ -1,10 +1,10 @@
 # Changelog
 
-## CO₂ Stream Screening preview
+## Reactions & Water preview
 
 - One original stream feeds independent ToCoMo, binary water and General Properties assessments.
 - Optional, explicit binary water reference for mixtures; no chemistry/EOS coupling or silent component omission.
-- Calculator input handoff, model provenance and stale-result protection.
+- Calculator handoff before or after calculation, explicit blocked-state explanations, model provenance and stale-result protection.
 
 ## Unreleased
 

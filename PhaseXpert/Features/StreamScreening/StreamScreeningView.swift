@@ -13,7 +13,7 @@ struct StreamScreeningView: View {
         @Bindable var model = viewModel
         IFEPage {
             ScientificStatusBanner(
-                title: String(localized: "Independent screening • Preview"),
+                title: String(localized: "Independent assessments • Preview"),
                 message: String(localized: "One original stream, three separate assessments. Reaction estimates are not fed into property or water calculations. This is not a coupled equilibrium model or a corrosion-rate prediction.")
             )
             .accessibilityIdentifier("stream-screening-scope")
@@ -35,14 +35,14 @@ struct StreamScreeningView: View {
                 focusedField = nil
                 viewModel.run()
             } label: {
-                Label(viewModel.isRunning ? String(localized: "Screening…") : String(localized: "Run screening"), systemImage: "checklist")
+                Label(viewModel.isRunning ? String(localized: "Assessing…") : String(localized: "Run assessments"), systemImage: "checklist")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .disabled(viewModel.input == nil || viewModel.isRunning)
             .accessibilityIdentifier("run-stream-screening")
 
-            if viewModel.isRunning { ProgressView().accessibilityLabel("Screening in progress") }
+            if viewModel.isRunning { ProgressView().accessibilityLabel("Assessments in progress") }
             if let error = viewModel.errorMessage {
                 Text(error).foregroundStyle(Color.pxError).accessibilityIdentifier("screening-error")
             }
@@ -53,7 +53,7 @@ struct StreamScreeningView: View {
             Text("All assessments use the input composition before reaction. No result means no conclusion; unavailable calculations do not imply a safe stream.")
                 .font(.caption).foregroundStyle(.secondary)
         }
-        .navigationTitle("CO₂ Stream Screening")
+        .navigationTitle("Reactions & Water")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
@@ -136,7 +136,7 @@ private struct StreamScreeningResultsView: View {
     let result: StreamScreeningResult
 
     var body: some View {
-        IFEGroup("Screening observations") {
+        IFEGroup("Reaction and water observations") {
             Text(observation).font(.subheadline)
                 .accessibilityIdentifier("screening-observation")
             Text("These independent results do not establish acid partitioning, pH, corrosion rate or material suitability.")

@@ -1,12 +1,14 @@
-# CO₂ Stream Screening (preview)
+# Reactions & Water (preview)
 
 One original composition and operating point drive three **independent** model
 assessments. This is workflow integration, not reactive phase equilibrium.
 
 ## Entry points
 
-- More → Tools → CO₂ Stream Screening.
-- Calculator result → Screen this stream copies the original calculation's
+- More → Tools → Reactions & Water.
+- Calculator inputs → Reactions & Water copies valid original inputs even when
+  the property model cannot calculate them. It never removes unsupported species.
+- Calculator result → Reactions & Water copies the original calculation's
   pressure, temperature and composition. No saved record is modified.
 
 Inputs are absolute pressure in bar(a), temperature in °C, and mole ppm
@@ -15,6 +17,10 @@ accepts all component identifiers supported by the existing app plus ToCoMo's
 SO₂ and NO₂ inputs. Negative, non-finite, unparseable, or overfull compositions
 are rejected. Decimal commas are accepted. No normalization or inferred trace
 impurity is applied.
+
+Calculator displays an explicit blocked-calculation reason for wet mixtures with
+additional components and for binary wet states outside the supported domains.
+These explanations do not broaden either model’s validity range.
 
 ## Independent routes
 
@@ -54,7 +60,7 @@ is calculated. Reference equilibrium output does not establish mixture accuracy.
 
 ## State and execution
 
-Explicit Run screening action, no solving inside SwiftUI body. Local reaction
+Explicit Run assessments action, no solving inside SwiftUI body. Local reaction
 and water-boundary calculations execute off the main actor. Editing or clearing
 any input cancels the current task, removes old results, and uses a request ID
 plus immutable input comparison to reject stale completion. Leaving the screen

@@ -31,6 +31,14 @@ final class StreamScreeningViewModel {
         }
     }
 
+    convenience init(input: StreamScreeningInput) {
+        self.init()
+        pressureText = String(input.pressurePa / 100_000)
+        temperatureText = String(input.temperatureK - 273.15)
+        ppmTexts = input.impurityPpm.mapValues { String($0) }
+        includeBinaryWaterReference = input.includeBinaryWaterReference
+    }
+
     static func parse(_ text: String) -> Double? {
         Double(text.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: ",", with: "."))
     }
