@@ -98,6 +98,16 @@ private struct MoreView: View {
                     .accessibilityIdentifier("more-stream-mixing")
 
                     IFENavigationRow(
+                        "CO₂ Stream Screening",
+                        subtitle: "Preview: reactions, water dropout and properties from one input",
+                        systemImage: "checklist",
+                        tint: .ifeViolet
+                    ) {
+                        StreamScreeningView(viewModel: state.streamScreeningViewModel)
+                    }
+                    .accessibilityIdentifier("more-stream-screening")
+
+                    IFENavigationRow(
                         "Impurity Reactions",
                         subtitle: "Preview: what reactive impurities could turn into",
                         systemImage: "testtube.2",
@@ -221,13 +231,16 @@ private struct SettingsView: View {
 final class MoreTabState {
     let streamMixingViewModel: StreamMixingViewModel
     let impurityReactionsViewModel: ImpurityReactionsViewModel
+    let streamScreeningViewModel: StreamScreeningViewModel
 
     init(
         streamMixingViewModel: StreamMixingViewModel = StreamMixingViewModel(),
-        impurityReactionsViewModel: ImpurityReactionsViewModel = ImpurityReactionsViewModel()
+        impurityReactionsViewModel: ImpurityReactionsViewModel = ImpurityReactionsViewModel(),
+        streamScreeningViewModel: StreamScreeningViewModel = StreamScreeningViewModel()
     ) {
         self.streamMixingViewModel = streamMixingViewModel
         self.impurityReactionsViewModel = impurityReactionsViewModel
+        self.streamScreeningViewModel = streamScreeningViewModel
     }
 }
 

@@ -642,6 +642,30 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["impurity-reactions-result"].exists)
     }
 
+    func testStreamScreeningKeepsBinaryReferenceSeparateAndClearsStaleResults() {
+        let app = XCUIApplication()
+        app.launch()
+        openMoreRow("CO₂ Stream Screening", in: app)
+        XCTAssertTrue(app.navigationBars["CO₂ Stream Screening"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.descendants(matching: .any)["stream-screening-scope"].exists)
+        app.buttons["screening-examples"].tap()
+        app.buttons["Reactive mixture example"].tap()
+        for _ in 0..<4 where !app.buttons["run-stream-screening"].isHittable { app.swipeUp() }
+        app.buttons["run-stream-screening"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["screening-results"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["screening-water-reference-result"].exists)
+        for _ in 0..<4 where !app.switches["screening-binary-reference"].isHittable { app.swipeDown() }
+        app.switches["screening-binary-reference"].tap()
+        XCTAssertFalse(app.descendants(matching: .any)["screening-results"].exists)
+        app.buttons["run-stream-screening"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["screening-results"].waitForExistence(timeout: 5))
+        for _ in 0..<8 where !app.staticTexts["Binary CO₂–water reference only"].isHittable { app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["Binary CO₂–water reference only"].exists)
+        for _ in 0..<10 where !app.buttons["clear-stream-screening"].isHittable { app.swipeDown() }
+        app.buttons["clear-stream-screening"].tap()
+        XCTAssertFalse(app.descendants(matching: .any)["screening-results"].exists)
+    }
+
     func testStreamMixingNavigationAndInitialTwoStreamState() {
         let app = XCUIApplication()
         app.launch()

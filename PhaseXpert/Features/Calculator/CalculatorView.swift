@@ -347,6 +347,13 @@ struct CalculatorView: View {
                         }
                         .accessibilityIdentifier("open-property-sweep")
 
+                        NavigationLink {
+                            StreamScreeningView(viewModel: StreamScreeningViewModel(record: record))
+                        } label: {
+                            Label("Screen this stream", systemImage: "checklist")
+                        }
+                        .accessibilityIdentifier("screen-calculation-stream")
+
                         Button("Copy result summary", systemImage: "doc.on.doc") {
                             SecureClipboard.copy(CalculationSummaryFormatter.text(for: record))
                         }

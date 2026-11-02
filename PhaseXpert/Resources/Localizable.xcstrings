@@ -1,6 +1,446 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Acid formation could not be assessed. Review the independent water and property outcomes; no safety conclusion is inferred." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syredannelse kunne ikke vurderes. Se de uavhengige vann- og egenskapsresultatene; ingen sikkerhetskonklusjon trekkes."
+          }
+        }
+      }
+    },
+    "CO₂ Stream Screening" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CO₂-strømscreening"
+          }
+        }
+      }
+    },
+    "Preview: reactions, water dropout and properties from one input" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forhåndsvisning: reaksjoner, vannutskilling og egenskaper fra samme inndata"
+          }
+        }
+      }
+    },
+    "Screen this stream" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vurder denne strømmen"
+          }
+        }
+      }
+    },
+    "Independent screening • Preview" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uavhengig screening • Forhåndsvisning"
+          }
+        }
+      }
+    },
+    "One original stream, three separate assessments. Reaction estimates are not fed into property or water calculations. This is not a coupled equilibrium model or a corrosion-rate prediction." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Én opprinnelig strøm, tre separate vurderinger. Reaksjonsestimatene brukes ikke som inndata for egenskaps- eller vannberegninger. Dette er ikke en koblet likevektsmodell eller en beregning av korrosjonshastighet."
+          }
+        }
+      }
+    },
+    "Water reference assumption" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forutsetning for vannreferansen"
+          }
+        }
+      }
+    },
+    "Include a binary CO₂–water reference" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta med en binær CO₂–vannreferanse"
+          }
+        }
+      }
+    },
+    "For mixtures, this optional reference keeps the original water ppm and treats all remaining material as CO₂. It excludes every other impurity and all reaction products. It does not predict water dropout for the actual mixture." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For blandinger beholder denne valgfrie referansen det opprinnelige vanninnholdet i ppm og behandler resten som CO₂. Alle andre urenheter og reaksjonsprodukter utelates. Den beregner ikke vannutskilling i den faktiske blandingen."
+          }
+        }
+      }
+    },
+    "Screening…" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vurderer…"
+          }
+        }
+      }
+    },
+    "Run screening" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kjør screening"
+          }
+        }
+      }
+    },
+    "Screening in progress" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screening pågår"
+          }
+        }
+      }
+    },
+    "All assessments use the input composition before reaction. No result means no conclusion; unavailable calculations do not imply a safe stream." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle vurderinger bruker sammensetningen før reaksjon. Manglende resultat gir ingen konklusjon; utilgjengelige beregninger betyr ikke at strømmen er trygg."
+          }
+        }
+      }
+    },
+    "Original stream composition" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opprinnelig strømsammensetning"
+          }
+        }
+      }
+    },
+    "Enter mole ppm (µmol/mol). CO₂ is the exact remainder; inputs are never normalized." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angi mol-ppm (µmol/mol). CO₂ er den nøyaktige resten; inndata normaliseres aldri."
+          }
+        }
+      }
+    },
+    "Other impurities" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andre urenheter"
+          }
+        }
+      }
+    },
+    "CO₂ remainder" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CO₂ som rest"
+          }
+        }
+      }
+    },
+    "Examples" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksempler"
+          }
+        }
+      }
+    },
+    "Binary water example" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binært vanneksempel"
+          }
+        }
+      }
+    },
+    "Reactive mixture example" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksempel på reaktiv blanding"
+          }
+        }
+      }
+    },
+    "Screening observations" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Observasjoner fra screening"
+          }
+        }
+      }
+    },
+    "These independent results do not establish acid partitioning, pH, corrosion rate or material suitability." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disse uavhengige resultatene fastslår ikke syrefordeling, pH, korrosjonshastighet eller materialegnethet."
+          }
+        }
+      }
+    },
+    "Water dropout • Original stream" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vannutskilling • Opprinnelig strøm"
+          }
+        }
+      }
+    },
+    "Binary CO₂–water reference only" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kun binær CO₂–vannreferanse"
+          }
+        }
+      }
+    },
+    "Hypothetical binary composition. Actual mixture water dropout remains unassessed." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hypotetisk binær sammensetning. Vannutskilling i den faktiske blandingen er ikke vurdert."
+          }
+        }
+      }
+    },
+    "Acid formation is estimated by ToCoMo, and a water-rich phase is indicated in the separate binary reference. This is a screening flag only: acid and liquid-water coexistence in the actual mixture has not been calculated." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ToCoMo estimerer syredannelse, og den separate binære referansen indikerer en vannrik fase. Dette er kun en screeningindikasjon: samtidig forekomst av syre og flytende vann i den faktiske blandingen er ikke beregnet."
+          }
+        }
+      }
+    },
+    "Acid formation is estimated by ToCoMo. Water dropout in the reactive mixture is not assessed; a negative or unavailable binary reference does not establish safety." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ToCoMo estimerer syredannelse. Vannutskilling i den reaktive blandingen er ikke vurdert; en negativ eller utilgjengelig binær referanse dokumenterer ikke sikkerhet."
+          }
+        }
+      }
+    },
+    "No acid formation is estimated by this reaction sequence. Review the independent water and property results below; this is not a safety classification." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denne reaksjonssekvensen estimerer ingen syredannelse. Se de uavhengige vann- og egenskapsresultatene nedenfor; dette er ingen sikkerhetsklassifisering."
+          }
+        }
+      }
+    },
+    "Impurity reactions • ToCoMo preview" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Urenhetsreaksjoner • ToCoMo-forhåndsvisning"
+          }
+        }
+      }
+    },
+    "Preliminary, not independently validated by PhaseXpert. Completion estimate without temperature, pressure, kinetics or phase separation. All ppm remain on the original stream basis; other impurities do not participate in ToCoMo." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foreløpig, ikke uavhengig validert av PhaseXpert. Estimat ved fullført reaksjon uten temperatur, trykk, kinetikk eller faseseparasjon. Alle ppm er basert på den opprinnelige strømmen; andre urenheter deltar ikke i ToCoMo."
+          }
+        }
+      }
+    },
+    "Initial and final reactive species" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaktive stoffer før og etter"
+          }
+        }
+      }
+    },
+    "Reaction steps" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaksjonstrinn"
+          }
+        }
+      }
+    },
+    "Model source and licence" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modellkilde og lisens"
+          }
+        }
+      }
+    },
+    "Water status" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vannstatus"
+          }
+        }
+      }
+    },
+    "Original water" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opprinnelig vanninnhold"
+          }
+        }
+      }
+    },
+    "Water saturation" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vannmetning"
+          }
+        }
+      }
+    },
+    "Margin to saturation" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Margin til metning"
+          }
+        }
+      }
+    },
+    "Dropout pressure" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trykk for vannutskilling"
+          }
+        }
+      }
+    },
+    "Dropout pressure unavailable within the supported range." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trykk for vannutskilling er utilgjengelig innenfor det støttede området."
+          }
+        }
+      }
+    },
+    "Dropout temperature" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur for vannutskilling"
+          }
+        }
+      }
+    },
+    "Dropout temperature unavailable within the supported range." : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatur for vannutskilling er utilgjengelig innenfor det støttede området."
+          }
+        }
+      }
+    },
+    "Water model source" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilde for vannmodellen"
+          }
+        }
+      }
+    },
+    "General Properties • Original stream" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generelle egenskaper • Opprinnelig strøm"
+          }
+        }
+      }
+    },
+    "Non-scientific provider result" : {
+      "localizations" : {
+        "nb" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ikke-vitenskapelig modellresultat"
+          }
+        }
+      }
+    },
     "" : {
 
     },

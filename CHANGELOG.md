@@ -1,5 +1,11 @@
 # Changelog
 
+## CO₂ Stream Screening preview
+
+- One original stream feeds independent ToCoMo, binary water and General Properties assessments.
+- Optional, explicit binary water reference for mixtures; no chemistry/EOS coupling or silent component omission.
+- Calculator input handoff, model provenance and stale-result protection.
+
 ## Unreleased
 
 - Added a Swift port of the ToCoMo (Total Consumption Model) reaction sequence
