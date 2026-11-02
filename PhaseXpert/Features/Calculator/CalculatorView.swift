@@ -227,6 +227,7 @@ struct CalculatorView: View {
                         }
                     }
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
+                    .accessibilityIdentifier("calculator-add-impurity")
 
                     if !viewModel.validatedCompositionOptions.isEmpty {
                         if viewModel.validatedCompositionOptions.count == 1,
@@ -351,6 +352,7 @@ struct CalculatorView: View {
                             StreamScreeningView(viewModel: StreamScreeningViewModel(record: record))
                         } label: {
                             Label("Screen this stream", systemImage: "checklist")
+                                .foregroundStyle(Color.accentColor)
                         }
                         .accessibilityIdentifier("screen-calculation-stream")
 

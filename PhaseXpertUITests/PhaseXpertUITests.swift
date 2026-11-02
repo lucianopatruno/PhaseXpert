@@ -888,11 +888,22 @@ final class PhaseXpertUITests: XCTestCase {
     }
 
     private func addImpurity(in app: XCUIApplication) {
-        let addImpurityButton = app.buttons["Add impurity"]
-        for _ in 0..<4 where !addImpurityButton.waitForExistence(timeout: 0.5) {
+        // Adding a row focuses its value field. Finish that edit before trying
+        // to reveal the next Add action; swipes over the keyboard cannot scroll
+        // the form, and an off-screen lazy Form row may not exist in the tree.
+        if app.keyboards.element.exists {
+            let done = app.buttons["keyboard-done"]
+            XCTAssertTrue(done.waitForExistence(timeout: 2))
+            done.tap()
+            XCTAssertTrue(app.keyboards.element.waitForNonExistence(timeout: 2))
+        }
+        let addImpurityButton = app.buttons["calculator-add-impurity"]
+        for _ in 0..<4 {
+            if addImpurityButton.waitForExistence(timeout: 0.5), addImpurityButton.isHittable { break }
             app.swipeUp()
         }
         XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(addImpurityButton.isHittable, "Add impurity must be visible and tappable before adding another row.")
         addImpurityButton.tap()
     }
 
