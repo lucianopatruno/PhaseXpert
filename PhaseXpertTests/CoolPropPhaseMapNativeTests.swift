@@ -50,6 +50,54 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
         }
     }
 
+    func testConcurrentPhaseClassificationMatchesSequentialResults() async throws {
+        let engine = NativeCoolPropEngine()
+        XCTAssertGreaterThan(engine.maximumConcurrentPhaseClassifications, 0)
+        let composition = historicalCO2NitrogenComposition
+        var points: [(Double, Double)] = []
+        for i in 0..<15 {
+            for j in 0..<15 {
+                let pressurePa: Double = 5_000_000 + Double(i) * 25_000_000 / 14
+                let temperatureK: Double = 270 + Double(j) * 60 / 14
+                points.append((pressurePa, temperatureK))
+            }
+        }
+
+        let sequentialStart = Date()
+        var sequential: [String] = []
+        for (p, t) in points {
+            sequential.append(try await engine.identifyDryCarbonDioxideMixturePhase(
+                pressurePa: p, temperatureK: t, composition: composition
+            ).phaseIdentifier)
+        }
+        let sequentialSeconds = Date().timeIntervalSince(sequentialStart)
+
+        let width = engine.maximumConcurrentPhaseClassifications
+        let concurrentStart = Date()
+        var concurrent = [String](repeating: "", count: points.count)
+        try await withThrowingTaskGroup(of: (Int, String).self) { group in
+            var next = 0
+            func enqueue() {
+                guard next < points.count else { return }
+                let index = next, (p, t) = points[next]
+                next += 1
+                group.addTask {
+                    (index, try await engine.identifyDryCarbonDioxideMixturePhaseConcurrently(
+                        pressurePa: p, temperatureK: t, composition: composition
+                    ).phaseIdentifier)
+                }
+            }
+            for _ in 0..<width { enqueue() }
+            while let (index, phase) = try await group.next() {
+                concurrent[index] = phase
+                enqueue()
+            }
+        }
+        let concurrentSeconds = Date().timeIntervalSince(concurrentStart)
+        print("PARALLEL_PROFILE points=\(points.count) width=\(width) sequential_s=\(sequentialSeconds) concurrent_s=\(concurrentSeconds) speedup=\(sequentialSeconds / concurrentSeconds)")
+        XCTAssertEqual(concurrent, sequential)
+    }
+
     func testHistoricalCO2NitrogenFiveByFiveMatchesReference() async throws {
         try await assertHistoricalCO2NitrogenReference(resolution: .five)
     }

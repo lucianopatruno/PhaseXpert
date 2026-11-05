@@ -190,6 +190,18 @@ public protocol CoolPropEngine: Sendable {
         composition: [MixtureComponent]
     ) async throws -> CoolPropPhaseEngineResult
 
+    /// Number of dry-mixture phase classifications the engine can safely run at
+    /// once. 1 keeps the Phase Map strictly sequential.
+    var maximumConcurrentPhaseClassifications: Int { get }
+
+    /// Same classification as `identifyDryCarbonDioxideMixturePhase`, but allowed
+    /// to run alongside other calls to this method.
+    func identifyDryCarbonDioxideMixturePhaseConcurrently(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult
+
     func dryCarbonDioxideMixtureSaturationPressures(
         temperatureK: Double,
         composition: [MixtureComponent]
@@ -272,6 +284,20 @@ public extension CoolPropEngine {
     ) async throws -> CoolPropPhaseEngineResult {
         throw ProviderError.modelUnavailable(
             "The CoolProp engine does not expose the dry-mixture phase-classification bridge."
+        )
+    }
+
+    var maximumConcurrentPhaseClassifications: Int { 1 }
+
+    func identifyDryCarbonDioxideMixturePhaseConcurrently(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        try await identifyDryCarbonDioxideMixturePhase(
+            pressurePa: pressurePa,
+            temperatureK: temperatureK,
+            composition: composition
         )
     }
 
@@ -1049,10 +1075,12 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
         }
 
         let startedAt = Date()
-        var evaluations: [PhaseMapEvaluation] = []
-        evaluations.reserveCapacity(points.count)
+        let concurrency = request.resolution.rendersAsRegionMap
+            ? max(1, engine.maximumConcurrentPhaseClassifications)
+            : 1
+        let engine = self.engine
 
-        for (index, point) in points.enumerated() {
+        @Sendable func evaluate(index: Int, point: PhaseMapGridPoint) async throws -> PhaseMapEvaluation {
             try Task.checkCancellation()
             do {
                 debugLogPhaseMapNativeCall(
@@ -1061,12 +1089,18 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                     composition: request.composition,
                     providerPath: "CoolProp dry-mixture legacy-stability phase classifier"
                 )
-                let raw = try await engine.identifyDryCarbonDioxideMixturePhase(
-                    pressurePa: point.pressurePa,
-                    temperatureK: point.temperatureK,
-                    composition: activeComposition
-                )
-                evaluations.append(PhaseMapEvaluation(
+                let raw = concurrency > 1
+                    ? try await engine.identifyDryCarbonDioxideMixturePhaseConcurrently(
+                        pressurePa: point.pressurePa,
+                        temperatureK: point.temperatureK,
+                        composition: activeComposition
+                    )
+                    : try await engine.identifyDryCarbonDioxideMixturePhase(
+                        pressurePa: point.pressurePa,
+                        temperatureK: point.temperatureK,
+                        composition: activeComposition
+                    )
+                return PhaseMapEvaluation(
                     point: point,
                     classification: PhaseMapClassificationAdapter.map(
                         phaseRegion(for: raw.phaseIdentifier)
@@ -1077,17 +1111,36 @@ public struct CoolPropProvider<Engine: CoolPropEngine>: ThermodynamicModelProvid
                         durationMilliseconds: Date().timeIntervalSince(startedAt) * 1_000
                     ),
                     failureReason: nil
-                ))
+                )
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                evaluations.append(failedEvaluation(
-                    point: point,
-                    message: userMessage(for: error)
-                ))
+                return failedEvaluation(point: point, message: userMessage(for: error))
             }
-            await progress?(PhaseMapProgress(completedCount: evaluations.count, totalCount: points.count))
         }
+
+        // Results are stored by grid index so the output order never depends on
+        // which point finishes first.
+        var slots = [PhaseMapEvaluation?](repeating: nil, count: points.count)
+        var completed = 0
+        try await withThrowingTaskGroup(of: (Int, PhaseMapEvaluation).self) { group in
+            var next = 0
+            func enqueue() {
+                guard next < points.count else { return }
+                let index = next, point = points[next]
+                next += 1
+                group.addTask { (index, try await evaluate(index: index, point: point)) }
+            }
+            for _ in 0..<min(concurrency, points.count) { enqueue() }
+            while let (index, evaluation) = try await group.next() {
+                slots[index] = evaluation
+                completed += 1
+                await progress?(PhaseMapProgress(completedCount: completed, totalCount: points.count))
+                enqueue()
+            }
+        }
+        let evaluations = slots.compactMap { $0 }
+        guard evaluations.count == points.count else { throw CancellationError() }
 
         return PhaseMapResult(
             request: request,
