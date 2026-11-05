@@ -643,6 +643,12 @@ private struct PhaseMapContent: View {
                             viewModel.phaseMapResolutionChanged()
                         }
 
+                        if viewModel.phaseMapResolution.rendersAsRegionMap {
+                            Label("Ultra evaluates 10,000 points and can take a minute or more to calculate.", systemImage: "clock")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                                .accessibilityIdentifier("phase-map-ultra-duration-notice")
+                        }
                     }
                 }
 
@@ -655,7 +661,8 @@ private struct PhaseMapContent: View {
                         temperatureUnit: viewModel.phaseMapTemperatureUnit,
                         selectedPointID: $selectedPointID,
                         selectedEvaluation: selectedEvaluation,
-                        isStale: viewModel.isPhaseMapResultStale
+                        isStale: viewModel.isPhaseMapResultStale,
+                        application: record.application
                     )
                 }
 
@@ -841,6 +848,7 @@ private struct PhaseMapResultsSection: View {
     @Binding var selectedPointID: String?
     let selectedEvaluation: PhaseMapEvaluation?
     let isStale: Bool
+    let application: ApplicationIdentity
     @State private var exportLifecycle = PhaseDiagramExportLifecycle()
     @State private var exportErrorMessage: String?
     @State private var isPreparingExport = false
@@ -972,39 +980,53 @@ private struct PhaseMapResultsSection: View {
                             }
                         }
                         if let operatingPoint = result.operatingPoint {
-                            let style = PhaseMapMarkerStyle.style(for: operatingPoint)
-                            PointMark(
-                                x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
-                                y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
-                            )
-                            .foregroundStyle(style.color)
-                            .symbol(style.chartSymbol)
-                            .symbolSize(90)
-                            .accessibilityLabel(style.accessibilityDescription)
+                            if usesRegionMap {
+                                // Ultra: a compact red cross, no label, so more of the map stays visible.
+                                PointMark(
+                                    x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
+                                    y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
+                                )
+                                .foregroundStyle(Color.red)
+                                .symbolSize(220)
+                                .symbol {
+                                    PhaseMapOperatingPointCross()
+                                }
+                                .accessibilityLabel("Operating point")
+                            } else {
+                                let style = PhaseMapMarkerStyle.style(for: operatingPoint)
+                                PointMark(
+                                    x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
+                                    y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
+                                )
+                                .foregroundStyle(style.color)
+                                .symbol(style.chartSymbol)
+                                .symbolSize(90)
+                                .accessibilityLabel(style.accessibilityDescription)
 
-                            PointMark(
-                                x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
-                                y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
-                            )
-                            .foregroundStyle(Color.red)
-                            .symbolSize(220)
-                            .symbol {
-                                Circle()
-                                    .stroke(Color.red, lineWidth: 2.5)
-                                    .frame(width: 20, height: 20)
-                                    .background(Circle().stroke(Color.white, lineWidth: 5).frame(width: 20, height: 20))
-                            }
-                            .annotation(
-                                position: .top,
-                                spacing: 4,
-                                overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
-                            ) {
-                                Text("Operating point")
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(Color.ifeText)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.ifeCard.opacity(0.92), in: Capsule())
+                                PointMark(
+                                    x: .value("Temperature (\(temperatureUnit.rawValue))", displayTemperature(operatingPoint)),
+                                    y: .value("Pressure (\(pressureUnit.rawValue))", displayPressure(operatingPoint))
+                                )
+                                .foregroundStyle(Color.red)
+                                .symbolSize(220)
+                                .symbol {
+                                    Circle()
+                                        .stroke(Color.red, lineWidth: 2.5)
+                                        .frame(width: 20, height: 20)
+                                        .background(Circle().stroke(Color.white, lineWidth: 5).frame(width: 20, height: 20))
+                                }
+                                .annotation(
+                                    position: .top,
+                                    spacing: 4,
+                                    overflowResolution: .init(x: .fit(to: .chart), y: .fit(to: .chart))
+                                ) {
+                                    Text("Operating point")
+                                        .font(.caption2.weight(.semibold))
+                                        .foregroundStyle(Color.ifeText)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.ifeCard.opacity(0.92), in: Capsule())
+                                }
                             }
                         }
                     }
@@ -1051,7 +1073,9 @@ private struct PhaseMapResultsSection: View {
                     }
                     .frame(minHeight: 360)
                     .accessibilityIdentifier("phase-map-chart")
-                    .accessibilityLabel("Multicomponent Phase Map with operating point highlighted by a red ring")
+                    .accessibilityLabel(usesRegionMap
+                        ? "Multicomponent Phase Map with operating point marked by a red cross"
+                        : "Multicomponent Phase Map with operating point highlighted by a red ring")
 
                     Text(usesRegionMap ? "Tap the map to see the nearest flash point." : "Tap a tile to see its details.")
                         .font(.caption)
@@ -1178,7 +1202,8 @@ private struct PhaseMapResultsSection: View {
                     try PhaseMapPDFExporter().writeTemporaryPDF(
                         result: result,
                         pressureUnit: pressureUnit,
-                        temperatureUnit: temperatureUnit
+                        temperatureUnit: temperatureUnit,
+                        application: application
                     )
                 }
             } catch {
@@ -1202,17 +1227,14 @@ private struct PhaseMapResultsSection: View {
     }
 }
 
-private struct PhaseMapLegend: View {
-    let result: PhaseMapResult
+struct PhaseMapLegendEntry: Identifiable {
+    let id: String
+    let label: String
+    let style: PhaseMapMarkerStyle
+    let count: Int
 
-    private struct Entry: Identifiable {
-        let id: String
-        let label: String
-        let style: PhaseMapMarkerStyle
-        let count: Int
-    }
-
-    private var entries: [Entry] {
+    /// Classes present in the result, in a fixed display order, with their point counts.
+    static func entries(for result: PhaseMapResult) -> [PhaseMapLegendEntry] {
         let order: [(String, PhaseMapMarkerStyle)] = [
             ("Solid", .style(for: .solid)),
             ("Gas", .style(for: .gas)),
@@ -1227,8 +1249,16 @@ private struct PhaseMapLegend: View {
             let count = result.evaluations.filter {
                 PhaseMapMarkerStyle.style(for: $0).accessibilityDescription == style.accessibilityDescription
             }.count
-            return count > 0 ? Entry(id: label, label: label, style: style, count: count) : nil
+            return count > 0 ? PhaseMapLegendEntry(id: label, label: label, style: style, count: count) : nil
         }
+    }
+}
+
+private struct PhaseMapLegend: View {
+    let result: PhaseMapResult
+
+    private var entries: [PhaseMapLegendEntry] {
+        PhaseMapLegendEntry.entries(for: result)
     }
 
     var body: some View {
@@ -1356,6 +1386,31 @@ struct PhaseMapMarkerStyle {
         case .failed:
             failed
         }
+    }
+}
+
+/// Red cross with an even white edge, used for the operating point on the Ultra region map.
+struct PhaseMapOperatingPointCross: View {
+    private nonisolated struct CrossShape: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            return path
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            CrossShape()
+                .stroke(Color.white, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+            CrossShape()
+                .stroke(Color.red, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+        }
+        .frame(width: 14, height: 14)
+        .padding(4)
     }
 }
 
