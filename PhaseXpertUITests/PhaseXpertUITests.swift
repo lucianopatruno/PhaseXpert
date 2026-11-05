@@ -642,6 +642,45 @@ final class PhaseXpertUITests: XCTestCase {
         XCTAssertFalse(app.descendants(matching: .any)["impurity-reactions-result"].exists)
     }
 
+    func testReactionsAndWaterIsReachableBeforeCalculation() {
+        let app = XCUIApplication()
+        app.launch()
+        let assessment = app.buttons["assess-input-reactions-water"]
+        for _ in 0..<8 {
+            if assessment.exists && assessment.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(assessment.exists)
+        XCTAssertTrue(assessment.isHittable)
+        assessment.tap()
+        XCTAssertTrue(app.navigationBars["Reactions & Water"].waitForExistence(timeout: 3))
+        XCTAssertFalse(app.descendants(matching: .any)["screening-results"].exists)
+    }
+
+    func testStreamScreeningKeepsBinaryReferenceSeparateAndClearsStaleResults() {
+        let app = XCUIApplication()
+        app.launch()
+        openMoreRow("Reactions & Water", in: app)
+        XCTAssertTrue(app.navigationBars["Reactions & Water"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.descendants(matching: .any)["stream-screening-scope"].exists)
+        app.buttons["screening-examples"].tap()
+        app.buttons["Reactive mixture example"].tap()
+        for _ in 0..<4 where !app.buttons["run-stream-screening"].isHittable { app.swipeUp() }
+        app.buttons["run-stream-screening"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["screening-results"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.descendants(matching: .any)["screening-water-reference-result"].exists)
+        for _ in 0..<4 where !app.switches["screening-binary-reference"].isHittable { app.swipeDown() }
+        app.switches["screening-binary-reference"].tap()
+        XCTAssertFalse(app.descendants(matching: .any)["screening-results"].exists)
+        app.buttons["run-stream-screening"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["screening-results"].waitForExistence(timeout: 5))
+        for _ in 0..<8 where !app.staticTexts["Binary CO₂–water reference only"].isHittable { app.swipeUp() }
+        XCTAssertTrue(app.staticTexts["Binary CO₂–water reference only"].exists)
+        for _ in 0..<10 where !app.buttons["clear-stream-screening"].isHittable { app.swipeDown() }
+        app.buttons["clear-stream-screening"].tap()
+        XCTAssertFalse(app.descendants(matching: .any)["screening-results"].exists)
+    }
+
     func testStreamMixingNavigationAndInitialTwoStreamState() {
         let app = XCUIApplication()
         app.launch()
@@ -864,11 +903,22 @@ final class PhaseXpertUITests: XCTestCase {
     }
 
     private func addImpurity(in app: XCUIApplication) {
-        let addImpurityButton = app.buttons["Add impurity"]
-        for _ in 0..<4 where !addImpurityButton.waitForExistence(timeout: 0.5) {
+        // Adding a row focuses its value field. Finish that edit before trying
+        // to reveal the next Add action; swipes over the keyboard cannot scroll
+        // the form, and an off-screen lazy Form row may not exist in the tree.
+        if app.keyboards.element.exists {
+            let done = app.buttons["keyboard-done"]
+            XCTAssertTrue(done.waitForExistence(timeout: 2))
+            done.tap()
+            XCTAssertTrue(app.keyboards.element.waitForNonExistence(timeout: 2))
+        }
+        let addImpurityButton = app.buttons["calculator-add-impurity"]
+        for _ in 0..<4 {
+            if addImpurityButton.waitForExistence(timeout: 0.5), addImpurityButton.isHittable { break }
             app.swipeUp()
         }
         XCTAssertTrue(addImpurityButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(addImpurityButton.isHittable, "Add impurity must be visible and tappable before adding another row.")
         addImpurityButton.tap()
     }
 

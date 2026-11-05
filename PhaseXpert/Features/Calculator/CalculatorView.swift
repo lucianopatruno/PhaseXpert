@@ -227,6 +227,7 @@ struct CalculatorView: View {
                         }
                     }
                     .disabled(viewModel.composition.count >= viewModel.supportedImpurityComponents.count + 1)
+                    .accessibilityIdentifier("calculator-add-impurity")
 
                     if !viewModel.validatedCompositionOptions.isEmpty {
                         if viewModel.validatedCompositionOptions.count == 1,
@@ -329,6 +330,25 @@ struct CalculatorView: View {
                     }
                 }
 
+                Section {
+                    if let reason = viewModel.calculationBlockedReason {
+                        Label(reason, systemImage: "exclamationmark.circle")
+                            .foregroundStyle(Color.pxError)
+                            .accessibilityIdentifier("calculation-blocked-reason")
+                    }
+                    if let input = viewModel.impurityAssessmentInput {
+                        NavigationLink {
+                            StreamScreeningView(viewModel: StreamScreeningViewModel(input: input))
+                        } label: {
+                            Label("Reactions & Water", systemImage: "checklist")
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .accessibilityIdentifier("assess-input-reactions-water")
+                    }
+                } header: {
+                    Text("Reactions & Water")
+                }
+
                 if let record = viewModel.calculationRecord {
                     CalculationResultSections(record: record)
                         .id("calculation-results")
@@ -346,6 +366,14 @@ struct CalculatorView: View {
                                 .foregroundStyle(Color.accentColor)
                         }
                         .accessibilityIdentifier("open-property-sweep")
+
+                        NavigationLink {
+                            StreamScreeningView(viewModel: StreamScreeningViewModel(record: record))
+                        } label: {
+                            Label("Reactions & Water", systemImage: "checklist")
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .accessibilityIdentifier("screen-calculation-stream")
 
                         Button("Copy result summary", systemImage: "doc.on.doc") {
                             SecureClipboard.copy(CalculationSummaryFormatter.text(for: record))
