@@ -1183,6 +1183,11 @@ final class PhaseXpertTests: XCTestCase {
         viewModel.phaseMapResolutionChanged()
         XCTAssertEqual(viewModel.phaseMapProgress.totalCount, 400)
         XCTAssertTrue(viewModel.phaseMapStatusMessage.contains("400"))
+
+        viewModel.phaseMapResolution = .hundred
+        viewModel.phaseMapResolutionChanged()
+        XCTAssertEqual(viewModel.phaseMapProgress.totalCount, 10_000)
+        XCTAssertTrue(viewModel.phaseMapStatusMessage.contains("10000"))
         XCTAssertEqual(counter.calculationCount, 0)
         XCTAssertEqual(counter.envelopeCount, 0)
     }

@@ -101,6 +101,62 @@ final class PhaseMapTests: XCTestCase {
         try assertValidGrid(twentyPoints, request: twenty)
     }
 
+    func testUltraResolutionIsHundredByHundredPlusOffGridOperatingPoint() throws {
+        let ultra = request(resolution: .hundred)
+        let points = try PhaseMapGridBuilder.points(for: ultra)
+
+        XCTAssertEqual(PhaseMapResolution.hundred.rawValue, 100)
+        XCTAssertEqual(PhaseMapResolution.hundred.gridPointCount, 10_000)
+        XCTAssertTrue(PhaseMapResolution.hundred.rendersAsRegionMap)
+        XCTAssertFalse(PhaseMapResolution.twenty.rendersAsRegionMap)
+        XCTAssertEqual(points.count, 10_001)
+        XCTAssertEqual(points.filter(\.isOperatingPoint).count, 1)
+        try assertValidGrid(points, request: ultra)
+    }
+
+    func testRegionRasterKeepsEveryGridNodeClassificationAndDrawsBoundary() throws {
+        let ultra = request(resolution: .hundred)
+        let points = try PhaseMapGridBuilder.points(for: ultra)
+        let midTemperature = (ultra.range.temperatureMinimumK + ultra.range.temperatureMaximumK) / 2
+        let evaluations = points.map { point -> PhaseMapEvaluation in
+            let region: PhaseRegion = point.temperatureK < midTemperature ? .liquid : .gas
+            return PhaseMapEvaluation(
+                point: point,
+                classification: PhaseMapClassificationAdapter.map(region),
+                solver: nil
+            )
+        }
+
+        let raster = try XCTUnwrap(PhaseMapRegionRaster.make(
+            evaluations: evaluations,
+            gridSize: 100,
+            pixelsPerCell: 3
+        ))
+
+        XCTAssertEqual(raster.width, 300)
+        XCTAssertEqual(raster.height, 300)
+        XCTAssertEqual(raster.labels.count, 90_000)
+        XCTAssertEqual(raster.labels[0], .liquid)
+        XCTAssertEqual(raster.labels[raster.width - 1], .gas)
+        XCTAssertEqual(Set(raster.labels), [.liquid, .gas])
+        XCTAssertTrue(raster.boundary.contains(true))
+        XCTAssertFalse(raster.boundary[0])
+    }
+
+    func testRegionRasterRejectsIncompleteGrid() throws {
+        let ultra = request(resolution: .five)
+        let points = try PhaseMapGridBuilder.points(for: ultra).dropLast(3)
+        let evaluations = points.map {
+            PhaseMapEvaluation(
+                point: $0,
+                classification: PhaseMapClassificationAdapter.map(.liquid),
+                solver: nil
+            )
+        }
+
+        XCTAssertNil(PhaseMapRegionRaster.make(evaluations: evaluations, gridSize: 5))
+    }
+
     func testTenByTenBaseGridUsesUniformInclusiveAxesAndAddsOffGridOperatingPointOnce() throws {
         let request = request(resolution: .ten)
         let points = try PhaseMapGridBuilder.points(for: request)

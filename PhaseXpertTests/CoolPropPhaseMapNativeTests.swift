@@ -259,6 +259,9 @@ final class CoolPropPhaseMapNativeTests: XCTestCase {
             [.gas: 8, .liquid: 89, .multiphase: 2, .unknown: 2]
         case .twenty:
             [.gas: 25, .liquid: 369, .multiphase: 3, .unknown: 4]
+        case .hundred:
+            // No historical reference exists for the Ultra grid.
+            counts
         }
         for classification in PhaseMapClassification.allCases {
             XCTAssertEqual(

@@ -624,7 +624,7 @@ private struct PhaseMapContent: View {
                                 }
                             )
 
-                            Text("The 5×5 grid includes the operating point as the central point. Even grids evaluate the operating point separately.")
+                            Text(gridDescription)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -685,6 +685,17 @@ private struct PhaseMapContent: View {
         }
     }
 
+    private var gridDescription: String {
+        let size = viewModel.phaseMapResolution.rawValue
+        if viewModel.phaseMapResolution.rendersAsRegionMap {
+            return String(localized: "Ultra evaluates a \(size)×\(size) grid (\(viewModel.phaseMapResolution.gridPointCount) flash points plus the operating point) and draws it as a continuous region map. It can take noticeably longer than the other resolutions.")
+        }
+        if size % 2 == 1 {
+            return String(localized: "The \(size)×\(size) grid includes the operating point as the central point.")
+        }
+        return String(localized: "The \(size)×\(size) grid evaluates the operating point separately.")
+    }
+
     private func compositionSummary(_ composition: [MixtureComponent]) -> String {
         composition
             .filter { $0.moleFraction > 0 }
@@ -699,6 +710,7 @@ private extension PhaseMapResolution {
         case .five: String(localized: "Low")
         case .ten: String(localized: "Medium")
         case .twenty: String(localized: "High")
+        case .hundred: String(localized: "Ultra")
         }
     }
 }
@@ -833,6 +845,11 @@ private struct PhaseMapResultsSection: View {
     @State private var exportErrorMessage: String?
     @State private var isPreparingExport = false
     @State private var showsShareSheet = false
+    @State private var regionImage: UIImage?
+
+    private var usesRegionMap: Bool {
+        PhaseMapRegionImage.usesRegionMap(for: result)
+    }
 
     private func displayTemperature(_ evaluation: PhaseMapEvaluation) -> Double {
         temperatureUnit.displayValue(from: evaluation.point.temperatureK)
@@ -911,7 +928,9 @@ private struct PhaseMapResultsSection: View {
                 VStack(alignment: .leading, spacing: IFESpacing.small) {
                     Text("Pressure-temperature classification")
                         .font(.headline)
-                    Text("Markers use both color and shape; gray points are unknown, failed, non-converged or unsupported.")
+                    Text(usesRegionMap
+                         ? "Regions are drawn between evaluated flash points, with darker lines where the classification changes; gray areas are unknown, failed, non-converged or unsupported."
+                         : "Markers use both color and shape; gray points are unknown, failed, non-converged or unsupported.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
@@ -919,7 +938,7 @@ private struct PhaseMapResultsSection: View {
 
                     Chart {
                         let steps = gridSteps
-                        ForEach(tiledEvaluations) { evaluation in
+                        ForEach(usesRegionMap ? [] : tiledEvaluations) { evaluation in
                             let style = PhaseMapMarkerStyle.style(for: evaluation)
                             let t = displayTemperature(evaluation)
                             let p = displayPressure(evaluation)
@@ -991,6 +1010,26 @@ private struct PhaseMapResultsSection: View {
                     }
                     .chartXScale(domain: xDomain)
                     .chartYScale(domain: yDomain)
+                    .chartPlotStyle { plot in
+                        plot.background {
+                            if usesRegionMap, let regionImage {
+                                Image(uiImage: regionImage)
+                                    .resizable()
+                                    .interpolation(.high)
+                            }
+                        }
+                    }
+                    .task(id: result.request.requestID) {
+                        regionImage = nil
+                        guard usesRegionMap else { return }
+                        let evaluations = result.evaluations
+                        let gridSize = result.request.resolution.rawValue
+                        let raster = await Task.detached(priority: .userInitiated) {
+                            PhaseMapRegionRaster.make(evaluations: evaluations, gridSize: gridSize)
+                        }.value
+                        guard let raster else { return }
+                        regionImage = PhaseMapRegionImage.image(for: raster)
+                    }
                     .chartXAxisLabel("Temperature (\(temperatureUnit.rawValue))")
                     .chartYAxisLabel("Pressure (\(pressureUnit.rawValue))")
                     .chartOverlay { proxy in
@@ -1014,22 +1053,24 @@ private struct PhaseMapResultsSection: View {
                     .accessibilityIdentifier("phase-map-chart")
                     .accessibilityLabel("Multicomponent Phase Map with operating point highlighted by a red ring")
 
-                    Text("Tap a tile to see its details.")
+                    Text(usesRegionMap ? "Tap the map to see the nearest flash point." : "Tap a tile to see its details.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
 
-                    Picker("Point", selection: Binding(
-                        get: { selectedPointID ?? result.operatingPoint?.id ?? result.evaluations.first?.id },
-                        set: { selectedPointID = $0 }
-                    )) {
-                        ForEach(result.evaluations) { evaluation in
-                            Text(pointLabel(evaluation))
-                                .tag(Optional(evaluation.id))
+                    if result.evaluations.count <= 500 {
+                        Picker("Point", selection: Binding(
+                            get: { selectedPointID ?? result.operatingPoint?.id ?? result.evaluations.first?.id },
+                            set: { selectedPointID = $0 }
+                        )) {
+                            ForEach(result.evaluations) { evaluation in
+                                Text(pointLabel(evaluation))
+                                    .tag(Optional(evaluation.id))
+                            }
                         }
+                        .pickerStyle(.menu)
+                        .accessibilityIdentifier("phase-map-point-picker")
                     }
-                    .pickerStyle(.menu)
-                    .accessibilityIdentifier("phase-map-point-picker")
 
                     if let selectedEvaluation {
                         Divider()

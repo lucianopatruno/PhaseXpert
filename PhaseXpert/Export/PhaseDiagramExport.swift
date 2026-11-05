@@ -400,12 +400,30 @@ private struct PhaseMapExportCanvas: View {
     let pressureUnit: PressureDisplayUnit
     let temperatureUnit: TemperatureDisplayUnit
 
+    private var usesRegionMap: Bool {
+        PhaseMapRegionImage.usesRegionMap(for: result)
+    }
+
+    private var regionImage: UIImage? {
+        usesRegionMap ? PhaseMapRegionImage.image(for: result) : nil
+    }
+
     private var xDomain: ClosedRange<Double> {
-        domain(result.evaluations.map { temperatureUnit.displayValue(from: $0.point.temperatureK) })
+        let values = result.evaluations.map { temperatureUnit.displayValue(from: $0.point.temperatureK) }
+        return usesRegionMap ? halfStepDomain(values) : domain(values)
     }
 
     private var yDomain: ClosedRange<Double> {
-        domain(result.evaluations.map { pressureUnit.displayValue(from: $0.point.pressurePa) })
+        let values = result.evaluations.map { pressureUnit.displayValue(from: $0.point.pressurePa) }
+        return usesRegionMap ? halfStepDomain(values) : domain(values)
+    }
+
+    /// Matches the region raster, which extends half a grid step beyond the outer nodes.
+    private func halfStepDomain(_ values: [Double]) -> ClosedRange<Double> {
+        let finite = values.filter(\.isFinite)
+        guard let minimum = finite.min(), let maximum = finite.max(), maximum > minimum else { return 0...1 }
+        let half = (maximum - minimum) / Double(result.request.resolution.rawValue - 1) / 2
+        return (minimum - half)...(maximum + half)
     }
 
     var body: some View {
@@ -423,7 +441,7 @@ private struct PhaseMapExportCanvas: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             Chart {
-                ForEach(result.evaluations) { evaluation in
+                ForEach(usesRegionMap ? [] : result.evaluations) { evaluation in
                     PointMark(
                         x: .value("Temperature (\(temperatureUnit.rawValue))", temperatureUnit.displayValue(from: evaluation.point.temperatureK)),
                         y: .value("Pressure (\(pressureUnit.rawValue))", pressureUnit.displayValue(from: evaluation.point.pressurePa))
@@ -446,6 +464,15 @@ private struct PhaseMapExportCanvas: View {
             }
             .chartXScale(domain: xDomain)
             .chartYScale(domain: yDomain)
+            .chartPlotStyle { plot in
+                plot.background {
+                    if let regionImage {
+                        Image(uiImage: regionImage)
+                            .resizable()
+                            .interpolation(.high)
+                    }
+                }
+            }
             .chartXAxisLabel("Temperature (\(temperatureUnit.rawValue))")
             .chartYAxisLabel("Pressure (\(pressureUnit.rawValue))")
             .frame(maxHeight: .infinity)

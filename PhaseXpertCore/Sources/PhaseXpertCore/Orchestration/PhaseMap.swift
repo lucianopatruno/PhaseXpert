@@ -4,6 +4,8 @@ public enum PhaseMapResolution: Int, CaseIterable, Codable, Equatable, Sendable,
     case five = 5
     case ten = 10
     case twenty = 20
+    /// 100×100 grid rendered as a continuous region map rather than discrete tiles.
+    case hundred = 100
 
     public var id: Int { rawValue }
 
@@ -13,6 +15,12 @@ public enum PhaseMapResolution: Int, CaseIterable, Codable, Equatable, Sendable,
 
     public var expectedEvaluationCount: Int {
         gridPointCount
+    }
+
+    /// Resolutions dense enough that individual tiles and markers are not
+    /// legible; clients should draw a region map instead.
+    public var rendersAsRegionMap: Bool {
+        self == .hundred
     }
 }
 
