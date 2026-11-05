@@ -179,46 +179,77 @@ public struct NativeCoolPropEngine: CoolPropEngine {
         }
     }
 
+    /// Classifications are independent of one another; the bridge serializes the
+    /// one section that touches process-global CoolProp configuration.
+    public var maximumConcurrentPhaseClassifications: Int {
+        min(max(ProcessInfo.processInfo.activeProcessorCount - 1, 1), 4)
+    }
+
     public func identifyDryCarbonDioxideMixturePhase(
         pressurePa: Double,
         temperatureK: Double,
         composition: [MixtureComponent]
     ) async throws -> CoolPropPhaseEngineResult {
         try Task.checkCancellation()
-        let fractions = composition.reduce(into: [ComponentID: Double]()) {
-            $0[$1.component, default: 0] += $1.moleFraction
-        }
-
+        let fractions = Self.fractions(composition)
         let result = try await runNativeWork(priority: .userInitiated) {
-            var nativeResult = PXCoolPropPhaseResult()
-            var errorBuffer = [CChar](repeating: 0, count: 512)
-            let status = px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
-                pressurePa,
-                temperatureK,
-                fractions[.carbonDioxide] ?? 0,
-                fractions[.nitrogen] ?? 0,
-                fractions[.oxygen] ?? 0,
-                fractions[.argon] ?? 0,
-                fractions[.methane] ?? 0,
-                fractions[.hydrogen] ?? 0,
-                fractions[.carbonMonoxide] ?? 0,
-                fractions[.hydrogenSulfide] ?? 0,
-                &nativeResult,
-                &errorBuffer,
-                errorBuffer.count
-            )
-            guard status == 0 else {
-                let message = String(cString: errorBuffer)
-                throw ProviderError.malformedResponse(
-                    message.isEmpty ? "CoolProp dry-mixture legacy-stability phase classification failed." : message
-                )
-            }
-            return CoolPropPhaseEngineResult(
-                phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
-            )
+            try Self.classifyDryMixturePhase(pressurePa: pressurePa, temperatureK: temperatureK, fractions: fractions)
         }
         try Task.checkCancellation()
         return result
+    }
+
+    public func identifyDryCarbonDioxideMixturePhaseConcurrently(
+        pressurePa: Double,
+        temperatureK: Double,
+        composition: [MixtureComponent]
+    ) async throws -> CoolPropPhaseEngineResult {
+        try Task.checkCancellation()
+        let fractions = Self.fractions(composition)
+        let result = try await runConcurrentNativeWork(priority: .userInitiated) {
+            try Self.classifyDryMixturePhase(pressurePa: pressurePa, temperatureK: temperatureK, fractions: fractions)
+        }
+        try Task.checkCancellation()
+        return result
+    }
+
+    private static func fractions(_ composition: [MixtureComponent]) -> [ComponentID: Double] {
+        composition.reduce(into: [ComponentID: Double]()) {
+            $0[$1.component, default: 0] += $1.moleFraction
+        }
+    }
+
+    private static func classifyDryMixturePhase(
+        pressurePa: Double,
+        temperatureK: Double,
+        fractions: [ComponentID: Double]
+    ) throws -> CoolPropPhaseEngineResult {
+        var nativeResult = PXCoolPropPhaseResult()
+        var errorBuffer = [CChar](repeating: 0, count: 512)
+        let status = px_coolprop_classify_dry_co2_mixture_phase_legacy_stability(
+            pressurePa,
+            temperatureK,
+            fractions[.carbonDioxide] ?? 0,
+            fractions[.nitrogen] ?? 0,
+            fractions[.oxygen] ?? 0,
+            fractions[.argon] ?? 0,
+            fractions[.methane] ?? 0,
+            fractions[.hydrogen] ?? 0,
+            fractions[.carbonMonoxide] ?? 0,
+            fractions[.hydrogenSulfide] ?? 0,
+            &nativeResult,
+            &errorBuffer,
+            errorBuffer.count
+        )
+        guard status == 0 else {
+            let message = String(cString: errorBuffer)
+            throw ProviderError.malformedResponse(
+                message.isEmpty ? "CoolProp dry-mixture legacy-stability phase classification failed." : message
+            )
+        }
+        return CoolPropPhaseEngineResult(
+            phaseIdentifier: phaseIdentifier(for: nativeResult.phase)
+        )
     }
 
     public func calculateDryCarbonDioxideMixture(

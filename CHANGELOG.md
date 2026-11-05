@@ -8,6 +8,12 @@
 
 ## Unreleased
 
+- Phase Map: added an "Ultra" resolution (100×100 grid, 10,000 flash points plus the
+  operating point). Ultra results are drawn as a continuous region map with
+  smooth boundaries between differently classified points instead of one marker
+  per point; the same map is used in the PDF export. Classifications are never
+  interpolated: every grid point keeps the provider's result.
+
 - Added a Swift port of the ToCoMo (Total Consumption Model) reaction sequence
   from Equinor's MIT-licensed repository, pinned to a commit and verified against
   results from the original Python code. It is not yet visible in the app.
